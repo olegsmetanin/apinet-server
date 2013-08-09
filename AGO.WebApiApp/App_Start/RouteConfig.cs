@@ -25,26 +25,6 @@ namespace AGO.WebApiApp.App_Start
 					"ng-app/{*path}",
 					new { controller = "StaticFiles", action = "StaticFile", prefix = "ng-app-public" });
 			}
-
-			routes.MapRoute(
-				"Content",
-				"Content/{*path}",
-				new { controller = "StaticFiles", action = "StaticFile", prefix = "Content" });
-
-			routes.MapRoute(
-				"Scripts",
-				"Scripts/{*path}",
-				new { controller = "StaticFiles", action = "StaticFile", prefix = "Scripts" });
-
-			routes.MapRoute(
-				"Images",
-				"Images/{*path}",
-				new { controller = "StaticFiles", action = "StaticFile", prefix = "Images" });
-
-			routes.MapRoute(
-				"Default", 
-				"{controller}/{action}/{id}", 
-				new { controller = "Home", action = "Index", id = UrlParameter.Optional });
 		}
 	}
 }
