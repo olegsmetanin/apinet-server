@@ -1,0 +1,25 @@
+﻿{
+    "$schema": "http://json-schema.org/draft-03/schema",
+    "id": "AGO.Hibernate.Filters.ValueFilterNode",
+    "type": "object",
+    "properties": {
+        "path": { "type": "string" },
+        "not": { "type": "boolean" },
+        "op": {
+            "enum": [
+                "==",
+                "isnull",
+                "isempty",
+                "~",
+                "<",
+                ">",
+                "<=",
+                ">=",
+                "><"
+            ]
+        },
+        "value": { "type": ["string", "null"] }
+    },
+    "requires": "path, op",
+    "additionalProperties": false
+}
