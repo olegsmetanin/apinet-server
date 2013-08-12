@@ -1,0 +1,23 @@
+﻿var sysConfig = {
+	src: function (path) { return "/src/" + path; },
+	site: function (path) { return "/" + path; },
+	module: "home"
+};
+
+// in Develop mode
+yepnope({
+	load: [sysConfig.src('include.js'), sysConfig.src('core/include.js'), sysConfig.src('backend/include.js'), sysConfig.src(sysConfig.module + '/include.js')],
+	complete: function () {
+	 	LoadResources(function () {
+	 		angular.element(document).ready(function () {
+
+	 			angular.module('core.templates', []);
+	 			angular.module(sysConfig.module + '.templates', []);
+
+	 			angular.module('core').constant('currentProject', 'play2').constant('userGroups', []).constant('sysConfig', sysConfig);
+
+	 			angular.bootstrap(document, ['backend', 'core', sysConfig.module]);
+	 		});
+	 	});
+	}
+});

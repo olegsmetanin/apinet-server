@@ -1,13 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Web;
 using System.Web.Mvc;
 using AGO.Hibernate;
+using AGO.WebApiApp.App_Start;
 
 namespace AGO.WebApiApp.Controllers
 {
 	public class StaticFilesController : Controller
 	{
+		#region Constants
+
+		public const string DevRoot = "~/ng-app/";
+
+		public const string ProdRoot = "~/ng-app/dist/";
+
+		#endregion
+
 		#region Nested classes
 
 		protected static class MimeAssistant
@@ -220,11 +230,34 @@ namespace AGO.WebApiApp.Controllers
 
 		#endregion
 
+		#region Controller actions
 
-		public FileResult StaticFile(string prefix, string path)
+		public ActionResult StaticFile(string path)
 		{
-			return File(Path.Combine(System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath, 
-				Path.Combine(prefix, path)), MimeAssistant.GetMimeType(path));
+			try
+			{
+				var originPath = WebApplication.DevMode == DevMode.Dev ? DevRoot : ProdRoot;
+				var originDirInfo = new DirectoryInfo(Server.MapPath(originPath));
+				if (!originDirInfo.Exists)
+					throw new Exception("Origin folder not exists");
+
+				var resultPath = Path.Combine(originDirInfo.FullName, path);
+				var resultFileInfo = new FileInfo(resultPath);
+				if (!resultFileInfo.Exists)
+					throw new Exception("File not exists");
+				if (!resultFileInfo.FullName.StartsWith(originDirInfo.FullName))
+					throw new Exception("File is not in origin subtree");
+
+				return File(resultFileInfo.FullName, MimeAssistant.GetMimeType(resultFileInfo.Name));
+			}
+			catch (Exception e)
+			{
+				if (e is HttpException)
+					throw;
+				throw new HttpException(404, e.Message);
+			}
 		}
+ 
+		#endregion
 	}
 }

@@ -1,0 +1,31 @@
+﻿var sysConfig = {
+    src: function(path) {
+        return path;
+    },
+    site: function(path) {
+        return "/" + path;
+    },
+    module: "home"
+}
+
+var componentsJS = [
+    "assets/styles.min.css",
+    "js.min.js"
+];
+
+var coreJS = [
+    "core.min.js"
+];
+
+var moduleJS = [
+    "home.min.js"
+];
+
+LoadResources(function() {
+    angular.element(document).ready(function() {
+
+        angular.module('core').constant('currentProject', null).constant('userGroups', []).constant('sysConfig', sysConfig); // important to get empty string!
+
+        angular.bootstrap(document, ['core', sysConfig.module]);
+    });
+});
