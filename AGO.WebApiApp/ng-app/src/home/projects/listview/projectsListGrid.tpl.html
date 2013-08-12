@@ -1,0 +1,21 @@
+<div class="row-fluid" ng-controller="projectsListGridCtrl">
+  <div ng-show="loading.active()">
+        <img src="/assets/ajax-loader.gif" class="ajax-loader"/>
+  </div>
+
+  <span am-time-ago="moment"></span>
+
+	<div class="span6">
+		<ul>
+			<li ng-repeat="project in projects">
+				<a href="/projects/{{project.id}}#!/common">{{project.name}}</a>
+				&nbsp;(<a ng-click="showDetails(project.id)">details</a>)
+			</li>
+		</ul>
+	</div>
+	<div class="span6">
+		<div ng-include src="projectDetailsTemplate">
+			Click [details] link to the right of the project name to view project details
+		</div>
+	</div>
+</div>

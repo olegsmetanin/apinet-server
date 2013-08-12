@@ -1,0 +1,56 @@
+<div ng-controller="contractFilterCtrl">
+
+    <button type="button" class="btn btn-success" ng-click="applyFilter()" ng-disabled="!isDirty" style="float:right;">Apply</button>
+
+    <tabset>
+        <tab heading="Simple">
+            <form>
+                <fieldset>
+                    <label>Number</label>
+                    <input filter-input filter-ng-model="filter.simple.number" path="'Contract.Number'" />
+                    <label>Categories</label>
+                    <input filter-lookup filter-ng-model="filter.simple.category" path="'Contract.Category.Name'" action="get" multiple/>
+                    <label>Status</label>
+                    <div style="padding-left:10px;">
+                        <label>StartDate</label>
+                        <input filter-input filter-ng-model="filter.simple.startDate" path="'Contract.StatusHistory.StartDate'" />
+                        <label>EndDate</label>
+                        <input filter-input filter-ng-model="filter.simple.endDate" path="'Contract.StatusHistory.StartDate'" />
+                        <label>Status</label>
+                        <input filter-lookup filter-ng-model="filter.simple.status" path="'Contract.StatusHistory.Status.Name'" action="get" multiple/>
+                        <label>Author</label>
+                        <div style="padding-left:10px;">
+                            <label>First Name</label>
+                            <input filter-lookup filter-ng-model="filter.simple.AuthorFirstName" path="'Contract.StatusHistory.Author.Name'" action="get" multiple />
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </tab>
+
+        <tab heading="User">
+            <div filter-user filter-ng-model="filter.user" meta="meta" path="'AGO.Docstore.Model.Documents.DocumentModel'"></div>
+        </tab>
+
+        <tab heading="Complex">
+            <div filter-complex filter-ng-model="filter.complex" meta="meta" path="'AGO.Docstore.Model.Documents.DocumentModel'"></div>
+        </tab>
+
+        <tab heading="Spatial">
+            This is spatial filter
+            <input type="text" filter-spatial/>
+
+        </tab>
+
+        <tab heading="Favorites">
+
+            <textarea ng-model="state" rows="6"></textarea>
+            <button type="button" class="btn btn-success" ng-click="loadState()" style="float:right;">loadState</button>
+        </tab>
+
+    </tabset>
+
+    Current filter: {{filter}}<br/>
+    Meta: {{meta}}
+
+</div>
