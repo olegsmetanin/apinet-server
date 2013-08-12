@@ -1,3 +1,3 @@
 [submodule "AGO.WebApiApp/ng-app"]
 	path = AGO.WebApiApp/ng-app
-	url = https://github.com/olegsmith/apinet-client
+	url = git@github.com:olegsmith/apinet-client.git
