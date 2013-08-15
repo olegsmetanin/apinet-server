@@ -113,3 +113,4 @@ UpgradeLog*.XML
 .DS_Store
 ._.DS_Store
 ._*
+/.nuget/NuGet.exe
