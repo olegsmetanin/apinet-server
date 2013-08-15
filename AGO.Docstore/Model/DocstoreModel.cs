@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace AGO.Docstore.Model
 {
 	[RelationalModel]
-	public abstract class DocstoreModel : IdentifiedModel
+	public abstract class DocstoreModel : IdentifiedModel, IDocstoreModel
 	{
 		#region Persistent
 
@@ -51,7 +51,7 @@ namespace AGO.Docstore.Model
 	}
 
 	[RelationalModel]
-	public abstract class DocstoreModel<TIdType> : IdentifiedModel<TIdType>
+	public abstract class DocstoreModel<TIdType> : IdentifiedModel<TIdType>, IDocstoreModel
 	{
 		#region Persistent
 

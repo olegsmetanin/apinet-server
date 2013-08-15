@@ -6,13 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using AGO.Hibernate.Attributes.Model;
+using AGO.Hibernate.Json;
+using AGO.Hibernate.Model;
 using NHibernate.Criterion;
 using NHibernate.SqlCommand;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using AGO.Hibernate.Attributes.Model;
-using AGO.Hibernate.Json;
-using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate.Filters
 {

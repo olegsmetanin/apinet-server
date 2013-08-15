@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using AGO.Hibernate.AutoMapping;
 using FluentMigrator;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Announcers;
@@ -9,7 +10,6 @@ using FluentMigrator.Runner.Processors;
 using FluentMigrator.Runner.Processors.SqlServer;
 using FluentMigrator.Runner.Processors.Sqlite;
 using FluentMigrator.VersionTableInfo;
-using AGO.Hibernate.AutoMapping;
 
 namespace AGO.Hibernate.Migration
 {

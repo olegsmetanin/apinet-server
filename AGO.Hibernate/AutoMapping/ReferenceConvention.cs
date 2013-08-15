@@ -1,7 +1,7 @@
-﻿using FluentNHibernate.Conventions;
-using FluentNHibernate.Conventions.Instances;
-using AGO.Hibernate.Attributes.Mapping;
+﻿using AGO.Hibernate.Attributes.Mapping;
 using AGO.Hibernate.Attributes.Model;
+using FluentNHibernate.Conventions;
+using FluentNHibernate.Conventions.Instances;
 
 namespace AGO.Hibernate.AutoMapping
 {

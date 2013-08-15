@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using AGO.Docstore.Model.Dictionary;
 using AGO.Hibernate.Attributes.Constraints;
-using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Documents
 {

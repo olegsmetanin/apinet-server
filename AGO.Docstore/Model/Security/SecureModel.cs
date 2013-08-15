@@ -15,7 +15,7 @@ namespace AGO.Docstore.Model.Security
 		[DisplayName("Когда последний раз редактировали"), JsonProperty,]
 		public virtual DateTime? LastChangeTime { get; set; }
 
-		[DisplayName("Кто последний раз редактировал"), /*JsonProperty,*/]
+		[DisplayName("Кто последний раз редактировал")/*, JsonProperty,*/]
 		public virtual UserModel LastChanger { get; set; }
 		
 		#endregion

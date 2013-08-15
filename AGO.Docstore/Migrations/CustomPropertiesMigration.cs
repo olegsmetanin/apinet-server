@@ -1,6 +1,7 @@
 ﻿using AGO.Docstore.Model.Dictionary;
+using AGO.Docstore.Model.Dictionary.Documents;
+using AGO.Docstore.Model.Dictionary.OrgStructure;
 using AGO.Docstore.Model.Documents;
-using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Migration;
 using FluentMigrator;
 

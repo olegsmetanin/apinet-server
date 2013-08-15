@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Migrations\ProjectsMigration.cs" />
     <Compile Include="Migrations\CustomPropertiesMigration.cs" />
     <Compile Include="Migrations\Extensions.cs" />
     <Compile Include="Migrations\InitialMigration.cs" />
@@ -62,18 +63,22 @@
     <Compile Include="Model\Dictionary\CustomPropertyInstanceModel.cs" />
     <Compile Include="Model\Dictionary\CustomPropertyTypeModel.cs" />
     <Compile Include="Model\Dictionary\CustomPropertyValueType.cs" />
+    <Compile Include="Model\Dictionary\Projects\ProjectStatusModel.cs" />
     <Compile Include="Model\Documents\DocumentCustomPropertyModel.cs" />
     <Compile Include="Model\IDocstoreModel.cs" />
     <Compile Include="Model\Dictionary\IDictionaryItemModel.cs" />
-    <Compile Include="Model\Dictionary\DocumentAddresseeModel.cs" />
-    <Compile Include="Model\Dictionary\DocumentCategoryModel.cs" />
+    <Compile Include="Model\Dictionary\Documents\DocumentAddresseeModel.cs" />
+    <Compile Include="Model\Dictionary\Documents\DocumentCategoryModel.cs" />
     <Compile Include="Model\Documents\DocumentCommentModel.cs" />
     <Compile Include="Model\DocstoreModel.cs" />
-    <Compile Include="Model\Dictionary\DepartmentModel.cs" />
+    <Compile Include="Model\Dictionary\OrgStructure\DepartmentModel.cs" />
+    <Compile Include="Model\Projects\ProjectParticipantModel.cs" />
+    <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
+    <Compile Include="Model\Projects\ProjectModel.cs" />
     <Compile Include="Model\Security\ISecureModel.cs" />
     <Compile Include="Model\Security\UserGroupModel.cs" />
     <Compile Include="Model\Security\SecureModel.cs" />
-    <Compile Include="Model\Dictionary\DocumentStatusModel.cs" />
+    <Compile Include="Model\Dictionary\Documents\DocumentStatusModel.cs" />
     <Compile Include="Model\Documents\DocumentModel.cs" />
     <Compile Include="Model\Documents\DocumentStatusHistoryModel.cs" />
     <Compile Include="Model\Documents\DocumentType.cs" />

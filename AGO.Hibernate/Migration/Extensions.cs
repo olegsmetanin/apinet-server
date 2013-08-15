@@ -2,6 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using AGO.Hibernate.Attributes.Constraints;
+using AGO.Hibernate.Attributes.Mapping;
+using AGO.Hibernate.Attributes.Model;
+using AGO.Hibernate.Model.Lob;
 using FluentMigrator.Builders;
 using FluentMigrator.Builders.Alter;
 using FluentMigrator.Builders.Alter.Table;
@@ -9,10 +13,6 @@ using FluentMigrator.Builders.Create;
 using FluentMigrator.Builders.Create.Table;
 using FluentMigrator.Builders.Delete;
 using FluentMigrator.Builders.Delete.Column;
-using AGO.Hibernate.Attributes.Constraints;
-using AGO.Hibernate.Attributes.Mapping;
-using AGO.Hibernate.Attributes.Model;
-using AGO.Hibernate.Model.Lob;
 
 namespace AGO.Hibernate.Migration
 {

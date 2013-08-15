@@ -1,8 +1,8 @@
-﻿using FluentNHibernate.Conventions;
+﻿using AGO.Hibernate.Model.Lob;
+using FluentNHibernate.Conventions;
 using FluentNHibernate.Conventions.AcceptanceCriteria;
 using FluentNHibernate.Conventions.Inspections;
 using FluentNHibernate.Conventions.Instances;
-using AGO.Hibernate.Model.Lob;
 
 namespace AGO.Hibernate.AutoMapping
 {
