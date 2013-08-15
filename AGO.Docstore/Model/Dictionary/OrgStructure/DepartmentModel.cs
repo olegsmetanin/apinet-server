@@ -6,7 +6,7 @@ using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
 using Newtonsoft.Json;
 
-namespace AGO.Docstore.Model.Dictionary
+namespace AGO.Docstore.Model.Dictionary.OrgStructure
 {
 	public class DepartmentModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
 	{

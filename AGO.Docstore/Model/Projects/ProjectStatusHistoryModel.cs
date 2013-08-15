@@ -1,13 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
-using AGO.Docstore.Model.Dictionary.Documents;
+using AGO.Docstore.Model.Dictionary.Projects;
 using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
 using Newtonsoft.Json;
 
-namespace AGO.Docstore.Model.Documents
+namespace AGO.Docstore.Model.Projects
 {
-	public class DocumentStatusHistoryModel : SecureModel<Guid>
+	public class ProjectStatusHistoryModel : SecureModel<Guid>
 	{
 		#region Persistent
 
@@ -18,10 +18,10 @@ namespace AGO.Docstore.Model.Documents
 		public virtual DateTime? EndDate { get; set; }
 
 		[DisplayName("Документ"), /*JsonProperty,*/ NotNull]
-		public virtual DocumentModel Document { get; set; }
+		public virtual ProjectModel Project { get; set; }
 
 		[DisplayName("Статус"), /*JsonProperty,*/ NotNull]
-		public virtual DocumentStatusModel Status { get; set; }
+		public virtual ProjectStatusModel Status { get; set; }
 
 		#endregion
 	}

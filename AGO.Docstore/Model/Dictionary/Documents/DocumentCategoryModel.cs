@@ -7,7 +7,7 @@ using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
 using Newtonsoft.Json;
 
-namespace AGO.Docstore.Model.Dictionary
+namespace AGO.Docstore.Model.Dictionary.Documents
 {
 	public class DocumentCategoryModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
 	{

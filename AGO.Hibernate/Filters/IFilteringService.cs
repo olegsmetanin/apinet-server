@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq.Expressions;
-using NHibernate.Criterion;
 using AGO.Hibernate.Model;
+using NHibernate.Criterion;
 
 namespace AGO.Hibernate.Filters
 {

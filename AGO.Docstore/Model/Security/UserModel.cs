@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using AGO.Docstore.Model.Dictionary;
+using AGO.Docstore.Model.Dictionary.OrgStructure;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
 using Newtonsoft.Json;
@@ -18,7 +18,7 @@ namespace AGO.Docstore.Model.Security
 		[DisplayName("MD5 хеш для авторизации в WebDav"), JsonProperty, NotLonger(128), NotEmpty]
 		public virtual string PwdHash { get; set; }
 
-		[DisplayName("Активен"), JsonProperty, NotLonger(128), NotEmpty]
+		[DisplayName("Активен"), JsonProperty, NotNull]
 		public virtual bool Active { get; set; }
 
 		[DisplayName("Имя"), JsonProperty, NotLonger(64), NotEmpty]

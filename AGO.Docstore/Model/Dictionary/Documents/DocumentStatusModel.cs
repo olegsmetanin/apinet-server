@@ -4,7 +4,7 @@ using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
 using Newtonsoft.Json;
 
-namespace AGO.Docstore.Model.Dictionary
+namespace AGO.Docstore.Model.Dictionary.Documents
 {
 	public class DocumentStatusModel : SecureModel<Guid>, IDictionaryItemModel
 	{

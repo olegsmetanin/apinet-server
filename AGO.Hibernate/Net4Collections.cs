@@ -587,7 +587,7 @@ namespace AGO.Hibernate
 		/// </summary>
 		public override bool EndRead(ICollectionPersister persister)
 		{
-			foreach (T item in tempList)
+			foreach (var item in tempList)
 			{
 				set.Add(item);
 			}

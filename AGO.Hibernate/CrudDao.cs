@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using NHibernate;
-using NHibernate.Criterion;
-using NHibernate.Metadata;
 using AGO.Hibernate.Attributes.Model;
 using AGO.Hibernate.Filters;
 using AGO.Hibernate.Filters.Metadata;
 using AGO.Hibernate.Model;
+using NHibernate;
+using NHibernate.Criterion;
+using NHibernate.Metadata;
 
 namespace AGO.Hibernate
 {

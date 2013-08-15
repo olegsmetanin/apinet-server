@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using AGO.Hibernate.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate.Json
 {
