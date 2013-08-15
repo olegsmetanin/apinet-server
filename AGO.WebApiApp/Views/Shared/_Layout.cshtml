@@ -52,11 +52,11 @@
         -moz-background-size:30px 30px;
         -webkit-background-size:30px 30px;
         -o-background-size:30px 30px;
-        background-image: -moz-linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+        background-image: -moz-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
         background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255, 255, 255, 0.2)), color-stop(25%, rgba(255, 255, 255, 0.2)), color-stop(25%, rgba(255, 255, 255, 0)), color-stop(50%, rgba(255, 255, 255, 0)), color-stop(50%, rgba(255, 255, 255, 0.2)), color-stop(75%, rgba(255, 255, 255, 0.2)), color-stop(75%, rgba(255, 255, 255, 0)), color-stop(100%, rgba(255, 255, 255, 0)));
-        background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.3) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-        background-image: -o-linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-        background-image: -ms-linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+        background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.3) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+        background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+        background-image: -ms-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
         background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
     }
     .color3 > span {
@@ -239,51 +239,70 @@
 				g || (n.parentNode.insertBefore(e, n), m(c, 0))
 			}
 		})(this, document);
+	
 
 		(function () {
 			
 			@RenderBody()
 	
 			function LoadResources(completeCb) {
+            //componentsJS.concat(coreJS, moduleJS
+            var resources = [].concat(
+                sysConfig.modules['components'].css,
+                sysConfig.modules['components'].js,
+                sysConfig.modules['core'].css,
+                sysConfig.modules['core'].js,
+                sysConfig.modules[sysConfig.module].css,
+                sysConfig.modules[sysConfig.module].js
+            );
 
-				resourceJS = componentsJS.concat(coreJS, moduleJS);
+            var fqResources = [];
+            for (var i = 0; i < resources.length; i++) {
+                fqResources.push(sysConfig.site(resources[i]));
+            }
 
-				var fqResourceJS = [];
-				for (var i = 0; i < resourceJS.length; i++) {
-					fqResourceJS.push(sysConfig.site(resourceJS[i]));
-				}
+            var percent = (function() {
+                var val = 0;
+                return {
+                    add: function(addVal) {
+                        val += addVal;
+                        document.getElementById("percent").setAttribute("style", "width: " + Math.floor(val) + "%");
+                    }
+                }
+            })();
 
-				var percent = (function () {
-					var val = 0;
-					return {
-						add: function (addVal) {
-							val += addVal;
-							document.getElementById("percent").setAttribute("style", "width: " + Math.floor(val) + "%");
-						}
-					}
-				})();
+            yepnope({
+                load: fqResources,
+                callback: function(url, result, key) {
+                    percent.add(100 / resources.length);
+                },
+                complete: function() {
+                    var uiView = document.createElement("div"),
+                        percent = document.getElementById("percent"),
+                        wrap = percent.parentNode,
+                        master = wrap.parentNode;
 
-				yepnope({
-					load: fqResourceJS,
-					callback: function (url, result, key) {
-						percent.add(100 / resourceJS.length);
-					},
-					complete: function () {
-						var uiView = document.createElement("div"),
-						percent = document.getElementById("percent"),
-						wrap = percent.parentNode,
-						master = wrap.parentNode;
+                    uiView.setAttribute("ui-view", "");
+                    master.replaceChild(uiView, wrap);
+                    completeCb();
 
-						uiView.setAttribute("ui-view", "");
-						master.replaceChild(uiView, wrap);
-						completeCb();
+                }
+            });
+        }
 
-					}
-				});
-			}
+        function getCookie(name) {
+            var matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
 
-		})();
-	</script>
+        function getLang() {
+            return getCookie('lang') || window.navigator.userLanguage || window.navigator.language;
+        }
+
+    })();
+    </script>
 
 </body>
 

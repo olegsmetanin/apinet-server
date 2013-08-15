@@ -1,31 +1,45 @@
-﻿var sysConfig = {
+﻿// Production section begin
+
+var sysConfig = {
     src: function(path) {
         return path;
     },
     site: function(path) {
-        return "/" + path;
+        return path;
     },
-    module: "home"
-}
+	modules: { },
+	module: "home",
+    lang: getLang()
+};
 
-var componentsJS = [
-    "assets/styles.min.css",
-    "js.min.js"
-];
+sysConfig.modules["components"] = {
+	css: [ "components/assets/styles.min.css" ],
+    js: [ "components/components.min.js" ]
+};
 
-var coreJS = [
-    "core.min.js"
-];
+sysConfig.modules["core"] = {
+	css: [ "core/assets/styles.min.css" ],
+	js: [ 
+		"core/core.min.js",
+		"core/core." + sysConfig.lang + ".js"
+	]
+};
 
-var moduleJS = [
-    "home.min.js"
-];
+sysConfig.modules[sysConfig.module] = {
+	css: [ sysConfig.module + "/assets/styles.min.css" ],
+	js: [
+		sysConfig.module + "/" + sysConfig.module + ".min.js",
+		sysConfig.module + "/" + sysConfig.module + "." + sysConfig.lang + ".js"
+	]
+};
 
 LoadResources(function() {
     angular.element(document).ready(function() {
 
-        angular.module('core').constant('currentProject', null).constant('userGroups', []).constant('sysConfig', sysConfig); // important to get empty string!
+        angular.module("core").constant("currentProject", null).constant("userGroups", []).constant("sysConfig", sysConfig); // important to get empty string!
 
-        angular.bootstrap(document, ['core', sysConfig.module]);
+        angular.bootstrap(document, ["core", sysConfig.module]);
     });
 });
+
+// Production section end

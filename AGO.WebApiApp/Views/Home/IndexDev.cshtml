@@ -1,23 +1,38 @@
-﻿var sysConfig = {
-	src: function (path) { return "/src/" + path; },
-	site: function (path) { return "/" + path; },
-	module: "home"
+﻿// Development section begin
+
+var sysConfig = {
+    src: function(path) {
+        return "../src/" + path
+    },
+    site: function(path) {
+        return "../" + path
+        // Production mode
+        // return "../dist/" + path
+    },
+	modules: { },
+	module: "home",
+    lang: getLang()
 };
 
-// in Develop mode
 yepnope({
-	load: [sysConfig.src('include.js'), sysConfig.src('core/include.js'), sysConfig.src('backend/include.js'), sysConfig.src(sysConfig.module + '/include.js')],
-	complete: function () {
-	 	LoadResources(function () {
-	 		angular.element(document).ready(function () {
+    load: [sysConfig.src('components/include.js'), sysConfig.src('components/include.' + sysConfig.lang + '.js'), sysConfig.src('core/include.js'), sysConfig.src('backend/include.js'), sysConfig.src(sysConfig.module + '/include.js')],
+    complete: function() {
 
-	 			angular.module('core.templates', []);
-	 			angular.module(sysConfig.module + '.templates', []);
+        sysConfig.modules['core'].js.push('src/core/lang/core.' + sysConfig.lang + '.js');
+        sysConfig.modules[sysConfig.module].js.push('src/' + sysConfig.module + '/lang/' + sysConfig.module + '.' + sysConfig.lang + '.js')
 
-	 			angular.module('core').constant('currentProject', 'play2').constant('userGroups', []).constant('sysConfig', sysConfig);
+        LoadResources(function() {
+            angular.element(document).ready(function() {
 
-	 			angular.bootstrap(document, ['backend', 'core', sysConfig.module]);
-	 		});
-	 	});
-	}
+                angular.module('core.templates', []);
+                angular.module(sysConfig.module + '.templates', []);
+
+                angular.module('core').constant('currentProject', 'play2').constant('userGroups', []).constant('sysConfig', sysConfig);
+
+                angular.bootstrap(document, ['backend', 'core', sysConfig.module]);
+            });
+        });
+    }
 });
+
+// Development section end
