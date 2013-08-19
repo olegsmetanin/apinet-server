@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Web.Configuration;
-using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Routing;
 using AGO.Hibernate;
@@ -54,7 +53,6 @@ namespace AGO.WebApiApp.App_Start
 
 			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(_Container));
 
-			RegisterWebApi(GlobalConfiguration.Configuration);
 			RegisterRoutes(RouteTable.Routes);
 		}
 
@@ -63,14 +61,6 @@ namespace AGO.WebApiApp.App_Start
 			base.DoMigrateUp();
 			/*if (_MigrationService != null)
 				_MigrationService.MigrateDown(new Version(1, 0, 0, 0));*/
-		}
-
-		protected void RegisterWebApi(HttpConfiguration config)
-		{
-			config.Routes.MapHttpRoute(
-				"DefaultApi", 
-				"api/{controller}/{id}", 
-				new { id = RouteParameter.Optional });
 		}
 
 		protected void RegisterRoutes(RouteCollection routes)
@@ -83,6 +73,11 @@ namespace AGO.WebApiApp.App_Start
 				"Home",
 				"",
 				new { controller = "Home", action = "Index" });
+
+			routes.MapRoute(
+				"Models",
+				"api/models",
+				new { controller = "ModelsApi", action = "Index" });
 
 			routes.MapRoute(
 				"ng-app", 

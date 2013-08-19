@@ -2,24 +2,47 @@
 
 sysConfig = {
     src: function(path) {
-        return "../src/" + path
+        return 'src/' + path;
     },
     site: function(path) {
-        return "../" + path
-        // Production mode
-        // return "../dist/" + path
+        return path;
     },
-	modules: { },
-	module: "home",
-    lang: getLang()
+    modules: {},
+    module: "home",
+    lang: getLang(),
+    // use fake backend
+    fakeBackend: true,
+    // make dalay in milliseconds before $http requests when use fake backend
+    delay: 0
 };
 
+
 yepnope({
-    load: [sysConfig.src('components/include.js'), sysConfig.src('components/include.' + sysConfig.lang + '.js'), sysConfig.src('core/include.js'), sysConfig.src('backend/include.js'), sysConfig.src(sysConfig.module + '/include.js')],
+    load: [
+        sysConfig.src('components/include.js'),
+        sysConfig.src('components/lang/include.' + sysConfig.lang + '.js'),
+        sysConfig.src('core/include.js'),
+        sysConfig.src('backend/include.js'),
+        sysConfig.src(sysConfig.module + '/include.js')
+    ],
     complete: function() {
 
-        sysConfig.modules['core'].js.push('src/core/lang/core.' + sysConfig.lang + '.js');
-        sysConfig.modules[sysConfig.module].js.push('src/' + sysConfig.module + '/lang/' + sysConfig.module + '.' + sysConfig.lang + '.js')
+        sysConfig.modules['components'].js = [].concat(
+            sysConfig.modules['components'].js,
+            sysConfig.modules['components.lang'].js
+        );
+
+        sysConfig.modules['core'].js = [].concat(
+            sysConfig.modules['core'].js, [
+                sysConfig.src('core/lang/core.' + sysConfig.lang + '.js')
+            ]
+        );
+
+        sysConfig.modules[sysConfig.module].js = [].concat(
+            sysConfig.modules[sysConfig.module].js, [
+                sysConfig.src(sysConfig.module + '/lang/' + sysConfig.module + '.' + sysConfig.lang + '.js')
+            ]
+        );
 
         LoadResources(function() {
             angular.element(document).ready(function() {
@@ -27,11 +50,17 @@ yepnope({
                 angular.module('core.templates', []);
                 angular.module(sysConfig.module + '.templates', []);
 
-                angular.module('core').constant('currentProject', 'play2').constant('userGroups', []).constant('sysConfig', sysConfig);
+                angular.module('core')
+                    .constant('currentProject', 'play2')
+                    .constant('userGroups', [])
+                    .constant('sysConfig', sysConfig);
 
-                angular.bootstrap(document, ['backend', 'core', sysConfig.module]);
+                angular.bootstrap(document, [].concat(
+                    (sysConfig.fakeBackend ? ['backend'] : []), ['core', sysConfig.module]
+                ));
             });
         });
+
     }
 });
 

@@ -37,7 +37,7 @@ namespace AGO.Docstore.Model
 			model.ModelVersion = null;
 		}
 
-		[NotMapped, JsonProperty]
+		[NotMapped, JsonProperty("Id")]
 		public override string UniqueId
 		{
 			get { return base.UniqueId; }
@@ -78,7 +78,7 @@ namespace AGO.Docstore.Model
 			model.ModelVersion = null;
 		}
 
-		[NotMapped, JsonProperty]
+		[NotMapped, JsonProperty("Id")]
 		public override string UniqueId
 		{
 			get { return !IsNew() ? Id.ToString() : base.UniqueId; }
