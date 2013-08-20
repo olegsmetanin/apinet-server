@@ -494,7 +494,7 @@ namespace AGO.Hibernate.Filters
 			else if (node.Operator == ValueFilterOperators.Like)
 			{
 				var str = node.Operand.TrimSafe();
-				var mode = MatchMode.Exact;
+				/*var mode = MatchMode.Exact;
 				var prefixed = str.StartsWith("%");
 				var suffixed = str.EndsWith("%");
 				if (prefixed && suffixed)
@@ -503,7 +503,8 @@ namespace AGO.Hibernate.Filters
 					mode = MatchMode.End;
 				else if (suffixed)
 					mode = MatchMode.Start;
-				result = Restrictions.Like(realPath, str.Replace("%", ""), mode);
+				result = Restrictions.Like(realPath, str.Replace("%", ""), mode);*/
+				result = Restrictions.Like(realPath, str.Replace("%", ""), MatchMode.Anywhere);
 			}
 			else if (node.Operator == ValueFilterOperators.Lt)
 			{

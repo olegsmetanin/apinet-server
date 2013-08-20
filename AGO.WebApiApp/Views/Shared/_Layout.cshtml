@@ -299,7 +299,8 @@
         }
 
         function getLang() {
-            return getCookie('lang') || window.navigator.userLanguage || window.navigator.language;
+            return (getCookie('lang') || window.navigator.userLanguage ||
+	            window.navigator.language).substring(0,2);
         }
 
     })();
