@@ -593,7 +593,7 @@ namespace AGO.Hibernate.Filters
 					current.Negative = property.Value.TokenValue().ConvertSafe<bool>(_Options.FormattingCulture);
 				else if ("value".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
 					current.Operand = property.Value.TokenValue();
-		}
+			}
 		}
 
 		protected ValueFilterOperators? ValueFilterOperatorFromToken(JToken token)

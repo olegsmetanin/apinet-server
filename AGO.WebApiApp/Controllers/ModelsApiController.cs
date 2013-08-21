@@ -33,13 +33,17 @@ namespace AGO.WebApiApp.Controllers
 
 		public const string FilterPropertyName = "filter";
 
+		public const string IdPropertyName = "id";
+
 		public const string SortersPropertyName = "sorters";
 
 		public const string SortFieldPropertyName = "field";
 
 		public const string SortDirectionPropertyName = "direction";
-
+		
 		public const string GetModelsActionName = "getModels";
+
+		public const string GetModelActionName = "getModel";
 
 		#endregion
 
@@ -68,8 +72,10 @@ namespace AGO.WebApiApp.Controllers
 					throw new Exception("Request body missing action");
 
 				if (GetModelsActionName.Equals(action, StringComparison.InvariantCultureIgnoreCase))
-					return GetModels(body, jsonService);
-				
+					return GetModels(body);
+				if (GetModelActionName.Equals(action, StringComparison.InvariantCultureIgnoreCase))
+					return GetModel(body);
+
 				throw new Exception(string.Format("Unknown action: {0}", action));
 			}
 			catch (Exception e)
@@ -82,7 +88,23 @@ namespace AGO.WebApiApp.Controllers
 
 		#region Helper methods
 
-		public ActionResult GetModels(JObject body, IJsonService jsonService)
+		protected ActionResult GetModel(JObject body)
+		{
+			var modelType = ModelTypeFromRequestBody(body);
+			var modelIdProperty = modelType.GetProperty("Id");
+			if (modelIdProperty == null)
+				throw new Exception("Specified model type is not queryable by id");
+
+			var idProperty = body.Property(IdPropertyName);
+			var id = idProperty != null ? idProperty.TokenValue().ConvertSafe(modelIdProperty.PropertyType) : null;
+			if (id == null)
+				throw new Exception("Id not specified, or not convertible");
+
+			var crudDao = DependencyResolver.Current.GetService<ICrudDao>();
+			return Content(Serialize(crudDao.Get<IDocstoreModel>(id, false, modelType)), "application/json", Encoding.UTF8);
+		}
+
+		protected ActionResult GetModels(JObject body)
 		{
 			var page = 0;
 			var pageSize = DefaultPageSize;
@@ -90,13 +112,7 @@ namespace AGO.WebApiApp.Controllers
 			string orderBy = null;
 			var descending = false;
 
-			var modelTypeProperty = body.Property(ModelTypePropertyName);
-			var modelTypeName = modelTypeProperty != null ? modelTypeProperty.TokenValue().TrimSafe() : null;		
-			var modelType = !modelTypeName.IsNullOrEmpty() 
-				? typeof (IDocstoreModel).Assembly.GetType(modelTypeName, false)
-				: null;
-			if (!typeof (IDocstoreModel).IsAssignableFrom(modelType))
-				throw new Exception("Model type not specified or invalid");
+			var modelType = ModelTypeFromRequestBody(body);
 
 			var filteringService = DependencyResolver.Current.GetService<IFilteringService>();
 			var filterProperty = body.Property(FilterPropertyName);
@@ -147,6 +163,18 @@ namespace AGO.WebApiApp.Controllers
 			};
 
 			return Content(Serialize(result), "application/json", Encoding.UTF8);
+		}
+
+		protected Type ModelTypeFromRequestBody(JObject body)
+		{
+			var modelTypeProperty = body.Property(ModelTypePropertyName);
+			var modelTypeName = modelTypeProperty != null ? modelTypeProperty.TokenValue().TrimSafe() : null;
+			var modelType = !modelTypeName.IsNullOrEmpty()
+				? typeof(IDocstoreModel).Assembly.GetType(modelTypeName, false)
+				: null;
+			if (!typeof(IDocstoreModel).IsAssignableFrom(modelType))
+				throw new Exception("Model type not specified or invalid");
+			return modelType;
 		}
 
 		protected string Serialize(object obj)
