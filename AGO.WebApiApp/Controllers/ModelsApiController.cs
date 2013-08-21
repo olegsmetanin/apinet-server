@@ -88,7 +88,7 @@ namespace AGO.WebApiApp.Controllers
 			var pageSize = DefaultPageSize;
 			var filters = new List<IModelFilterNode>();
 			string orderBy = null;
-			var ascending = true;
+			var descending = false;
 
 			var modelTypeProperty = body.Property(ModelTypePropertyName);
 			var modelTypeName = modelTypeProperty != null ? modelTypeProperty.TokenValue().TrimSafe() : null;		
@@ -113,8 +113,8 @@ namespace AGO.WebApiApp.Controllers
 					if (firstSorter != null)
 					{
 						orderBy = firstSorter.TokenValue(SortFieldPropertyName).TrimSafe();
-						ascending = firstSorter.TokenValue(SortDirectionPropertyName).TrimSafe().Equals(
-							"asc", StringComparison.InvariantCultureIgnoreCase);
+						descending = firstSorter.TokenValue(SortDirectionPropertyName).TrimSafe().Equals(
+							"desc", StringComparison.InvariantCultureIgnoreCase);
 					}
 				}
 			}
@@ -138,11 +138,7 @@ namespace AGO.WebApiApp.Controllers
 			var filteringDao = DependencyResolver.Current.GetService<IFilteringDao>();
 
 			var totalRows = filteringDao.RowCount<IDocstoreModel>(filters, modelType);
-
-			if (orderBy != null && orderBy.Equals("StatusDescription", StringComparison.InvariantCultureIgnoreCase))
-				orderBy = "Status";
-
-			var modelsList = filteringDao.List<IDocstoreModel>(filters, orderBy, ascending, page * pageSize, pageSize, modelType);
+			var modelsList = filteringDao.List<IDocstoreModel>(filters, orderBy, !descending, page * pageSize, pageSize, modelType);
 
 			var result = new
 			{
