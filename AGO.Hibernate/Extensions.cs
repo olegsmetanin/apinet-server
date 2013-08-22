@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Json;
 using AGO.Hibernate.Model;
-using Newtonsoft.Json.Linq;
 
 namespace AGO.Hibernate
 {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
+using FluentNHibernate;
+using FluentNHibernate.Automapping;
 using AGO.Hibernate.Attributes.Mapping;
 using AGO.Hibernate.Attributes.Model;
 using AGO.Hibernate.Model;
-using FluentNHibernate;
-using FluentNHibernate.Automapping;
 
 namespace AGO.Hibernate.AutoMapping
 {

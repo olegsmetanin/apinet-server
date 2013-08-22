@@ -1,6 +1,6 @@
 ﻿using System;
-using AGO.Hibernate.Config;
 using Common.Logging;
+using AGO.Hibernate.Config;
 
 namespace AGO.Hibernate
 {

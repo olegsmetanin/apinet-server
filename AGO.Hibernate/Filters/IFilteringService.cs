@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using AGO.Hibernate.Model;
 using NHibernate.Criterion;
+using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate.Filters
 {
@@ -33,7 +33,7 @@ namespace AGO.Hibernate.Filters
 		public static IList<TModel> List<TModel>(
 			this IModelFilterBuilder<TModel, TModel> filter,
 			IFilteringDao dao,
-			FilteringOptions options = null)
+			FilteringOptions<TModel> options = null)
 			where TModel : class, IIdentifiedModel
 		{
 			if (filter == null)
@@ -47,7 +47,7 @@ namespace AGO.Hibernate.Filters
 		public static IEnumerable<TModel> Future<TModel>(
 			this IModelFilterBuilder<TModel, TModel> filter,
 			IFilteringDao dao,
-			FilteringOptions options = null)
+			FilteringOptions<TModel> options = null)
 			where TModel : class, IIdentifiedModel
 		{
 			if (filter == null)

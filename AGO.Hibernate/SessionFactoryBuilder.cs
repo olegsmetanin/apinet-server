@@ -4,13 +4,13 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using AGO.Hibernate.Attributes.Model;
-using AGO.Hibernate.Filters.Metadata;
-using AGO.Hibernate.Model;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Context;
 using NHibernate.Metadata;
+using AGO.Hibernate.Attributes.Model;
+using AGO.Hibernate.Filters.Metadata;
+using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate
 {

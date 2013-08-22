@@ -1,9 +1,9 @@
 ﻿using System;
+using FluentNHibernate.Conventions;
+using FluentNHibernate.Conventions.Instances;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Model;
 using AGO.Hibernate.Nullables;
-using FluentNHibernate.Conventions;
-using FluentNHibernate.Conventions.Instances;
 
 namespace AGO.Hibernate.AutoMapping
 {

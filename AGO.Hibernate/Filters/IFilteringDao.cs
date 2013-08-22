@@ -5,7 +5,6 @@ using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate.Filters
 {
-
 	public interface IFilteringDao
 	{
 		IFilteringService FilteringService { get; }

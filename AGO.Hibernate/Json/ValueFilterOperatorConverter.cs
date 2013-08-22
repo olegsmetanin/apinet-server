@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using AGO.Hibernate.Filters;
 using Newtonsoft.Json;
+using AGO.Hibernate.Filters;
 
 namespace AGO.Hibernate.Json
 {

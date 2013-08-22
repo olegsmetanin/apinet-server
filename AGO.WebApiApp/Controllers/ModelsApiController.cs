@@ -152,7 +152,7 @@ namespace AGO.WebApiApp.Controllers
 			{
 				foreach (var sorter in sortersArray.OfType<JObject>())
 				{
-					options.Sorters.Add(new FilteringOptions.SortInfo
+					options.Sorters.Add(new SortInfo
 					{
 						Property = sorter.TokenValue(SortPropertyName).TrimSafe(),
 						Descending = sorter.TokenValue(SortDescendingName).ConvertSafe<bool>()

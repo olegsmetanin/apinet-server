@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using AGO.Hibernate.Filters;
-using AGO.Hibernate.Model;
 using NHibernate;
 using NHibernate.Criterion;
+using AGO.Hibernate.Filters;
+using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate
 {
@@ -143,12 +143,12 @@ namespace AGO.Hibernate
 				_FilteringService.ConcatFilters(filters), options.ModelType ?? typeof(TModel));
 
 			var criteria = compiled.GetExecutableCriteria(CurrentSession);
-			foreach (var sortInfo in options.Sorters.Where(sortInfo => !sortInfo.Property.IsNullOrWhiteSpace()))
+			foreach (var sortInfo in options.ActualSorters.Where(sortInfo => !sortInfo.Property.IsNullOrWhiteSpace()))
 				criteria = criteria.AddOrder(new Order(sortInfo.Property.TrimSafe(), !sortInfo.Descending));
 
 			if (options.FetchStrategy == FetchStrategy.FetchRootReferences || options.FetchStrategy == FetchStrategy.DontFetchReferences)
 			{
-				var metadata = _SessionProvider.ModelMetadata(options.ModelType);
+				var metadata = _SessionProvider.ModelMetadata(options.ModelType ?? typeof(TModel));
 				if (metadata == null)
 					throw new Exception("Requested model type is not mapped");
 

@@ -1,8 +1,8 @@
 ﻿using System.Linq;
-using AGO.Hibernate.Attributes.Mapping;
-using AGO.Hibernate.Attributes.Model;
 using FluentNHibernate.Conventions;
 using FluentNHibernate.Conventions.Instances;
+using AGO.Hibernate.Attributes.Mapping;
+using AGO.Hibernate.Attributes.Model;
 
 namespace AGO.Hibernate.AutoMapping
 {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using AGO.Hibernate.Filters.Metadata;
-using AGO.Hibernate.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using AGO.Hibernate.Filters.Metadata;
+using AGO.Hibernate.Model;
 
 namespace AGO.Hibernate.Json
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using AGO.Hibernate.Filters.Metadata;
 using NHibernate;
+using AGO.Hibernate.Filters.Metadata;
 
 namespace AGO.Hibernate
 {

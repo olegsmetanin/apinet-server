@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using AGO.Hibernate.Filters.Metadata;
 using Newtonsoft.Json;
+using AGO.Hibernate.Filters.Metadata;
 
 namespace AGO.Hibernate.Json
 {
