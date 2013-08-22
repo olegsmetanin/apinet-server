@@ -80,6 +80,11 @@ namespace AGO.WebApiApp.App_Start
 				new { controller = "ModelsApi", action = "Index" });
 
 			routes.MapRoute(
+				"AllModelsMetadata",
+				"metadata/AllModelsMetadata",
+				new { controller = "Metadata", action = "AllModelsMetadata" });
+
+			routes.MapRoute(
 				"ng-app", 
 				"{*path}", 
 				new { controller = "StaticFiles", action = "StaticFile" });

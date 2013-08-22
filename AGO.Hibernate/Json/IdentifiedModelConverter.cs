@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using AGO.Hibernate.Model;
+using NHibernate.Proxy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,8 +15,6 @@ namespace AGO.Hibernate.Json
 		public const string ModelTypePropertyName = "ModelType";
 
 		public const string ModelAssemblyPropertyName = "ModelAssembly";
-
-		public const string SelectionModePropertyName = "SelectionMode";
 		
 		#endregion
 
@@ -54,13 +53,13 @@ namespace AGO.Hibernate.Json
 				if (attributes.Length == 0)
 					continue;
 
-				WriteProperty(model, propertyInfo, writer, serializer, (JsonPropertyAttribute)attributes[0]);
+				WriteProperty(model, propertyInfo, writer, serializer, (JsonPropertyAttribute) attributes[0]);
 			}
 
-			writer.WritePropertyName(ModelTypePropertyName);
+			/*writer.WritePropertyName(ModelTypePropertyName);
 			writer.WriteValue(model.RealType.FullName);
 			writer.WritePropertyName(ModelAssemblyPropertyName);
-			writer.WriteValue(model.RealType.Assembly.GetName().Name);
+			writer.WriteValue(model.RealType.Assembly.GetName().Name);*/
 
 			writer.WriteEndObject();
 		} 
@@ -76,25 +75,29 @@ namespace AGO.Hibernate.Json
 			JsonSerializer serializer,
 			JsonPropertyAttribute attribute)
 		{
-			var propertyName = attribute.PropertyName.IsNullOrWhiteSpace()
+			var propertyName = attribute == null || attribute.PropertyName.IsNullOrWhiteSpace()
 				? propertyInfo.Name
 				: attribute.PropertyName;
 			var value = propertyInfo.GetValue(model, null);
 
-			var modelValue = value as IIdentifiedModel;
-			if (modelValue != null)
+			if (typeof(IIdentifiedModel).IsAssignableFrom(propertyInfo.PropertyType) &&
+				value.IsProxy() && ((INHibernateProxy) value).HibernateLazyInitializer.IsUninitialized)
 			{
-				writer.WritePropertyName(propertyName + "Id");
-				writer.WriteValue(modelValue.UniqueId);
-
-				writer.WritePropertyName(propertyName + "Description");
-				writer.WriteValue(modelValue.ToStringSafe());
-			}
-			else
-			{
+				var modelIdProperty = model.GetType().GetProperty(
+					propertyInfo.Name + "Id", BindingFlags.Public | BindingFlags.Instance);
+				if (modelIdProperty == null)
+					return;
+				
 				writer.WritePropertyName(propertyName);
-				serializer.Serialize(writer, value);
+				writer.WriteStartObject();
+				writer.WritePropertyName("Id");
+				serializer.Serialize(writer, modelIdProperty.GetValue(model, null));
+				writer.WriteEndObject();
+				return;
 			}
+			
+			writer.WritePropertyName(propertyName);
+			serializer.Serialize(writer, value);		
 		}
 
 		protected void ReadProperty(IIdentifiedModel model, Type modelType, JProperty property, JsonSerializer serializer)

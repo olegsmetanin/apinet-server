@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
 using AGO.Hibernate.Model;
 using NHibernate.Criterion;
 
@@ -34,10 +33,7 @@ namespace AGO.Hibernate.Filters
 		public static IList<TModel> List<TModel>(
 			this IModelFilterBuilder<TModel, TModel> filter,
 			IFilteringDao dao,
-			string orderBy = null,
-			bool ascending = true,
-			int? skip = null,
-			int? take = null)
+			FilteringOptions options = null)
 			where TModel : class, IIdentifiedModel
 		{
 			if (filter == null)
@@ -45,16 +41,13 @@ namespace AGO.Hibernate.Filters
 			if (dao == null)
 				throw new ArgumentNullException("dao");
 
-			return dao.List<TModel>(new[] { filter }, orderBy, ascending, skip, take);
+			return dao.List<TModel>(new[] { filter }, options);
 		}
 
-		public static IList<TModel> List<TModel, TValue>(
+		public static IEnumerable<TModel> Future<TModel>(
 			this IModelFilterBuilder<TModel, TModel> filter,
 			IFilteringDao dao,
-			Expression<Func<TModel, TValue>> orderBy = null,
-			bool ascending = true,
-			int? skip = null,
-			int? take = null)
+			FilteringOptions options = null)
 			where TModel : class, IIdentifiedModel
 		{
 			if (filter == null)
@@ -62,32 +55,7 @@ namespace AGO.Hibernate.Filters
 			if (dao == null)
 				throw new ArgumentNullException("dao");
 
-			var orderByName = string.Empty;
-			if (orderBy != null)
-				orderByName = orderBy.PropertyInfoFromExpression().Name;
-
-			return dao.List<TModel>(new[] { filter }, orderByName, ascending, skip, take);
-		}
-
-		public static IEnumerable<TModel> Future<TModel, TValue>(
-			this IModelFilterBuilder<TModel, TModel> filter,
-			IFilteringDao dao,
-			Expression<Func<TModel, TValue>> orderBy = null,
-			bool ascending = true,
-			int? skip = null,
-			int? take = null)
-			where TModel : class, IIdentifiedModel
-		{
-			if (filter == null)
-				throw new ArgumentNullException("filter");
-			if (dao == null)
-				throw new ArgumentNullException("dao");
-
-			var orderByName = string.Empty;
-			if (orderBy != null)
-				orderByName = orderBy.PropertyInfoFromExpression().Name;
-
-			return dao.Future<TModel>(new[] { filter }, orderByName, ascending, skip, take);
+			return dao.Future<TModel>(new[] { filter }, options);
 		}
 
 		public static int RowCount<TModel>(

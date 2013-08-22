@@ -4,6 +4,7 @@ using System.ComponentModel;
 using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Dictionary.OrgStructure
@@ -20,17 +21,19 @@ namespace AGO.Docstore.Model.Dictionary.OrgStructure
 
 		[DisplayName("Полное наименование"), JsonProperty, NotLonger(1024)]
 		public virtual string FullName { get; set; }
-		
-		[DisplayName("Пользователи"), PersistentCollection]
-		public virtual ISet<UserModel> Users { get { return _Users; } set { _Users = value; } }
-		private ISet<UserModel> _Users = new HashSet<UserModel>();
 
-		[DisplayName("Предшественник"), /*JsonProperty,*/]
+		[DisplayName("Предшественник"), JsonProperty]
 		public virtual DepartmentModel Parent { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? ParentId { get; set; }
 
 		[DisplayName("Последователи"), PersistentCollection]
 		public virtual ISet<DepartmentModel> Children { get { return _Children; } set { _Children = value; } }
 		private ISet<DepartmentModel> _Children = new HashSet<DepartmentModel>();
+
+		[DisplayName("Пользователи"), PersistentCollection]
+		public virtual ISet<UserModel> Users { get { return _Users; } set { _Users = value; } }
+		private ISet<UserModel> _Users = new HashSet<UserModel>();
 
 		#endregion
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Web.Mvc;
 using AGO.Docstore.Model;
@@ -19,31 +20,33 @@ namespace AGO.WebApiApp.Controllers
 
 		public const string ErrorResult = "error";
 
-		public const string PagePropertyName = "page";
+		public const string PageName = "page";
 
-		public const string PageSizePropertyName = "pageSize";
+		public const string PageSizeName = "pageSize";
 
 		public const int DefaultPageSize = 15;
 
 		public const int MaxPageSize = 100;
 
-		public const string ActionPropertyName = "action";
+		public const string ActionName = "action";
 
-		public const string ModelTypePropertyName = "modelType";
+		public const string ModelTypeName = "modelType";
 
-		public const string FilterPropertyName = "filter";
+		public const string FilterName = "filter";
 
-		public const string IdPropertyName = "id";
+		public const string IdName = "id";
 
-		public const string SortersPropertyName = "sorters";
+		public const string SortersName = "sorters";
 
-		public const string SortFieldPropertyName = "field";
+		public const string SortPropertyName = "property";
 
-		public const string SortDirectionPropertyName = "direction";
+		public const string SortDescendingName = "descending";
 		
 		public const string GetModelsActionName = "getModels";
 
 		public const string GetModelActionName = "getModel";
+
+		public const string DontFetchReferencesName = "dontFetchReferences";
 
 		#endregion
 
@@ -66,7 +69,7 @@ namespace AGO.WebApiApp.Controllers
 				if (body == null)
 					throw new Exception("Empty request body");
 
-				var actionProperty = body.Property(ActionPropertyName);
+				var actionProperty = body.Property(ActionName);
 				var action = actionProperty != null ? actionProperty.TokenValue().TrimSafe() : null;
 				if (action.IsNullOrEmpty())
 					throw new Exception("Request body missing action");
@@ -90,71 +93,96 @@ namespace AGO.WebApiApp.Controllers
 
 		protected ActionResult GetModel(JObject body)
 		{
-			var modelType = ModelTypeFromRequestBody(body);
-			var modelIdProperty = modelType.GetProperty("Id");
-			if (modelIdProperty == null)
-				throw new Exception("Specified model type is not queryable by id");
+			var options = new FilteringOptions
+			{
+				ModelType = ModelTypeFromRequestBody(body),
+				Take = 1,
+				FetchStrategy = FetchStrategy.FetchRootReferences
+			};
 
-			var idProperty = body.Property(IdPropertyName);
-			var id = idProperty != null ? idProperty.TokenValue().ConvertSafe(modelIdProperty.PropertyType) : null;
-			if (id == null)
-				throw new Exception("Id not specified, or not convertible");
+			var idProperty = body.Property(IdName);
+			var id = idProperty != null ? idProperty.TokenValue().TrimSafe() : null;
+			if (id.IsNullOrEmpty())
+				throw new Exception("Id not specified");
 
-			var crudDao = DependencyResolver.Current.GetService<ICrudDao>();
-			return Content(Serialize(crudDao.Get<IDocstoreModel>(id, false, modelType)), "application/json", Encoding.UTF8);
+			var dontFetchReferencesProperty = body.Property(DontFetchReferencesName);
+			var dontFetchReferences = dontFetchReferencesProperty != null && 
+				dontFetchReferencesProperty.TokenValue().ConvertSafe<bool>();
+
+			IDocstoreModel result;
+
+			if (dontFetchReferences)
+			{
+				var modelIdProperty = options.ModelType.GetProperty("Id");
+
+				var crudDao = DependencyResolver.Current.GetService<ICrudDao>();
+				result = crudDao.Get<IDocstoreModel>(modelIdProperty != null ? 
+					id.ConvertSafe(modelIdProperty.PropertyType) : id, false, options.ModelType);
+			}
+			else
+			{
+				var filteringDao = DependencyResolver.Current.GetService<IFilteringDao>();
+				var filteringService = DependencyResolver.Current.GetService<IFilteringService>();
+				var json = @"
+				{
+					op: '&&',
+					items: [ { path: 'Id', op: '=', value: '" + id + @"' } ]
+				}";
+
+				result = filteringDao.List<IDocstoreModel>(
+					new[] {filteringService.ParseFilterFromJson(json)}, options).FirstOrDefault();
+			}
+
+			return Content(Serialize(result), "application/json", Encoding.UTF8);
 		}
 
 		protected ActionResult GetModels(JObject body)
 		{
-			var page = 0;
-			var pageSize = DefaultPageSize;
+			var options = new FilteringOptions { ModelType = ModelTypeFromRequestBody(body) };
+		
 			var filters = new List<IModelFilterNode>();
-			string orderBy = null;
-			var descending = false;
-
-			var modelType = ModelTypeFromRequestBody(body);
-
 			var filteringService = DependencyResolver.Current.GetService<IFilteringService>();
-			var filterProperty = body.Property(FilterPropertyName);
+			var filterProperty = body.Property(FilterName);
 			if (filterProperty != null)
 				filters.Add(filteringService.ParseFilterFromJson(filterProperty.Value.ToString()));
 
-			var sortersProperty = body.Property(SortersPropertyName);
-			if (sortersProperty != null)
+			var sortersProperty = body.Property(SortersName);
+			var sortersArray = sortersProperty != null ? sortersProperty.Value as JArray : null;
+			if (sortersArray != null)
 			{
-				var sortersArray = sortersProperty.Value as JArray;
-				if (sortersArray != null && sortersArray.HasValues)
+				foreach (var sorter in sortersArray.OfType<JObject>())
 				{
-					var firstSorter = sortersArray[0] as JObject;
-					if (firstSorter != null)
+					options.Sorters.Add(new FilteringOptions.SortInfo
 					{
-						orderBy = firstSorter.TokenValue(SortFieldPropertyName).TrimSafe();
-						descending = firstSorter.TokenValue(SortDirectionPropertyName).TrimSafe().Equals(
-							"desc", StringComparison.InvariantCultureIgnoreCase);
-					}
+						Property = sorter.TokenValue(SortPropertyName).TrimSafe(),
+						Descending = sorter.TokenValue(SortDescendingName).ConvertSafe<bool>()
+					});
 				}
 			}
 
-			var pageProperty = body.Property(PagePropertyName);
+			var page = 0;
+			var pageProperty = body.Property(PageName);
 			if (pageProperty != null)
 				page = pageProperty.TokenValue().ConvertSafe<int>();
-
-			var pageSizeProperty = body.Property(PageSizePropertyName);
-			if (pageSizeProperty != null)
-				pageSize = pageSizeProperty.TokenValue().ConvertSafe<int>();
-
 			if (page < 0)
 				page = 0;
 
+			var pageSize = DefaultPageSize;
+			var pageSizeProperty = body.Property(PageSizeName);
+			if (pageSizeProperty != null)
+				pageSize = pageSizeProperty.TokenValue().ConvertSafe<int>();
 			if (pageSize <= 0)
 				pageSize = DefaultPageSize;
 			if (pageSize > MaxPageSize)
 				pageSize = MaxPageSize;
 
+			options.Skip = page*pageSize;
+			options.Take = pageSize;
+
 			var filteringDao = DependencyResolver.Current.GetService<IFilteringDao>();
 
-			var totalRows = filteringDao.RowCount<IDocstoreModel>(filters, modelType);
-			var modelsList = filteringDao.List<IDocstoreModel>(filters, orderBy, !descending, page * pageSize, pageSize, modelType);
+			var totalRows = filteringDao.RowCount<IDocstoreModel>(filters, options.ModelType);
+			var modelsList = filteringDao.List<IDocstoreModel>(filters, options);
 
 			var result = new
 			{
@@ -167,7 +195,7 @@ namespace AGO.WebApiApp.Controllers
 
 		protected Type ModelTypeFromRequestBody(JObject body)
 		{
-			var modelTypeProperty = body.Property(ModelTypePropertyName);
+			var modelTypeProperty = body.Property(ModelTypeName);
 			var modelTypeName = modelTypeProperty != null ? modelTypeProperty.TokenValue().TrimSafe() : null;
 			var modelType = !modelTypeName.IsNullOrEmpty()
 				? typeof(IDocstoreModel).Assembly.GetType(modelTypeName, false)

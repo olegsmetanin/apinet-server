@@ -46,8 +46,10 @@ namespace AGO.Docstore.Model.Documents
 		[DisplayName("Номер исходного документа"), JsonProperty, NotLonger(64)]
 		public virtual string SourceDocNumber { get; set; }
 
-		[DisplayName("Статус"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Статус"), JsonProperty, NotNull]
 		public virtual DocumentStatusModel Status { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? StatusId { get; set; }
 
 		[DisplayName("История статусов документа"), PersistentCollection]
 		public virtual ISet<DocumentStatusHistoryModel> StatusHistory { get { return _StatusHistory; } set { _StatusHistory = value; } }

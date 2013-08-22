@@ -3,6 +3,7 @@ using System.ComponentModel;
 using AGO.Docstore.Model.Dictionary.Documents;
 using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Documents
@@ -17,11 +18,15 @@ namespace AGO.Docstore.Model.Documents
 		[DisplayName("Дата конца"), JsonProperty]
 		public virtual DateTime? EndDate { get; set; }
 
-		[DisplayName("Документ"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Документ"), JsonProperty, NotNull]
 		public virtual DocumentModel Document { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? DocumentId { get; set; }
 
-		[DisplayName("Статус"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Статус"), JsonProperty, NotNull]
 		public virtual DocumentStatusModel Status { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? StatusId { get; set; }
 
 		#endregion
 	}

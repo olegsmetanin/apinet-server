@@ -1,4 +1,7 @@
-﻿using NHibernate;
+﻿using System;
+using System.Collections.Generic;
+using AGO.Hibernate.Filters.Metadata;
+using NHibernate;
 
 namespace AGO.Hibernate
 {
@@ -9,5 +12,9 @@ namespace AGO.Hibernate
 		void CloseCurrentSession(bool forceRollback = false);
 
 		ISessionFactory SessionFactory { get; }
+
+		IEnumerable<IModelMetadata> AllModelsMetadata { get; }
+
+		IModelMetadata ModelMetadata(Type modelType);
 	}
 }

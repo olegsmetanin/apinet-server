@@ -33,8 +33,10 @@ namespace AGO.Docstore.Model.Dictionary
 		})]
 		public virtual CustomPropertyValueType ValueType { get; set; }
 
-		[DisplayName("Предшественник"), /*JsonProperty,*/]
+		[DisplayName("Предшественник"), JsonProperty]
 		public virtual CustomPropertyTypeModel Parent { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? ParentId { get; set; }
 
 		[DisplayName("Последователи"), PersistentCollection]
 		public virtual ISet<CustomPropertyTypeModel> Children { get { return _Children; } set { _Children = value; } }

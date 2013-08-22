@@ -12,7 +12,7 @@ namespace AGO.Hibernate.AutoMapping
 		public void Apply(IPropertyInstance instance)
 		{
 			var readOnly =
-				instance.Property.MemberInfo.FirstAttribute<ReadOnlyAttribute>(true);
+				instance.Property.MemberInfo.FirstAttribute<ReadOnlyPropertyAttribute>(true);
 			if (readOnly != null)
 				instance.ReadOnly();
 

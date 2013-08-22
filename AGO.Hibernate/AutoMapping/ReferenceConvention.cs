@@ -14,7 +14,7 @@ namespace AGO.Hibernate.AutoMapping
 			var lazyPropertyAttribute = instance.Property.MemberInfo.FirstAttribute<PrefetchedAttribute>(true);
 			if (lazyPropertyAttribute != null)
 				instance.Fetch.Join();
-			var readOnly = instance.Property.MemberInfo.FirstAttribute<ReadOnlyAttribute>(true);
+			var readOnly = instance.Property.MemberInfo.FirstAttribute<ReadOnlyPropertyAttribute>(true);
 			if (readOnly != null)
 				instance.ReadOnly();
 

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using AGO.Docstore.Model.Dictionary.OrgStructure;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Security
@@ -42,8 +43,10 @@ namespace AGO.Docstore.Model.Security
 		[DisplayName("Краткое наименование должности (родительный)"), JsonProperty, NotLonger(64)]
 		public virtual string WhomJobName { get; set; }
 
-		[DisplayName("Группа"), /*JsonProperty,*/]
+		[DisplayName("Группа"), JsonProperty]
 		public virtual UserGroupModel Group { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? GroupId { get; set; }
 
 		[DisplayName("Подразделения"), PersistentCollection(Inverse = false)]
 		public virtual ISet<DepartmentModel> Departments { get { return _Departments; } set { _Departments = value; } }

@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Documents
@@ -16,8 +17,10 @@ namespace AGO.Docstore.Model.Documents
 		[DisplayName("Текст"), JsonProperty, NotEmpty]
 		public virtual string Text { get; set; }
 
-		[DisplayName("Документ"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Документ"), JsonProperty, NotNull]
 		public virtual DocumentModel Document { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? DocumentId { get; set; }
 
 		#endregion
 	}

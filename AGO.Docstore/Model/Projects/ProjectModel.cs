@@ -5,6 +5,7 @@ using AGO.Docstore.Model.Dictionary.Projects;
 using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Projects
@@ -31,8 +32,10 @@ namespace AGO.Docstore.Model.Projects
 		[DisplayName("Путь к проекту"), NotLonger(512), JsonProperty]
 		public virtual string FileSystemPath { get; set; }
 
-		[DisplayName("Статус проекта"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Статус проекта"), JsonProperty, NotNull]
 		public virtual ProjectStatusModel Status { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? StatusId { get; set; }
 
 		[DisplayName("История статусов учета"), PersistentCollection]
 		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return _StatusHistory; } set { _StatusHistory = value; } }

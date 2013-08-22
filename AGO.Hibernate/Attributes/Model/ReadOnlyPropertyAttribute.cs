@@ -6,7 +6,7 @@ namespace AGO.Hibernate.Attributes.Model
 	/// Помечает свойства которые присутствуют в хранилище, но не могут быть сохранены в него средствами DAL 
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-	public class ReadOnlyAttribute: Attribute
+	public class ReadOnlyPropertyAttribute: Attribute
 	{
 	}
 }

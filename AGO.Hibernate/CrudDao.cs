@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using AGO.Hibernate.Attributes.Model;
 using AGO.Hibernate.Filters;
-using AGO.Hibernate.Filters.Metadata;
 using AGO.Hibernate.Model;
 using NHibernate;
 using NHibernate.Criterion;
-using NHibernate.Metadata;
 
 namespace AGO.Hibernate
 {
@@ -120,29 +116,23 @@ namespace AGO.Hibernate
 
 		public IList<TModel> List<TModel>(
 			IEnumerable<IModelFilterNode> filters,
-			string orderBy = null,
-			bool ascending = true,
-			int? skip = null,
-			int? take = null,
-			Type modelType = null)
+			FilteringOptions options = null)
 			where TModel : class, IIdentifiedModel
 		{
-			return Future<TModel>(filters, orderBy, ascending, skip, take, modelType).ToList();
+			return Future<TModel>(filters, options).ToList();
 		}
 
 		public IEnumerable<TModel> Future<TModel>(
-			IEnumerable<IModelFilterNode> filters, 
-			string orderBy = null, 
-			bool ascending = true,
-			int? skip = null,
-			int? take = null, 
-			Type modelType = null) where TModel : class, IIdentifiedModel
+			IEnumerable<IModelFilterNode> filters,
+			FilteringOptions options = null) where TModel : class, IIdentifiedModel
 		{
 			if (filters == null)
 				throw new ArgumentNullException("filters");
 
-			skip = skip ?? 0;
-			take = take ?? 0;
+			options = options ?? new FilteringOptions();
+
+			var skip = options.Skip ?? 0;
+			var take = options.Take ?? 0;
 
 			if (skip < 0)
 				skip = 0;
@@ -150,14 +140,25 @@ namespace AGO.Hibernate
 				take = _MaxPageSize;
 
 			var compiled = _FilteringService.CompileFilter(
-				_FilteringService.ConcatFilters(filters), modelType ?? typeof(TModel));
+				_FilteringService.ConcatFilters(filters), options.ModelType ?? typeof(TModel));
 
 			var criteria = compiled.GetExecutableCriteria(CurrentSession);
-			if (!orderBy.IsNullOrWhiteSpace())
-				criteria = criteria.AddOrder(new Order(orderBy.TrimSafe(), ascending));
+			foreach (var sortInfo in options.Sorters.Where(sortInfo => !sortInfo.Property.IsNullOrWhiteSpace()))
+				criteria = criteria.AddOrder(new Order(sortInfo.Property.TrimSafe(), !sortInfo.Descending));
 
-			return criteria.SetFirstResult(skip.Value)
-				.SetMaxResults(take.Value)
+			if (options.FetchStrategy == FetchStrategy.FetchRootReferences || options.FetchStrategy == FetchStrategy.DontFetchReferences)
+			{
+				var metadata = _SessionProvider.ModelMetadata(options.ModelType);
+				if (metadata == null)
+					throw new Exception("Requested model type is not mapped");
+
+				foreach (var modelProperty in metadata.ModelProperties.Where(m => !m.IsCollection))
+						criteria.SetFetchMode(modelProperty.Name, options.FetchStrategy == 
+					FetchStrategy.FetchRootReferences ? FetchMode.Join : FetchMode.Lazy);
+			}
+
+			return criteria.SetFirstResult(skip)
+				.SetMaxResults(take)
 				.Future<TModel>();
 		}
 
@@ -180,39 +181,6 @@ namespace AGO.Hibernate
 		public void CloseCurrentSession(bool forceRollback = false)
 		{
 			_SessionProvider.CloseCurrentSession(forceRollback);
-		}
-
-		public IEnumerable<IModelMetadata> AllModelsMetadata()
-		{
-			var result = new List<IModelMetadata>();
-
-			foreach (var pair in _SessionProvider.SessionFactory.GetAllClassMetadata())
-			{
-				var internalClassMeta = pair.Value;
-				var mappedClass = internalClassMeta.GetMappedClass(EntityMode.Poco);
-				if (mappedClass == null)
-					continue;
-				
-				var classMeta = new ModelMetadata
-				{
-					Name = pair.Key,
-					ModelType = mappedClass
-				};
-				result.Add(classMeta);
-
-				
-				for (var i = 0; i < internalClassMeta.PropertyNames.Length; i++)
-				{
-					if (internalClassMeta.IsVersioned && i == internalClassMeta.VersionProperty)
-						continue;
-					AddPropertyMeta(classMeta, internalClassMeta, mappedClass, internalClassMeta.PropertyNames[i]);				
-				}
-
-				if (internalClassMeta.HasIdentifierProperty)
-					AddPropertyMeta(classMeta, internalClassMeta, mappedClass, internalClassMeta.IdentifierPropertyName);
-			}
-
-			return result;
 		}
 
 		#endregion
@@ -240,88 +208,6 @@ namespace AGO.Hibernate
 				initializable.Initialize();
 		}
 
-		#endregion
-
-		#region Helper methods
-
-		internal void AddPropertyMeta(ModelMetadata classMeta, IClassMetadata internalClassMeta, Type mappedClass, string propertyName)
-		{
-			var internalPropertyMeta = internalClassMeta.GetPropertyType(propertyName);
-			if (internalPropertyMeta == null)
-				return;
-
-			var propertyInfo = mappedClass.GetProperty(propertyName);
-			if (propertyInfo == null)
-				return;
-
-			PropertyMetadata propertyMeta;
-			if (internalPropertyMeta.IsAssociationType)
-			{
-				var propertyType = propertyInfo.PropertyType;
-				var isCollection = internalPropertyMeta.IsCollectionType;
-				if (isCollection)
-				{
-					if (!propertyType.IsGenericType)
-						throw new InvalidOperationException("Collection model property must be generic");
-					propertyType = propertyType.GetGenericArguments()[0];
-				}
-				if (!typeof (IIdentifiedModel).IsAssignableFrom(propertyType))
-					throw new InvalidOperationException("Model property must be IIdentifiedModel");
-
-				propertyMeta = new ModelPropertyMetadata
-				{
-					IsCollection = isCollection,
-					PropertyType = propertyType
-				};
-				classMeta._ModelProperties.Add((IModelPropertyMetadata)propertyMeta);
-			}
-			else
-			{
-				var propertyType = propertyInfo.PropertyType;
-				if (propertyType.IsNullable())
-					propertyType = propertyType.GetGenericArguments()[0];
-				if (!propertyType.IsValueType && !typeof(string).IsAssignableFrom(propertyType))
-					throw new InvalidOperationException("Property is not primitive");
-
-				var isTimestamp = propertyInfo.GetCustomAttributes(typeof(TimestampAttribute), false).Length > 0 &&
-					typeof(DateTime).IsAssignableFrom(propertyType);
-
-				PrimitivePropertyMetadata primitiveMeta;
-				propertyMeta = primitiveMeta = new PrimitivePropertyMetadata
-				{
-					PropertyType = propertyType,
-					IsTimestamp = isTimestamp
-				};
-
-				if (propertyType.IsEnum)
-				{
-					var displayNamesAttribute = propertyInfo.GetCustomAttributes(
-						typeof(EnumDisplayNamesAttribute), false).OfType<EnumDisplayNamesAttribute>().FirstOrDefault();
-
-					var displayNamesDict = displayNamesAttribute != null
-						? displayNamesAttribute.DisplayNames
-						: new Dictionary<string, string>();
-
-					primitiveMeta.PossibleValues = new Dictionary<string, string>();
-					foreach (var name in Enum.GetNames(propertyType))
-					{
-						primitiveMeta.PossibleValues[name] = displayNamesDict.ContainsKey(name)
-							? displayNamesDict[name].TrimSafe()
-							: name;
-					}
-				}
-
-				classMeta._PrimitiveProperties.Add(primitiveMeta);
-			}
-
-			propertyMeta.Name = propertyName;
-			propertyMeta.DisplayName = propertyName;
-			var displayNameAttribute = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false)
-				.OfType<DisplayNameAttribute>().FirstOrDefault();
-			if (displayNameAttribute != null)
-				propertyMeta.DisplayName = displayNameAttribute.DisplayName.TrimSafe();
-		}
-		
 		#endregion
 	}
 }

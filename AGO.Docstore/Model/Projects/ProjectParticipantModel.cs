@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using AGO.Docstore.Model.Security;
 using AGO.Hibernate.Attributes.Constraints;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Projects
@@ -16,11 +17,15 @@ namespace AGO.Docstore.Model.Projects
 		[DisplayName("Группа по умолчанию"), JsonProperty]
 		public virtual bool IsDefaultGroup { get; set; }
 
-		[DisplayName("Проект"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Проект"), JsonProperty, NotNull]
 		public virtual ProjectModel Project { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? ProjectId { get; set; }
 
-		[DisplayName("Пользователь")/*, JsonProperty,*/, NotNull]
+		[DisplayName("Пользователь"), JsonProperty, NotNull]
 		public virtual UserModel User { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? UserId { get; set; }
 
 		#endregion
 	}

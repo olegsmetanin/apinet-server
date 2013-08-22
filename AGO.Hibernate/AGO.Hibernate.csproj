@@ -50,7 +50,7 @@
     <Compile Include="Attributes\Model\PrefetchedAttribute.cs" />
     <Compile Include="Attributes\Model\ModelVersionAttribute.cs" />
     <Compile Include="Attributes\Model\NotMappedAttribute.cs" />
-    <Compile Include="Attributes\Model\ReadOnlyAttribute.cs" />
+    <Compile Include="Attributes\Model\ReadOnlyPropertyAttribute.cs" />
     <Compile Include="Attributes\Model\RelationalModelAttribute.cs" />
     <Compile Include="Attributes\Model\TimestampAttribute.cs" />
     <Compile Include="AutoMapping\UserTypeConvention.cs" />
@@ -66,6 +66,7 @@
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="ExpressionExceptions.cs" />
     <Compile Include="ExpressionExtensions.cs" />
+    <Compile Include="Filters\FilteringOptions.cs" />
     <Compile Include="Filters\FilteringServiceOptions.cs" />
     <Compile Include="Filters\IFilteringDao.cs" />
     <Compile Include="Filters\Metadata\IModelMetadata.cs" />

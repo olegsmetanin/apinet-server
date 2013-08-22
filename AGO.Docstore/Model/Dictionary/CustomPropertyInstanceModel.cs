@@ -5,6 +5,7 @@ using AGO.Docstore.Model.Security;
 using AGO.Hibernate;
 using AGO.Hibernate.Attributes.Constraints;
 using AGO.Hibernate.Attributes.Mapping;
+using AGO.Hibernate.Attributes.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Docstore.Model.Dictionary
@@ -14,8 +15,10 @@ namespace AGO.Docstore.Model.Dictionary
 	{
 		#region Persistent
 
-		[DisplayName("Тип параметра"), /*JsonProperty,*/ NotNull]
+		[DisplayName("Тип параметра"), JsonProperty, NotNull]
 		public virtual CustomPropertyTypeModel PropertyType { get; set; }
+		[ReadOnlyProperty]
+		public virtual Guid? PropertyTypeId { get; set; }
 
 		[DisplayName("Значение-строка"), JsonProperty, NotLonger(512)]
 		public virtual string StringValue { get; set; }
