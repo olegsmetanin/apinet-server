@@ -727,5 +727,27 @@ namespace AGO.Hibernate
 				? modelType
 				: null;
 		}
+
+		public static string FirstCharToUpper(this string str)
+		{
+			str = str.TrimSafe();
+			if (str.IsNullOrEmpty())
+				return str;
+
+			var chars = str.ToCharArray();
+			chars[0] = char.ToUpper(chars[0]);
+			return new string(chars);
+		}
+
+		public static string FirstCharToLower(this string str)
+		{
+			str = str.TrimSafe();
+			if (str.IsNullOrEmpty())
+				return str;
+
+			var chars = str.ToCharArray();
+			chars[0] = char.ToLower(chars[0]);
+			return new string(chars);
+		}
 	}
 }

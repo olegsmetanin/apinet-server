@@ -30,8 +30,12 @@ namespace AGO.Hibernate.Filters
 
 	public class FilteringOptions
 	{
-		private readonly IList<SortInfo> _Sorters = new List<SortInfo>();
-		public IList<SortInfo> Sorters { get { return _Sorters; } }
+		private IList<SortInfo> _Sorters = new List<SortInfo>();
+		public IList<SortInfo> Sorters
+		{
+			get { return _Sorters; } 
+			set { _Sorters = value ?? _Sorters; }
+		}
 
 		public SortInfo Sorter
 		{
@@ -57,8 +61,12 @@ namespace AGO.Hibernate.Filters
 	public class FilteringOptions<TModel> : FilteringOptions
 		where TModel : class, IIdentifiedModel
 	{
-		private readonly IList<SortInfo<TModel>> _GenericSorters = new List<SortInfo<TModel>>();
-		public new IList<SortInfo<TModel>> Sorters { get { return _GenericSorters; } }
+		private IList<SortInfo<TModel>> _GenericSorters = new List<SortInfo<TModel>>();
+		public new IList<SortInfo<TModel>> Sorters
+		{
+			get { return _GenericSorters; } 
+			set { _GenericSorters = value ?? _GenericSorters; }
+		}
 
 		public new SortInfo<TModel> Sorter
 		{

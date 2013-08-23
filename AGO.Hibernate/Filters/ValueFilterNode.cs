@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace AGO.Hibernate.Filters
 {
 	[JsonObject(MemberSerialization.OptIn)]
-	internal class ValueFilterNode : AbstractFilterNode, IValueFilterNode
+	public class ValueFilterNode : AbstractFilterNode, IValueFilterNode
 	{
 		public static IDictionary<ValueFilterOperators, string> OperatorConversionTable = new Dictionary<ValueFilterOperators, string>
 		{

@@ -85,7 +85,6 @@
     <Compile Include="Filters\IValueFilterNode.cs" />
     <Compile Include="Filters\IFilterNode.cs" />
     <Compile Include="Filters\Exceptions.cs" />
-    <Compile Include="Filters\GeneralExceptions.cs" />
     <Compile Include="Filters\IFilteringService.cs" />
     <Compile Include="Filters\FilteringService.cs" />
     <Compile Include="CrudDao.cs" />
@@ -154,6 +153,11 @@
     <Compile Include="Model\Lob\StreamBlob.cs" />
     <Compile Include="Model\Lob\StringClob.cs" />
     <Compile Include="Model\Lob\TextReaderClob.cs" />
+    <Compile Include="Modules\Attributes\JsonEndpointAttribute.cs" />
+    <Compile Include="Modules\IModuleConsumer.cs" />
+    <Compile Include="Modules\IModuleDescriptor.cs" />
+    <Compile Include="Modules\IServiceDescriptor.cs" />
+    <Compile Include="Modules\AttributedServiceDescriptor.cs" />
     <Compile Include="Net4Collections.cs" />
     <Compile Include="Nullables\NullableDateTime.cs" />
     <Compile Include="Nullables\NullableType.cs" />

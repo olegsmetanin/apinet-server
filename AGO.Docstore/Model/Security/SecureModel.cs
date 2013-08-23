@@ -10,15 +10,15 @@ namespace AGO.Docstore.Model.Security
 	{
 		#region Persistent
 
-		[DisplayName("Кто создал"), JsonProperty, NotNull]
+		[DisplayName("Кто создал"), NotNull]
 		public virtual UserModel Creator { get; set; }
 		[ReadOnlyProperty]
 		public virtual Guid? CreatorId { get; set; }
 
-		[DisplayName("Когда последний раз редактировали"), JsonProperty,]
+		[DisplayName("Когда последний раз редактировали"), JsonProperty]
 		public virtual DateTime? LastChangeTime { get; set; }
 
-		[DisplayName("Кто последний раз редактировал"), JsonProperty]
+		[DisplayName("Кто последний раз редактировал")]
 		public virtual UserModel LastChanger { get; set; }
 		[ReadOnlyProperty]
 		public virtual Guid? LastChangerId { get; set; }

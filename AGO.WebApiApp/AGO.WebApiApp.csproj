@@ -130,7 +130,7 @@
     <Compile Include="App_Start\WebApplication.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MetadataController.cs" />
-    <Compile Include="Controllers\ModelsApiController.cs" />
+    <Compile Include="Controllers\ApiController.cs" />
     <Compile Include="Controllers\StaticFilesController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

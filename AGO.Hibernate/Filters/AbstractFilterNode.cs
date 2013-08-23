@@ -2,7 +2,7 @@
 
 namespace AGO.Hibernate.Filters
 {
-	internal abstract class AbstractFilterNode : IFilterNode
+	public abstract class AbstractFilterNode : IFilterNode
 	{
 		[JsonProperty(PropertyName = "path")]
 		public string Path { get; set; }
