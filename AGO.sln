@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3350A3
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGO.Docstore", "AGO.Docstore\AGO.Docstore.csproj", "{3EBC65C9-4131-4F70-BCDC-07849A017CA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGO.Core", "AGO.Core\AGO.Core.csproj", "{3EBC65C9-4131-4F70-BCDC-07849A017CA6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGO.WebApiApp", "AGO.WebApiApp\AGO.WebApiApp.csproj", "{4D2D66F9-2955-4997-9E2E-40EF3BA9FFDF}"
 EndProject

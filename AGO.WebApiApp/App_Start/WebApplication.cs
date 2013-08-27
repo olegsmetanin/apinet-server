@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Web.Configuration;
 using System.Web.Mvc;
 using System.Web.Routing;
-using AGO.Docstore.Json;
+using AGO.Core.Json;
 using AGO.Hibernate;
 using AGO.Hibernate.Application;
 using AGO.Hibernate.Config;

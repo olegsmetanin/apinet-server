@@ -153,9 +153,9 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AGO.Docstore\AGO.Docstore.csproj">
+    <ProjectReference Include="..\AGO.Core\AGO.Core.csproj">
       <Project>{3EBC65C9-4131-4F70-BCDC-07849A017CA6}</Project>
-      <Name>AGO.Docstore</Name>
+      <Name>AGO.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\AGO.Hibernate\AGO.Hibernate.csproj">
       <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
