@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using AGO.Hibernate.Filters;
+using AGO.Core.Filters;
 
 namespace AGO.Core.Json
 {

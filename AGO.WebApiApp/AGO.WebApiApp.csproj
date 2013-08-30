@@ -129,10 +129,8 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApplication.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\MetadataController.cs" />
     <Compile Include="Controllers\ApiController.cs" />
     <Compile Include="Controllers\StaticFilesController.cs" />
-    <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -154,12 +152,20 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AGO.Core\AGO.Core.csproj">
-      <Project>{3EBC65C9-4131-4F70-BCDC-07849A017CA6}</Project>
+      <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
       <Name>AGO.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AGO.Hibernate\AGO.Hibernate.csproj">
-      <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
-      <Name>AGO.Hibernate</Name>
+    <ProjectReference Include="..\AGO.DocManagement\AGO.DocManagement.csproj">
+      <Project>{6DF09283-2613-4291-B9EE-9999175CBDEF}</Project>
+      <Name>AGO.DocManagement</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AGO.Home\AGO.Home.csproj">
+      <Project>{A36378E2-910F-48E2-A146-51D00F3C39A9}</Project>
+      <Name>AGO.Home</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AGO.System\AGO.System.csproj">
+      <Project>{B72AAE6E-CD22-4255-8022-A03588670DE9}</Project>
+      <Name>AGO.System</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

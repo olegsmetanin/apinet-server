@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Web;
 using System.Web.Mvc;
-using AGO.Hibernate;
+using AGO.Core;
 using AGO.WebApiApp.App_Start;
 
 namespace AGO.WebApiApp.Controllers

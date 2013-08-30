@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using AGO.Hibernate.Modules;
+using AGO.Core.Modules;
 using AGO.Core.Controllers;
 
 namespace AGO.Core
@@ -18,9 +18,7 @@ namespace AGO.Core
 		{
 			Services = new List<IServiceDescriptor>
 			{
-				new AttributedServiceDescriptor<DictionaryController>(this),
-				new AttributedServiceDescriptor<DocumentsController>(this),
-				new AttributedServiceDescriptor<ProjectsController>(this)
+				new AttributedServiceDescriptor<DictionaryController>(this)
 			};
 		}
 	}

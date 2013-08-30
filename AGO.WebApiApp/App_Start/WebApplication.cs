@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Web.Configuration;
 using System.Web.Mvc;
 using System.Web.Routing;
 using AGO.Core.Json;
-using AGO.Hibernate;
-using AGO.Hibernate.Application;
-using AGO.Hibernate.Config;
-using AGO.Hibernate.Modules;
+using AGO.Core;
+using AGO.Core.Application;
+using AGO.Core.Config;
+using AGO.Core.Modules;
 using AGO.WebApiApp.App_Start;
 using Common.Logging;
 using SimpleInjector.Integration.Web.Mvc;
@@ -120,13 +121,19 @@ namespace AGO.WebApiApp.App_Start
 			}
 		}
 
+		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
+		{
+			InitializeEnvironment(initializedServices);
+			InitializePersistence(initializedServices);
+		}
+
 		protected override void Initialize()
 		{
 			RegisterCoreRoutes(RouteTable.Routes);
 
 			RegisterModules();
 
-
+			base.Initialize();
 
 			RegisterDefaultRoute(RouteTable.Routes);		
 
@@ -136,8 +143,11 @@ namespace AGO.WebApiApp.App_Start
 		protected override void DoMigrateUp()
 		{
 			base.DoMigrateUp();
-			/*if (_MigrationService != null)
-				_MigrationService.MigrateDown(new Version(1, 0, 0, 0));*/
+			if (_MigrationService == null)
+				return;
+			
+			_MigrationService.MigrateUp(new Version(0, 9, 0, 0));
+			_MigrationService.MigrateUp(new Version(1, 0, 0, 0));
 		}
 	}
 

@@ -2,6 +2,10 @@
 
 namespace AGO.Core.Json
 {
+	public class InvalidModelTypeInJsonException : Exception
+	{
+	}
+	
 	public class JsonRequestException : Exception
 	{
 		public JsonRequestException(Exception innerException)

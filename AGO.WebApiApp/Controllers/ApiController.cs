@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Web;
 using System.Web.Mvc;
-using AGO.Hibernate;
-using AGO.Hibernate.Json;
+using AGO.Core;
+using AGO.Core.Attributes.Controllers;
+using AGO.Core.Json;
+using AGO.System.Controllers;
 using Newtonsoft.Json;
 
 namespace AGO.WebApiApp.Controllers
@@ -23,7 +27,7 @@ namespace AGO.WebApiApp.Controllers
 				var method = RouteData.Values["method"] as MethodInfo;
 				if (method == null)
 					throw new Exception("method is null");
-				
+
 				var jsonService = DependencyResolver.Current.GetService<IJsonService>();
 				JsonReader inputReader = null;
 				JsonWriter outputWriter = null;
@@ -34,15 +38,15 @@ namespace AGO.WebApiApp.Controllers
 				{
 					if (typeof (JsonReader).IsAssignableFrom(parameterInfo.ParameterType))
 					{
-						inputReader = inputReader ?? 
-							jsonService.CreateReader(new StreamReader(HttpContext.Request.InputStream, true));
+						inputReader = inputReader ??
+						              jsonService.CreateReader(new StreamReader(HttpContext.Request.InputStream, true));
 						parameters.Add(inputReader);
 						continue;
 					}
 					if (typeof (JsonWriter).IsAssignableFrom(parameterInfo.ParameterType))
 					{
-						outputWriter = outputWriter ?? 
-							jsonService.CreateWriter(new StringWriter(stringBuilder), true);
+						outputWriter = outputWriter ??
+						               jsonService.CreateWriter(new StringWriter(stringBuilder), true);
 						parameters.Add(outputWriter);
 						continue;
 					}
@@ -57,6 +61,21 @@ namespace AGO.WebApiApp.Controllers
 				if (initializable != null)
 					initializable.Initialize();
 
+				var requireAuthorizationAttribute = method.FirstAttribute<RequireAuthorizationAttribute>(false);
+				if (requireAuthorizationAttribute != null)
+				{
+					var authController = DependencyResolver.Current.GetService<AuthController>();
+					if (authController == null)
+						throw new NotAuthorizedException();
+
+					if(!authController.IsAuthenticated())
+						throw new NotAuthorizedException();
+
+					if (requireAuthorizationAttribute.RequiredRoles.Count > 0 &&
+							!authController.HasAnyRole(requireAuthorizationAttribute.RequiredRoles.ToArray()))
+						throw new AccessForbiddenException();
+				}
+
 				try
 				{
 					method.Invoke(DependencyResolver.Current.GetService(serviceType), parameters.ToArray());
@@ -68,10 +87,26 @@ namespace AGO.WebApiApp.Controllers
 
 				outputWriter.Flush();
 				return Content(stringBuilder.ToString(), "application/json", Encoding.UTF8);
+			}			
+			catch (NotAuthorizedException e)
+			{
+				HttpContext.Response.StatusCode = 401;
+				return Json(new { message = e.Message }, JsonRequestBehavior.AllowGet);
+			}
+			catch (AccessForbiddenException e)
+			{
+				HttpContext.Response.StatusCode = 403;
+				return Json(new { message = e.Message }, JsonRequestBehavior.AllowGet);
+			}
+			catch (HttpException e)
+			{
+				HttpContext.Response.StatusCode = e.GetHttpCode();
+				return Json(new { error = e.InnerException != null ? e.InnerException.Message : e.Message }, JsonRequestBehavior.AllowGet);
 			}
 			catch (Exception e)
 			{
-				return Json(new { result = "error", message = e.Message });
+				HttpContext.Response.StatusCode = 500;
+				return Json(new { message = e.Message }, JsonRequestBehavior.AllowGet);
 			}
 		}
 	}

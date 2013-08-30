@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using AGO.Hibernate;
-using AGO.Hibernate.Filters;
-using AGO.Hibernate.Json;
+using AGO.Core.Filters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -59,6 +57,24 @@ namespace AGO.Core.Json
 		#endregion
 
 		#region Interfaces implementation
+
+		public IJsonRequest ParseRequest(JsonReader reader)
+		{
+			if (reader == null)
+				throw new ArgumentNullException("reader");
+
+			try
+			{
+				var result = new JsonRequest();
+				ParseRequest(reader, result);
+
+				return result;
+			}
+			catch (Exception e)
+			{
+				throw new JsonRequestException(e);
+			}
+		}
 
 		public IJsonModelsRequest ParseModelsRequest(JsonReader reader, int defaultPageSize, int maxPageSize)
 		{

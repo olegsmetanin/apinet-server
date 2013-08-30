@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Linq;
+using AGO.Core.Attributes.Controllers;
 using AGO.Core.Json;
 using AGO.Core.Model.Dictionary;
-using AGO.Core.Model.Dictionary.Documents;
-using AGO.Hibernate;
-using AGO.Hibernate.Filters;
-using AGO.Hibernate.Json;
-using AGO.Hibernate.Modules.Attributes;
+using AGO.Core.Filters;
+using AGO.Core.Modules.Attributes;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Controllers
@@ -20,8 +18,9 @@ namespace AGO.Core.Controllers
 			IFilteringService filteringService,
 			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
-			IFilteringDao filteringDao)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao)
+			IFilteringDao filteringDao,
+			ISessionProvider sessionProvider)
+			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
 		{
 		}
 
@@ -29,7 +28,7 @@ namespace AGO.Core.Controllers
 
 		#region Json endpoints
 
-		[JsonEndpoint]
+		[JsonEndpoint, RequireAuthorization]
 		public void GetCustomPropertyTypes(JsonReader input, JsonWriter output)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
@@ -41,7 +40,7 @@ namespace AGO.Core.Controllers
 			});
 		}
 
-		[JsonEndpoint]
+		[JsonEndpoint, RequireAuthorization]
 		public void GetCustomPropertyType(JsonReader input, JsonWriter output)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
@@ -58,62 +57,11 @@ namespace AGO.Core.Controllers
 				new[] {filter}, OptionsFromRequest(request)).FirstOrDefault());
 		}
 
-		[JsonEndpoint]
-		public void GetDocumentStatuses(JsonReader input, JsonWriter output)
+		[JsonEndpoint, RequireAuthorization]
+		public void CustomPropertyMetadata(JsonReader input, JsonWriter output)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			_JsonService.CreateSerializer().Serialize(output, new
-			{
-				totalRowsCount = _FilteringDao.RowCount<DocumentStatusModel>(request.Filters),
-				rows = _FilteringDao.List<DocumentStatusModel>(request.Filters, OptionsFromRequest(request))
-			});
-		}
-
-		[JsonEndpoint]
-		public void GetDocumentStatus(JsonReader input, JsonWriter output)
-		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<DocumentStatusModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
-		}
-
-		[JsonEndpoint]
-		public void GetDocumentCategories(JsonReader input, JsonWriter output)
-		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			_JsonService.CreateSerializer().Serialize(output, new
-			{
-				totalRowsCount = _FilteringDao.RowCount<DocumentCategoryModel>(request.Filters),
-				rows = _FilteringDao.List<DocumentCategoryModel>(request.Filters, OptionsFromRequest(request))
-			});
-		}
-
-		[JsonEndpoint]
-		public void GetDocumentCategory(JsonReader input, JsonWriter output)
-		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<DocumentCategoryModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+			_JsonService.CreateSerializer().Serialize(
+				output, MetadataForModelAndRelations<CustomPropertyTypeModel>());
 		}
 
 		#endregion
