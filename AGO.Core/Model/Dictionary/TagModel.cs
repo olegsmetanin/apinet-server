@@ -9,7 +9,8 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Dictionary
 {
-	public class CustomPropertyTypeModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
+	[TablePerSubclass("ModelType")]
+	public class TagModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
 	{
 		#region Persistent
 
@@ -22,25 +23,19 @@ namespace AGO.Core.Model.Dictionary
 		[DisplayName("Полное наименование"), JsonProperty, NotLonger(1024)]
 		public virtual string FullName { get; set; }
 
-		[DisplayName("Формат"), JsonProperty, NotLonger(64)]
-		public virtual string Format { get; set; }
-
-		[DisplayName("Тип значения"), JsonProperty, EnumDisplayNames(new[]
-		{
-			"String", "Строка",
-			"Number", "Число",
-			"Date", "Дата"
-		})]
-		public virtual CustomPropertyValueType ValueType { get; set; }
+		[DisplayName("Владелец")]
+		public virtual UserModel Owner { get; set; }
+		[ReadOnlyProperty, MetadataExclude]
+		public virtual Guid? OwnerId { get; set; }
 
 		[DisplayName("Предшественник"), JsonProperty]
-		public virtual CustomPropertyTypeModel Parent { get; set; }
+		public virtual TagModel Parent { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ParentId { get; set; }
 
 		[DisplayName("Последователи"), PersistentCollection]
-		public virtual ISet<CustomPropertyTypeModel> Children { get { return _Children; } set { _Children = value; } }
-		private ISet<CustomPropertyTypeModel> _Children = new HashSet<CustomPropertyTypeModel>();
+		public virtual ISet<TagModel> Children { get { return _Children; } set { _Children = value; } }
+		private ISet<TagModel> _Children = new HashSet<TagModel>();
 
 		#endregion
 

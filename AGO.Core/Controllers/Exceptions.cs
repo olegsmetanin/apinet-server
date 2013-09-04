@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AGO.System.Controllers
+namespace AGO.Core.Controllers
 {
 	public class EmptyLoginException : Exception
 	{

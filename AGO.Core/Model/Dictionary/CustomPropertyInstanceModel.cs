@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Globalization;
 using AGO.Core.Model.Security;
-using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;

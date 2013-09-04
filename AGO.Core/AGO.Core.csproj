@@ -67,7 +67,11 @@
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
+    <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
+    <Compile Include="Controllers\Exceptions.cs" />
+    <Compile Include="Model\Security\SystemRole.cs" />
+    <Compile Include="TestDataPopulationService.cs" />
     <Compile Include="ExpressionExceptions.cs" />
     <Compile Include="ExpressionExtensions.cs" />
     <Compile Include="Filters\FilteringOptions.cs" />
@@ -144,12 +148,13 @@
     <Compile Include="Migration\IMigrationService.cs" />
     <Compile Include="Migration\MigrationService.cs" />
     <Compile Include="Model\AbstractModel.cs" />
+    <Compile Include="Model\Dictionary\TagModel.cs" />
     <Compile Include="Model\Dictionary\CustomPropertyInstanceModel.cs" />
     <Compile Include="Model\Dictionary\CustomPropertyTypeModel.cs" />
     <Compile Include="Model\Dictionary\CustomPropertyValueType.cs" />
     <Compile Include="Model\Dictionary\IDictionaryItemModel.cs" />
     <Compile Include="Model\Dictionary\IHierarchicalDictionaryItemModel.cs" />
-    <Compile Include="Model\Dictionary\OrgStructure\DepartmentModel.cs" />
+    <Compile Include="Model\Dictionary\DepartmentModel.cs" />
     <Compile Include="Model\DocstoreModel.cs" />
     <Compile Include="Model\Example\CommonModel.cs" />
     <Compile Include="Model\Example\ExampleEnum.cs" />
@@ -175,10 +180,8 @@
     <Compile Include="Model\Lob\StreamBlob.cs" />
     <Compile Include="Model\Lob\StringClob.cs" />
     <Compile Include="Model\Lob\TextReaderClob.cs" />
-    <Compile Include="Model\Security\RoleModel.cs" />
     <Compile Include="Model\Security\ISecureModel.cs" />
     <Compile Include="Model\Security\SecureModel.cs" />
-    <Compile Include="Model\Security\UserGroupModel.cs" />
     <Compile Include="Model\Security\UserModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Modules\Attributes\JsonEndpointAttribute.cs" />
@@ -229,6 +232,7 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>

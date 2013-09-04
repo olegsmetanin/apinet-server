@@ -18,7 +18,8 @@ namespace AGO.Core
 		{
 			Services = new List<IServiceDescriptor>
 			{
-				new AttributedServiceDescriptor<DictionaryController>(this)
+				new AttributedServiceDescriptor<DictionaryController>(this),
+				new AttributedServiceDescriptor<AuthController>(this)
 			};
 		}
 	}

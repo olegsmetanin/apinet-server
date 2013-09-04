@@ -1,5 +1,4 @@
 ﻿using AGO.Core.Model.Dictionary;
-using AGO.Core.Model.Dictionary.OrgStructure;
 using AGO.Core.Model.Security;
 using AGO.Core.Migration;
 using FluentMigrator;
@@ -12,10 +11,6 @@ namespace AGO.Core.Migrations
 		public override void Up()
 		{
 			Create.DocstoreModelTable<UserModel>();
-
-			Create.SecureModelTable<UserGroupModel>()
-				.WithValueColumn<UserGroupModel>(m => m.Name)
-				.WithValueColumn<UserGroupModel>(m => m.Description);
 
 			Alter.ModelTable<UserModel>()
 				.AddRefColumn<UserModel>(m => m.Creator)
@@ -32,7 +27,7 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.WhomFIO)
 				.AddValueColumn<UserModel>(m => m.JobName)
 				.AddValueColumn<UserModel>(m => m.WhomJobName)
-				.AddRefColumn<UserModel>(m => m.Group);
+				.AddValueColumn<UserModel>(m => m.SystemRole);
 
 			Create.SecureModelTable<DepartmentModel>()
 				.WithValueColumn<DepartmentModel>(m => m.ProjectCode)
@@ -45,16 +40,6 @@ namespace AGO.Core.Migrations
 					.ForeignKey("FK_UserModelToDepartmentModel_UserId", "UserModel", "Id")
 				.WithColumn("DepartmentId").AsGuid().NotNullable()
 					.ForeignKey("FK_UserModelToDepartmentModel_DepartmentId", "DepartmentModel", "Id");
-
-			Create.DocstoreModelTable<RoleModel>()
-				.WithValueColumn<RoleModel>(m => m.Name)
-				.WithValueColumn<RoleModel>(m => m.Description);
-
-			Create.Table("UserModelToRoleModel")
-				.WithColumn("UserId").AsGuid().NotNullable()
-					.ForeignKey("FK_UserModelToRoleModel_UserId", "UserModel", "Id")
-				.WithColumn("RoleId").AsGuid().NotNullable()
-					.ForeignKey("FK_UserModelToRoleModel_RoleId", "RoleModel", "Id");
 
 			Create.SecureModelTable<CustomPropertyTypeModel>()
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.ProjectCode)
@@ -69,6 +54,13 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<CustomPropertyInstanceModel>(m => m.StringValue)
 				.WithValueColumn<CustomPropertyInstanceModel>(m => m.NumberValue)
 				.WithValueColumn<CustomPropertyInstanceModel>(m => m.DateValue);
+
+			Create.SecureModelTable<TagModel>()
+				.WithValueColumn<TagModel>(m => m.ProjectCode)
+				.WithValueColumn<TagModel>(m => m.Name)
+				.WithValueColumn<TagModel>(m => m.FullName)
+				.WithRefColumn<TagModel>(m => m.Parent)
+				.WithRefColumn<TagModel>(m => m.Owner);
 		}
 
 		public override void Down()

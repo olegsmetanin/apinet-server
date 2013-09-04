@@ -1,25 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using AGO.Core.Controllers;
-using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using Newtonsoft.Json;
 
-namespace AGO.System.Controllers
+namespace AGO.Core.Controllers
 {
-	internal class AuthInfo
-	{
-		public string Login { get; set; }
-
-		public IList<string> Roles { get; set; }
-	}
-
 	public class AuthController : AbstractController
 	{
 		#region Constants
@@ -27,8 +17,6 @@ namespace AGO.System.Controllers
 		public const string LoginName = "email";
 
 		public const string PwdName = "password";
-
-		public const string AdminRoleName = "admin";
 		
 		#endregion
 
@@ -75,59 +63,30 @@ namespace AGO.System.Controllers
 			if (!string.Equals(user.PwdHash, pwdHash))
 				throw new InvalidPwdException();
 
-			UserModel alias = null;
-			var authInfo = new AuthInfo
-			{
-				Login = user.Login,
-				Roles = _SessionProvider.CurrentSession.QueryOver<RoleModel>()
-					.JoinAlias(m => m.Users, () => alias)
-					.Where(() => alias.Id == user.Id)
-					.Select(m => m.Name)
-					.List<string>()
-			};
-			HttpContext.Current.Session["AuthInfo"] = authInfo;
+			HttpContext.Current.Session["CurrentUser"] = user;
 
 			_JsonService.CreateSerializer().Serialize(output, new
 			{
-				user = new
-				{
-					id = user.Id,
-					firstName = user.Name,
-					lastName = user.LastName,
-					email = user.Login,
-					admin = authInfo.Roles.Contains(AdminRoleName)
-				}
+				user = UserToJsonUser(user)
 			});
 		}
 
 		[JsonEndpoint]
 		public void Logout(JsonReader input, JsonWriter output)
 		{
-			HttpContext.Current.Session["AuthInfo"] = null;
+			HttpContext.Current.Session["CurrentUser"] = null;
 		}
 
 		[JsonEndpoint]
 		public void CurrentUser(JsonReader input, JsonWriter output)
 		{
-			var authInfo = HttpContext.Current.Session["AuthInfo"] as AuthInfo;
-			if (authInfo == null)
+			var currentUser = HttpContext.Current.Session["CurrentUser"] as UserModel;
+			if (currentUser == null)
 				throw new NotAuthorizedException();
-
-			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.Login == authInfo.Login).Take(1).List().FirstOrDefault();
-			if (user == null)
-				throw new NoSuchUserException();
 
 			_JsonService.CreateSerializer().Serialize(output, new
 			{
-				user = new
-				{
-					id = user.Id,
-					firstName = user.Name,
-					lastName = user.LastName,
-					email = user.Login,
-					admin = authInfo.Roles.Contains(AdminRoleName)
-				}
+				user = UserToJsonUser(currentUser)
 			});
 		}
 
@@ -135,21 +94,34 @@ namespace AGO.System.Controllers
 
 		#region Public methods
 
-		public bool IsAuthenticated()
+		public bool IsAuthenticated
 		{
-			return (HttpContext.Current.Session["AuthInfo"] as AuthInfo) != null;
+			get { return (HttpContext.Current.Session["CurrentUser"] as UserModel) != null; }
 		}
 
-		public bool HasAnyRole(params string[] roles)
+		public bool IsAdmin
 		{
-			var authInfo = HttpContext.Current.Session["AuthInfo"] as AuthInfo;
-			return authInfo != null && (roles ?? new string[0]).Any(role => authInfo.Roles.Contains(role));
+			get
+			{
+				var currentUser = HttpContext.Current.Session["CurrentUser"] as UserModel;
+				return currentUser != null && currentUser.SystemRole == SystemRole.Administrator;	
+			}
 		}
+		
+		#endregion
 
-		public bool HasAllRoles(params string[] roles)
+		#region Helper methods
+
+		protected object UserToJsonUser(UserModel user)
 		{
-			var authInfo = HttpContext.Current.Session["AuthInfo"] as AuthInfo;
-			return authInfo != null && (roles ?? new string[0]).All(role => authInfo.Roles.Contains(role));
+			return new
+			{
+				id = user.Id,
+				firstName = user.Name,
+				lastName = user.LastName,
+				email = user.Login,
+				admin = user.SystemRole == SystemRole.Administrator
+			};
 		}
 
 		#endregion

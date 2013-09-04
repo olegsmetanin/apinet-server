@@ -14,7 +14,7 @@ namespace AGO.Home.Model.Projects
 	{
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32), NotEmpty]
+		[DisplayName("Код проекта"), JsonProperty, NotLonger(32)]
 		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), NotEmpty, NotLonger(64), JsonProperty]
@@ -32,6 +32,11 @@ namespace AGO.Home.Model.Projects
 		[DisplayName("Путь к проекту"), NotLonger(512), JsonProperty]
 		public virtual string FileSystemPath { get; set; }
 
+		[DisplayName("Тип проекта"), JsonProperty, NotNull]
+		public virtual ProjectTypeModel Type { get; set; }
+		[ReadOnlyProperty, MetadataExclude]
+		public virtual Guid? TypeId { get; set; }
+
 		[DisplayName("Статус проекта"), JsonProperty, NotNull]
 		public virtual ProjectStatusModel Status { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
@@ -44,6 +49,10 @@ namespace AGO.Home.Model.Projects
 		[DisplayName("Участники проекта"), PersistentCollection]
 		public virtual ISet<ProjectParticipantModel> Participants { get { return _Participants; } set { _Participants = value; } }
 		private ISet<ProjectParticipantModel> _Participants = new HashSet<ProjectParticipantModel>();
+
+		[DisplayName("Теги проекта"), PersistentCollection]
+		public virtual ISet<ProjectTagModel> Tags { get { return _Tags; } set { _Tags = value; } }
+		private ISet<ProjectTagModel> _Tags = new HashSet<ProjectTagModel>();
 
 		#endregion
 

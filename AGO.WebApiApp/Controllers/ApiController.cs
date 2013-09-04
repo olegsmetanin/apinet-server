@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using AGO.Core;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.Controllers;
 using AGO.Core.Json;
-using AGO.System.Controllers;
 using Newtonsoft.Json;
 
 namespace AGO.WebApiApp.Controllers
@@ -68,11 +67,10 @@ namespace AGO.WebApiApp.Controllers
 					if (authController == null)
 						throw new NotAuthorizedException();
 
-					if(!authController.IsAuthenticated())
+					if(!authController.IsAuthenticated)
 						throw new NotAuthorizedException();
 
-					if (requireAuthorizationAttribute.RequiredRoles.Count > 0 &&
-							!authController.HasAnyRole(requireAuthorizationAttribute.RequiredRoles.ToArray()))
+					if (requireAuthorizationAttribute.RequireAdmin && !authController.IsAdmin)
 						throw new AccessForbiddenException();
 				}
 

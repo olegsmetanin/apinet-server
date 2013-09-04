@@ -7,13 +7,13 @@ using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using Newtonsoft.Json;
 
-namespace AGO.Core.Model.Dictionary.OrgStructure
+namespace AGO.Core.Model.Dictionary
 {
 	public class DepartmentModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
 	{
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32), NotEmpty]
+		[DisplayName("Код проекта"), JsonProperty, NotLonger(32)]
 		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), JsonProperty, NotLonger(128), NotEmpty]

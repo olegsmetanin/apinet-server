@@ -11,7 +11,7 @@ namespace AGO.DocManagement.Model.Dictionary.Documents
 	{
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32), NotEmpty]
+		[DisplayName("Код проекта"), JsonProperty, NotLonger(32)]
 		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), NotEmpty, NotLonger(64), JsonProperty]

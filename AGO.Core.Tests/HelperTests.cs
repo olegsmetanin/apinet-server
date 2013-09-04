@@ -149,6 +149,10 @@ namespace AGO.Core.Tests
 			InitializePersistence(initializedServices);
 		}
 
+		protected override void DoMigrateUp()
+		{
+		}
+
 		#endregion
 	}
 }
