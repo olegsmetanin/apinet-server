@@ -77,6 +77,7 @@ namespace AGO.WebApiApp.Controllers
 				try
 				{
 					method.Invoke(DependencyResolver.Current.GetService(serviceType), parameters.ToArray());
+					DependencyResolver.Current.GetService<ISessionProvider>().CloseCurrentSession();
 				}
 				catch (TargetInvocationException e)
 				{

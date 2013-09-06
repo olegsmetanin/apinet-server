@@ -59,6 +59,35 @@ namespace AGO.Home.Controllers
 				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
 		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public void GetProjectTypes(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+
+			_JsonService.CreateSerializer().Serialize(output, new
+			{
+				totalRowsCount = _FilteringDao.RowCount<ProjectTypeModel>(request.Filters),
+				rows = _FilteringDao.List<ProjectTypeModel>(request.Filters, OptionsFromRequest(request))
+			});
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void GetProjectType(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
+
+			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
+			filter.AddItem(new ValueFilterNode
+			{
+				Path = "Id",
+				Operator = ValueFilterOperators.Eq,
+				Operand = request.Id.ToStringSafe()
+			});
+
+			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<ProjectTypeModel>(
+				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+		}
+
 		#endregion
 	}
 }

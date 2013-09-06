@@ -80,7 +80,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint]
 		public void CurrentUser(JsonReader input, JsonWriter output)
 		{
-			var currentUser = HttpContext.Current.Session["CurrentUser"] as UserModel;
+			var currentUser = GetCurrentUser();
 			if (currentUser == null)
 				throw new NotAuthorizedException();
 
@@ -96,16 +96,21 @@ namespace AGO.Core.Controllers
 
 		public bool IsAuthenticated
 		{
-			get { return (HttpContext.Current.Session["CurrentUser"] as UserModel) != null; }
+			get { return GetCurrentUser() != null; }
 		}
 
 		public bool IsAdmin
 		{
 			get
 			{
-				var currentUser = HttpContext.Current.Session["CurrentUser"] as UserModel;
+				var currentUser = GetCurrentUser();
 				return currentUser != null && currentUser.SystemRole == SystemRole.Administrator;	
 			}
+		}
+
+		public UserModel GetCurrentUser()
+		{
+			return HttpContext.Current.Session["CurrentUser"] as UserModel;
 		}
 		
 		#endregion

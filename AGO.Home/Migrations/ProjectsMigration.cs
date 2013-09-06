@@ -19,7 +19,9 @@ namespace AGO.Home.Migrations
 			Create.SecureModelTable<ProjectStatusModel>()
 				.WithValueColumn<ProjectStatusModel>(m => m.ProjectCode)
 				.WithValueColumn<ProjectStatusModel>(m => m.Name)
-				.WithValueColumn<ProjectStatusModel>(m => m.Description);
+				.WithValueColumn<ProjectStatusModel>(m => m.Description)
+				.WithValueColumn<ProjectStatusModel>(m => m.IsInitial)
+				.WithValueColumn<ProjectStatusModel>(m => m.IsFinal);
 
 			Create.SecureModelTable<ProjectModel>()
 				.WithValueColumn<ProjectModel>(m => m.ProjectCode)

@@ -24,11 +24,11 @@ namespace AGO.Core.Json
 		{
 			var obj = (JObject)JToken.ReadFrom(reader);
 
-			var modelType = obj.ModelType();
+			var modelType = obj.ModelType() ?? objectType;
 			if (modelType == null)
 				throw new InvalidModelTypeInJsonException();
 
-			var model = (IIdentifiedModel)Activator.CreateInstance(modelType);
+			var model = (IIdentifiedModel) Activator.CreateInstance(modelType);
 			foreach (var property in obj.Properties().Where(
 					p => !ModelTypePropertyName.Equals(p.Name, StringComparison.InvariantCulture)))
 				ReadProperty(model, modelType, property, serializer);
@@ -108,7 +108,7 @@ namespace AGO.Core.Json
 				var attributes = propertyInfo.GetCustomAttributes(typeof(JsonPropertyAttribute), true);
 				if (attributes.Length == 0)
 					continue;
-				var attribute = (JsonPropertyAttribute)attributes[0];
+				var attribute = (JsonPropertyAttribute) attributes[0];
 
 				var propertyName = attribute.PropertyName.IsNullOrWhiteSpace()
 					? propertyInfo.Name
@@ -123,6 +123,18 @@ namespace AGO.Core.Json
 
 			if (modelProperty == null)
 				return;
+
+			if (typeof(IIdentifiedModel).IsAssignableFrom(modelProperty.PropertyType) && property.Value is JValue)
+			{
+				var modelIdProperty = model.GetType().GetProperty(
+					modelProperty.Name + "Id", BindingFlags.Public | BindingFlags.Instance);
+				if (modelIdProperty != null)
+				{
+					modelIdProperty.SetValue(model, 
+						property.Value.TokenValue().ConvertSafe(modelIdProperty.PropertyType), null);
+					return;
+				}			
+			}
 
 			var tokenReader = new JTokenReader(property.Value) {CloseInput = false};
 			var value = serializer.Deserialize(tokenReader, modelProperty.PropertyType);

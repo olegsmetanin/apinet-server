@@ -1,35 +1,51 @@
 ﻿using System;
-using System.Web;
-using System.Web.Configuration;
-using System.Web.Http;
-using System.Web.Routing;
-using AGO.WebApiApp.App_Start;
 
 namespace AGO.WebApiApp
 {
-	public enum DevMode
+	public class Global : global::System.Web.HttpApplication
 	{
-		Dev,
-		Prod
-	}
 
-	public class WebApiApplication : HttpApplication
-	{
-		public static DevMode DevMode { get; private set; }
-
-		protected void Application_Start()
+		protected void Application_Start(object sender, EventArgs e)
 		{
-			var config = WebConfigurationManager.OpenWebConfiguration("~/Web.config");
-			var setting = config.AppSettings.Settings["DevMode"];
-			if (setting != null)
-			{
-				DevMode result;
-				if (Enum.TryParse(setting.Value, out result))
-					DevMode = result;
-			}
 
-			WebApiConfig.Register(GlobalConfiguration.Configuration);
-			RouteConfig.RegisterRoutes(RouteTable.Routes);
+		}
+
+		protected void Session_Start(object sender, EventArgs e)
+		{
+			#if DEBUG
+
+			/*HttpContext.Current.Session["CurrentUser"] = 
+				DependencyResolver.Current.GetService<ISessionProvider>().CurrentSession
+				.QueryOver<UserModel>()
+				.Where(m => m.Login == "admin@agosystems.com")
+				.Take(1).List().FirstOrDefault();*/
+
+			#endif
+		}
+
+		protected void Application_BeginRequest(object sender, EventArgs e)
+		{
+
+		}
+
+		protected void Application_AuthenticateRequest(object sender, EventArgs e)
+		{
+
+		}
+
+		protected void Application_Error(object sender, EventArgs e)
+		{
+
+		}
+
+		protected void Session_End(object sender, EventArgs e)
+		{
+
+		}
+
+		protected void Application_End(object sender, EventArgs e)
+		{
+
 		}
 	}
 }

@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Controllers\ProjectsController.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
+    <Compile Include="Exceptions.cs" />
     <Compile Include="Migrations\ProjectsMigration.cs" />
     <Compile Include="Migrations\VersionTableMetadata.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />

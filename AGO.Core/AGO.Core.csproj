@@ -70,6 +70,7 @@
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="Controllers\Exceptions.cs" />
+    <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
     <Compile Include="TestDataPopulationService.cs" />
     <Compile Include="ExpressionExceptions.cs" />

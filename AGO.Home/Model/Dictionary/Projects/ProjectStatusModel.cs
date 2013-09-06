@@ -20,6 +20,12 @@ namespace AGO.Home.Model.Dictionary.Projects
 		[DisplayName("Описание"), NotLonger(512), JsonProperty]
 		public virtual new string Description { get; set; }
 
+		[DisplayName("Начальный"), JsonProperty]
+		public virtual bool IsInitial { get; set; }
+
+		[DisplayName("Конечный"), JsonProperty]
+		public virtual bool IsFinal { get; set; }
+
 		#endregion
 
 		#region Non-persistent

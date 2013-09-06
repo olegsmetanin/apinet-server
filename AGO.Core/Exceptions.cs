@@ -21,4 +21,28 @@ namespace AGO.Core
 		{
 		}
 	}
+
+	public class RequiredFieldException : Exception
+	{
+		public RequiredFieldException()
+			: base("Required field")
+		{
+		}
+	}
+
+	public class UniqueFieldException : Exception
+	{
+		public UniqueFieldException()
+			: base("Must be unique")
+		{
+		}
+	}
+
+	public class MalformedRequestException : Exception
+	{
+		public MalformedRequestException()
+			: base("Malformed request")
+		{
+		}
+	}
 }

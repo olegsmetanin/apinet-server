@@ -68,15 +68,26 @@ namespace AGO.Home
 			};
 			CurrentSession.Save(docStoreType);
 
-			var inWorkStatus = new ProjectStatusModel { Creator = admin, Name = "В работе" };
+			var inWorkStatus = new ProjectStatusModel
+			{
+				Creator = admin, 
+				Name = "В работе", 
+				IsInitial = true
+			};
 			CurrentSession.Save(inWorkStatus);
 
-			var closedStatus = new ProjectStatusModel { Creator = admin, Name = "Закрыт" };
+			var closedStatus = new ProjectStatusModel
+			{
+				Creator = admin, 
+				Name = "Закрыт",
+				IsFinal = true
+			};
 			CurrentSession.Save(closedStatus);
 
 			var project1 = new ProjectModel
 			{
 				Creator = admin,
+				ProjectCode = "Docs1",
 				Name = "Проект хранилища документов 1",
 				Description = "Описание проекта 1",
 				Type = docStoreType,
@@ -123,6 +134,7 @@ namespace AGO.Home
 			var project2 = new ProjectModel
 			{
 				Creator = admin,
+				ProjectCode = "Docs2",
 				Name = "Проект хранилища документов 2",
 				Description = "Описание проекта 2",
 				Type = docStoreType,

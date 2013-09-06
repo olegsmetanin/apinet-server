@@ -1,1 +1,1 @@
-﻿<%@ Application Inherits="System.Web.HttpApplication" Language="C#" %>
+﻿<%@ Application Codebehind="Global.asax.cs" Inherits="AGO.WebApiApp.Global" Language="C#" %>
