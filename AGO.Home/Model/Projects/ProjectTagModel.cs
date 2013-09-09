@@ -12,7 +12,7 @@ namespace AGO.Home.Model.Projects
 	{
 		#region Persistent
 
-		[DisplayName("Документ"), JsonProperty, NotNull]
+		[DisplayName("Проект"), JsonProperty, NotNull]
 		public virtual ProjectModel Project { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ProjectId { get; set; }

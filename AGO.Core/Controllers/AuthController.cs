@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Model.Security;
@@ -77,16 +78,12 @@ namespace AGO.Core.Controllers
 			HttpContext.Current.Session["CurrentUser"] = null;
 		}
 
-		[JsonEndpoint]
+		[JsonEndpoint, RequireAuthorization]
 		public void CurrentUser(JsonReader input, JsonWriter output)
 		{
-			var currentUser = GetCurrentUser();
-			if (currentUser == null)
-				throw new NotAuthorizedException();
-
 			_JsonService.CreateSerializer().Serialize(output, new
 			{
-				user = UserToJsonUser(currentUser)
+				user = UserToJsonUser(GetCurrentUser())
 			});
 		}
 
