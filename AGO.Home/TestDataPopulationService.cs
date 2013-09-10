@@ -117,19 +117,33 @@ namespace AGO.Home
 				Creator = admin,
 				Name = "Общий тег",
 				FullName = "Общий тег",
-				Project = project1
 			};
 			CurrentSession.Save(commonTag);
+			
+			var commonTagLink = new ProjectToTagModel
+			{
+				Creator = admin,
+				Project = project1,
+				Tag = commonTag
+			};
+			CurrentSession.Save(commonTagLink);
 
 			var personalTag = new ProjectTagModel
 			{
 				Creator = admin,
 				Name = "Персональный тег",
 				FullName = "Персональный тег",
-				Owner = user1,
-				Project = project1
+				Owner = admin
 			};
 			CurrentSession.Save(personalTag);
+
+			var personalTagLink = new ProjectToTagModel
+			{
+				Creator = admin,
+				Project = project1,
+				Tag = personalTag
+			};
+			CurrentSession.Save(personalTagLink);
 
 			var project2 = new ProjectModel
 			{

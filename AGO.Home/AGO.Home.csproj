@@ -63,7 +63,8 @@
     <Compile Include="Migrations\VersionTableMetadata.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectStatusModel.cs" />
-    <Compile Include="Model\Projects\ProjectTagModel.cs" />
+    <Compile Include="Model\Projects\ProjectToTagModel.cs" />
+    <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Projects\ProjectParticipantModel.cs" />
     <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
     <Compile Include="Model\Projects\ProjectModel.cs" />

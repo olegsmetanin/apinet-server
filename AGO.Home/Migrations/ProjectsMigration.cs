@@ -45,8 +45,9 @@ namespace AGO.Home.Migrations
 				.WithRefColumn<ProjectParticipantModel>(m => m.Project)
 				.WithRefColumn<ProjectParticipantModel>(m => m.User);
 
-			Alter.ModelTable<ProjectTagModel>()
-				 .AddRefColumn<ProjectTagModel>(m => m.Project);
+			Create.SecureModelTable<ProjectToTagModel>()
+				.WithRefColumn<ProjectToTagModel>(m => m.Project)
+				.WithRefColumn<ProjectToTagModel>(m => m.Tag);
 
 		}
 

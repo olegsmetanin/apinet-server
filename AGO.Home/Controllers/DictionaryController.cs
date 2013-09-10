@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
+using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AGO.Home.Controllers
 {
@@ -23,6 +28,8 @@ namespace AGO.Home.Controllers
 		#region Constants
 
 		public const string TagsRequestModeName = "mode";
+
+		public const string ModelName = "model";
 
 		#endregion
 
@@ -85,6 +92,69 @@ namespace AGO.Home.Controllers
 				output, MetadataForModelAndRelations<ProjectStatusModel>());
 		}
 
+		[JsonEndpoint, RequireAuthorization(true)]
+		public void EditProjectStatus(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseRequest(input);
+			var validationResult = new ValidationResult();
+
+			try
+			{
+				var modelProperty = request.Body.Property(ModelName);
+				if (modelProperty == null)
+					throw new MalformedRequestException();
+
+				var requestModel = _JsonService.CreateSerializer().Deserialize<ProjectStatusModel>(
+					new JTokenReader(modelProperty.Value));
+				if (requestModel == null)
+					throw new MalformedRequestException();
+
+				var model = default(Guid).Equals(requestModel.Id)
+					? new ProjectStatusModel { Creator = _AuthController.GetCurrentUser() }
+					: _CrudDao.Get<ProjectStatusModel>(requestModel.Id, true);
+
+				var name = requestModel.Name.TrimSafe();
+				if (name.IsNullOrEmpty())
+					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
+				if (_SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
+						.Where(m => m.Name == name && m.Id != requestModel.Id).RowCount() > 0)
+					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
+
+				if (!validationResult.Success)
+					return;
+
+				model.Name = name;
+				model.Description = requestModel.Description.TrimSafe();
+				_CrudDao.Store(model);
+			}
+			catch (Exception e)
+			{
+				validationResult.GeneralError = e.Message;
+			}
+			finally
+			{
+				_JsonService.CreateSerializer().Serialize(output, validationResult);
+			}
+		}
+
+		[JsonEndpoint, RequireAuthorization(true)]
+		public void DeleteProjectStatus(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
+
+			var model = _CrudDao.Get<ProjectStatusModel>(request.Id, true);
+			
+			if (_SessionProvider.CurrentSession.QueryOver<ProjectModel>()
+					.Where(m => m.Status == model).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			if (_SessionProvider.CurrentSession.QueryOver<ProjectStatusHistoryModel>()
+					.Where(m => m.Status == model).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			_CrudDao.Delete(model);
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public void GetProjectTags(JsonReader input, JsonWriter output)
 		{
@@ -144,6 +214,100 @@ namespace AGO.Home.Controllers
 		{
 			_JsonService.CreateSerializer().Serialize(
 				output, MetadataForModelAndRelations<ProjectTagModel>());
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void EditProjectTag(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseRequest(input);
+			var validationResult = new ValidationResult();
+
+			try
+			{
+				var modelProperty = request.Body.Property(ModelName);
+				if (modelProperty == null)
+					throw new MalformedRequestException();
+
+				var requestModel = _JsonService.CreateSerializer().Deserialize<ProjectTagModel>(
+					new JTokenReader(modelProperty.Value));
+				if (requestModel == null)
+					throw new MalformedRequestException();
+
+				var modeProperty = request.Body.Property(TagsRequestModeName);
+				var mode = (modeProperty != null ? modeProperty.TokenValue() : string.Empty)
+					.ParseEnumSafe(TagsRequestMode.Personal);
+
+				var currentUser = _AuthController.GetCurrentUser();				
+				var model = default(Guid).Equals(requestModel.Id) 
+					? new ProjectTagModel
+						{
+							Creator = currentUser,
+							Owner = mode == TagsRequestMode.Personal ? currentUser : null
+						}	
+					: _CrudDao.Get<ProjectTagModel>(requestModel.Id, true);
+
+				if (model.Owner != null && !currentUser.Equals(model.Owner) && currentUser.SystemRole != SystemRole.Administrator)
+					throw new AccessForbiddenException();
+
+				var name = requestModel.Name.TrimSafe();
+				if (name.IsNullOrEmpty())
+					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
+				if (_SessionProvider.CurrentSession.QueryOver<ProjectTagModel>().Where(
+						m => m.Name == name && m.Owner == requestModel.Owner && m.Id != requestModel.Id).RowCount() > 0)
+					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
+
+				if (!validationResult.Success)
+					return;
+
+				model.Name = name;
+
+				var parentsStack = new Stack<TagModel>();
+
+				var current = model as TagModel;
+				while (current != null)
+				{
+					parentsStack.Push(current);
+					current = current.Parent;
+				}
+
+				var fullName = new StringBuilder();
+				while (parentsStack.Count > 0)
+				{
+					current = parentsStack.Pop();
+					if (fullName.Length > 0)
+						fullName.Append(" / ");
+					fullName.Append(current.Name);
+				}
+				model.FullName = fullName.ToString();
+
+				_CrudDao.Store(model);
+			}
+			catch (Exception e)
+			{
+				validationResult.GeneralError = e.Message;
+			}
+			finally
+			{
+				_JsonService.CreateSerializer().Serialize(output, validationResult);
+			}
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void DeleteProjectTag(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
+
+			var model = _CrudDao.Get<ProjectTagModel>(request.Id, true);
+
+			var currentUser = _AuthController.GetCurrentUser();
+			if (model.Owner != null && !currentUser.Equals(model.Owner) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			if (_SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+					.Where(m => m.Tag == model).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			_CrudDao.Delete(model);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

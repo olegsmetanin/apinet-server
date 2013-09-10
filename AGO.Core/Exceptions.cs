@@ -2,6 +2,14 @@
 
 namespace AGO.Core
 {
+	public class CannotDeleteReferencedItemException : Exception
+	{
+		public CannotDeleteReferencedItemException()
+			: base("Cannot delete item, while other items reference it")
+		{
+		}
+	}
+
 	public class ServiceNotInitializedException : Exception
 	{
 	}
