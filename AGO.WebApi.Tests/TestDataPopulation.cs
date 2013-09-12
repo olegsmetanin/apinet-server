@@ -36,9 +36,6 @@ namespace AGO.WebApi.Tests
 				( NAME = N''{0}_log'', FILENAME = N''' + @Path + '{0}_log.ldf'', SIZE = 1024KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)')
 				GO", databaseName));
 
-			_MigrationService.MigrateUp(new Version(0, 9, 0, 0));
-			_MigrationService.MigrateUp(new Version(1, 0, 0, 0));
-
 			DoPopulateDatabase();
 		}
 
@@ -51,6 +48,9 @@ namespace AGO.WebApi.Tests
 
 		protected void DoPopulateDatabase()
 		{
+			_MigrationService.MigrateUp(new Version(0, 9, 0, 0));
+			_MigrationService.MigrateUp(new Version(1, 0, 0, 0));
+
 			_Container.GetInstance<TestDataPopulationService>().PopulateCore();
 			_Container.GetInstance<Home.TestDataPopulationService>().PopulateHome();
 

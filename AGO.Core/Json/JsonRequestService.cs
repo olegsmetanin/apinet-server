@@ -122,20 +122,20 @@ namespace AGO.Core.Json
 					}
 				}
 
-				var page = 0;
+				result.Page = 0;
 				var pageProperty = result.Body.Property(PageName);
 				if (pageProperty != null)
-					page = pageProperty.TokenValue().ConvertSafe<int>();
-				if (page < 0)
+					result.Page = pageProperty.TokenValue().ConvertSafe<int>();
+				if (result.Page < 0)
 					result.Page = 0;
 
-				var pageSize = defaultPageSize;
+				result.PageSize = defaultPageSize;
 				var pageSizeProperty = result.Body.Property(PageSizeName);
 				if (pageSizeProperty != null)
-					pageSize = pageSizeProperty.TokenValue().ConvertSafe<int>();
-				if (pageSize <= 0)
-					pageSize = defaultPageSize;
-				if (pageSize > maxPageSize)
+					result.PageSize = pageSizeProperty.TokenValue().ConvertSafe<int>();
+				if (result.PageSize <= 0)
+					result.PageSize = defaultPageSize;
+				if (result.PageSize > maxPageSize)
 					result.PageSize = maxPageSize;
 
 				return result;
@@ -287,6 +287,9 @@ namespace AGO.Core.Json
 				var arrayValue = value as JArray;
 				var valValue = value as JValue;
 				if (path == null || path.IsNullOrEmpty() || op == null || (arrayValue == null && valValue == null))
+					continue;
+
+				if (arrayValue != null && arrayValue.Count == 0)
 					continue;
 
 				var parent = result as IModelFilterNode;

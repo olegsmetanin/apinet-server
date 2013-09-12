@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using AGO.Core.Controllers;
 using AGO.Core.Modules;
+using AGO.System.Controllers;
 
 namespace AGO.System
 {
@@ -18,6 +18,7 @@ namespace AGO.System
 		{
 			Services = new List<IServiceDescriptor>
 			{
+				new AttributedServiceDescriptor<UsersController>(this),
 			};
 		}
 	}

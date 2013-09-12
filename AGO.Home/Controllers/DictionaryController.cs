@@ -12,6 +12,7 @@ using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
+using NHibernate.Criterion;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -55,6 +56,49 @@ namespace AGO.Home.Controllers
 		#endregion
 
 		#region Json endpoints
+
+		[JsonEndpoint, RequireAuthorization]
+		public void LookupProjectStatuses(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+
+			var termProperty = request.Body.Property("term");
+			var term = termProperty != null ? termProperty.TokenValue() : null;
+			var options = OptionsFromRequest(request);
+
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>();
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			var result = new List<object>();
+
+			foreach (var model in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List())
+				result.Add(new {id = model.Id, text = model.Name});
+
+			_JsonService.CreateSerializer().Serialize(output, new {rows = result});
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void LookupProjectStatusDescriptions(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+
+			var termProperty = request.Body.Property("term");
+			var term = termProperty != null ? termProperty.TokenValue() : null;
+			var options = OptionsFromRequest(request);
+
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
+				.Select(Projections.Distinct(Projections.Property("Description")));
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Description).IsLike(term, MatchMode.Anywhere);
+
+			var result = new List<object>();
+
+			foreach (var str in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List<string>())
+				result.Add(new { id = str, text = str });
+
+			_JsonService.CreateSerializer().Serialize(output, new { rows = result });
+		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public void GetProjectStatuses(JsonReader input, JsonWriter output)
@@ -207,6 +251,27 @@ namespace AGO.Home.Controllers
 
 			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<ProjectTagModel>(
 				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void LookupProjectTags(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+
+			var termProperty = request.Body.Property("term");
+			var term = termProperty != null ? termProperty.TokenValue() : null;
+			var options = OptionsFromRequest(request);
+
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>();
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			var result = new List<object>();
+
+			foreach (var model in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List())
+				result.Add(new { id = model.Id, text = model.Name });
+
+			_JsonService.CreateSerializer().Serialize(output, new { rows = result });
 		}
 
 		[JsonEndpoint, RequireAuthorization]

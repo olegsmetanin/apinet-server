@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
@@ -8,16 +9,25 @@ using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
+using NHibernate.Criterion;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace AGO.Home.Controllers
 {
+	public enum ProjectsRequestMode
+	{
+		All,
+		Participated
+	}
+
 	public class ProjectsController : AbstractController
 	{
 		#region Constants
 
 		public const string NewProjectModelName = "project";
+
+		public const string ProjectsRequestModeName = "mode";
 
 		#endregion
 
@@ -129,11 +139,49 @@ namespace AGO.Home.Controllers
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
+			var modeProperty = request.Body.Property(ProjectsRequestModeName);
+			var mode = (modeProperty != null ? modeProperty.TokenValue() : string.Empty)
+				.ParseEnumSafe(ProjectsRequestMode.All);
+	
+			if (mode == ProjectsRequestMode.Participated)
+			{
+				var modeFilter = new ModelFilterNode { Path = "Participants" };
+				modeFilter.AddItem(new ValueFilterNode
+				{
+					Path = "User",
+					Operator = ValueFilterOperators.Eq,
+					Operand = _AuthController.GetCurrentUser().Id.ToString()
+				});
+				request.Filters.Add(modeFilter);
+			}
+
 			_JsonService.CreateSerializer().Serialize(output, new
 			{
 				totalRowsCount = _FilteringDao.RowCount<ProjectModel>(request.Filters),
 				rows = _FilteringDao.List<ProjectModel>(request.Filters, OptionsFromRequest(request))
 			});
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void LookupProjectNames(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+
+			var termProperty = request.Body.Property("term");
+			var term = termProperty != null ? termProperty.TokenValue() : null;
+			var options = OptionsFromRequest(request);
+
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
+				.Select(Projections.Distinct(Projections.Property("Name")));
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			var result = new List<object>();
+
+			foreach (var str in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List<string>())
+				result.Add(new { id = str, text = str });
+
+			_JsonService.CreateSerializer().Serialize(output, new { rows = result });
 		}
 
 		[JsonEndpoint, RequireAuthorization]

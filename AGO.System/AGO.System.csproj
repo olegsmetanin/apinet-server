@@ -56,6 +56,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\UsersController.cs" />
+    <Compile Include="Exceptions.cs" />
+    <Compile Include="Migrations\UserFiltersMigration.cs" />
+    <Compile Include="Migrations\VersionTableMetadata.cs" />
+    <Compile Include="Model\UserFilterModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

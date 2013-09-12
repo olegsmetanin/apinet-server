@@ -51,8 +51,8 @@ namespace AGO.Home.Model.Projects
 		private ISet<ProjectParticipantModel> _Participants = new HashSet<ProjectParticipantModel>();
 
 		[DisplayName("Теги проекта"), PersistentCollection(CascadeType = CascadeType.Delete)]
-		public virtual ISet<ProjectTagModel> Tags { get { return _Tags; } set { _Tags = value; } }
-		private ISet<ProjectTagModel> _Tags = new HashSet<ProjectTagModel>();
+		public virtual ISet<ProjectToTagModel> Tags { get { return _Tags; } set { _Tags = value; } }
+		private ISet<ProjectToTagModel> _Tags = new HashSet<ProjectToTagModel>();
 
 		#endregion
 
