@@ -19,7 +19,9 @@ namespace AGO.Home
 			Services = new List<IServiceDescriptor>
 			{
 				new AttributedServiceDescriptor<DictionaryController>(this),
-				new AttributedServiceDescriptor<ProjectsController>(this)
+				new AttributedServiceDescriptor<ProjectsController>(this),
+				new AttributedServiceDescriptor<ConfigController>(this),
+				new AttributedServiceDescriptor<UsersController>(this)
 			};
 		}
 	}

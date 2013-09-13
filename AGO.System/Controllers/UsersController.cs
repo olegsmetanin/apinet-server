@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
@@ -8,7 +7,6 @@ using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using AGO.System.Model;
-using NHibernate.Criterion;
 using Newtonsoft.Json;
 
 namespace AGO.System.Controllers
@@ -147,7 +145,7 @@ namespace AGO.System.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void LookupFilters(JsonReader input, JsonWriter output)
+		public void GetFilterNames(JsonReader input, JsonWriter output)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 
@@ -156,24 +154,14 @@ namespace AGO.System.Controllers
 			if (filterGroup.IsNullOrEmpty())
 				throw new MalformedRequestException();
 
-			var termProperty = request.Body.Property("term");
-			var term = termProperty != null ? termProperty.TokenValue() : null;
-			
 			var currentUser = _AuthController.GetCurrentUser();
 
 			var query = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 			    .Where(m => m.GroupName == filterGroup && m.User == currentUser)
-				.OrderBy(m => m.Name).Asc;
+				.OrderBy(m => m.Name).Asc
+				.Select(m => m.Name);
 
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			var result = new List<object>();
-			foreach (var filter in query.List())
-				result.Add(new {id = filter.Name, text = filter.Name});
-
-
-			_JsonService.CreateSerializer().Serialize(output, new {rows = result});
+			_JsonService.CreateSerializer().Serialize(output, new {rows = query.List<string>() });
 		}
 
 		#endregion
