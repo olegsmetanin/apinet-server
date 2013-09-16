@@ -1,11 +1,10 @@
 ﻿using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Core.Migration;
-using FluentMigrator;
 
 namespace AGO.Core.Migrations
 {
-	[Migration(9000)]
+	[MigrationVersion(2013, 09, 01, 01)]
 	public class CoreMigration : FluentMigrator.Migration
 	{
 		public override void Up()

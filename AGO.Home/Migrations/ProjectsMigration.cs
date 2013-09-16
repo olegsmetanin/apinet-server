@@ -5,7 +5,7 @@ using FluentMigrator;
 
 namespace AGO.Home.Migrations
 {
-	[Migration(10000)]
+	[MigrationVersion(2013, 09, 05, 01)]
 	public class ProjectsMigration : Migration
 	{
 		public override void Up()

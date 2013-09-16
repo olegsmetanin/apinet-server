@@ -32,11 +32,13 @@ namespace AGO.Core.Migration
 
 		#region Creation
 
-		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root, string tableName)
+		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root, string tableName, string schema = null)
 		{
 			var type = typeof(TModel);
 
-			var table = root.Table(tableName) as ICreateTableWithColumnSyntax;
+            var table = root.Table(tableName) as ICreateTableWithColumnSyntax;
+            if (!string.IsNullOrEmpty(schema))
+                table = ((ICreateTableWithColumnOrSchemaSyntax) table).InSchema(schema);
 
 			var idProperty = type.GetProperty("Id");
 			if (idProperty != null)
@@ -76,19 +78,19 @@ namespace AGO.Core.Migration
 			return table;
 		}
 
-		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root)
+        public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root)
 		{
 			return root.ModelTable<TModel>(TableName<TModel>());
 		}
 
 		public static ICreateTableColumnAsTypeSyntax WithColumn<TModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression)
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression)
 		{
 			return self.WithColumn(ColumnName(expression));
 		}
 
-		public static ICreateTableColumnOptionOrWithColumnSyntax WithValueColumn<TModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression)
+	    public static ICreateTableColumnOptionOrWithColumnSyntax WithValueColumn<TModel>(
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression)
 		{
 			var propertyInfo = expression.PropertyInfoFromExpression();
 			if (propertyInfo == null)
@@ -142,7 +144,7 @@ namespace AGO.Core.Migration
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithBinaryColumn<TModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, Blob>> expression)
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, Blob>> expression)
 		{
 			var length = Int32.MaxValue;
 			var propertyInfo = expression.PropertyInfoFromExpression();
@@ -155,7 +157,7 @@ namespace AGO.Core.Migration
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithTypeColumn<TModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, Type>> expression)
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, Type>> expression)
 		{
 			var propertyInfo = expression.PropertyInfoFromExpression();
 			if (propertyInfo == null)
@@ -164,13 +166,13 @@ namespace AGO.Core.Migration
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithRefColumn<TModel, TForeignModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, string foreignTable = null)
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, string foreignSchema = null, string foreignTable = null)
 		{
-			return self.WithRefColumn(expression, true, typeof(TForeignModel));
+			return self.WithRefColumn(expression, true, foreignSchema, typeof(TForeignModel));
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithRefColumn<TModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, bool isForeignKey = true, Type foreignType = null)
+			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, bool isForeignKey = true, string foreignSchema = null, Type foreignType = null)
 		{
 			var columnName = ColumnName(expression);
 			var propertyInfo = expression.PropertyInfoFromExpression();
@@ -195,8 +197,11 @@ namespace AGO.Core.Migration
 				throw new Exception(string.Format("Unexpected ref property type in model type \"{0}\"", propertyInfo.PropertyType));
 			if (isForeignKey)
 			{
-				result.ForeignKey("FK_" + TableName<TModel>() + "_" + ColumnName(expression),
-					TableName(foreignType ?? propertyInfo.PropertyType), "Id");
+			    var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
+                if (string.IsNullOrWhiteSpace(foreignSchema))
+                    result.ForeignKey(fkName, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
+                else
+                    result.ForeignKey(fkName, foreignSchema, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
 			}
 			return result.ColumnOptions<TModel>(propertyInfo);
 		}
@@ -446,38 +451,38 @@ namespace AGO.Core.Migration
 
 		#region Docstore
 
-		public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(
-			this ICreateExpressionRoot root)
+        public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(
+			this ICreateExpressionRoot root, string schema = null)
 			where TModel : IDocstoreModel
 		{
-			return root.DocstoreModelTable<TModel>(TableName<TModel>());
+			return root.DocstoreModelTable<TModel>(TableName<TModel>(), schema);
 		}
 
-		public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(
+        public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(
 			this ICreateExpressionRoot root,
-			string tableName)
+			string tableName, string schema)
 			where TModel : IDocstoreModel
-		{
-			return root.ModelTable<TModel>(tableName)
+        {
+			return root.ModelTable<TModel>(tableName, schema)
 				.WithValueColumn<TModel>(m => m.CreationTime);
-		}
+        }
 
-		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(
-			this ICreateExpressionRoot root)
+        public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(
+			this ICreateExpressionRoot root, string schema = null)
 			where TModel : ISecureModel
 		{
-			return root.SecureModelTable<TModel>(TableName<TModel>());
+			return root.SecureModelTable<TModel>(TableName<TModel>(), schema);
 		}
 
-		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(
+        public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(
 			this ICreateExpressionRoot root,
-			string tableName)
+			string tableName, string schema)
 			where TModel : ISecureModel
 		{
-			return root.DocstoreModelTable<TModel>(tableName)
+			return root.DocstoreModelTable<TModel>(tableName, schema)
 				.WithRefColumn<TModel>(m => m.Creator)
 				.WithValueColumn<TModel>(m => m.LastChangeTime)
-				.WithRefColumn<TModel>(m => m.LastChanger);
+                .WithRefColumn<TModel>(m => m.LastChanger);
 		}
 
 		#endregion

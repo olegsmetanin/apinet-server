@@ -79,7 +79,8 @@ namespace AGO.Core.Migration
 
 		protected long GetMigrationVersion(Version version)
 		{
-			return version.Major * 10000 + version.Minor * 1000 + version.Build * 100 + version.Revision;
+			//return version.Major * 10000 + version.Minor * 1000 + version.Build * 100 + version.Revision;
+            return MigrationVersionAttribute.CalculateVersion(version.Major, version.Minor, version.Build, version.Revision);
 		}
 
 		protected MigrationRunner GetMigrationRunner(Assembly assembly, bool previewOnly)

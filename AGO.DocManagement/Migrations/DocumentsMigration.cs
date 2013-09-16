@@ -5,7 +5,7 @@ using FluentMigrator;
 
 namespace AGO.DocManagement.Migrations
 {
-	[Migration(10000)]
+	[MigrationVersion(2013, 09, 10, 01)]
 	public class DocumentsMigration : Migration
 	{
 		public override void Up()
@@ -64,6 +64,7 @@ namespace AGO.DocManagement.Migrations
 
 		public override void Down()
 		{
+
 		}
 	}
 }

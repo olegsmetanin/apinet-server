@@ -4,7 +4,7 @@ using FluentMigrator;
 
 namespace AGO.System.Migrations
 {
-	[Migration(10000)]
+	[MigrationVersion(2013, 09, 02, 01)]
 	public class UserFiltersMigration : Migration
 	{
 		public override void Up()
