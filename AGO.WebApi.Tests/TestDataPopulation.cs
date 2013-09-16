@@ -34,7 +34,15 @@ namespace AGO.WebApi.Tests
 				( NAME = N''{0}'', FILENAME = N''' + @Path + '{0}.mdf'', SIZE = 3072KB , MAXSIZE = UNLIMITED, FILEGROWTH = 1024KB )
 				 LOG ON 
 				( NAME = N''{0}_log'', FILENAME = N''' + @Path + '{0}_log.ldf'', SIZE = 1024KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)')
-				GO", databaseName));
+				GO
+                USE [{0}]
+                GO
+                CREATE USER [ago_user] FOR LOGIN [ago_user]
+                GO
+                USE [{0}]
+                GO
+                EXEC sp_addrolemember N'db_owner', N'ago_user'
+                GO", databaseName));
 
 			DoPopulateDatabase();
 		}
