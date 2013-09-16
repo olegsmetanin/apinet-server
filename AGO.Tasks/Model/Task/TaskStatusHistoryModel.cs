@@ -33,7 +33,7 @@ namespace AGO.Tasks.Model.Task
         /// Задачи, изменение статуса которой регистрируется
         /// </summary>
         [DisplayName("Задача"), JsonProperty, NotNull]
-        public virtual Task Task { get; set; }
+        public virtual TaskModel Task { get; set; }
         [ReadOnlyProperty, MetadataExclude]
         public virtual Guid? TaskId { get; set; }
 

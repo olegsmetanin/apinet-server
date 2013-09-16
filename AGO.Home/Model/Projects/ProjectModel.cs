@@ -12,9 +12,11 @@ namespace AGO.Home.Model.Projects
 {
 	public class ProjectModel : SecureModel<Guid>
 	{
+		public const int PROJECT_CODE_SIZE = 32;
+
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32), NotEmpty]
+		[DisplayName("Код проекта"), JsonProperty, NotLonger(PROJECT_CODE_SIZE), NotEmpty]
 		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), NotLonger(64), JsonProperty, NotEmpty]

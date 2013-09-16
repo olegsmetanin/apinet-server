@@ -7,7 +7,7 @@ namespace AGO.Tasks.Migrations
     {
         public string SchemaName
         {
-            get { return "Tasks"; }
+            get { return TasksBootstrapMigration.MODULE_SCHEMA; }
         }
 
         public string TableName
