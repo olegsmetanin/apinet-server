@@ -84,6 +84,14 @@ namespace AGO.Tasks.Test
 			return new JsonTextReader(new StringReader(json));
 		}
 
+		private JsonReader ModelRequest(string project, string method, object model)
+		{
+			var serializer = new JsonSerializer();
+			var sw = new StringWriter();
+			serializer.Serialize(sw, new { project, method, model });
+			return Reader(sw.ToString());
+		}
+
 		private JsonReader ModelRequest(string project, string method, Guid id)
 		{
 			var serializer = new JsonSerializer();
@@ -154,6 +162,43 @@ namespace AGO.Tasks.Test
 			var result = sw.ToString();
 			Assert.IsNotNullOrEmpty(result);
 			Assert.AreEqual(string.Format("{{\"totalRowsCount\":2,\"rows\":[{0},{1}]}}", tt1Json, tt2Json), result);
+		}
+
+		[Test]
+		public void CreateTaskType()
+		{
+			var testTaskType = new TaskTypeModel { ProjectCode = testProject, Name = "TestTaskType" };
+			var input = ModelRequest(testProject, "tasks/dictionary/editTaskType", testTaskType);
+			var sw = new StringWriter();
+			var output = new JsonTextWriter(sw);
+
+			taskTypeController.EditTaskType(input, output);
+			_SessionProvider.CloseCurrentSession();
+
+			testTaskType = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
+				.Where(m => m.ProjectCode == testProject && m.Name == "TestTaskType")
+				.SingleOrDefault();
+			Assert.AreNotEqual(default(Guid), testTaskType.Id);
+			Assert.AreEqual("TestTaskType", testTaskType.Name);
+		}
+
+		[Test]
+		public void UpdateTaskType()
+		{
+			var testTaskType = new TaskTypeModel { ProjectCode = testProject, Name = "TestTaskType" };
+			_SessionProvider.CurrentSession.Save(testTaskType);
+			_SessionProvider.CloseCurrentSession();
+
+			testTaskType.Name = "NewName";
+			var input = ModelRequest(testProject, "tasks/dictionary/editTaskType", testTaskType);
+			var sw = new StringWriter();
+			var output = new JsonTextWriter(sw);
+
+			taskTypeController.EditTaskType(input, output);
+			_SessionProvider.CloseCurrentSession();
+
+			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
+			Assert.AreEqual("NewName", testTaskType.Name);
 		}
 
 		[Test]

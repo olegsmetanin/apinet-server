@@ -30,8 +30,6 @@ namespace AGO.Home.Controllers
 
 		public const string TagsRequestModeName = "mode";
 
-		public const string ModelName = "model";
-
 		#endregion
 
 		#region Properties, fields, constructors

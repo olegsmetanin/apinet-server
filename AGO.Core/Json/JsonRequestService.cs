@@ -33,7 +33,7 @@ namespace AGO.Core.Json
 
 		public const string SortDescendingName = "descending";
 
-		public const string ProjectName = "dontFetchReferences";
+		public const string ProjectName = "project";
 
 		public const string DontFetchReferencesName = "dontFetchReferences";
 
