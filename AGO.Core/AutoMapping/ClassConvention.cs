@@ -15,6 +15,19 @@ namespace AGO.Core.AutoMapping
 			{
 				if(!tablePerSubclassAttribute.TableName.IsNullOrWhiteSpace())
 					instance.Table(tablePerSubclassAttribute.TableName.Trim());
+				if (!tablePerSubclassAttribute.SchemaName.IsNullOrWhiteSpace())
+					instance.Schema(tablePerSubclassAttribute.SchemaName);
+			}
+			else
+			{
+				var tableAttribute = instance.EntityType.FirstAttribute<TableAttribute>(false);
+				if (tableAttribute != null)
+				{
+					if (!tableAttribute.TableName.IsNullOrWhiteSpace())
+						instance.Table(tableAttribute.TableName.Trim());
+					if (!tableAttribute.SchemaName.IsNullOrWhiteSpace())
+						instance.Schema(tableAttribute.SchemaName);
+				}
 			}
 
 			var optimisticLockAttribute = instance.EntityType.FirstAttribute<OptimisticLockAttribute>(true);

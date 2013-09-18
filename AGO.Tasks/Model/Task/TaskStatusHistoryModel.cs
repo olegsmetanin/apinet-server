@@ -11,6 +11,7 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Запись в истории изменения статусов задачи
     /// </summary>
+	[Table(SchemaName = "Tasks")]
     public class TaskStatusHistoryModel: SecureModel<Guid>
     {
         #region Persistent

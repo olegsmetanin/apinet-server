@@ -45,6 +45,7 @@
     <Compile Include="Attributes\Mapping\PersistentCollectionAttribute.cs" />
     <Compile Include="Attributes\Mapping\OptimisticLockAttribute.cs" />
     <Compile Include="Attributes\Mapping\OptimisticLockType.cs" />
+    <Compile Include="Attributes\Mapping\TableAttribute.cs" />
     <Compile Include="Attributes\Mapping\TablePerSubclassAttribute.cs" />
     <Compile Include="Attributes\Model\ComponentPrefixAttribute.cs" />
     <Compile Include="Attributes\Model\EnumDisplayNamesAttribute.cs" />

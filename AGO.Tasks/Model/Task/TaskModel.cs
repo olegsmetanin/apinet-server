@@ -14,6 +14,7 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Задача - основная запись основного реестра модуля
     /// </summary>
+	[Table(SchemaName = "Tasks")]
     public class TaskModel: SecureModel<Guid>
     {
         #region Persistent
