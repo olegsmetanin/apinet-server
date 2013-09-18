@@ -88,7 +88,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Примечание
 		/// </summary>
-		[DisplayName("Примечание"), JsonProperty, NotLonger(int.MaxValue)]
+		[DisplayName("Примечание"), JsonProperty]
 		public virtual string Note { get; set; }
 
 		/// <summary>
@@ -126,6 +126,17 @@ namespace AGO.Tasks.Model.Task
     		set { executorsStore = value; }
     	}
     	private ISet<TaskExecutorModel> executorsStore = new HashSet<TaskExecutorModel>();
+
+		/// <summary>
+		/// Согласования задачи
+		/// </summary>
+		[DisplayName("Согласования"), PersistentCollection]
+    	public virtual ISet<TaskAgreementModel> Agreements
+    	{
+			get { return agreementsStore; }
+			set { agreementsStore = value; }
+    	}
+    	private ISet<TaskAgreementModel> agreementsStore = new HashSet<TaskAgreementModel>();
 
     	#endregion
     }

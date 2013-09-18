@@ -72,6 +72,7 @@
     <Compile Include="Model\Dictionary\CustomTaskStatusModel.cs" />
     <Compile Include="Model\Dictionary\TaskTypeModel.cs" />
     <Compile Include="Model\Task\CustomTaskStatusHistoryModel.cs" />
+    <Compile Include="Model\Task\TaskAgreementModel.cs" />
     <Compile Include="Model\Task\TaskExecutorModel.cs" />
     <Compile Include="Model\Task\TaskModel.cs" />
     <Compile Include="Model\Task\TaskPriority.cs" />

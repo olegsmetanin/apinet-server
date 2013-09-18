@@ -54,12 +54,25 @@ namespace AGO.Tasks.Migrations
         	Create.SecureModelTable<TaskExecutorModel>(MODULE_SCHEMA)
         		.WithRefColumn<TaskExecutorModel>(m => m.Task, true, MODULE_SCHEMA)
         		.WithRefColumn<TaskExecutorModel>(m => m.Executor);
+
+        	Create.SecureModelTable<TaskAgreementModel>(MODULE_SCHEMA)
+        		.WithRefColumn<TaskAgreementModel>(m => m.Task, true, MODULE_SCHEMA)
+        		.WithRefColumn<TaskAgreementModel>(m => m.Agreemer)
+        		.WithValueColumn<TaskAgreementModel>(m => m.DueDate)
+        		.WithValueColumn<TaskAgreementModel>(m => m.AgreedAt)
+        		.WithValueColumn<TaskAgreementModel>(m => m.Done)
+        		.WithValueColumn<TaskAgreementModel>(m => m.Comment);
         }
 
         public override void Down()
         {
-            Delete.ModelTable<TaskStatusHistoryModel>();
-            Delete.ModelTable<TaskModel>();
+        	Delete.ModelTable<CustomTaskStatusHistoryModel>().InSchema(MODULE_SCHEMA);
+            Delete.ModelTable<TaskStatusHistoryModel>().InSchema(MODULE_SCHEMA);
+			Delete.ModelTable<TaskExecutorModel>().InSchema(MODULE_SCHEMA);
+			Delete.ModelTable<TaskAgreementModel>().InSchema(MODULE_SCHEMA);
+            Delete.ModelTable<TaskModel>().InSchema(MODULE_SCHEMA);
+			Delete.ModelTable<CustomTaskStatusHistoryModel>().InSchema(MODULE_SCHEMA);
+			Delete.ModelTable<TaskTypeModel>().InSchema(MODULE_SCHEMA);
             //Delete.Schema("Tasks");
         }
     }
