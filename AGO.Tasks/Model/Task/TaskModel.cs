@@ -138,6 +138,17 @@ namespace AGO.Tasks.Model.Task
     	}
     	private ISet<TaskAgreementModel> agreementsStore = new HashSet<TaskAgreementModel>();
 
+		/// <summary>
+		/// Пользовательские свойства
+		/// </summary>
+		[DisplayName("Параметры"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+    	public virtual ISet<TaskCustomPropertyModel> CustomProperties
+    	{
+    		get { return customPropsStore; }
+			set { customPropsStore = value; }
+    	}
+    	private ISet<TaskCustomPropertyModel> customPropsStore = new HashSet<TaskCustomPropertyModel>();
+
     	#endregion
     }
 }

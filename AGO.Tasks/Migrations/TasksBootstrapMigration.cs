@@ -1,7 +1,7 @@
-﻿using AGO.Tasks.Model.Dictionary;
+﻿using AGO.Core.Migration;
+using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using FluentMigrator;
-using AGO.Core.Migration;
 
 namespace AGO.Tasks.Migrations
 {
@@ -62,6 +62,9 @@ namespace AGO.Tasks.Migrations
         		.WithValueColumn<TaskAgreementModel>(m => m.AgreedAt)
         		.WithValueColumn<TaskAgreementModel>(m => m.Done)
         		.WithValueColumn<TaskAgreementModel>(m => m.Comment);
+
+			Alter.ModelTable<TaskCustomPropertyModel>()
+				 .AddRefColumn<TaskCustomPropertyModel>(m => m.Task, true, MODULE_SCHEMA);
         }
 
         public override void Down()
@@ -73,6 +76,8 @@ namespace AGO.Tasks.Migrations
             Delete.ModelTable<TaskModel>().InSchema(MODULE_SCHEMA);
 			Delete.ModelTable<CustomTaskStatusHistoryModel>().InSchema(MODULE_SCHEMA);
 			Delete.ModelTable<TaskTypeModel>().InSchema(MODULE_SCHEMA);
+
+        	Delete.Column<TaskCustomPropertyModel>(m => m.Task);
             //Delete.Schema("Tasks");
         }
     }

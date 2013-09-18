@@ -338,13 +338,13 @@ namespace AGO.Core.Migration
 		}
 
 		public static IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax AddRefColumn<TModel, TForeignModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression)
+			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression, string foreignSchema = null)
 		{
-			return self.AddRefColumn(expression, true, typeof(TForeignModel));
+			return self.AddRefColumn(expression, true, foreignSchema, typeof(TForeignModel));
 		}
 
 		public static IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax AddRefColumn<TModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression, bool isForeignKey = true, Type foreignType = null)
+			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression, bool isForeignKey = true, string foreignSchema = null, Type foreignType = null)
 		{
 			var columnName = ColumnName(expression);
 			var propertyInfo = expression.PropertyInfoFromExpression();
@@ -369,8 +369,11 @@ namespace AGO.Core.Migration
 				throw new Exception(string.Format("Unexpected ref property type in model type \"{0}\"", propertyInfo.PropertyType));
 			if (isForeignKey)
 			{
-				result.ForeignKey("FK_" + TableName<TModel>() + "_" + ColumnName(expression),
-					TableName(foreignType ?? propertyInfo.PropertyType), "Id");
+				var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
+				if (string.IsNullOrWhiteSpace(foreignSchema))
+					result.ForeignKey(fkName, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
+				else
+					result.ForeignKey(fkName, foreignSchema, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
 			}
 			return result.ColumnOptions<TModel>(propertyInfo);
 		}
