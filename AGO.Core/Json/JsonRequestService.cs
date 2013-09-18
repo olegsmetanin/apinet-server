@@ -33,6 +33,8 @@ namespace AGO.Core.Json
 
 		public const string SortDescendingName = "descending";
 
+		public const string ProjectName = "dontFetchReferences";
+
 		public const string DontFetchReferencesName = "dontFetchReferences";
 
 		#endregion
@@ -253,6 +255,8 @@ namespace AGO.Core.Json
 
 			if (request.Body == null)
 				throw new JsonRequestBodyEmptyException();
+
+			request.Project = request.Body.TokenValue(ProjectName);
 
 			request.DontFetchReferences = request.Body.TokenValue(
 				DontFetchReferencesName).ConvertSafe<bool>();
