@@ -1,8 +1,10 @@
-﻿using AGO.Core;
+﻿using System;
+using AGO.Core;
 using AGO.Core.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Tasks.Model.Dictionary;
+using AGO.Tasks.Model.Task;
 using Newtonsoft.Json;
 
 namespace AGO.Tasks.Controllers
@@ -32,6 +34,19 @@ namespace AGO.Tasks.Controllers
 				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(request.Filters),
 				rows = _FilteringDao.List<TaskTypeModel>(request.Filters, OptionsFromRequest(request))
 			});
+		}
+
+		public void DeleteTaskType(JsonReader input, JsonWriter output)
+		{
+			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
+
+			var taskType = _CrudDao.Get<TaskTypeModel>(request.Id, true);
+
+			if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
+					.Where(m => m.TaskType == taskType).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			_CrudDao.Delete(taskType);
 		}
     }
 }

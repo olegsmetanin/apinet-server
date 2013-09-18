@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Json;
 using AGO.Tasks.Controllers;
-using NUnit.Framework;
+using AGO.Tasks.Model.Dictionary;
+using AGO.Tasks.Model.Task;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 
 namespace AGO.Tasks.Test
 {
@@ -36,23 +40,29 @@ namespace AGO.Tasks.Test
 			//skip this step
 		}
 
-//		protected override void AfterContainerInitialized(IList<IInitializable> initializedServices)
-//		{
-//			if (_MigrationService == null) return;
-//
-//			var now = DateTime.Now;
-//			var mostRecentVersion = new Version(now.Year, now.Month, now.Day, 99);
-//			_MigrationService.MigrateUp(mostRecentVersion);
-//		}
-
+		private string testProject;
 		private DictionaryController taskTypeController;
 
 		[SetUp]
 		public void Init()
 		{
 			InitContainer();
-
+			testProject = Guid.NewGuid().ToString().Replace("-", string.Empty);
 			taskTypeController = _Container.GetInstance<DictionaryController>();
+		}
+
+		[TearDown]
+		public void Cleanup()
+		{
+			var cmd = _SessionProvider.CurrentSession.Connection.CreateCommand();
+
+			cmd.CommandText = string.Format("delete from Tasks.TaskModel where ProjectCode = '{0}'", testProject);
+			cmd.ExecuteNonQuery();
+
+			cmd.CommandText = string.Format("delete from Tasks.TaskTypeModel where ProjectCode = '{0}'", testProject);
+			cmd.ExecuteNonQuery();
+
+			_SessionProvider.CloseCurrentSession();
 		}
 
 		[Test]
@@ -61,63 +71,129 @@ namespace AGO.Tasks.Test
 			Assert.IsNotNull(taskTypeController);
 		}
 
-		private JsonReader Input(string json)
+		private string ToJson(object item)
+		{
+			var serializer = new JsonSerializer();
+			var sw = new StringWriter();
+			serializer.Serialize(sw, item);
+			return sw.ToString();
+		}
+
+		private JsonReader Reader(string json)
 		{
 			return new JsonTextReader(new StringReader(json));
 		}
 
-		private JsonReader ModelRequest(string project, string method,
-			string simpleFilter = null, string complexFilter = null, string userFilter = null,
-			string sorters = null, int page = 1, int pageSize = 10)
+		private JsonReader ModelRequest(string project, string method, Guid id)
 		{
-			var sb = new StringBuilder();
-			sb.Append("{ \"project\": \"").Append(project).Append("\", \"method\": \"").Append(method).Append("\"");
-			if (simpleFilter != null || complexFilter != null || userFilter != null)
-			{
-				sb.Append(", \"filter\": {");
-				var firstFilter = true;
-				if (simpleFilter != null)
-				{
-					sb.Append("\"simple\": {").Append(simpleFilter).Append("}");
-					firstFilter = false;
-				}
-				if (complexFilter != null)
-				{
-					if (!firstFilter)
-						sb.Append(", ");
-					else
-						firstFilter = false;
-					sb.Append("\"complex\": {").Append(complexFilter).Append("}");
-				}
-				if (userFilter != null)
-				{
-					if (!firstFilter)
-						sb.Append(", ");
-					sb.Append("\"user\": {").Append(userFilter).Append("}");
-				}
-				sb.Append("}");
-			}
+			var serializer = new JsonSerializer();
+			var sw = new StringWriter();
+			serializer.Serialize(sw, new { project, method, id });
+			return Reader(sw.ToString());
+		}
 
-			if (sorters != null)
-				sb.Append(", \"sorters\": [").Append(sorters).Append("]");
+		private JsonReader ModelRequest(string project, string method,
+			object simpleFilter = null, object complexFilter = null, object userFilter = null,
+			IEnumerable sorters = null, int page = 0, int pageSize = 10)
+		{
+			var s = new JsonSerializerSettings() {NullValueHandling = NullValueHandling.Ignore};
+			var serializer = JsonSerializer.Create(s);
+			var sw = new StringWriter();
+			serializer.Serialize(sw, new { project, method, 
+				filter = new {simple = simpleFilter, complex = complexFilter, user = userFilter},
+				sorters, page, pageSize});
+			return Reader(sw.ToString());
+		}
 
-			sb.Append(", \"page\": ").Append(page).Append(", \"pageSize\": ").Append(pageSize);
-			sb.Append("}");
-
-			return Input(sb.ToString());
+		private JObject ParseOutput(string output)
+		{
+			return JObject.Load(Reader(output));
 		}
 
 		[Test]
-		public void ReadRecordsFromEmptyTest()
+		public void ReadTaskTypesFromEmptyReturnEmptyData()
 		{
-			var input = ModelRequest("t", "tasks/dictionary/getTaskTypes");
+			//arrange
+			var input = ModelRequest(testProject, "tasks/dictionary/getTaskTypes");
+			var sw = new StringWriter();
+			var output = new JsonTextWriter(sw);
+
+			//act
+			taskTypeController.GetTaskTypes(input, output);
+
+			//assert
+			var result = sw.ToString();
+			Assert.IsNotNullOrEmpty(result);
+			var jres = ParseOutput(result);
+			Assert.AreEqual(0, jres.Property("totalRowsCount").Value.Value<int>());
+			Assert.AreEqual(0, (jres.Property("rows").Value as JArray).Count());
+		}
+
+		[Test]
+		public void ReadTaskTypes()
+		{
+			var tt1 = new TaskTypeModel { ProjectCode = testProject, Name = "tt1" };
+			var tt2 = new TaskTypeModel { ProjectCode = testProject, Name = "tt2" };
+			_SessionProvider.CurrentSession.Save(tt1);
+			_SessionProvider.CurrentSession.Save(tt2);
+			_SessionProvider.CloseCurrentSession();
+			//need ordered result for assertion in json format
+			var input = ModelRequest(testProject, "tasks/dictionary/getTaskTypes", sorters: new [] { new {property = "Name"} });
 			var sw = new StringWriter();
 			var output = new JsonTextWriter(sw);
 
 			taskTypeController.GetTaskTypes(input, output);
 
+			//need to reload models, because when saving to underlying database datetime fields 
+			//lose their accuracy and, so, json does not match with controller result
+			tt1 = _SessionProvider.CurrentSession.Get<TaskTypeModel>(tt1.Id);
+			tt2 = _SessionProvider.CurrentSession.Get<TaskTypeModel>(tt2.Id);
+			var tt1Json = ToJson(tt1);
+			var tt2Json = ToJson(tt2);
+
 			var result = sw.ToString();
 			Assert.IsNotNullOrEmpty(result);
+			Assert.AreEqual(string.Format("{{\"totalRowsCount\":2,\"rows\":[{0},{1}]}}", tt1Json, tt2Json), result);
+		}
+
+		[Test]
+		public void DeleteTaskType()
+		{
+			var testTaskType = new TaskTypeModel {ProjectCode = testProject, Name = "TestTaskType"};
+			_SessionProvider.CurrentSession.Save(testTaskType);
+			_SessionProvider.CloseCurrentSession();
+			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
+			var sw = new StringWriter();
+			var output = new JsonTextWriter(sw);
+
+			taskTypeController.DeleteTaskType(input, output);
+			_SessionProvider.CloseCurrentSession();
+
+			var notExisted = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
+			Assert.IsNull(notExisted);
+		}
+
+		[Test, ExpectedException(typeof(CannotDeleteReferencedItemException))]
+		public void CantDeleteReferencedTaskType()
+		{
+			var testTaskType = new TaskTypeModel { ProjectCode = testProject, Name = "TestTaskType" };
+			var testTask = new TaskModel
+			               	{
+			               		ProjectCode = testProject, 
+								SeqNumber = "t0-1",
+								InternalSeqNumber = 1,
+
+								TaskType = testTaskType
+			               	};
+			_SessionProvider.CurrentSession.Save(testTaskType);
+			_SessionProvider.CurrentSession.Save(testTask);
+			_SessionProvider.CloseCurrentSession();
+			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
+			var sw = new StringWriter();
+			var output = new JsonTextWriter(sw);
+
+			taskTypeController.DeleteTaskType(input, output);
+			_SessionProvider.CloseCurrentSession();
 		}
 	}
 }
