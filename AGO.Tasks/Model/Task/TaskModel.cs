@@ -52,7 +52,7 @@ namespace AGO.Tasks.Model.Task
         /// <summary>
         /// История изменения статуса задачи
         /// </summary>
-        [DisplayName("История изменения статуса"), PersistentCollection]
+        [DisplayName("История изменения статуса"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
         public virtual ISet<TaskStatusHistoryModel> StatusHistory
         {
             get { return statusHistoryStore; }
@@ -108,7 +108,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// История изменения пользовательского статуса задачи
 		/// </summary>
-		[DisplayName("История изменения пользовательского статуса"), PersistentCollection]
+		[DisplayName("История изменения пользовательского статуса"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
 		public virtual ISet<CustomTaskStatusHistoryModel> CustomStatusHistory
 		{
 			get { return customStatusHistoryStore; }
@@ -119,7 +119,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Исполнители задачи
 		/// </summary>
-		[DisplayName("Исполнители"), PersistentCollection]
+		[DisplayName("Исполнители"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
     	public virtual ISet<TaskExecutorModel> Executors
     	{
     		get { return executorsStore; }
@@ -130,7 +130,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Согласования задачи
 		/// </summary>
-		[DisplayName("Согласования"), PersistentCollection]
+		[DisplayName("Согласования"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
     	public virtual ISet<TaskAgreementModel> Agreements
     	{
 			get { return agreementsStore; }
