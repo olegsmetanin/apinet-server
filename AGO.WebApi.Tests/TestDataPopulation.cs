@@ -17,6 +17,8 @@ namespace AGO.WebApi.Tests
 
 			var databaseName = GetKeyValueProvider().Value("DatabaseName").TrimSafe();
 			databaseName = databaseName.IsNullOrEmpty() ? "AGO_Docstore" : databaseName;
+			var loginName = GetKeyValueProvider().Value("LoginName").TrimSafe();
+			loginName = loginName.IsNullOrWhiteSpace() ? "ago_user" : loginName;
 			
 			ExecuteNonQuery(string.Format(@"
 				IF EXISTS(SELECT name FROM sys.databases WHERE name = '{0}') BEGIN
@@ -35,14 +37,20 @@ namespace AGO.WebApi.Tests
 				 LOG ON 
 				( NAME = N''{0}_log'', FILENAME = N''' + @Path + '{0}_log.ldf'', SIZE = 1024KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)')
 				GO
+				if not exists(select 1 from sys.sql_logins where name = N'{1}')
+					create login [{1}]
+					with password=N'123', default_database=[{0}], check_expiration=off, check_policy=off
+				go
+				alter login [{1}] enable
+				go
                 USE [{0}]
                 GO
-                CREATE USER [ago_user] FOR LOGIN [ago_user]
+                CREATE USER [{1}] FOR LOGIN [{1}]
                 GO
                 USE [{0}]
                 GO
-                EXEC sp_addrolemember N'db_owner', N'ago_user'
-                GO", databaseName));
+                EXEC sp_addrolemember N'db_owner', N'{1}'
+                GO", databaseName, loginName));
 
 			DoPopulateDatabase();
 		}
