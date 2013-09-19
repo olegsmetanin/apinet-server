@@ -83,6 +83,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ApiController.cs" />
     <Compile Include="Controllers\JsonBodyParameterResolver.cs" />
+    <Compile Include="Controllers\SysConfigData.cs" />
     <Compile Include="Controllers\StaticFilesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

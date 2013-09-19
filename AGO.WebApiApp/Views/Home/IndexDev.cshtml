@@ -1,14 +1,17 @@
-﻿// Development section begin
+﻿@model AGO.WebApiApp.Controllers.SysConfigData
+
+// Development section begin
 
 sysConfig = {
-    src: function(path) {
-        return 'src/' + path;
+	src: function(path) {
+		return '@Model.SrcPath/' + path;
     },
     site: function(path) {
-        return path;
+		return '@Model.SitePath' + path;
     },
     modules: {},
-    module: "home",
+	module: "@Model.Module",
+	project: "@Model.Project",
     lang: getLang(),
     // make dalay in milliseconds before $http requests when use fake backend
     delay: 0
@@ -49,7 +52,7 @@ yepnope({
                 angular.module(sysConfig.module + '.templates', []);
 
                 angular.module('core')
-                    .constant('currentProject', 'play2')
+                    .constant('currentProject', '@Model.Project') //TODO remove, if project in sysConfig enough
                     .constant('userGroups', [])
                     .constant('sysConfig', sysConfig);
 

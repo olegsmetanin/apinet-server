@@ -7,9 +7,20 @@ namespace AGO.WebApiApp.Controllers
 	{
 		public ActionResult Index()
 		{
+			var model = new SysConfigData("src", "home");
+
 			return WebApplication.DevMode == DevMode.Dev
-				? View("IndexDev")
-				: View("IndexProd");
+				? View("IndexDev", model)
+				: View("IndexProd", model);
+		}
+
+		public ActionResult Project(string project)
+		{
+			var model = new SysConfigData("../../src", "../../", project, "tasks"); //TODO get module from project
+
+			return WebApplication.DevMode == DevMode.Dev
+				? View("IndexDev", model)
+				: View("IndexProd", model);
 		}
 	}
 }

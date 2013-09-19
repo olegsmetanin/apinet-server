@@ -99,6 +99,11 @@ namespace AGO.WebApiApp.App_Start
 				new { controller = "Home", action = "Index" });
 
 			routes.MapRoute(
+				"ProjectPage",
+				"projects/{project}",
+				new { controller = "Home", action = "Project" });
+
+			routes.MapRoute(
 				"AllModelsMetadata",
 				"metadata/AllModelsMetadata",
 				new { controller = "Metadata", action = "AllModelsMetadata" });

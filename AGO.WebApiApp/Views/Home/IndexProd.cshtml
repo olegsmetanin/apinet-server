@@ -1,14 +1,17 @@
-﻿// Production section begin
+﻿@model AGO.WebApiApp.Controllers.SysConfigData
+		   
+// Production section begin
 
 sysConfig = {
     src: function(path) {
-        return path;
+		return '@Model.SrcPath/' + path;
     },
     site: function(path) {
-        return path;
+		return '@Model.SitePath' + path;
     },
     modules: {},
-    module: "home",
+    module: "@Model.Module",
+	project: "@Model.Project",
     lang: getLang()
 };
 
@@ -28,7 +31,7 @@ LoadResources(function() {
     angular.element(document).ready(function() {
 
         angular.module("core")
-            .constant("currentProject", null)
+            .constant('currentProject', '@Model.Project') //TODO remove, if project in sysConfig enough
             .constant("userGroups", [])
             .constant("sysConfig", sysConfig); // important to get empty string!
 
