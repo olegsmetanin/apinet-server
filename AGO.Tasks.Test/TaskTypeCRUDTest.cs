@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
+using AGO.Core.Controllers;
 using AGO.Core.Json;
-using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
 
 namespace AGO.Tasks.Test
 {
@@ -25,7 +26,7 @@ namespace AGO.Tasks.Test
 		{
 			RegisterEnvironment();
 			RegisterPersistence();
-			RegisterControllers();		
+			RegisterControllers();
 		}
 
 		/*protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
