@@ -5,12 +5,9 @@ using System.IO;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
-using AGO.Core.Controllers;
-using AGO.Core.Json;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
 
@@ -64,14 +61,6 @@ namespace AGO.Tasks.Test
 			Assert.IsNotNull(taskTypeController);
 		}
 
-		private string ToJson(object item)
-		{
-			var serializer = new JsonSerializer();
-			var sw = new StringWriter();
-			serializer.Serialize(sw, item);
-			return sw.ToString();
-		}
-
 		private JsonReader Reader(string json)
 		{
 			return new JsonTextReader(new StringReader(json));
@@ -97,18 +86,13 @@ namespace AGO.Tasks.Test
 			object simpleFilter = null, object complexFilter = null, object userFilter = null,
 			IEnumerable sorters = null, int page = 0, int pageSize = 10)
 		{
-			var s = new JsonSerializerSettings() {NullValueHandling = NullValueHandling.Ignore};
+			var s = new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore};
 			var serializer = JsonSerializer.Create(s);
 			var sw = new StringWriter();
 			serializer.Serialize(sw, new { project, method, 
 				filter = new {simple = simpleFilter, complex = complexFilter, user = userFilter},
 				sorters, page, pageSize});
 			return Reader(sw.ToString());
-		}
-
-		private JObject ParseOutput(string output)
-		{
-			return JObject.Load(Reader(output));
 		}
 
 		[Test]
