@@ -7,6 +7,8 @@ namespace AGO.System.Migrations
 	[MigrationVersion(2013, 09, 02, 01)]
 	public class UserFiltersMigration : Migration
 	{
+		internal const string MODULE_SCHEMA = "System";
+
 		public override void Up()
 		{
 			Create.DocstoreModelTable<UserFilterModel>()

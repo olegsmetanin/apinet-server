@@ -8,6 +8,8 @@ namespace AGO.Home.Migrations
 	[MigrationVersion(2013, 09, 05, 01)]
 	public class ProjectsMigration : Migration
 	{
+		internal const string MODULE_SCHEMA = "Home";
+
 		public override void Up()
 		{
 			Create.SecureModelTable<ProjectTypeModel>()

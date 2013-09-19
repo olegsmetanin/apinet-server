@@ -45,8 +45,6 @@ namespace AGO.Core.Application
 		protected IMigrationService _MigrationService;
 		public IMigrationService MigrationService { get { return _MigrationService; } }
 
-		protected string _AlternateHibernateConfigRegex;
-
 		protected AbstractApplication()
 		{
 			_Current = this;
@@ -94,11 +92,7 @@ namespace AGO.Core.Application
 		protected virtual void ConfigurePersistence(IKeyValueProvider keyValueProvider)
 		{
 			_Container.RegisterInitializer<AutoMappedSessionFactoryBuilder>(service =>
-			{
-				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", keyValueProvider)).ApplyTo(service);
-				if(!_AlternateHibernateConfigRegex.IsNullOrWhiteSpace())
-					new KeyValueConfigProvider(new RegexKeyValueProvider(_AlternateHibernateConfigRegex.TrimSafe(), keyValueProvider)).ApplyTo(service);
-			});
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", keyValueProvider)).ApplyTo(service));
 			_Container.RegisterInitializer<CrudDao>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Dao_(.*)", keyValueProvider)).ApplyTo(service));
 			_Container.RegisterInitializer<MigrationService>(service =>
@@ -130,13 +124,6 @@ namespace AGO.Core.Application
 
 		protected virtual void AfterContainerInitialized(IList<IInitializable> initializedServices)
 		{
-			DoMigrateUp();
-		}
-
-		protected virtual void DoMigrateUp()
-		{
-			if (_MigrationService != null)
-				_MigrationService.MigrateUp();
 		}
 
 		protected virtual void InitializeEnvironment(IList<IInitializable> initializedServices)
@@ -182,7 +169,7 @@ namespace AGO.Core.Application
 
 		#region Helper methods
 
-		protected void ExecuteNonQuery(string script)
+		protected void ExecuteNonQuery(string script, IDbConnection connection)
 		{
 			var scripts = new List<string>();
 			using (var reader = new StringReader(script))
@@ -207,7 +194,7 @@ namespace AGO.Core.Application
 
 			foreach (var str in scripts)
 			{
-				var command = _SessionProvider.CurrentSession.Connection.CreateCommand();
+				var command = connection.CreateCommand();
 				command.CommandText = str;
 				command.CommandType = CommandType.Text;
 

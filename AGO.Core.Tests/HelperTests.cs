@@ -13,7 +13,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void CreateAndPopulateDatabase()
 		{
-			_AlternateHibernateConfigRegex = "^AlternateHibernate_(.*)";
 			InitContainer();
 
 			var createDatabaseStream = typeof(FilteringTests).Assembly.GetManifestResourceStream(
@@ -25,7 +24,7 @@ namespace AGO.Core.Tests
 			using (var reader = new StreamReader(createDatabaseStream))
 				script = reader.ReadToEnd();
 
-			ExecuteNonQuery(script);
+			ExecuteNonQuery(script, _SessionProvider.CurrentSession.Connection);
 			DoPopulateDatabase();
 		}
 
@@ -147,10 +146,6 @@ namespace AGO.Core.Tests
 		{
 			InitializeEnvironment(initializedServices);
 			InitializePersistence(initializedServices);
-		}
-
-		protected override void DoMigrateUp()
-		{
 		}
 
 		#endregion

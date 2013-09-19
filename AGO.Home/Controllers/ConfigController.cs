@@ -1,5 +1,4 @@
-﻿using System;
-using AGO.Core.Attributes.Controllers;
+﻿using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core;
 using AGO.Core.Filters;
@@ -19,8 +18,6 @@ namespace AGO.Home.Controllers
 
 		#region Properties, fields, constructors
 
-		protected readonly AuthController _AuthController;
-
 		public ConfigController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
@@ -29,11 +26,8 @@ namespace AGO.Home.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
+			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
 		{
-			if (authController == null)
-				throw new ArgumentNullException("authController");
-			_AuthController = authController;
 		}
 
 		#endregion

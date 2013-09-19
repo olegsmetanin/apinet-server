@@ -139,15 +139,6 @@ namespace AGO.WebApiApp.App_Start
 
 			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(_Container));
 		}
-
-		protected override void DoMigrateUp()
-		{
-			if (_MigrationService == null)
-				return;
-			
-			_MigrationService.MigrateUp(new Version(0, 9, 0, 0));
-			_MigrationService.MigrateUp(new Version(1, 0, 0, 0));
-		}
 	}
 
 	public static class Initializer

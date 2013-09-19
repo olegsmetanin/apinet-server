@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
-using AGO.Core.Attributes.Mapping;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Home.Model.Projects;
@@ -12,7 +11,6 @@ namespace AGO.Tasks.Model.Dictionary
 	/// <summary>
 	/// Пользовательский (произвольный) статус задачи, не ограниченный рамками workflow
 	/// </summary>
-	[Table(SchemaName = "Tasks")]
 	public class CustomTaskStatusModel: SecureModel<Guid>, IDictionaryItemModel
 	{
 		/// <summary>

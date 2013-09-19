@@ -19,8 +19,9 @@ namespace AGO.Core.Controllers
 			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
+			ISessionProvider sessionProvider,
+			AuthController authController)
+			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 

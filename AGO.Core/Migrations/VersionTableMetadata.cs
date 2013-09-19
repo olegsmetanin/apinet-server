@@ -7,12 +7,12 @@ namespace AGO.Core.Migrations
 	{
 		public string SchemaName
 		{
-			get { return string.Empty; }
+			get { return CoreMigration.MODULE_SCHEMA; }
 		}
 
 		public string TableName
 		{
-			get { return GetType().Assembly.GetName().Name.Replace('.', '_') + "_VersionInfo"; }
+			get { return "VersionInfo"; }
 		}
 
 		public string ColumnName

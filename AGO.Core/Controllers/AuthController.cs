@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -11,7 +12,7 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Controllers
 {
-	public class AuthController : AbstractController
+	public class AuthController : AbstractService
 	{
 		#region Constants
 
@@ -23,6 +24,18 @@ namespace AGO.Core.Controllers
 
 		#region Properties, fields, constructors
 
+		protected readonly IJsonService _JsonService;
+
+		protected readonly IFilteringService _FilteringService;
+
+		protected readonly IJsonRequestService _JsonRequestService;
+
+		protected readonly ICrudDao _CrudDao;
+
+		protected readonly IFilteringDao _FilteringDao;
+
+		protected readonly ISessionProvider _SessionProvider;
+
 		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
@@ -30,8 +43,30 @@ namespace AGO.Core.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
 		{
+			if (jsonService == null)
+				throw new ArgumentNullException("jsonService");
+			_JsonService = jsonService;
+
+			if (filteringService == null)
+				throw new ArgumentNullException("filteringService");
+			_FilteringService = filteringService;
+
+			if (jsonRequestService == null)
+				throw new ArgumentNullException("jsonRequestService");
+			_JsonRequestService = jsonRequestService;
+
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			_CrudDao = crudDao;
+
+			if (filteringDao == null)
+				throw new ArgumentNullException("filteringDao");
+			_FilteringDao = filteringDao;
+
+			if (sessionProvider == null)
+				throw new ArgumentNullException("sessionProvider");
+			_SessionProvider = sessionProvider;
 		}
 
 		#endregion

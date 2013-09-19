@@ -7,6 +7,8 @@ namespace AGO.Core.Migrations
 	[MigrationVersion(2013, 09, 01, 01)]
 	public class CoreMigration : FluentMigrator.Migration
 	{
+		internal const string MODULE_SCHEMA = "Core";
+
 		public override void Up()
 		{
 			Create.DocstoreModelTable<UserModel>();
@@ -34,11 +36,11 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<DepartmentModel>(m => m.FullName)
 				.WithRefColumn<DepartmentModel>(m => m.Parent);
 
-			Create.Table("UserModelToDepartmentModel")
+			Create.Table("UserModelToDepartmentModel").InSchema(MODULE_SCHEMA)
 				.WithColumn("UserId").AsGuid().NotNullable()
-					.ForeignKey("FK_UserModelToDepartmentModel_UserId", "UserModel", "Id")
+					.ForeignKey("FK_UserModelToDepartmentModel_UserId", MODULE_SCHEMA, "UserModel", "Id")
 				.WithColumn("DepartmentId").AsGuid().NotNullable()
-					.ForeignKey("FK_UserModelToDepartmentModel_DepartmentId", "DepartmentModel", "Id");
+					.ForeignKey("FK_UserModelToDepartmentModel_DepartmentId", MODULE_SCHEMA, "DepartmentModel", "Id");
 
 			Create.SecureModelTable<CustomPropertyTypeModel>()
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.ProjectCode)
@@ -46,10 +48,10 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.FullName)
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.Format)
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.ValueType)
-				.WithRefColumn<CustomPropertyTypeModel>(m => m.Parent);
+				.WithRefColumn<CustomPropertyTypeModel, CustomPropertyTypeModel>(m => m.Parent);
 
 			Create.SecureModelTable<CustomPropertyInstanceModel>()
-				.WithRefColumn<CustomPropertyInstanceModel>(m => m.PropertyType)
+				.WithRefColumn<CustomPropertyInstanceModel,CustomPropertyTypeModel>(m => m.PropertyType)
 				.WithValueColumn<CustomPropertyInstanceModel>(m => m.StringValue)
 				.WithValueColumn<CustomPropertyInstanceModel>(m => m.NumberValue)
 				.WithValueColumn<CustomPropertyInstanceModel>(m => m.DateValue);

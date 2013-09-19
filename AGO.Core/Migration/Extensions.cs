@@ -32,13 +32,11 @@ namespace AGO.Core.Migration
 
 		#region Creation
 
-		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root, string tableName, string schema = null)
+		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root)
 		{
 			var type = typeof(TModel);
 
-            var table = root.Table(tableName) as ICreateTableWithColumnSyntax;
-            if (!string.IsNullOrEmpty(schema))
-                table = ((ICreateTableWithColumnOrSchemaSyntax) table).InSchema(schema);
+			var table = root.Table(TableName<TModel>()).InSchema(SchemaName<TModel>());
 
 			var idProperty = type.GetProperty("Id");
 			if (idProperty != null)
@@ -76,11 +74,6 @@ namespace AGO.Core.Migration
 				table = table.WithColumn(tablePerSubclassAttribute.DiscriminatorColumn).AsString(128);
 
 			return table;
-		}
-
-        public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root)
-		{
-			return root.ModelTable<TModel>(TableName<TModel>());
 		}
 
 		public static ICreateTableColumnAsTypeSyntax WithColumn<TModel>(
@@ -166,18 +159,22 @@ namespace AGO.Core.Migration
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithRefColumn<TModel, TForeignModel>(
-            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, string foreignSchema = null, string foreignTable = null)
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression)
 		{
-			return self.WithRefColumn(expression, true, foreignSchema, typeof(TForeignModel));
+			return self.WithRefColumn(expression, true, typeof(TForeignModel));
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithRefColumn<TModel>(
-			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, bool isForeignKey = true, string foreignSchema = null, Type foreignType = null)
+			this ICreateTableWithColumnSyntax self, 
+			Expression<Func<TModel, object>> expression, 
+			bool isForeignKey = true, 
+			Type foreignType = null)
 		{
 			var columnName = ColumnName(expression);
 			var propertyInfo = expression.PropertyInfoFromExpression();
+			foreignType = foreignType ?? propertyInfo.PropertyType;
 
-			var idProperty = propertyInfo.PropertyType.GetProperty("Id") ?? propertyInfo;
+			var idProperty = foreignType.GetProperty("Id") ?? propertyInfo;
 
 			var idType = idProperty.PropertyType;
 			ICreateTableColumnOptionOrWithColumnSyntax result = null;
@@ -194,14 +191,11 @@ namespace AGO.Core.Migration
 			if (typeof(Guid?).IsAssignableFrom(idType))
 				result = self.WithColumn(columnName).AsGuid();
 			if (result == null)
-				throw new Exception(string.Format("Unexpected ref property type in model type \"{0}\"", propertyInfo.PropertyType));
+				throw new Exception(string.Format("Unexpected ref property type in model type \"{0}\"", foreignType));
 			if (isForeignKey)
 			{
 			    var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
-                if (string.IsNullOrWhiteSpace(foreignSchema))
-                    result.ForeignKey(fkName, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
-                else
-                    result.ForeignKey(fkName, foreignSchema, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
+				result.ForeignKey(fkName, SchemaName(foreignType), TableName(foreignType), "Id");
 			}
 			return result.ColumnOptions<TModel>(propertyInfo);
 		}
@@ -252,17 +246,19 @@ namespace AGO.Core.Migration
 
 		public static IAlterTableAddColumnOrAlterColumnSyntax ModelTable<TModel>(this IAlterExpressionRoot root)
 		{
-			return root.Table(TableName<TModel>());
+			return root.Table(TableName<TModel>()).InSchema(SchemaName<TModel>());
 		}
 
 		public static IAlterTableColumnAsTypeSyntax AddColumn<TModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression)
+			this IAlterTableAddColumnOrAlterColumnSyntax self,
+			Expression<Func<TModel, object>> expression)
 		{
 			return self.AddColumn(ColumnName(expression));
 		}
 
 		public static IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax AddValueColumn<TModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression)
+			this IAlterTableAddColumnOrAlterColumnSyntax self, 
+			Expression<Func<TModel, object>> expression)
 		{
 			var propertyInfo = expression.PropertyInfoFromExpression();
 			if (propertyInfo == null)
@@ -338,18 +334,22 @@ namespace AGO.Core.Migration
 		}
 
 		public static IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax AddRefColumn<TModel, TForeignModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression, string foreignSchema = null)
+			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression)
 		{
-			return self.AddRefColumn(expression, true, foreignSchema, typeof(TForeignModel));
+			return self.AddRefColumn(expression, true, typeof(TForeignModel));
 		}
 
 		public static IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax AddRefColumn<TModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, Expression<Func<TModel, object>> expression, bool isForeignKey = true, string foreignSchema = null, Type foreignType = null)
+			this IAlterTableAddColumnOrAlterColumnSyntax self, 
+			Expression<Func<TModel, object>> expression, 
+			bool isForeignKey = true,
+			Type foreignType = null)
 		{
 			var columnName = ColumnName(expression);
 			var propertyInfo = expression.PropertyInfoFromExpression();
+			foreignType = foreignType ?? propertyInfo.PropertyType;
 
-			var idProperty = propertyInfo.PropertyType.GetProperty("Id") ?? propertyInfo;
+			var idProperty = foreignType.GetProperty("Id") ?? propertyInfo;
 
 			var idType = idProperty.PropertyType;
 			IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax result = null;
@@ -366,14 +366,11 @@ namespace AGO.Core.Migration
 			if (typeof(Guid?).IsAssignableFrom(idType))
 				result = self.AddColumn(columnName).AsGuid();
 			if (result == null)
-				throw new Exception(string.Format("Unexpected ref property type in model type \"{0}\"", propertyInfo.PropertyType));
+				throw new Exception(string.Format("Unexpected ref property type in model type \"{0}\"", foreignType));
 			if (isForeignKey)
 			{
 				var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
-				if (string.IsNullOrWhiteSpace(foreignSchema))
-					result.ForeignKey(fkName, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
-				else
-					result.ForeignKey(fkName, foreignSchema, TableName(foreignType ?? propertyInfo.PropertyType), "Id");
+				result.ForeignKey(fkName, SchemaName(foreignType), TableName(foreignType), "Id");
 			}
 			return result.ColumnOptions<TModel>(propertyInfo);
 		}
@@ -382,9 +379,9 @@ namespace AGO.Core.Migration
 
 		#region Deletion
 
-		public static IInSchemaSyntax ModelTable<TModel>(this IDeleteExpressionRoot root)
+		public static void ModelTable<TModel>(this IDeleteExpressionRoot root)
 		{
-			return root.Table(TableName<TModel>());
+			root.Table(TableName<TModel>()).InSchema(SchemaName<TModel>());
 		}
 
 		public static IDeleteColumnFromTableSyntax Column<TModel>(
@@ -454,35 +451,16 @@ namespace AGO.Core.Migration
 
 		#region Docstore
 
-        public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(
-			this ICreateExpressionRoot root, string schema = null)
-			where TModel : IDocstoreModel
-		{
-			return root.DocstoreModelTable<TModel>(TableName<TModel>(), schema);
-		}
-
-        public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(
-			this ICreateExpressionRoot root,
-			string tableName, string schema)
+        public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(this ICreateExpressionRoot root)
 			where TModel : IDocstoreModel
         {
-			return root.ModelTable<TModel>(tableName, schema)
-				.WithValueColumn<TModel>(m => m.CreationTime);
+			return root.ModelTable<TModel>().WithValueColumn<TModel>(m => m.CreationTime);
         }
 
-        public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(
-			this ICreateExpressionRoot root, string schema = null)
+        public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
 			where TModel : ISecureModel
 		{
-			return root.SecureModelTable<TModel>(TableName<TModel>(), schema);
-		}
-
-        public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(
-			this ICreateExpressionRoot root,
-			string tableName, string schema)
-			where TModel : ISecureModel
-		{
-			return root.DocstoreModelTable<TModel>(tableName, schema)
+			return root.DocstoreModelTable<TModel>()
 				.WithRefColumn<TModel>(m => m.Creator)
 				.WithValueColumn<TModel>(m => m.LastChangeTime)
                 .WithRefColumn<TModel>(m => m.LastChanger);
@@ -492,15 +470,51 @@ namespace AGO.Core.Migration
 
 		#region Helper methods
 
+		public static string SchemaName<TModel>()
+		{
+			return SchemaName(typeof(TModel));
+		}
+
 		public static string TableName<TModel>()
 		{
 			return TableName(typeof (TModel));
+		}
+
+		public static string SchemaName(Type type)
+		{
+			if (type == null)
+				throw new ArgumentNullException("type");
+
+			var parts = type.Assembly.GetName().Name.Split('.');
+			var schema = parts[parts.Length - 1];
+
+			var tableAttribute = type.FirstAttribute<TableAttribute>(false);
+			if (tableAttribute != null && !tableAttribute.SchemaName.IsNullOrWhiteSpace())
+				schema = tableAttribute.SchemaName.TrimSafe();
+
+			var tablePerSubclass = type.FirstAttribute<TablePerSubclassAttribute>(true);
+			if (tablePerSubclass != null)
+			{
+				tablePerSubclass = type.FirstAttribute<TablePerSubclassAttribute>(false);
+				if (tablePerSubclass == null)
+					return SchemaName(type.BaseType);
+				if (!tablePerSubclass.SchemaName.IsNullOrWhiteSpace())
+					schema = tablePerSubclass.SchemaName.TrimSafe();
+			}
+			return schema;
 		}
 
 		public static string TableName(Type type)
 		{
 			if (type == null)
 				throw new ArgumentNullException("type");
+
+			var table = type.Name;
+
+			var tableAttribute = type.FirstAttribute<TableAttribute>(false);
+			if (tableAttribute != null && !tableAttribute.TableName.IsNullOrWhiteSpace())
+				table = tableAttribute.TableName.TrimSafe();
+
 			var tablePerSubclass = type.FirstAttribute<TablePerSubclassAttribute>(true);
 			if(tablePerSubclass!=null)
 			{
@@ -508,9 +522,10 @@ namespace AGO.Core.Migration
 				if (tablePerSubclass == null)
 					return TableName(type.BaseType);
 				if (!tablePerSubclass.TableName.IsNullOrWhiteSpace())
-					return tablePerSubclass.TableName.Trim();
+					table = tablePerSubclass.TableName.TrimSafe();
 			}
-			return type.Name;
+
+			return table;
 		}
 
 		public static string ColumnName<TModel>(Expression<Func<TModel, object>> expression)

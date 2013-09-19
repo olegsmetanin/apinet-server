@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
+using AGO.Core.Controllers;
 using AGO.Core.Json;
-using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
 
 namespace AGO.Tasks.Test
 {
@@ -26,6 +27,7 @@ namespace AGO.Tasks.Test
 			RegisterEnvironment();
 			RegisterPersistence();
 
+			_Container.RegisterSingle<AuthController, AuthController>();
 			_Container.RegisterSingle<IJsonRequestService, JsonRequestService>();
 		}
 
@@ -33,11 +35,6 @@ namespace AGO.Tasks.Test
 		{
 			InitializeEnvironment(initializedServices);
 			InitializePersistence(initializedServices);
-		}
-
-		protected override void DoMigrateUp()
-		{
-			//skip this step
 		}
 
 		private string testProject;

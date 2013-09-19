@@ -8,6 +8,8 @@ namespace AGO.DocManagement.Migrations
 	[MigrationVersion(2013, 09, 10, 01)]
 	public class DocumentsMigration : Migration
 	{
+		internal const string MODULE_SCHEMA = "DocManagement";
+
 		public override void Up()
 		{
 			Create.SecureModelTable<DocumentAddresseeModel>()
@@ -39,17 +41,17 @@ namespace AGO.DocManagement.Migrations
 				.WithValueColumn<DocumentModel>(m => m.SourceDocNumber)
 				.WithRefColumn<DocumentModel>(m => m.Status);
 
-			Create.Table("DocumentModelToDocumentAddresseeModel")
+			Create.Table("DocumentModelToDocumentAddresseeModel").InSchema(MODULE_SCHEMA)
 				.WithColumn("DocumentId").AsGuid().NotNullable()
-					.ForeignKey("FK_DocumentModelToDocumentAddresseeModel_DocumentId", "DocumentModel", "Id")
+					.ForeignKey("FK_DocumentModelToDocumentAddresseeModel_DocumentId", MODULE_SCHEMA, "DocumentModel", "Id")
 				.WithColumn("DocumentAddresseeId").AsGuid().NotNullable()
-					.ForeignKey("FK_DocumentModelToDocumentAddresseeModel_DocumentAddresseeId", "DocumentAddresseeModel", "Id");
+					.ForeignKey("FK_DocumentModelToDocumentAddresseeModel_DocumentAddresseeId", MODULE_SCHEMA, "DocumentAddresseeModel", "Id");
 
-			Create.Table("DocumentModelToDocumentCategoryModel")
+			Create.Table("DocumentModelToDocumentCategoryModel").InSchema(MODULE_SCHEMA)
 				.WithColumn("DocumentId").AsGuid().NotNullable()
-					.ForeignKey("FK_DocumentModelToDocumentCategoryModel_DocumentId", "DocumentModel", "Id")
+					.ForeignKey("FK_DocumentModelToDocumentCategoryModel_DocumentId", MODULE_SCHEMA, "DocumentModel", "Id")
 				.WithColumn("DocumentCategoryId").AsGuid().NotNullable()
-					.ForeignKey("FK_DocumentModelToDocumentCategoryModel_DocumentCategoryId", "DocumentCategoryModel", "Id");
+					.ForeignKey("FK_DocumentModelToDocumentCategoryModel_DocumentCategoryId", MODULE_SCHEMA, "DocumentCategoryModel", "Id");
 			
 			Create.SecureModelTable<DocumentStatusHistoryModel>()
 				.WithValueColumn<DocumentStatusHistoryModel>(m => m.StartDate)
