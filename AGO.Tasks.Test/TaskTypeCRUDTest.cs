@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
+using AGO.Core.Filters;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
 
@@ -55,56 +53,13 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CloseCurrentSession();
 		}
 
-		/*[Test]
-		public void TaskTypeControllerRegistered()
-		{
-			Assert.IsNotNull(taskTypeController);
-		}
-
-		private JsonReader Reader(string json)
-		{
-			return new JsonTextReader(new StringReader(json));
-		}
-
-		private JsonReader ModelRequest(string project, string method, object model)
-		{
-			var serializer = new JsonSerializer();
-			var sw = new StringWriter();
-			serializer.Serialize(sw, new { project, method, model });
-			return Reader(sw.ToString());
-		}
-
-		private JsonReader ModelRequest(string project, string method, Guid id)
-		{
-			var serializer = new JsonSerializer();
-			var sw = new StringWriter();
-			serializer.Serialize(sw, new { project, method, id });
-			return Reader(sw.ToString());
-		}
-
-		private JsonReader ModelRequest(string project, string method,
-			object simpleFilter = null, object complexFilter = null, object userFilter = null,
-			IEnumerable sorters = null, int page = 0, int pageSize = 10)
-		{
-			var s = new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore};
-			var serializer = JsonSerializer.Create(s);
-			var sw = new StringWriter();
-			serializer.Serialize(sw, new { project, method, 
-				filter = new {simple = simpleFilter, complex = complexFilter, user = userFilter},
-				sorters, page, pageSize});
-			return Reader(sw.ToString());
-		}
-
 		[Test]
 		public void ReadTaskTypesFromEmptyReturnEmptyData()
 		{
-			//arrange
-			var input = ModelRequest(testProject, "tasks/dictionary/getTaskTypes");
+			var result = taskTypeController.GetTaskTypes(0, 10, 
+				Enumerable.Empty<IModelFilterNode>().ToArray(), 
+				Enumerable.Empty<SortInfo>().ToArray());
 
-			//act
-			var result = taskTypeController.GetTaskTypes(input);
-
-			//assert
 			Assert.IsNotNull(result);
 			Assert.AreEqual(0, result.totalRowsCount);
 			Assert.IsFalse(result.rows.Any());
@@ -118,10 +73,10 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(tt1);
 			_SessionProvider.CurrentSession.Save(tt2);
 			_SessionProvider.CloseCurrentSession();
-			//need ordered result for assertion
-			var input = ModelRequest(testProject, "tasks/dictionary/getTaskTypes", sorters: new [] { new {property = "Name"} });
-
-			var result = taskTypeController.GetTaskTypes(input);
+			
+			var result = taskTypeController.GetTaskTypes(0, 10, 
+				Enumerable.Empty<IModelFilterNode>().ToArray(),
+				new [] { new SortInfo {Property = "Name"} }); //need ordered result for assertion
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(2, result.totalRowsCount);
@@ -133,10 +88,9 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskType()
 		{
-			var testTaskType = new TaskTypeModel { ProjectCode = testProject, Name = "TestTaskType" };
-			var input = ModelRequest(testProject, "tasks/dictionary/editTaskType", testTaskType);
+			var testTaskType = new TaskTypeModel { Name = "TestTaskType" };
 
-			var vr = taskTypeController.EditTaskType(input);
+			var vr = taskTypeController.EditTaskType(testTaskType, testProject);
 			_SessionProvider.CloseCurrentSession();
 
 			testTaskType = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
@@ -155,10 +109,8 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CloseCurrentSession();
 
-			testTaskType.Name = "NewName";
-			var input = ModelRequest(testProject, "tasks/dictionary/editTaskType", testTaskType);
-
-			var vr = taskTypeController.EditTaskType(input);
+			testTaskType = new TaskTypeModel {Id = testTaskType.Id, Name = "NewName"};
+			var vr = taskTypeController.EditTaskType(testTaskType, testProject);
 			_SessionProvider.CloseCurrentSession();
 
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
@@ -173,9 +125,8 @@ namespace AGO.Tasks.Test
 			var testTaskType = new TaskTypeModel {ProjectCode = testProject, Name = "TestTaskType"};
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CloseCurrentSession();
-			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
 
-			taskTypeController.DeleteTaskType(input);
+			taskTypeController.DeleteTaskType(testTaskType.Id);
 			_SessionProvider.CloseCurrentSession();
 
 			var notExisted = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
@@ -196,9 +147,8 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CurrentSession.Save(testTask);
 			_SessionProvider.CloseCurrentSession();
-			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
 			
-			taskTypeController.DeleteTaskType(input);
-		}*/
+			taskTypeController.DeleteTaskType(testTaskType.Id);
+		}
 	}
 }
