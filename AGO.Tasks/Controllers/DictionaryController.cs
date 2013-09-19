@@ -27,11 +27,11 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		public object GetTaskTypes(JsonReader input)
+		public ModelsResponse<TaskTypeModel> GetTaskTypes(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			return new
+			return new ModelsResponse<TaskTypeModel>
 			{
 				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(request.Filters),
 				rows = _FilteringDao.List<TaskTypeModel>(request.Filters, OptionsFromRequest(request))

@@ -29,12 +29,12 @@ namespace AGO.Tasks.Test
 			RegisterControllers();
 		}
 
-		/*protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
+		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
 		{
 			InitializeEnvironment(initializedServices);
 			InitializePersistence(initializedServices);
 		}
-
+		
 		private string testProject;
 		private DictionaryController taskTypeController;
 
@@ -49,14 +49,12 @@ namespace AGO.Tasks.Test
 		[TearDown]
 		public void Cleanup()
 		{
-			var cmd = _SessionProvider.CurrentSession.Connection.CreateCommand();
-
-			cmd.CommandText = string.Format("delete from Tasks.TaskModel where ProjectCode = '{0}'", testProject);
-			cmd.ExecuteNonQuery();
-
-			cmd.CommandText = string.Format("delete from Tasks.TaskTypeModel where ProjectCode = '{0}'", testProject);
-			cmd.ExecuteNonQuery();
-
+			var conn = _SessionProvider.CurrentSession.Connection; 
+			ExecuteNonQuery(string.Format(@"
+					delete from Tasks.TaskModel where ProjectCode = '{0}'
+					go
+					delete from Tasks.TaskTypeModel where ProjectCode = '{0}'
+					go", testProject), conn);
 			_SessionProvider.CloseCurrentSession();
 		}
 
@@ -118,20 +116,16 @@ namespace AGO.Tasks.Test
 		{
 			//arrange
 			var input = ModelRequest(testProject, "tasks/dictionary/getTaskTypes");
-			var sw = new StringWriter();
-			var output = new JsonTextWriter(sw);
 
 			//act
-			taskTypeController.GetTaskTypes(input, output);
+			var result = taskTypeController.GetTaskTypes(input);
 
 			//assert
-			var result = sw.ToString();
-			Assert.IsNotNullOrEmpty(result);
-			var jres = ParseOutput(result);
-			Assert.AreEqual(0, jres.Property("totalRowsCount").Value.Value<int>());
-			Assert.AreEqual(0, (jres.Property("rows").Value as JArray).Count());
+			Assert.IsNotNull(result);
+			Assert.AreEqual(0, result.totalRowsCount);
+			Assert.IsFalse(result.rows.Any());
 		}
-
+		
 		[Test]
 		public void ReadTaskTypes()
 		{
@@ -140,34 +134,25 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(tt1);
 			_SessionProvider.CurrentSession.Save(tt2);
 			_SessionProvider.CloseCurrentSession();
-			//need ordered result for assertion in json format
+			//need ordered result for assertion
 			var input = ModelRequest(testProject, "tasks/dictionary/getTaskTypes", sorters: new [] { new {property = "Name"} });
-			var sw = new StringWriter();
-			var output = new JsonTextWriter(sw);
 
-			taskTypeController.GetTaskTypes(input, output);
+			var result = taskTypeController.GetTaskTypes(input);
 
-			//need to reload models, because when saving to underlying database datetime fields 
-			//lose their accuracy and, so, json does not match with controller result
-			tt1 = _SessionProvider.CurrentSession.Get<TaskTypeModel>(tt1.Id);
-			tt2 = _SessionProvider.CurrentSession.Get<TaskTypeModel>(tt2.Id);
-			var tt1Json = ToJson(tt1);
-			var tt2Json = ToJson(tt2);
-
-			var result = sw.ToString();
-			Assert.IsNotNullOrEmpty(result);
-			Assert.AreEqual(string.Format("{{\"totalRowsCount\":2,\"rows\":[{0},{1}]}}", tt1Json, tt2Json), result);
+			Assert.IsNotNull(result);
+			Assert.AreEqual(2, result.totalRowsCount);
+			Assert.AreEqual(2, result.rows.Count());
+			Assert.AreEqual("tt1", result.rows.ElementAt(0).Name);
+			Assert.AreEqual("tt2", result.rows.ElementAt(1).Name);
 		}
-
+		
 		[Test]
 		public void CreateTaskType()
 		{
 			var testTaskType = new TaskTypeModel { ProjectCode = testProject, Name = "TestTaskType" };
 			var input = ModelRequest(testProject, "tasks/dictionary/editTaskType", testTaskType);
-			var sw = new StringWriter();
-			var output = new JsonTextWriter(sw);
 
-			taskTypeController.EditTaskType(input, output);
+			var vr = taskTypeController.EditTaskType(input);
 			_SessionProvider.CloseCurrentSession();
 
 			testTaskType = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
@@ -175,8 +160,10 @@ namespace AGO.Tasks.Test
 				.SingleOrDefault();
 			Assert.AreNotEqual(default(Guid), testTaskType.Id);
 			Assert.AreEqual("TestTaskType", testTaskType.Name);
+			Assert.IsTrue(vr.Success);
 		}
 
+		
 		[Test]
 		public void UpdateTaskType()
 		{
@@ -186,16 +173,16 @@ namespace AGO.Tasks.Test
 
 			testTaskType.Name = "NewName";
 			var input = ModelRequest(testProject, "tasks/dictionary/editTaskType", testTaskType);
-			var sw = new StringWriter();
-			var output = new JsonTextWriter(sw);
 
-			taskTypeController.EditTaskType(input, output);
+			var vr = taskTypeController.EditTaskType(input);
 			_SessionProvider.CloseCurrentSession();
 
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.AreEqual("NewName", testTaskType.Name);
+			Assert.IsTrue(vr.Success);
 		}
 
+		
 		[Test]
 		public void DeleteTaskType()
 		{
@@ -203,10 +190,8 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CloseCurrentSession();
 			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
-			var sw = new StringWriter();
-			var output = new JsonTextWriter(sw);
 
-			taskTypeController.DeleteTaskType(input, output);
+			taskTypeController.DeleteTaskType(input);
 			_SessionProvider.CloseCurrentSession();
 
 			var notExisted = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
@@ -222,18 +207,14 @@ namespace AGO.Tasks.Test
 			               		ProjectCode = testProject, 
 								SeqNumber = "t0-1",
 								InternalSeqNumber = 1,
-
 								TaskType = testTaskType
 			               	};
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CurrentSession.Save(testTask);
 			_SessionProvider.CloseCurrentSession();
 			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
-			var sw = new StringWriter();
-			var output = new JsonTextWriter(sw);
-
-			taskTypeController.DeleteTaskType(input, output);
-			_SessionProvider.CloseCurrentSession();
-		}*/
+			
+			taskTypeController.DeleteTaskType(input);
+		}
 	}
 }

@@ -60,12 +60,12 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\DictionaryController.cs" />
+    <Compile Include="Controllers\ModelsResponse.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Migrations\TasksBootstrapMigration.cs" />
     <Compile Include="Migrations\VersionTableMetaData.cs" />
