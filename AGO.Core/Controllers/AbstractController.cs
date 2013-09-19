@@ -31,13 +31,16 @@ namespace AGO.Core.Controllers
 
 		protected readonly ISessionProvider _SessionProvider;
 
+		protected readonly AuthController _AuthController;
+
 		protected AbstractController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
 			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider)
+			ISessionProvider sessionProvider,
+			AuthController authController)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -62,6 +65,10 @@ namespace AGO.Core.Controllers
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (authController == null)
+				throw new ArgumentNullException("authController");
+			_AuthController = authController;
 		}
 
 		#endregion
@@ -91,6 +98,12 @@ namespace AGO.Core.Controllers
 			initializable = _FilteringDao as IInitializable;
 			if (initializable != null)
 				initializable.Initialize();
+
+			initializable = _SessionProvider as IInitializable;
+			if (initializable != null)
+				initializable.Initialize();
+
+			_AuthController.Initialize();
 		}
 
 		#endregion

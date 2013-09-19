@@ -33,8 +33,6 @@ namespace AGO.Home.Controllers
 
 		#region Properties, fields, constructors
 
-		protected readonly AuthController _AuthController;
-
 		public ProjectsController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
@@ -43,11 +41,8 @@ namespace AGO.Home.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
+			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
 		{
-			if (authController == null)
-				throw new ArgumentNullException("authController");
-			_AuthController = authController;
 		}
 
 		#endregion

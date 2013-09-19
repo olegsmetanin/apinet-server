@@ -15,9 +15,10 @@ namespace AGO.Tasks.Controllers
             IFilteringService filteringService, 
             IJsonRequestService jsonRequestService, 
             ICrudDao crudDao, 
-            IFilteringDao filteringDao, 
-            ISessionProvider sessionProvider) 
-            : base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
+            IFilteringDao filteringDao,
+			ISessionProvider sessionProvider,
+			AuthController authController) 
+            : base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
         {
         }
     }

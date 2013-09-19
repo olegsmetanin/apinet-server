@@ -10,25 +10,24 @@ namespace AGO.Core.AutoMapping
 	{
 		public void Apply(IClassInstance instance)
 		{
+			var table = instance.EntityType.Name;
+			var parts = instance.EntityType.Assembly.GetName().Name.Split('.');
+			var schema = parts[parts.Length - 1];
+
 			var tablePerSubclassAttribute = instance.EntityType.FirstAttribute<TablePerSubclassAttribute>(false);
-			if (tablePerSubclassAttribute != null)
-			{
-				if(!tablePerSubclassAttribute.TableName.IsNullOrWhiteSpace())
-					instance.Table(tablePerSubclassAttribute.TableName.Trim());
-				if (!tablePerSubclassAttribute.SchemaName.IsNullOrWhiteSpace())
-					instance.Schema(tablePerSubclassAttribute.SchemaName);
-			}
-			else
-			{
-				var tableAttribute = instance.EntityType.FirstAttribute<TableAttribute>(false);
-				if (tableAttribute != null)
-				{
-					if (!tableAttribute.TableName.IsNullOrWhiteSpace())
-						instance.Table(tableAttribute.TableName.Trim());
-					if (!tableAttribute.SchemaName.IsNullOrWhiteSpace())
-						instance.Schema(tableAttribute.SchemaName);
-				}
-			}
+			if (tablePerSubclassAttribute != null && !tablePerSubclassAttribute.TableName.IsNullOrWhiteSpace())
+				table = tablePerSubclassAttribute.TableName.TrimSafe();
+			if (tablePerSubclassAttribute != null && !tablePerSubclassAttribute.SchemaName.IsNullOrWhiteSpace())
+				schema = tablePerSubclassAttribute.SchemaName.TrimSafe();
+
+			var tableAttribute = instance.EntityType.FirstAttribute<TableAttribute>(false);
+			if (tableAttribute != null && !tableAttribute.TableName.IsNullOrWhiteSpace())
+				table = tableAttribute.TableName.TrimSafe();
+			if (tableAttribute != null && !tableAttribute.SchemaName.IsNullOrWhiteSpace())
+				schema = tableAttribute.SchemaName.TrimSafe();
+			
+			instance.Table(table);
+			instance.Schema(schema);
 
 			var optimisticLockAttribute = instance.EntityType.FirstAttribute<OptimisticLockAttribute>(true);
 			if (optimisticLockAttribute == null)

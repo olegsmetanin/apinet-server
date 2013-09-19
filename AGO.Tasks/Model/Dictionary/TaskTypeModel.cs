@@ -12,7 +12,6 @@ namespace AGO.Tasks.Model.Dictionary
 	/// <summary>
 	/// Тип задачи
 	/// </summary>
-	[Table(SchemaName = "Tasks")]
 	public class TaskTypeModel: SecureModel<Guid>, IDictionaryItemModel
 	{
 		/// <summary>

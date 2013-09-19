@@ -35,11 +35,6 @@ namespace AGO.Tasks.Test
 			InitializePersistence(initializedServices);
 		}
 
-		protected override void DoMigrateUp()
-		{
-			//skip this step
-		}
-
 		private string testProject;
 		private DictionaryController taskTypeController;
 

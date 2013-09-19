@@ -12,7 +12,6 @@ namespace AGO.Tasks.Model.Task
 	/// <summary>
 	/// Запись о согласовании задачи
 	/// </summary>
-	[Table(SchemaName = "Tasks")]
 	public class TaskAgreementModel: SecureModel<Guid>
 	{
 		#region Persistent

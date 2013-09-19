@@ -46,6 +46,14 @@ namespace AGO.Core.AutoMapping
 				var second = !attribute.Inverse ? relatedManyToMany.StringIdentifierForModel : instance.EntityType.Name;
 				instance.Table(first + "To" + second);
 			}
+
+			if (!attribute.LinkSchema.IsNullOrWhiteSpace())
+				instance.Schema(attribute.LinkSchema.TrimSafe());
+			else
+			{
+				var parts = instance.EntityType.Assembly.GetName().Name.Split('.');
+				instance.Schema(parts[parts.Length - 1]);
+			}
 		}
 	}
 }

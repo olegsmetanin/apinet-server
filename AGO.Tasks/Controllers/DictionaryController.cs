@@ -15,22 +15,17 @@ namespace AGO.Tasks.Controllers
     /// </summary>
     public class DictionaryController: AbstractController
     {
-		private readonly AuthController authController;
-
         public DictionaryController(
             IJsonService jsonService, 
             IFilteringService filteringService, 
             IJsonRequestService jsonRequestService, 
             ICrudDao crudDao, 
-            IFilteringDao filteringDao, 
-            ISessionProvider sessionProvider,
+            IFilteringDao filteringDao,
+			ISessionProvider sessionProvider,
 			AuthController authController)
-            : base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider)
-        {
-			if (authController == null)
-				throw new ArgumentNullException("authController");
-			this.authController = authController;
-        }
+			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+		{
+		}
 
 		public void GetTaskTypes(JsonReader input, JsonWriter output)
 		{

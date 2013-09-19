@@ -12,6 +12,8 @@ namespace AGO.Core.Attributes.Mapping
 
 		public string LinkTable { get; set; }
 
+		public string LinkSchema { get; set; }
+
 		private bool _Inverse = true;
 		public bool Inverse { get { return _Inverse; } set { _Inverse = value; } }
 

@@ -11,7 +11,6 @@ namespace AGO.Tasks.Model.Task
 	/// <summary>
 	/// Исполнитель задачи
 	/// </summary>
-	[Table(SchemaName = "Tasks")]
 	public class TaskExecutorModel: SecureModel<Guid>
 	{
 		/// <summary>
