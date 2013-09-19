@@ -25,11 +25,10 @@ namespace AGO.Tasks.Test
 		{
 			RegisterEnvironment();
 			RegisterPersistence();
-
-			_Container.RegisterSingle<IJsonRequestService, JsonRequestService>();
+			RegisterControllers();		
 		}
 
-		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
+		/*protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
 		{
 			InitializeEnvironment(initializedServices);
 			InitializePersistence(initializedServices);
@@ -234,6 +233,6 @@ namespace AGO.Tasks.Test
 
 			taskTypeController.DeleteTaskType(input, output);
 			_SessionProvider.CloseCurrentSession();
-		}
+		}*/
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Filters;
@@ -30,19 +32,19 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetCustomPropertyTypes(JsonReader input, JsonWriter output)
+		public object GetCustomPropertyTypes(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<CustomPropertyTypeModel>(request.Filters),
 				rows = _FilteringDao.List<CustomPropertyTypeModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetCustomPropertyType(JsonReader input, JsonWriter output)
+		public CustomPropertyTypeModel GetCustomPropertyType(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -54,15 +56,14 @@ namespace AGO.Core.Controllers
 				Operand = request.Id.ToStringSafe()
 			});
 
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<CustomPropertyTypeModel>(
-				new[] {filter}, OptionsFromRequest(request)).FirstOrDefault());
+			return _FilteringDao.List<CustomPropertyTypeModel>(
+				new[] {filter}, OptionsFromRequest(request)).FirstOrDefault();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void CustomPropertyMetadata(JsonReader input, JsonWriter output)
+		public IEnumerable<IModelMetadata> CustomPropertyMetadata(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(
-				output, MetadataForModelAndRelations<CustomPropertyTypeModel>());
+			return MetadataForModelAndRelations<CustomPropertyTypeModel>();
 		}
 
 		#endregion

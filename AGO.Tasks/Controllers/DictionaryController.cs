@@ -27,18 +27,18 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		public void GetTaskTypes(JsonReader input, JsonWriter output)
+		public object GetTaskTypes(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(request.Filters),
 				rows = _FilteringDao.List<TaskTypeModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
-		public void EditTaskType(JsonReader input, JsonWriter output)
+		public ValidationResult EditTaskType(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
@@ -66,7 +66,7 @@ namespace AGO.Tasks.Controllers
 					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
 
 				if (!validationResult.Success)
-					return;
+					return validationResult;
 
 				model.Name = name;
 				_CrudDao.Store(model);
@@ -75,13 +75,11 @@ namespace AGO.Tasks.Controllers
 			{
 				validationResult.GeneralError = e.Message;
 			}
-			finally
-			{
-				_JsonService.CreateSerializer().Serialize(output, validationResult);
-			}
+
+			return validationResult;
 		}
 
-		public void DeleteTaskType(JsonReader input, JsonWriter output)
+		public void DeleteTaskType(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 

@@ -32,19 +32,19 @@ namespace AGO.DocManagement.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetDocumentStatuses(JsonReader input, JsonWriter output)
+		public object GetDocumentStatuses(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<DocumentStatusModel>(request.Filters),
 				rows = _FilteringDao.List<DocumentStatusModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetDocumentStatus(JsonReader input, JsonWriter output)
+		public DocumentStatusModel GetDocumentStatus(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -56,24 +56,24 @@ namespace AGO.DocManagement.Controllers
 				Operand = request.Id.ToStringSafe()
 			});
 
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<DocumentStatusModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+			return _FilteringDao.List<DocumentStatusModel>(
+				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetDocumentCategories(JsonReader input, JsonWriter output)
+		public object GetDocumentCategories(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<DocumentCategoryModel>(request.Filters),
 				rows = _FilteringDao.List<DocumentCategoryModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetDocumentCategory(JsonReader input, JsonWriter output)
+		public DocumentCategoryModel GetDocumentCategory(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -85,8 +85,8 @@ namespace AGO.DocManagement.Controllers
 				Operand = request.Id.ToStringSafe()
 			});
 
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<DocumentCategoryModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+			return _FilteringDao.List<DocumentCategoryModel>(
+				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
 		}
 
 		#endregion

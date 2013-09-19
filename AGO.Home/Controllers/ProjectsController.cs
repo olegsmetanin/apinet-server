@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
+using AGO.Core.Filters.Metadata;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using AGO.Core;
@@ -50,7 +51,7 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public void CreateProject(JsonReader input, JsonWriter output)
+		public ValidationResult CreateProject(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
@@ -89,7 +90,7 @@ namespace AGO.Home.Controllers
 					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
 
 				if (!validationResult.Success)
-					return;
+					return validationResult;
 				
 				var newProject = new ProjectModel
 				{
@@ -114,14 +115,12 @@ namespace AGO.Home.Controllers
 			{
 				validationResult.GeneralError = e.Message;
 			}
-			finally
-			{
-				_JsonService.CreateSerializer().Serialize(output, validationResult); 
-			}	
+			
+			return validationResult;
 		}
 
 		/*[JsonEndpoint, RequireAuthorization(true)]
-		public void DeleteProject(JsonReader input, JsonWriter output)
+		public void DeleteProject(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -130,7 +129,7 @@ namespace AGO.Home.Controllers
 		}*/
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjects(JsonReader input, JsonWriter output)
+		public object GetProjects(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
@@ -150,15 +149,15 @@ namespace AGO.Home.Controllers
 				request.Filters.Add(modeFilter);
 			}
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<ProjectModel>(request.Filters),
 				rows = _FilteringDao.List<ProjectModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void LookupProjectNames(JsonReader input, JsonWriter output)
+		public object LookupProjectNames(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
@@ -176,14 +175,13 @@ namespace AGO.Home.Controllers
 			foreach (var str in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List<string>())
 				result.Add(new { id = str, text = str });
 
-			_JsonService.CreateSerializer().Serialize(output, new { rows = result });
+			return new { rows = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void ProjectMetadata(JsonReader input, JsonWriter output)
+		public IEnumerable<IModelMetadata> ProjectMetadata(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(
-				output, MetadataForModelAndRelations<ProjectModel>());
+			return MetadataForModelAndRelations<ProjectModel>();
 		}
 
 		#endregion

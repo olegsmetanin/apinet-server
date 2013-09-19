@@ -36,7 +36,7 @@ namespace AGO.Core.Controllers
 
 		protected readonly ISessionProvider _SessionProvider;
 
-		protected AuthController(
+		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
 			IJsonRequestService jsonRequestService,
@@ -74,7 +74,7 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint]
-		public void Login(JsonReader input, JsonWriter output)
+		public object Login(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 
@@ -101,25 +101,25 @@ namespace AGO.Core.Controllers
 
 			HttpContext.Current.Session["CurrentUser"] = user;
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				user = UserToJsonUser(user)
-			});
+			};
 		}
 
 		[JsonEndpoint]
-		public void Logout(JsonReader input, JsonWriter output)
+		public void Logout(JsonReader input)
 		{
 			HttpContext.Current.Session["CurrentUser"] = null;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void CurrentUser(JsonReader input, JsonWriter output)
+		public object CurrentUser(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				user = UserToJsonUser(GetCurrentUser())
-			});
+			};
 		}
 
 		#endregion

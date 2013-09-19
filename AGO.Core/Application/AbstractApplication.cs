@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using AGO.Core.AutoMapping;
 using AGO.Core.Config;
+using AGO.Core.Controllers;
+using AGO.Core.Execution;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Migration;
@@ -56,19 +58,42 @@ namespace AGO.Core.Application
 
 		protected abstract void Register();
 
+		protected virtual IEnumerable<Type> AllActionParameterResolvers
+		{
+			get { return Enumerable.Empty<Type>(); }
+		}
+
+		protected virtual IEnumerable<Type> AllActionParameterTransformers
+		{
+			get { return new[] {typeof (AttributeValidatingParameterTransformer)}; }
+		}
+
 		protected virtual void RegisterEnvironment()
 		{
 			_Container.RegisterSingle<IJsonService, JsonService>();
 			_Container.RegisterSingle<IFilteringService, FilteringService>();
+			_Container.RegisterSingle<IJsonRequestService, JsonRequestService>();
 		}
 
-		protected void RegisterPersistence()
+		protected virtual void RegisterPersistence()
 		{
 			_Container.RegisterSingle<ISessionProvider, AutoMappedSessionFactoryBuilder>();
 			_Container.RegisterSingle<CrudDao, CrudDao>();
 			_Container.Register<ICrudDao>(_Container.GetInstance<CrudDao>);
 			_Container.Register<IFilteringDao>(_Container.GetInstance<CrudDao>);
 			_Container.RegisterSingle<IMigrationService, MigrationService>();
+		}
+
+		protected virtual void RegisterActionExecution()
+		{
+			_Container.RegisterAll<IActionParameterResolver>(AllActionParameterResolvers);
+			_Container.RegisterAll<IActionParameterTransformer>(AllActionParameterTransformers);
+			_Container.RegisterSingle<IActionExecutor, ActionExecutor>();
+		}
+
+		protected virtual void RegisterControllers()
+		{
+			_Container.RegisterSingle<AuthController, AuthController>();
 		}
 
 		#endregion

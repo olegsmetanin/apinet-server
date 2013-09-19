@@ -8,6 +8,7 @@ using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using AGO.System.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AGO.System.Controllers
 {
@@ -42,7 +43,7 @@ namespace AGO.System.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public void LoadFilter(JsonReader input, JsonWriter output)
+		public JToken LoadFilter(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 
@@ -62,22 +63,24 @@ namespace AGO.System.Controllers
 				.Where(m => m.Name == filterName && m.GroupName == filterGroup && m.User == currentUser)
 				.Take(1).List().FirstOrDefault();
 
-			output.WriteRaw(filterModel != null ? filterModel.Filter : "null");
+			return filterModel != null ? JToken.Parse(filterModel.Filter) : null;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void SaveFilter(JsonReader input, JsonWriter output)
+		public ValidationResult SaveFilter(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
 
 			try
 			{
+				//TODO: Валидации длины
+
 				var filterNameProperty = request.Body.Property(FilterNameProperty);
 				var filterName = filterNameProperty != null ? filterNameProperty.TokenValue().TrimSafe() : null;
 				if (filterName.IsNullOrEmpty())
 					throw new MalformedRequestException();
-
+				
 				var filterGroupProperty = request.Body.Property(FilterGroupProperty);
 				var filterGroup = filterGroupProperty != null ? filterGroupProperty.TokenValue().TrimSafe() : null;
 				if (filterGroup.IsNullOrEmpty())
@@ -107,14 +110,12 @@ namespace AGO.System.Controllers
 			{
 				validationResult.GeneralError = e.Message;
 			}
-			finally
-			{
-				_JsonService.CreateSerializer().Serialize(output, new { success = true });
-			}
+			
+			return validationResult;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteFilter(JsonReader input, JsonWriter output)
+		public object DeleteFilter(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 			
@@ -136,11 +137,11 @@ namespace AGO.System.Controllers
 			if (filterModel != null)
 				_CrudDao.Delete(filterModel);
 
-			_JsonService.CreateSerializer().Serialize(output, new { success = true });	
+			return new { success = true };	
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetFilterNames(JsonReader input, JsonWriter output)
+		public object GetFilterNames(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 
@@ -156,7 +157,7 @@ namespace AGO.System.Controllers
 				.OrderBy(m => m.Name).Asc
 				.Select(m => m.Name);
 
-			_JsonService.CreateSerializer().Serialize(output, new {rows = query.List<string>() });
+			return new {rows = query.List<string>() };
 		}
 
 		#endregion

@@ -71,6 +71,11 @@
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="Controllers\Exceptions.cs" />
+    <Compile Include="Execution\ActionExecutor.cs" />
+    <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
+    <Compile Include="Execution\IActionExecutor.cs" />
+    <Compile Include="Execution\IActionParameterResolver.cs" />
+    <Compile Include="Execution\IActionParameterTransformer.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />

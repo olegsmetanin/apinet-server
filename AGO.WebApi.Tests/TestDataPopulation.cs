@@ -13,8 +13,6 @@ namespace AGO.WebApi.Tests
 		[Test]
 		public void CreateAndPopulateDatabase()
 		{
-			InitContainer();
-
 			var databaseName = GetKeyValueProvider().Value("DatabaseName").TrimSafe();
 			Assert.IsNotEmpty(databaseName);
 
@@ -47,8 +45,9 @@ namespace AGO.WebApi.Tests
 			finally
 			{
 				masterConnection.Close();
-			}	
+			}
 
+			InitContainer();
 			DoPopulateDatabase();
 		}
 

@@ -6,6 +6,7 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core;
 using AGO.Core.Filters;
+using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
@@ -51,7 +52,7 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public void LookupProjectStatuses(JsonReader input, JsonWriter output)
+		public object LookupProjectStatuses(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
@@ -68,11 +69,11 @@ namespace AGO.Home.Controllers
 			foreach (var model in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List())
 				result.Add(new {id = model.Id, text = model.Name});
 
-			_JsonService.CreateSerializer().Serialize(output, new {rows = result});
+			return new {rows = result};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void LookupProjectStatusDescriptions(JsonReader input, JsonWriter output)
+		public object LookupProjectStatusDescriptions(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
@@ -90,23 +91,23 @@ namespace AGO.Home.Controllers
 			foreach (var str in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List<string>())
 				result.Add(new { id = str, text = str });
 
-			_JsonService.CreateSerializer().Serialize(output, new { rows = result });
+			return new { rows = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjectStatuses(JsonReader input, JsonWriter output)
+		public object GetProjectStatuses(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<ProjectStatusModel>(request.Filters),
 				rows = _FilteringDao.List<ProjectStatusModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjectStatus(JsonReader input, JsonWriter output)
+		public ProjectStatusModel GetProjectStatus(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -118,19 +119,18 @@ namespace AGO.Home.Controllers
 				Operand = request.Id.ToStringSafe()
 			});
 
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<ProjectStatusModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+			return _FilteringDao.List<ProjectStatusModel>(
+				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void ProjectStatusMetadata(JsonReader input, JsonWriter output)
+		public IEnumerable<IModelMetadata> ProjectStatusMetadata(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(
-				output, MetadataForModelAndRelations<ProjectStatusModel>());
+			return MetadataForModelAndRelations<ProjectStatusModel>();
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public void EditProjectStatus(JsonReader input, JsonWriter output)
+		public ValidationResult EditProjectStatus(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
@@ -158,7 +158,7 @@ namespace AGO.Home.Controllers
 					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
 
 				if (!validationResult.Success)
-					return;
+					return validationResult;
 
 				model.Name = name;
 				model.Description = requestModel.Description.TrimSafe();
@@ -168,14 +168,12 @@ namespace AGO.Home.Controllers
 			{
 				validationResult.GeneralError = e.Message;
 			}
-			finally
-			{
-				_JsonService.CreateSerializer().Serialize(output, validationResult);
-			}
+
+			return validationResult;
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public void DeleteProjectStatus(JsonReader input, JsonWriter output)
+		public void DeleteProjectStatus(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -193,7 +191,7 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjectTags(JsonReader input, JsonWriter output)
+		public object GetProjectTags(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
@@ -222,15 +220,15 @@ namespace AGO.Home.Controllers
 			}
 			request.Filters.Add(modeFilter);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<ProjectTagModel>(request.Filters),
 				rows = _FilteringDao.List<ProjectTagModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjectTag(JsonReader input, JsonWriter output)
+		public ProjectTagModel GetProjectTag(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -242,12 +240,12 @@ namespace AGO.Home.Controllers
 				Operand = request.Id.ToStringSafe()
 			});
 
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<ProjectTagModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+			return _FilteringDao.List<ProjectTagModel>(
+				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void LookupProjectTags(JsonReader input, JsonWriter output)
+		public object LookupProjectTags(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
@@ -264,18 +262,17 @@ namespace AGO.Home.Controllers
 			foreach (var model in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List())
 				result.Add(new { id = model.Id, text = model.Name });
 
-			_JsonService.CreateSerializer().Serialize(output, new { rows = result });
+			return new { rows = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void ProjectTagMetadata(JsonReader input, JsonWriter output)
+		public IEnumerable<IModelMetadata> ProjectTagMetadata(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(
-				output, MetadataForModelAndRelations<ProjectTagModel>());
+			return MetadataForModelAndRelations<ProjectTagModel>();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void EditProjectTag(JsonReader input, JsonWriter output)
+		public ValidationResult EditProjectTag(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
@@ -315,7 +312,7 @@ namespace AGO.Home.Controllers
 					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
 
 				if (!validationResult.Success)
-					return;
+					return validationResult;
 
 				model.Name = name;
 
@@ -344,14 +341,12 @@ namespace AGO.Home.Controllers
 			{
 				validationResult.GeneralError = e.Message;
 			}
-			finally
-			{
-				_JsonService.CreateSerializer().Serialize(output, validationResult);
-			}
+			
+			return validationResult;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteProjectTag(JsonReader input, JsonWriter output)
+		public void DeleteProjectTag(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -369,19 +364,19 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjectTypes(JsonReader input, JsonWriter output)
+		public object GetProjectTypes(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<ProjectTypeModel>(request.Filters),
 				rows = _FilteringDao.List<ProjectTypeModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetProjectType(JsonReader input, JsonWriter output)
+		public ProjectTypeModel GetProjectType(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
 
@@ -393,8 +388,8 @@ namespace AGO.Home.Controllers
 				Operand = request.Id.ToStringSafe()
 			});
 
-			_JsonService.CreateSerializer().Serialize(output, _FilteringDao.List<ProjectTypeModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault());
+			return _FilteringDao.List<ProjectTypeModel>(
+				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
 		}
 
 		#endregion

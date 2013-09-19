@@ -35,9 +35,9 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetConfig(JsonReader input, JsonWriter output)
+		public object GetConfig(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(output, new { });
+			return new { };
 		}
 
 		#endregion

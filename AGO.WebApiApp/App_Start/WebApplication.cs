@@ -5,12 +5,12 @@ using System.Reflection;
 using System.Web.Configuration;
 using System.Web.Mvc;
 using System.Web.Routing;
-using AGO.Core.Json;
 using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Config;
 using AGO.Core.Modules;
 using AGO.WebApiApp.App_Start;
+using AGO.WebApiApp.Controllers;
 using Common.Logging;
 using SimpleInjector.Integration.Web.Mvc;
 using WebActivator;
@@ -42,8 +42,13 @@ namespace AGO.WebApiApp.App_Start
 
 			RegisterEnvironment();
 			RegisterPersistence();
+			RegisterControllers();
+			RegisterActionExecution();
+		}
 
-			_Container.RegisterSingle<IJsonRequestService, JsonRequestService>();
+		protected override IEnumerable<Type> AllActionParameterResolvers
+		{
+			get { return base.AllActionParameterResolvers.Concat(new[] {typeof (JsonBodyParameterResolver)}); }
 		}
 
 		public IKeyValueProvider KeyValueProvider { get; private set; }

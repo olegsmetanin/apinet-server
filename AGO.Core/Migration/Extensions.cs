@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using AGO.Core.Model;
 using AGO.Core.Model.Security;
-using FluentMigrator.Builders;
 using FluentMigrator.Builders.Alter;
 using FluentMigrator.Builders.Alter.Table;
 using FluentMigrator.Builders.Create;
@@ -396,14 +395,14 @@ namespace AGO.Core.Migration
 			return self.Column(ColumnName(expression));
 		}
 
-		public static IInSchemaSyntax FromModelTable<TModel>(this IDeleteColumnFromTableSyntax self)
+		public static void FromModelTable<TModel>(this IDeleteColumnFromTableSyntax self)
 		{
-			return self.FromTable(TableName<TModel>());
+			self.FromTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
 		}
 
-		public static IDeleteDataOrInSchemaSyntax FromModelTable<TModel>(this IDeleteExpressionRoot root)
+		public static IDeleteDataSyntax FromModelTable<TModel>(this IDeleteExpressionRoot root)
 		{
-			return root.FromTable(TableName<TModel>());
+			return root.FromTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
 		}
 
 		public static IDeleteExpressionRoot NullPropertyRows<TModel>(
@@ -418,8 +417,8 @@ namespace AGO.Core.Migration
 			Expression<Func<TModel, object>> expression)
 		{
 			root.ForeignKey("FK_" + TableName<TModel>() + "_" + ColumnName(expression))
-				.OnTable(TableName<TModel>());
-			root.Column(expression).FromTable(TableName<TModel>());
+				.OnTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			root.Column(expression).FromTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
 			return root;
 		}
 
@@ -429,7 +428,7 @@ namespace AGO.Core.Migration
 			foreach (var expression in expressions)
 			{
 				self.Index("IX_" + TableName<TModel>() + "_" + ColumnName(expression))
-					.OnTable(TableName<TModel>()).OnColumn(ColumnName(expression));
+					.OnTable(TableName<TModel>()).InSchema(SchemaName<TModel>()).OnColumn(ColumnName(expression));
 			}
 			return self;
 		}
@@ -440,7 +439,7 @@ namespace AGO.Core.Migration
 			var indexName = "IX_" + TableName<TModel>();
 			indexName += expressions.Aggregate("", (current, expression) => current + ("_" + ColumnName(expression)));
 
-			var tempResult = self.Index(indexName).OnTable(TableName<TModel>());
+			var tempResult = self.Index(indexName).OnTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
 			foreach (var expression in expressions)
 				tempResult.OnColumn(ColumnName(expression));
 

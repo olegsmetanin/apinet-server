@@ -1,5 +1,7 @@
-﻿using AGO.Core.Attributes.Controllers;
+﻿using System.Collections.Generic;
+using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
+using AGO.Core.Filters.Metadata;
 using AGO.DocManagement.Model.Documents;
 using AGO.Core;
 using AGO.Core.Filters;
@@ -30,22 +32,21 @@ namespace AGO.DocManagement.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public void GetDocuments(JsonReader input, JsonWriter output)
+		public object GetDocuments(JsonReader input)
 		{
 			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
 
-			_JsonService.CreateSerializer().Serialize(output, new
+			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<DocumentModel>(request.Filters),
 				rows = _FilteringDao.List<DocumentModel>(request.Filters, OptionsFromRequest(request))
-			});
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DocumentMetadata(JsonReader input, JsonWriter output)
+		public IEnumerable<IModelMetadata> DocumentMetadata(JsonReader input)
 		{
-			_JsonService.CreateSerializer().Serialize(
-				output, MetadataForModelAndRelations<DocumentModel>());
+			return MetadataForModelAndRelations<DocumentModel>();
 		}
 
 		#endregion

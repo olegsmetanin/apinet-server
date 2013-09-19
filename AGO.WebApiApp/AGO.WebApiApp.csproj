@@ -67,6 +67,7 @@
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Mvc, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Web.WebPages, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -81,6 +82,7 @@
     <Compile Include="App_Start\WebApplication.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ApiController.cs" />
+    <Compile Include="Controllers\JsonBodyParameterResolver.cs" />
     <Compile Include="Controllers\StaticFilesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -122,6 +124,10 @@
     <ProjectReference Include="..\AGO.System\AGO.System.csproj">
       <Project>{B72AAE6E-CD22-4255-8022-A03588670DE9}</Project>
       <Name>AGO.System</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AGO.Tasks\AGO.Tasks.csproj">
+      <Project>{A8703384-0A00-471E-B76E-7BEEB4082475}</Project>
+      <Name>AGO.Tasks</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
