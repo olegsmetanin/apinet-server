@@ -65,14 +65,20 @@ namespace AGO.Core.Application
 
 		protected virtual IEnumerable<Type> AllActionParameterTransformers
 		{
-			get { return new[] {typeof (AttributeValidatingParameterTransformer)}; }
+			get 
+			{ 
+				return new[]
+				{
+					typeof (FilterParameterTransformer),
+					typeof (AttributeValidatingParameterTransformer)
+				}; 
+			}
 		}
 
 		protected virtual void RegisterEnvironment()
 		{
 			_Container.RegisterSingle<IJsonService, JsonService>();
 			_Container.RegisterSingle<IFilteringService, FilteringService>();
-			_Container.RegisterSingle<IJsonRequestService, JsonRequestService>();
 		}
 
 		protected virtual void RegisterPersistence()

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
-using AGO.Core.Model;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Model

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core;
@@ -14,8 +14,6 @@ using AGO.Core.Modules.Attributes;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using NHibernate.Criterion;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AGO.Home.Controllers
 {
@@ -27,23 +25,16 @@ namespace AGO.Home.Controllers
 
 	public class DictionaryController : AbstractController
 	{
-		#region Constants
-
-		public const string TagsRequestModeName = "mode";
-
-		#endregion
-
 		#region Properties, fields, constructors
 
 		public DictionaryController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 
@@ -52,13 +43,12 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectStatuses(JsonReader input)
+		public object LookupProjectStatuses(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			string term)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			var termProperty = request.Body.Property("term");
-			var term = termProperty != null ? termProperty.TokenValue() : null;
-			var options = OptionsFromRequest(request);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>();
 			if (!term.IsNullOrWhiteSpace())
@@ -66,20 +56,19 @@ namespace AGO.Home.Controllers
 
 			var result = new List<object>();
 
-			foreach (var model in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List())
+			foreach (var model in query.Skip(page * pageSize).Take(pageSize).List())
 				result.Add(new {id = model.Id, text = model.Name});
 
 			return new {rows = result};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectStatusDescriptions(JsonReader input)
+		public object LookupProjectStatusDescriptions(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			string term)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			var termProperty = request.Body.Property("term");
-			var term = termProperty != null ? termProperty.TokenValue() : null;
-			var options = OptionsFromRequest(request);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
 				.Select(Projections.Distinct(Projections.Property("Description")));
@@ -88,81 +77,69 @@ namespace AGO.Home.Controllers
 
 			var result = new List<object>();
 
-			foreach (var str in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List<string>())
+			foreach (var str in query.Skip(page * pageSize).Take(pageSize).List<string>())
 				result.Add(new { id = str, text = str });
 
 			return new { rows = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjectStatuses(JsonReader input)
+		public object GetProjectStatuses(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectStatusModel>(request.Filters),
-				rows = _FilteringDao.List<ProjectStatusModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<ProjectStatusModel>(filter),
+				rows = _FilteringDao.List<ProjectStatusModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ProjectStatusModel GetProjectStatus(JsonReader input)
+		public ProjectStatusModel GetProjectStatus([NotEmpty] Guid id, bool dontFetchReferences)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<ProjectStatusModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
+			return GetModel<ProjectStatusModel, Guid>(id, dontFetchReferences);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> ProjectStatusMetadata(JsonReader input)
+		public IEnumerable<IModelMetadata> ProjectStatusMetadata()
 		{
 			return MetadataForModelAndRelations<ProjectStatusModel>();
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public ValidationResult EditProjectStatus(JsonReader input)
+		public ValidationResult EditProjectStatus([NotNull] ProjectStatusModel model)
 		{
-			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
 
 			try
 			{
-				var modelProperty = request.Body.Property(ModelName);
-				if (modelProperty == null)
-					throw new MalformedRequestException();
-
-				var requestModel = _JsonService.CreateSerializer().Deserialize<ProjectStatusModel>(
-					new JTokenReader(modelProperty.Value));
-				if (requestModel == null)
-					throw new MalformedRequestException();
-
-				var model = default(Guid).Equals(requestModel.Id)
+				var persistentModel = default(Guid).Equals(model.Id)
 					? new ProjectStatusModel { Creator = _AuthController.GetCurrentUser() }
-					: _CrudDao.Get<ProjectStatusModel>(requestModel.Id, true);
+					: _CrudDao.Get<ProjectStatusModel>(model.Id, true);
 
-				var name = requestModel.Name.TrimSafe();
+				var name = model.Name.TrimSafe();
 				if (name.IsNullOrEmpty())
 					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
 				if (_SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
-						.Where(m => m.Name == name && m.Id != requestModel.Id).RowCount() > 0)
+						.Where(m => m.Name == name && m.Id != model.Id).RowCount() > 0)
 					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
 
 				if (!validationResult.Success)
 					return validationResult;
 
-				model.Name = name;
-				model.Description = requestModel.Description.TrimSafe();
-				_CrudDao.Store(model);
+				persistentModel.Name = name;
+				persistentModel.Description = model.Description.TrimSafe();
+				_CrudDao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
@@ -173,11 +150,9 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public void DeleteProjectStatus(JsonReader input)
+		public void DeleteProjectStatus([NotEmpty] Guid id)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var model = _CrudDao.Get<ProjectStatusModel>(request.Id, true);
+			var model = _CrudDao.Get<ProjectStatusModel>(id, true);
 			
 			if (_SessionProvider.CurrentSession.QueryOver<ProjectModel>()
 					.Where(m => m.Status == model).RowCount() > 0)
@@ -191,13 +166,14 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjectTags(JsonReader input)
+		public object GetProjectTags(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters,
+			TagsRequestMode mode)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			var modeProperty = request.Body.Property(TagsRequestModeName);
-			var mode = (modeProperty != null ? modeProperty.TokenValue() : string.Empty)
-				.ParseEnumSafe(TagsRequestMode.Personal);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			IModelFilterNode modeFilter = new ModelFilterNode();
 			if (mode == TagsRequestMode.Personal)
@@ -218,40 +194,33 @@ namespace AGO.Home.Controllers
 					Negative = true
 				});
 			}
-			request.Filters.Add(modeFilter);
+			filter.Add(modeFilter);
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectTagModel>(request.Filters),
-				rows = _FilteringDao.List<ProjectTagModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<ProjectTagModel>(filter),
+				rows = _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ProjectTagModel GetProjectTag(JsonReader input)
+		public ProjectTagModel GetProjectTag([NotEmpty] Guid id, bool dontFetchReferences)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<ProjectTagModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
+			return GetModel<ProjectTagModel, Guid>(id, dontFetchReferences);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectTags(JsonReader input)
+		public object LookupProjectTags(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			string term)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			var termProperty = request.Body.Property("term");
-			var term = termProperty != null ? termProperty.TokenValue() : null;
-			var options = OptionsFromRequest(request);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>();
 			if (!term.IsNullOrWhiteSpace())
@@ -259,66 +228,52 @@ namespace AGO.Home.Controllers
 
 			var result = new List<object>();
 
-			foreach (var model in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List())
+			foreach (var model in query.Skip(page * pageSize).Take(pageSize).List())
 				result.Add(new { id = model.Id, text = model.Name });
 
 			return new { rows = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> ProjectTagMetadata(JsonReader input)
+		public IEnumerable<IModelMetadata> ProjectTagMetadata()
 		{
 			return MetadataForModelAndRelations<ProjectTagModel>();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ValidationResult EditProjectTag(JsonReader input)
+		public ValidationResult EditProjectTag([NotNull] ProjectTagModel model, TagsRequestMode mode)
 		{
-			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
 
 			try
 			{
-				var modelProperty = request.Body.Property(ModelName);
-				if (modelProperty == null)
-					throw new MalformedRequestException();
-
-				var requestModel = _JsonService.CreateSerializer().Deserialize<ProjectTagModel>(
-					new JTokenReader(modelProperty.Value));
-				if (requestModel == null)
-					throw new MalformedRequestException();
-
-				var modeProperty = request.Body.Property(TagsRequestModeName);
-				var mode = (modeProperty != null ? modeProperty.TokenValue() : string.Empty)
-					.ParseEnumSafe(TagsRequestMode.Personal);
-
 				var currentUser = _AuthController.GetCurrentUser();				
-				var model = default(Guid).Equals(requestModel.Id) 
+				var persistentModel = default(Guid).Equals(model.Id) 
 					? new ProjectTagModel
 						{
 							Creator = currentUser,
 							Owner = mode == TagsRequestMode.Personal ? currentUser : null
 						}	
-					: _CrudDao.Get<ProjectTagModel>(requestModel.Id, true);
+					: _CrudDao.Get<ProjectTagModel>(model.Id, true);
 
-				if (model.Owner != null && !currentUser.Equals(model.Owner) && currentUser.SystemRole != SystemRole.Administrator)
+				if (persistentModel.Owner != null && !currentUser.Equals(persistentModel.Owner) && currentUser.SystemRole != SystemRole.Administrator)
 					throw new AccessForbiddenException();
 
-				var name = requestModel.Name.TrimSafe();
+				var name = model.Name.TrimSafe();
 				if (name.IsNullOrEmpty())
 					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
 				if (_SessionProvider.CurrentSession.QueryOver<ProjectTagModel>().Where(
-						m => m.Name == name && m.Owner == requestModel.Owner && m.Id != requestModel.Id).RowCount() > 0)
+						m => m.Name == name && m.Owner == model.Owner && m.Id != model.Id).RowCount() > 0)
 					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
 
 				if (!validationResult.Success)
 					return validationResult;
 
-				model.Name = name;
+				persistentModel.Name = name;
 
 				var parentsStack = new Stack<TagModel>();
 
-				var current = model as TagModel;
+				var current = persistentModel as TagModel;
 				while (current != null)
 				{
 					parentsStack.Push(current);
@@ -333,9 +288,9 @@ namespace AGO.Home.Controllers
 						fullName.Append(" / ");
 					fullName.Append(current.Name);
 				}
-				model.FullName = fullName.ToString();
+				persistentModel.FullName = fullName.ToString();
 
-				_CrudDao.Store(model);
+				_CrudDao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
@@ -346,11 +301,9 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteProjectTag(JsonReader input)
+		public void DeleteProjectTag([NotEmpty] Guid id)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var model = _CrudDao.Get<ProjectTagModel>(request.Id, true);
+			var model = _CrudDao.Get<ProjectTagModel>(id, true);
 
 			var currentUser = _AuthController.GetCurrentUser();
 			if (model.Owner != null && !currentUser.Equals(model.Owner) && currentUser.SystemRole != SystemRole.Administrator)
@@ -364,32 +317,30 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjectTypes(JsonReader input)
+		public object GetProjectTypes(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectTypeModel>(request.Filters),
-				rows = _FilteringDao.List<ProjectTypeModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<ProjectTypeModel>(filter),
+				rows = _FilteringDao.List<ProjectTypeModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ProjectTypeModel GetProjectType(JsonReader input)
+		public ProjectTypeModel GetProjectType([NotEmpty] Guid id, bool dontFetchReferences)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<ProjectTypeModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
+			return GetModel<ProjectTypeModel, Guid>(id, dontFetchReferences);
 		}
 
 		#endregion

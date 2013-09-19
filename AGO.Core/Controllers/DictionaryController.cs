@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Filters;
 using AGO.Core.Modules.Attributes;
-using Newtonsoft.Json;
 
 namespace AGO.Core.Controllers
 {
@@ -18,12 +17,11 @@ namespace AGO.Core.Controllers
 		public DictionaryController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 
@@ -32,36 +30,34 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetCustomPropertyTypes(JsonReader input)
+		public object GetCustomPropertyTypes(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<CustomPropertyTypeModel>(request.Filters),
-				rows = _FilteringDao.List<CustomPropertyTypeModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<CustomPropertyTypeModel>(filter),
+				rows = _FilteringDao.List<CustomPropertyTypeModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public CustomPropertyTypeModel GetCustomPropertyType(JsonReader input)
+		public CustomPropertyTypeModel GetCustomPropertyType([NotEmpty] Guid id, bool dontFetchReferences)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode {Operator = ModelFilterOperators.And};
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id", 
-				Operator = ValueFilterOperators.Eq, 
-				Operand = request.Id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<CustomPropertyTypeModel>(
-				new[] {filter}, OptionsFromRequest(request)).FirstOrDefault();
+			return GetModel<CustomPropertyTypeModel, Guid>(id, dontFetchReferences);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> CustomPropertyMetadata(JsonReader input)
+		public IEnumerable<IModelMetadata> CustomPropertyMetadata()
 		{
 			return MetadataForModelAndRelations<CustomPropertyTypeModel>();
 		}

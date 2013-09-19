@@ -55,7 +55,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CloseCurrentSession();
 		}
 
-		[Test]
+		/*[Test]
 		public void TaskTypeControllerRegistered()
 		{
 			Assert.IsNotNull(taskTypeController);
@@ -199,6 +199,6 @@ namespace AGO.Tasks.Test
 			var input = ModelRequest(testProject, "tasks/dictionary/deleteTaskTypes", testTaskType.Id);
 			
 			taskTypeController.DeleteTaskType(input);
-		}
+		}*/
 	}
 }

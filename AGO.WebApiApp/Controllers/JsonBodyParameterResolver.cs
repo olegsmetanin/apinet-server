@@ -82,7 +82,7 @@ namespace AGO.WebApiApp.Controllers
 				var jsonProperty = jsonBody != null ? jsonBody.Property(parameterInfo.Name) : null;
 
 				parameterValue = jsonProperty != null
-					? (jsonProperty.Value is JValue ? (object)jsonProperty.TokenValue() : jsonProperty)
+					? (jsonProperty.Value is JValue ? (object)jsonProperty.TokenValue() : jsonProperty.Value)
 					: null;
 			}
 

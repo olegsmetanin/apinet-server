@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Filters.Metadata;
@@ -7,7 +8,6 @@ using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
-using Newtonsoft.Json;
 
 namespace AGO.DocManagement.Controllers
 {
@@ -18,12 +18,11 @@ namespace AGO.DocManagement.Controllers
 		public DocumentsController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 
@@ -32,19 +31,28 @@ namespace AGO.DocManagement.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetDocuments(JsonReader input)
+		public object GetDocuments(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<DocumentModel>(request.Filters),
-				rows = _FilteringDao.List<DocumentModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<DocumentModel>(filter),
+				rows = _FilteringDao.List<DocumentModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> DocumentMetadata(JsonReader input)
+		public IEnumerable<IModelMetadata> DocumentMetadata()
 		{
 			return MetadataForModelAndRelations<DocumentModel>();
 		}

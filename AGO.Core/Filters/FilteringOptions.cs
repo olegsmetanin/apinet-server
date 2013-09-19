@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using AGO.Core.Model;
+using Newtonsoft.Json;
 
 namespace AGO.Core.Filters
 {
@@ -13,15 +14,16 @@ namespace AGO.Core.Filters
 		DontFetchReferences
 	}
 
-		public struct SortInfo
-		{
-			public string Property { get; set; }
+	public struct SortInfo
+	{
+		[JsonProperty("property")]
+		public string Property { get; set; }
 
-			public bool Descending { get; set; }
-		}
+		[JsonProperty("descending")]
+		public bool Descending { get; set; }
+	}
 
-	public struct SortInfo<T>
-			where T : class, IIdentifiedModel
+	public struct SortInfo<T> where T : class, IIdentifiedModel
 	{
 		public Expression<Func<T, object>> Property { get; set; }
 
@@ -30,8 +32,8 @@ namespace AGO.Core.Filters
 
 	public class FilteringOptions
 	{
-		private IList<SortInfo> _Sorters = new List<SortInfo>();
-		public IList<SortInfo> Sorters
+		private ICollection<SortInfo> _Sorters = new List<SortInfo>();
+		public ICollection<SortInfo> Sorters
 		{
 			get { return _Sorters; } 
 			set { _Sorters = value ?? _Sorters; }
@@ -61,8 +63,8 @@ namespace AGO.Core.Filters
 	public class FilteringOptions<TModel> : FilteringOptions
 		where TModel : class, IIdentifiedModel
 	{
-		private IList<SortInfo<TModel>> _GenericSorters = new List<SortInfo<TModel>>();
-		public new IList<SortInfo<TModel>> Sorters
+		private ICollection<SortInfo<TModel>> _GenericSorters = new List<SortInfo<TModel>>();
+		public new ICollection<SortInfo<TModel>> Sorters
 		{
 			get { return _GenericSorters; } 
 			set { _GenericSorters = value ?? _GenericSorters; }

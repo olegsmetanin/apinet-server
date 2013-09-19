@@ -6,8 +6,6 @@ namespace AGO.Core
 {
 	public abstract class AbstractService : IInitializable, IKeyValueConfigurable
 	{
-		public const string ModelName = "model";
-
 		#region Configuration properties, fields and methods
 
 		public string GetConfigProperty(string key)

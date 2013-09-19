@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using AGO.Core.Attributes.Constraints;
-using AGO.Core.Filters;
 using AGO.Core.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,19 +12,11 @@ namespace AGO.Core.Execution
 		
 		protected readonly IJsonService _JsonService;
 
-		protected readonly IFilteringService _FilteringService;
-
-		public AttributeValidatingParameterTransformer(
-			IJsonService jsonService,
-			IFilteringService filteringService)
+		public AttributeValidatingParameterTransformer(IJsonService jsonService)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
 			_JsonService = jsonService;
-
-			if (filteringService == null)
-				throw new ArgumentNullException("filteringService");
-			_FilteringService = filteringService;
 		}
 
 		#endregion
@@ -43,41 +34,46 @@ namespace AGO.Core.Execution
 			ParameterInfo parameterInfo, 
 			ref object parameterValue)
 		{
-				var initial = parameterValue;
-				var paramType = parameterInfo.ParameterType;
+			var initial = parameterValue;
+			var paramType = parameterInfo.ParameterType;
 
-				var token = parameterValue as JToken;
-				if (token != null)
+			var token = parameterValue as JToken;
+			if (token != null)
+			{
+				var tokenReader = new JTokenReader(token) { CloseInput = false };
+				parameterValue = _JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
+			}
+
+			if (parameterValue != null)
+			{
+				if (!paramType.IsInstanceOfType(parameterValue))
+					parameterValue = parameterValue.ConvertSafe(paramType);
+			}
+			else
+			{
+				if (paramType.IsValueType)
+					parameterValue = Activator.CreateInstance(paramType);
+			}
+
+			var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttribute(parameterValue);
+			if (invalidAttribute != null)
+			{
+				if (invalidAttribute is NotNullAttribute || invalidAttribute is NotEmptyAttribute)
 				{
-					var tokenReader = new JTokenReader(token) { CloseInput = false };
-					parameterValue = _JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
+					if (invalidAttribute is NotNullAttribute)
+						throw new ArgumentNullException(parameterInfo.Name);
+
+					throw new ArgumentException("Parameter is empty", parameterInfo.Name);
 				}
 
-				if (parameterValue != null)
-				{
-					if (!paramType.IsInstanceOfType(parameterValue))
-						parameterValue = parameterValue.ConvertSafe(paramType);
-				}
+				var inRange = invalidAttribute as InRangeAttribute;
+				if (inRange != null)
+					throw new ArgumentException(string.Format("Parameter not in range ({0} - {1}){2}",
+				inRange.Start, inRange.End, inRange.Inclusive ? " inclusive" : string.Empty), parameterInfo.Name);
 
-				var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttribute(parameterValue);
-				if (invalidAttribute != null)
-				{
-					if (invalidAttribute is NotNullAttribute || invalidAttribute is NotEmptyAttribute)
-					{
-						if (invalidAttribute is NotNullAttribute)
-							throw new ArgumentNullException(parameterInfo.Name);
-
-						throw new ArgumentException("Parameter is empty", parameterInfo.Name);
-					}
-
-					var inRange = invalidAttribute as InRangeAttribute;
-					if (inRange != null)
-						throw new ArgumentException(string.Format("Parameter not in range ({0} - {1}){2}",
-					inRange.Start, inRange.End, inRange.Inclusive ? " inclusive" : string.Empty), parameterInfo.Name);
-
-					throw new InvalidOperationException();
-				}
-				return (parameterValue != null && paramType.IsInstanceOfType(parameterValue)) || initial == null;
+				throw new InvalidOperationException();
+			}
+			return (parameterValue != null && paramType.IsInstanceOfType(parameterValue)) || initial == null;
 		}
 
 		#endregion

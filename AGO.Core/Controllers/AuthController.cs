@@ -3,32 +3,22 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
-using Newtonsoft.Json;
 
 namespace AGO.Core.Controllers
 {
 	public class AuthController : AbstractService
 	{
-		#region Constants
-
-		public const string LoginName = "email";
-
-		public const string PwdName = "password";
-		
-		#endregion
-
 		#region Properties, fields, constructors
 
 		protected readonly IJsonService _JsonService;
 
 		protected readonly IFilteringService _FilteringService;
-
-		protected readonly IJsonRequestService _JsonRequestService;
 
 		protected readonly ICrudDao _CrudDao;
 
@@ -39,7 +29,6 @@ namespace AGO.Core.Controllers
 		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider)
@@ -51,10 +40,6 @@ namespace AGO.Core.Controllers
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
 			_FilteringService = filteringService;
-
-			if (jsonRequestService == null)
-				throw new ArgumentNullException("jsonRequestService");
-			_JsonRequestService = jsonRequestService;
 
 			if (crudDao == null)
 				throw new ArgumentNullException("crudDao");
@@ -74,28 +59,16 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint]
-		public object Login(JsonReader input)
+		public object Login([NotEmpty] string email, [NotEmpty] string password)
 		{
-			var request = _JsonRequestService.ParseRequest(input);
-
-			var loginProperty = request.Body.Property(LoginName);
-			var login = loginProperty != null ? loginProperty.TokenValue().TrimSafe() : null;
-			if (login == null || login.IsNullOrEmpty())
-				throw new EmptyLoginException();
-
-			var pwdProperty = request.Body.Property(PwdName);
-			var pwd = pwdProperty != null ? pwdProperty.TokenValue().TrimSafe() : null;
-			if (pwd == null || pwd.IsNullOrEmpty())
-				throw new EmptyPwdException();
-
 			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.Login == login).Take(1).List().FirstOrDefault();
+				.Where(m => m.Login == email.TrimSafe()).Take(1).List().FirstOrDefault();
 			if (user == null)
 				throw new NoSuchUserException();
 
 			var cryptoProvider = new MD5CryptoServiceProvider();
 			var pwdHash = Encoding.Default.GetString(
-				cryptoProvider.ComputeHash(Encoding.Default.GetBytes(pwd)));
+				cryptoProvider.ComputeHash(Encoding.Default.GetBytes(password.TrimSafe())));
 			if (!string.Equals(user.PwdHash, pwdHash))
 				throw new InvalidPwdException();
 
@@ -108,13 +81,13 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint]
-		public void Logout(JsonReader input)
+		public void Logout()
 		{
 			HttpContext.Current.Session["CurrentUser"] = null;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object CurrentUser(JsonReader input)
+		public object CurrentUser()
 		{
 			return new
 			{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Filters;
@@ -23,8 +24,6 @@ namespace AGO.Core.Controllers
 
 		protected readonly IFilteringService _FilteringService;
 
-		protected readonly IJsonRequestService _JsonRequestService;
-
 		protected readonly ICrudDao _CrudDao;
 
 		protected readonly IFilteringDao _FilteringDao;
@@ -36,7 +35,6 @@ namespace AGO.Core.Controllers
 		protected AbstractController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
@@ -49,10 +47,6 @@ namespace AGO.Core.Controllers
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
 			_FilteringService = filteringService;
-
-			if (jsonRequestService == null)
-				throw new ArgumentNullException("jsonRequestService");
-			_JsonRequestService = jsonRequestService;
 
 			if (crudDao == null)
 				throw new ArgumentNullException("crudDao");
@@ -87,10 +81,6 @@ namespace AGO.Core.Controllers
 			if (initializable != null)
 				initializable.Initialize();
 
-			initializable = _JsonRequestService as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
 			initializable = _CrudDao as IInitializable;
 			if (initializable != null)
 				initializable.Initialize();
@@ -109,25 +99,6 @@ namespace AGO.Core.Controllers
 		#endregion
 
 		#region Helper methods
-
-		protected FilteringOptions OptionsFromRequest(IJsonModelsRequest request)
-		{
-			return new FilteringOptions
-			{
-				Skip = request.Page * request.PageSize,
-				Take = request.PageSize,
-				Sorters = request.Sorters
-			};
-		}
-
-		protected FilteringOptions OptionsFromRequest<TIdType>(IJsonModelRequest<TIdType> request)
-		{
-			return new FilteringOptions
-			{
-				Take = 1,
-				FetchStrategy = FetchStrategy.FetchRootReferences
-			};
-		}
 
 		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations<TModel>()
 			where TModel : IIdentifiedModel
@@ -159,6 +130,24 @@ namespace AGO.Core.Controllers
 
 			foreach (var modelProperty in metadata.ModelProperties)
 				ProcessMetadata(modelProperty.PropertyType, result, processedTypes);
+		}
+
+		protected TModel GetModel<TModel, TId>(TId id, bool dontFetchReferences)
+			where TModel : class, IIdentifiedModel<TId>
+		{
+			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
+			filter.AddItem(new ValueFilterNode
+			{
+				Path = "Id",
+				Operator = ValueFilterOperators.Eq,
+				Operand = id.ToStringSafe()
+			});
+
+			return _FilteringDao.List<TModel>(new[] { filter }, new FilteringOptions
+			{
+				Take = 1,
+				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
+			}).FirstOrDefault();
 		}
 
 		#endregion

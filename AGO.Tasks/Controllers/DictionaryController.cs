@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using AGO.Core;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AGO.Tasks.Controllers
 {
@@ -17,59 +17,57 @@ namespace AGO.Tasks.Controllers
     {
         public DictionaryController(
             IJsonService jsonService, 
-            IFilteringService filteringService, 
-            IJsonRequestService jsonRequestService, 
+            IFilteringService filteringService,
             ICrudDao crudDao, 
             IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 
-		public ModelsResponse<TaskTypeModel> GetTaskTypes(JsonReader input)
+		public ModelsResponse<TaskTypeModel> GetTaskTypes(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new ModelsResponse<TaskTypeModel>
 			{
-				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(request.Filters),
-				rows = _FilteringDao.List<TaskTypeModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(filter),
+				rows = _FilteringDao.List<TaskTypeModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
-		public ValidationResult EditTaskType(JsonReader input)
+		public ValidationResult EditTaskType([NotNull] TaskTypeModel model, [NotEmpty] string project)
 		{
-			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
 
 			try
 			{
-				var modelProperty = request.Body.Property(ModelName);
-				if (modelProperty == null)
-					throw new MalformedRequestException();
+				var persistentModel = default(Guid).Equals(model.Id)
+					? new TaskTypeModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.GetCurrentUser() }
+					: _CrudDao.Get<TaskTypeModel>(model.Id, true);
 
-				var requestModel = _JsonService.CreateSerializer().Deserialize<TaskTypeModel>(
-					new JTokenReader(modelProperty.Value));
-				if (requestModel == null)
-					throw new MalformedRequestException();
-
-				var model = default(Guid).Equals(requestModel.Id)
-					? new TaskTypeModel { ProjectCode = request.Project }//TODO improve AuthController for work without http context { Creator = authController.GetCurrentUser() }
-					: _CrudDao.Get<TaskTypeModel>(requestModel.Id, true);
-
-				var name = requestModel.Name.TrimSafe();
+				var name = model.Name.TrimSafe();
 				if (name.IsNullOrEmpty())
 					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
 				if (_SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
-						.Where(m => m.ProjectCode == request.Project && m.Name == name && m.Id != requestModel.Id).RowCount() > 0)
+						.Where(m => m.ProjectCode == project && m.Name == name && m.Id != model.Id).RowCount() > 0)
 					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
 
 				if (!validationResult.Success)
 					return validationResult;
 
-				model.Name = name;
-				_CrudDao.Store(model);
+				persistentModel.Name = name;
+				_CrudDao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
@@ -79,11 +77,9 @@ namespace AGO.Tasks.Controllers
 			return validationResult;
 		}
 
-		public void DeleteTaskType(JsonReader input)
+		public void DeleteTaskType([NotEmpty] Guid id)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var taskType = _CrudDao.Get<TaskTypeModel>(request.Id, true);
+			var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
 
 			if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
 					.Where(m => m.TaskType == taskType).RowCount() > 0)

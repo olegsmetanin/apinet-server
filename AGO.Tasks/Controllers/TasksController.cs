@@ -12,13 +12,12 @@ namespace AGO.Tasks.Controllers
     {
         public TasksController(
             IJsonService jsonService, 
-            IFilteringService filteringService, 
-            IJsonRequestService jsonRequestService, 
+            IFilteringService filteringService,
             ICrudDao crudDao, 
             IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController) 
-            : base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+            : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
         {
         }
     }

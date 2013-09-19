@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.DocManagement.Model.Dictionary.Documents;
@@ -7,7 +8,6 @@ using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
-using Newtonsoft.Json;
 
 namespace AGO.DocManagement.Controllers
 {
@@ -18,12 +18,11 @@ namespace AGO.DocManagement.Controllers
 		public DictionaryController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 
@@ -32,61 +31,57 @@ namespace AGO.DocManagement.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetDocumentStatuses(JsonReader input)
+		public object GetDocumentStatuses(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<DocumentStatusModel>(request.Filters),
-				rows = _FilteringDao.List<DocumentStatusModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<DocumentStatusModel>(filter),
+				rows = _FilteringDao.List<DocumentStatusModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public DocumentStatusModel GetDocumentStatus(JsonReader input)
+		public DocumentStatusModel GetDocumentStatus([NotEmpty] Guid id, bool dontFetchReferences)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<DocumentStatusModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
+			return GetModel<DocumentStatusModel, Guid>(id, dontFetchReferences);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetDocumentCategories(JsonReader input)
+		public object GetDocumentCategories(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<DocumentCategoryModel>(request.Filters),
-				rows = _FilteringDao.List<DocumentCategoryModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<DocumentCategoryModel>(filter),
+				rows = _FilteringDao.List<DocumentCategoryModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public DocumentCategoryModel GetDocumentCategory(JsonReader input)
+		public DocumentCategoryModel GetDocumentCategory([NotEmpty] Guid id, bool dontFetchReferences)
 		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = request.Id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<DocumentCategoryModel>(
-				new[] { filter }, OptionsFromRequest(request)).FirstOrDefault();
+			return GetModel<DocumentCategoryModel, Guid>(id, dontFetchReferences);
 		}
 
 		#endregion

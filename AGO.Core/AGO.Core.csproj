@@ -73,6 +73,7 @@
     <Compile Include="Controllers\Exceptions.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
+    <Compile Include="Execution\FilterParameterTransformer.cs" />
     <Compile Include="Execution\IActionExecutor.cs" />
     <Compile Include="Execution\IActionParameterResolver.cs" />
     <Compile Include="Execution\IActionParameterTransformer.cs" />
@@ -124,14 +125,6 @@
     <Compile Include="Json\ContractResolver.cs" />
     <Compile Include="Json\Exceptions.cs" />
     <Compile Include="Json\IdentifiedModelConverter.cs" />
-    <Compile Include="Json\IJsonModelRequest.cs" />
-    <Compile Include="Json\IJsonModelsRequest.cs" />
-    <Compile Include="Json\IJsonRequest.cs" />
-    <Compile Include="Json\IJsonRequestService.cs" />
-    <Compile Include="Json\JsonModelRequest.cs" />
-    <Compile Include="Json\JsonModelsRequest.cs" />
-    <Compile Include="Json\JsonRequest.cs" />
-    <Compile Include="Json\JsonRequestService.cs" />
     <Compile Include="Json\ModelFilterOperatorConverter.cs" />
     <Compile Include="Json\ModelMetadataConverter.cs" />
     <Compile Include="Json\ValueFilterOperatorConverter.cs" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Filters.Metadata;
@@ -11,8 +12,6 @@ using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using NHibernate.Criterion;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AGO.Home.Controllers
 {
@@ -24,25 +23,16 @@ namespace AGO.Home.Controllers
 
 	public class ProjectsController : AbstractController
 	{
-		#region Constants
-
-		public const string NewProjectModelName = "project";
-
-		public const string ProjectsRequestModeName = "mode";
-
-		#endregion
-
 		#region Properties, fields, constructors
 
 		public ProjectsController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			IJsonRequestService jsonRequestService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			AuthController authController)
-			: base(jsonService, filteringService, jsonRequestService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
 		}
 
@@ -51,22 +41,12 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public ValidationResult CreateProject(JsonReader input)
+		public ValidationResult CreateProject([NotNull] ProjectModel model)
 		{
-			var request = _JsonRequestService.ParseRequest(input);
 			var validationResult = new ValidationResult();
 
 			try
 			{
-				var modelProperty = request.Body.Property(NewProjectModelName);
-				if (modelProperty == null)
-					throw new MalformedRequestException();
-
-				var model = _JsonService.CreateSerializer().Deserialize<ProjectModel>(
-					new JTokenReader(modelProperty.Value));
-				if (model == null)
-					throw new MalformedRequestException();
-
 				var initialStatus = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
 					.Where(m => m.IsInitial).Take(1).List().FirstOrDefault();
 				if (initialStatus == null)
@@ -129,14 +109,15 @@ namespace AGO.Home.Controllers
 		}*/
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjects(JsonReader input)
+		public object GetProjects(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters,
+			ProjectsRequestMode mode)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
-			var modeProperty = request.Body.Property(ProjectsRequestModeName);
-			var mode = (modeProperty != null ? modeProperty.TokenValue() : string.Empty)
-				.ParseEnumSafe(ProjectsRequestMode.All);
-	
 			if (mode == ProjectsRequestMode.Participated)
 			{
 				var modeFilter = new ModelFilterNode { Path = "Participants" };
@@ -146,40 +127,45 @@ namespace AGO.Home.Controllers
 					Operator = ValueFilterOperators.Eq,
 					Operand = _AuthController.GetCurrentUser().Id.ToString()
 				});
-				request.Filters.Add(modeFilter);
+				filter.Add(modeFilter);
 			}
 
 			return new
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectModel>(request.Filters),
-				rows = _FilteringDao.List<ProjectModel>(request.Filters, OptionsFromRequest(request))
+				totalRowsCount = _FilteringDao.RowCount<ProjectModel>(filter),
+				rows = _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
+				{
+					Skip = page * pageSize,
+					Take = pageSize,
+					Sorters = sorters
+				})
 			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectNames(JsonReader input)
+		public object LookupProjectNames(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			string term)
 		{
-			var request = _JsonRequestService.ParseModelsRequest(input, DefaultPageSize, MaxPageSize);
-
-			var termProperty = request.Body.Property("term");
-			var term = termProperty != null ? termProperty.TokenValue() : null;
-			var options = OptionsFromRequest(request);
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-				.Select(Projections.Distinct(Projections.Property("Name")));
+				.Select(Projections.Distinct(Projections.Property("Name")))
+				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
 			var result = new List<object>();
 
-			foreach (var str in query.Skip(options.Skip ?? 0).Take(options.Take ?? 1).List<string>())
+			foreach (var str in query.Skip(page * pageSize).Take(pageSize).List<string>())
 				result.Add(new { id = str, text = str });
 
 			return new { rows = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> ProjectMetadata(JsonReader input)
+		public IEnumerable<IModelMetadata> ProjectMetadata()
 		{
 			return MetadataForModelAndRelations<ProjectModel>();
 		}
