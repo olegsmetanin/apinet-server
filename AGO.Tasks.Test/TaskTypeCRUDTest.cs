@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
@@ -16,21 +15,8 @@ namespace AGO.Tasks.Test
 	/// Тесты CRUD справочника типов задач
 	/// </summary>
 	[TestFixture]
-	public class TaskTypeCRUDTest: AbstractApplication
+	public class TaskTypeCRUDTest: AbstractTestFixture
 	{
-		protected override void Register()
-		{
-			RegisterEnvironment();
-			RegisterPersistence();
-			RegisterControllers();
-		}
-
-		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
-		{
-			InitializeEnvironment(initializedServices);
-			InitializePersistence(initializedServices);
-		}
-		
 		private string testProject;
 		private DictionaryController taskTypeController;
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using AGO.Core.Application;
 using AGO.Core.Model.Example;
@@ -8,34 +8,41 @@ using NUnit.Framework;
 namespace AGO.Core.Tests
 {
 	[TestFixture]
-	public class HelperTests : AbstractApplication
+	public class HelperTests : AbstractTestFixture
 	{
 		[Test]
 		public void CreateAndPopulateDatabase()
 		{
-			InitContainer();
+			DoCreateDatabase();
 
-			var createDatabaseStream = typeof(FilteringTests).Assembly.GetManifestResourceStream(
-				typeof(FilteringTests).Assembly.GetName().Name + ".CreateDatabase.sql");
-			if (createDatabaseStream == null)
+			InitContainer();
+			DoPopulateDatabase();
+		}
+
+		protected override void DoExecuteCreateDatabaseScript(
+			IDbConnection masterConnection,
+			string databaseName, 
+			string loginName)
+		{
+			base.DoExecuteCreateDatabaseScript(masterConnection, databaseName, loginName);
+
+			var createSchemaStream = typeof(FilteringTests).Assembly.GetManifestResourceStream(
+				typeof(FilteringTests).Assembly.GetName().Name + ".CreateSchema.sql");
+			if (createSchemaStream == null)
 				throw new InvalidOperationException();
 
 			string script;
-			using (var reader = new StreamReader(createDatabaseStream))
+			using (var reader = new StreamReader(createSchemaStream))
 				script = reader.ReadToEnd();
 
-			ExecuteNonQuery(script, _SessionProvider.CurrentSession.Connection);
-			DoPopulateDatabase();
+			ExecuteNonQuery(script, masterConnection);
 		}
 
-		[Test]
-		public void PopulateDatabase()
+		protected override void DoMigrateUp()
 		{
-			InitContainer();
-			DoPopulateDatabase();
 		}
 
-		protected void DoPopulateDatabase()
+		protected override void  DoExecutePopulateDatabaseScript()
 		{
 			var manyEndModel1 = new ManyEndModel
 			{
@@ -131,23 +138,7 @@ namespace AGO.Core.Tests
 			manyToMany1Model.AssociatedModels.Add(manyToMany2Model);
 			_CrudDao.Store(manyToMany1Model);
 
-			_SessionProvider.CurrentSession.Flush();
+			_SessionProvider.CloseCurrentSession();
 		}
-
-		#region Container initialization
-
-		protected override void Register()
-		{
-			RegisterEnvironment();
-			RegisterPersistence();
-		}
-
-		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
-		{
-			InitializeEnvironment(initializedServices);
-			InitializePersistence(initializedServices);
-		}
-
-		#endregion
 	}
 }

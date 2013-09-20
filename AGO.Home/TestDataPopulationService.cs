@@ -8,7 +8,7 @@ using NHibernate;
 
 namespace AGO.Home
 {
-	public class TestDataPopulationService : AbstractService
+	public class TestDataPopulationService : AbstractService, ITestDataPopulationService
 	{
 		#region Properties, fields, constructors
 
@@ -27,7 +27,7 @@ namespace AGO.Home
 
 		#region Public methods
 
-		public void PopulateHome()
+		public void Populate()
 		{
 			var admin = CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.SystemRole == SystemRole.Administrator).Take(1).List().FirstOrDefault();
@@ -35,8 +35,6 @@ namespace AGO.Home
 				throw new Exception("admin is null");
 
 			PopulateProjects(admin);
-
-			CurrentSession.Flush();
 		}
 
 		#endregion

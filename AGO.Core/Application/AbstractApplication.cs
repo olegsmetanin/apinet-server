@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
 using System.Linq;
-using System.Text;
 using AGO.Core.AutoMapping;
 using AGO.Core.Config;
 using AGO.Core.Controllers;
@@ -56,7 +53,13 @@ namespace AGO.Core.Application
 
 		#region Registration
 
-		protected abstract void Register();
+		protected virtual void Register()
+		{
+			RegisterEnvironment();
+			RegisterPersistence();
+			RegisterActionExecution();
+			RegisterControllers();
+		}
 
 		protected virtual IEnumerable<Type> AllActionParameterResolvers
 		{
@@ -70,6 +73,7 @@ namespace AGO.Core.Application
 				return new[]
 				{
 					typeof (FilterParameterTransformer),
+					typeof (JsonTokenParameterTransformer),
 					typeof (AttributeValidatingParameterTransformer)
 				}; 
 			}
@@ -116,6 +120,7 @@ namespace AGO.Core.Application
 		{
 			ConfigureEnvironment(keyValueProvider);
 			ConfigurePersistence(keyValueProvider);
+			ConfigureControllers(keyValueProvider);
 		}
 
 		protected void ConfigureEnvironment(IKeyValueProvider keyValueProvider)
@@ -134,6 +139,12 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Dao_(.*)", keyValueProvider)).ApplyTo(service));
 			_Container.RegisterInitializer<MigrationService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", keyValueProvider)).ApplyTo(service));
+		}
+
+		protected virtual void ConfigureControllers(IKeyValueProvider keyValueProvider)
+		{
+			_Container.RegisterInitializer<AuthController>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^Core_Auth_(.*)", keyValueProvider)).ApplyTo(service));
 		}
 
 		#endregion
@@ -157,6 +168,8 @@ namespace AGO.Core.Application
 
 		protected virtual void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
 		{
+			InitializeEnvironment(initializedServices);
+			InitializePersistence(initializedServices);
 		}
 
 		protected virtual void AfterContainerInitialized(IList<IInitializable> initializedServices)
@@ -200,47 +213,6 @@ namespace AGO.Core.Application
 		protected virtual IKeyValueProvider GetKeyValueProvider()
 		{
 			return new AppSettingsKeyValueProvider();
-		}
-
-		#endregion
-
-		#region Helper methods
-
-		protected void ExecuteNonQuery(string script, IDbConnection connection)
-		{
-			var scripts = new List<string>();
-			using (var reader = new StringReader(script))
-			{
-				var line = reader.ReadLine();
-				var currentBatch = new StringBuilder();
-				while (line != null)
-				{
-					line = line.TrimSafe();
-					if (!"GO".Equals(line, StringComparison.InvariantCultureIgnoreCase))
-						currentBatch.AppendLine(line);
-					else
-					{
-						if (currentBatch.Length > 0)
-							scripts.Add(currentBatch.ToString());
-						currentBatch = new StringBuilder();
-					}
-
-					line = reader.ReadLine();
-				}
-			}
-
-			foreach (var str in scripts)
-			{
-				var command = connection.CreateCommand();
-				command.CommandText = str;
-				command.CommandType = CommandType.Text;
-
-				var rowsAffected = command.ExecuteNonQuery();
-				if (rowsAffected >= 0)
-					Console.WriteLine("Rows affected: {0}", rowsAffected);
-			}
-
-			Console.WriteLine("Batch complete ({0} scripts executed)", scripts.Count);
 		}
 
 		#endregion
