@@ -4,6 +4,7 @@ using System.Linq;
 using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Filters;
+using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
@@ -56,9 +57,10 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void ReadTaskTypesFromEmptyReturnEmptyData()
 		{
-			var result = taskTypeController.GetTaskTypes(0, 10, 
+			var result = taskTypeController.GetTaskTypes(testProject, 
 				Enumerable.Empty<IModelFilterNode>().ToArray(), 
-				Enumerable.Empty<SortInfo>().ToArray());
+				Enumerable.Empty<SortInfo>().ToArray(), 
+				0, 10);
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(0, result.totalRowsCount);
@@ -73,10 +75,12 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(tt1);
 			_SessionProvider.CurrentSession.Save(tt2);
 			_SessionProvider.CloseCurrentSession();
-			
-			var result = taskTypeController.GetTaskTypes(0, 10, 
+
+			var result = taskTypeController.GetTaskTypes(
+				testProject,
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
-				new [] { new SortInfo {Property = "Name"} }); //need ordered result for assertion
+				new [] { new SortInfo {Property = "Name"} }, //need ordered result for assertion
+				0, 10); 
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(2, result.totalRowsCount);
@@ -88,16 +92,16 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskType()
 		{
-			var testTaskType = new TaskTypeModel { Name = "TestTaskType" };
+			var model = new TaskTypeDTO { Name = "TestTaskType" };
 
-			var vr = taskTypeController.EditTaskType(testTaskType, testProject);
+			var vr = taskTypeController.EditTaskType(testProject, model);
 			_SessionProvider.CloseCurrentSession();
 
-			testTaskType = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
+			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == testProject && m.Name == "TestTaskType")
 				.SingleOrDefault();
-			Assert.AreNotEqual(default(Guid), testTaskType.Id);
-			Assert.AreEqual("TestTaskType", testTaskType.Name);
+			Assert.AreNotEqual(default(Guid), tt.Id);
+			Assert.AreEqual("TestTaskType", tt.Name);
 			Assert.IsTrue(vr.Success);
 		}
 
@@ -109,8 +113,8 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CloseCurrentSession();
 
-			testTaskType = new TaskTypeModel {Id = testTaskType.Id, Name = "NewName"};
-			var vr = taskTypeController.EditTaskType(testTaskType, testProject);
+			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
+			var vr = taskTypeController.EditTaskType(testProject, model);
 			_SessionProvider.CloseCurrentSession();
 
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
@@ -118,7 +122,6 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(vr.Success);
 		}
 
-		
 		[Test]
 		public void DeleteTaskType()
 		{

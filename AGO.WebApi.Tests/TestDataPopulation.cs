@@ -83,6 +83,7 @@ namespace AGO.WebApi.Tests
 
 			_Container.GetInstance<TestDataPopulationService>().PopulateCore();
 			_Container.GetInstance<Home.TestDataPopulationService>().PopulateHome();
+			_Container.GetInstance<Tasks.TestDataPopulationService>().PopulateTasks();
 
 			_SessionProvider.CloseCurrentSession();
 		}

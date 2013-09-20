@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
+using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Filters;
+using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
+using AGO.Core.Modules.Attributes;
+using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
+using System.Linq;
 
 namespace AGO.Tasks.Controllers
 {
@@ -26,27 +31,40 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		public ModelsResponse<TaskTypeModel> GetTaskTypes(
-			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
+		[JsonEndpoint, RequireAuthorization]
+		public ModelsResponse<TaskTypeDTO> GetTaskTypes(
+			[NotEmpty] string project,
 			[NotNull] ICollection<IModelFilterNode> filter,
-			[NotNull] ICollection<SortInfo> sorters)
+			[NotNull] ICollection<SortInfo> sorters, 
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize)
 		{
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
-			return new ModelsResponse<TaskTypeModel>
+			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
+			var predicate = filter.Concat(new[] {projectPredicate}).ToArray();
+
+			return new ModelsResponse<TaskTypeDTO>
 			{
-				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(filter),
-				rows = _FilteringDao.List<TaskTypeModel>(filter, new FilteringOptions
+				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(predicate),
+				rows = _FilteringDao.List<TaskTypeModel>(predicate, new FilteringOptions
 				{
 					Skip = page * pageSize,
 					Take = pageSize,
 					Sorters = sorters
-				})
+				}).Select(m => new TaskTypeDTO
+				               	{
+									Id = m.Id,
+				               		Name = m.Name, 
+									Author = (m.Creator != null ? m.Creator.ShortName : string.Empty), 
+									CreationTime = m.CreationTime,
+									ModelVersion = m.ModelVersion
+				               	})
 			};
 		}
 
-		public ValidationResult EditTaskType([NotNull] TaskTypeModel model, [NotEmpty] string project)
+		[JsonEndpoint, RequireAuthorization]
+		public ValidationResult EditTaskType([NotEmpty] string project, [NotNull] TaskTypeDTO model)
 		{
 			var validationResult = new ValidationResult();
 
@@ -77,6 +95,7 @@ namespace AGO.Tasks.Controllers
 			return validationResult;
 		}
 
+		[JsonEndpoint, RequireAuthorization]
 		public void DeleteTaskType([NotEmpty] Guid id)
 		{
 			var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
@@ -86,6 +105,12 @@ namespace AGO.Tasks.Controllers
 				throw new CannotDeleteReferencedItemException();
 
 			_CrudDao.Delete(taskType);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<IModelMetadata> TaskTypeMetadata()
+		{
+			return MetadataForModelAndRelations<TaskTypeModel>();
 		}
     }
 }

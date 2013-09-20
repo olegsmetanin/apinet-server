@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
+using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Dictionary;
 using Newtonsoft.Json;
 
@@ -50,5 +51,23 @@ namespace AGO.Core.Model.Security
 		private ISet<DepartmentModel> _Departments = new HashSet<DepartmentModel>();
 
 		#endregion
+
+		[NotMapped]
+		public virtual string FullName
+		{
+			get { return string.Join(" ", LastName, Name, MiddleName); }
+		}
+
+		[NotMapped]
+		public virtual string ShortName
+		{
+			get
+			{
+				var ni = !Name.IsNullOrWhiteSpace() ? Name.Substring(0, 1).ToUpper() + ". " : null;
+				var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
+
+				return ni != null && mi != null ? LastName + ni + mi : LastName;
+			}
+		}
 	}
 }
