@@ -75,6 +75,11 @@ namespace AGO.Core.Application
 			}
 		}
 
+		protected virtual IEnumerable<Type> AllActionResultTransformers
+		{
+			get { return Enumerable.Empty<Type>(); }
+		}
+
 		protected virtual void RegisterEnvironment()
 		{
 			_Container.RegisterSingle<IJsonService, JsonService>();
@@ -94,6 +99,7 @@ namespace AGO.Core.Application
 		{
 			_Container.RegisterAll<IActionParameterResolver>(AllActionParameterResolvers);
 			_Container.RegisterAll<IActionParameterTransformer>(AllActionParameterTransformers);
+			_Container.RegisterAll<IActionResultTransformer>(AllActionResultTransformers);
 			_Container.RegisterSingle<IActionExecutor, ActionExecutor>();
 		}
 

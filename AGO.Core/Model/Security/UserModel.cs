@@ -16,7 +16,7 @@ namespace AGO.Core.Model.Security
 		[DisplayName("Логин"), JsonProperty, NotLonger(64), NotEmpty]
 		public virtual string Login { get; set; }
 
-		[DisplayName("MD5 хеш"), JsonProperty, NotLonger(128), NotEmpty, MetadataExclude]
+		[DisplayName("MD5 хеш"), NotLonger(128), NotEmpty, MetadataExclude]
 		public virtual string PwdHash { get; set; }
 
 		[DisplayName("Активен"), JsonProperty, NotNull]

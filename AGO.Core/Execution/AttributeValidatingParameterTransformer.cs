@@ -30,32 +30,32 @@ namespace AGO.Core.Execution
 			return true;
 		}
 
-		public bool Transform(
+		public object Transform(
 			ParameterInfo parameterInfo, 
-			ref object parameterValue)
+			object parameterValue)
 		{
-			var initial = parameterValue;
+			var result = parameterValue;
 			var paramType = parameterInfo.ParameterType;
 
-			var token = parameterValue as JToken;
+			var token = result as JToken;
 			if (token != null)
 			{
 				var tokenReader = new JTokenReader(token) { CloseInput = false };
-				parameterValue = _JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
+				result = _JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
 			}
 
-			if (parameterValue != null)
+			if (result != null)
 			{
-				if (!paramType.IsInstanceOfType(parameterValue))
-					parameterValue = parameterValue.ConvertSafe(paramType);
+				if (!paramType.IsInstanceOfType(result))
+					result = result.ConvertSafe(paramType);
 			}
 			else
 			{
 				if (paramType.IsValueType)
-					parameterValue = Activator.CreateInstance(paramType);
+					result = Activator.CreateInstance(paramType);
 			}
 
-			var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttribute(parameterValue);
+			var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttribute(result);
 			if (invalidAttribute != null)
 			{
 				if (invalidAttribute is NotNullAttribute || invalidAttribute is NotEmptyAttribute)
@@ -73,7 +73,8 @@ namespace AGO.Core.Execution
 
 				throw new InvalidOperationException();
 			}
-			return (parameterValue != null && paramType.IsInstanceOfType(parameterValue)) || initial == null;
+
+			return result;
 		}
 
 		#endregion

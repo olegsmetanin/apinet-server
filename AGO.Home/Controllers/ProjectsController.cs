@@ -74,7 +74,7 @@ namespace AGO.Home.Controllers
 				
 				var newProject = new ProjectModel
 				{
-					Creator = _AuthController.GetCurrentUser(),
+					Creator = _AuthController.CurrentUser(),
 					ProjectCode = projectCode,
 					Name = name,
 					Description = model.Description.TrimSafe(),
@@ -109,7 +109,7 @@ namespace AGO.Home.Controllers
 		}*/
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjects(
+		public IEnumerable<ProjectModel> GetProjects(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
@@ -125,25 +125,21 @@ namespace AGO.Home.Controllers
 				{
 					Path = "User",
 					Operator = ValueFilterOperators.Eq,
-					Operand = _AuthController.GetCurrentUser().Id.ToString()
+					Operand = _AuthController.CurrentUser().Id.ToString()
 				});
 				filter.Add(modeFilter);
 			}
 
-			return new
+			return _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectModel>(filter),
-				rows = _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
-				{
-					Skip = page * pageSize,
-					Take = pageSize,
-					Sorters = sorters
-				})
-			};
+				Skip = page * pageSize,
+				Take = pageSize,
+				Sorters = sorters
+			});
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectNames(
+		public IEnumerable<LookupEntry> LookupProjectNames(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
@@ -156,12 +152,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
-			var result = new List<object>();
-
-			foreach (var str in query.Skip(page * pageSize).Take(pageSize).List<string>())
-				result.Add(new { id = str, text = str });
-
-			return new { rows = result };
+			return query.Skip(page*pageSize).Take(pageSize).LookupList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

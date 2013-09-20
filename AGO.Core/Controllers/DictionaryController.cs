@@ -30,7 +30,7 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetCustomPropertyTypes(
+		public IEnumerable<CustomPropertyTypeModel> GetCustomPropertyTypes(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
@@ -38,16 +38,12 @@ namespace AGO.Core.Controllers
 		{
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
-			return new
+			return _FilteringDao.List<CustomPropertyTypeModel>(filter, new FilteringOptions
 			{
-				totalRowsCount = _FilteringDao.RowCount<CustomPropertyTypeModel>(filter),
-				rows = _FilteringDao.List<CustomPropertyTypeModel>(filter, new FilteringOptions
-				{
-					Skip = page * pageSize,
-					Take = pageSize,
-					Sorters = sorters
-				})
-			};
+				Skip = page * pageSize,
+				Take = pageSize,
+				Sorters = sorters
+			});
 		}
 
 		[JsonEndpoint, RequireAuthorization]

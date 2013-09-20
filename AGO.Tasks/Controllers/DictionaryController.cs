@@ -71,7 +71,7 @@ namespace AGO.Tasks.Controllers
 			try
 			{
 				var persistentModel = default(Guid).Equals(model.Id)
-					? new TaskTypeModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.GetCurrentUser() }
+					? new TaskTypeModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.CurrentUser() }
 					: _CrudDao.Get<TaskTypeModel>(model.Id, true);
 
 				var name = model.Name.TrimSafe();
@@ -96,7 +96,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteTaskType([NotEmpty] Guid id)
+		public bool DeleteTaskType([NotEmpty] Guid id)
 		{
 			var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
 
@@ -105,6 +105,8 @@ namespace AGO.Tasks.Controllers
 				throw new CannotDeleteReferencedItemException();
 
 			_CrudDao.Delete(taskType);
+
+			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]

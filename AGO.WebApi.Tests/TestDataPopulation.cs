@@ -76,6 +76,17 @@ namespace AGO.WebApi.Tests
 			DoPopulateDatabase();
 		}
 
+		[Test]
+		public void TemporaryTest()
+		{
+			InitContainer();
+
+			var ctrl = _Container.GetInstance<Home.Controllers.DictionaryController>();
+			Assert.IsNotNull(ctrl);
+
+			_JsonService.CreateSerializer().Serialize(Console.Out, ctrl.LookupProjectStatuses(0, 10, null));
+		}
+
 		protected void DoPopulateDatabase()
 		{
 		    var now = DateTime.Now;
@@ -94,6 +105,7 @@ namespace AGO.WebApi.Tests
 		{
 			RegisterEnvironment();
 			RegisterPersistence();
+			RegisterControllers();
 		}
 
 		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)

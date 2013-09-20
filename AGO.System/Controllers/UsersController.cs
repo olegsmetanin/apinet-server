@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -36,7 +37,7 @@ namespace AGO.System.Controllers
 			[NotEmpty] string name, 
 			[NotEmpty] string group)
 		{
-			var currentUser = _AuthController.GetCurrentUser();
+			var currentUser = _AuthController.CurrentUser();
 
 			var filterModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 				.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
@@ -56,7 +57,7 @@ namespace AGO.System.Controllers
 			try
 			{
 				//TODO: Валидации длины
-				var currentUser = _AuthController.GetCurrentUser();
+				var currentUser = _AuthController.CurrentUser();
 
 				var filterModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 					.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
@@ -81,11 +82,11 @@ namespace AGO.System.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object DeleteFilter(
+		public bool DeleteFilter(
 			[NotEmpty] string name,
 			[NotEmpty] string group)
 		{
-			var currentUser = _AuthController.GetCurrentUser();
+			var currentUser = _AuthController.CurrentUser();
 
 			var filterModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 				.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
@@ -93,20 +94,17 @@ namespace AGO.System.Controllers
 			if (filterModel != null)
 				_CrudDao.Delete(filterModel);
 
-			return new { success = true };	
+			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetFilterNames([NotEmpty] string group)
+		public IEnumerable<string> GetFilterNames([NotEmpty] string group)
 		{
-			var currentUser = _AuthController.GetCurrentUser();
-
-			var query = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
-			    .Where(m => m.GroupName == group && m.User == currentUser)
+			return _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
+			    .Where(m => m.GroupName == group && m.User == _AuthController.CurrentUser())
 				.OrderBy(m => m.Name).Asc
-				.Select(m => m.Name);
-
-			return new {rows = query.List<string>() };
+				.Select(m => m.Name)
+				.List<string>();
 		}
 
 		#endregion

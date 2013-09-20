@@ -20,6 +20,9 @@ namespace AGO.WebApiApp.Controllers
 		{
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
 			{
+				var sessionProvider = DependencyResolver.Current.GetService<ISessionProvider>();
+				var rollback = false;
+
 				try
 				{
 					var serviceType = RouteData.Values["serviceType"] as Type;
@@ -42,17 +45,15 @@ namespace AGO.WebApiApp.Controllers
 						if (authController == null)
 							throw new NotAuthorizedException();
 
-						if (!authController.IsAuthenticated)
+						if (!authController.IsAuthenticated())
 							throw new NotAuthorizedException();
 
-						if (requireAuthorizationAttribute.RequireAdmin && !authController.IsAdmin)
+						if (requireAuthorizationAttribute.RequireAdmin && !authController.IsAdmin())
 							throw new AccessForbiddenException();
 					}
 
 					var executor = DependencyResolver.Current.GetService<IActionExecutor>();
 					var result = executor.Execute(service, method);
-
-					DependencyResolver.Current.GetService<ISessionProvider>().CurrentSession.Flush();
 
 					var jsonService = DependencyResolver.Current.GetService<IJsonService>();
 					var stringBuilder = new StringBuilder();
@@ -63,24 +64,32 @@ namespace AGO.WebApiApp.Controllers
 				}
 				catch (NotAuthorizedException e)
 				{
+					rollback = true;
 					HttpContext.Response.StatusCode = 401;
 					return Json(new {message = e.Message}, JsonRequestBehavior.AllowGet);
 				}
 				catch (AccessForbiddenException e)
 				{
+					rollback = true;
 					HttpContext.Response.StatusCode = 403;
 					return Json(new {message = e.Message}, JsonRequestBehavior.AllowGet);
 				}
 				catch (HttpException e)
 				{
+					rollback = true;
 					HttpContext.Response.StatusCode = e.GetHttpCode();
 					return Json(new {error = e.InnerException != null ? e.InnerException.Message : e.Message},
-						JsonRequestBehavior.AllowGet);
+					            JsonRequestBehavior.AllowGet);
 				}
 				catch (Exception e)
 				{
+					rollback = true;
 					HttpContext.Response.StatusCode = 500;
 					return Json(new {message = e.Message}, JsonRequestBehavior.AllowGet);
+				}
+				finally
+				{
+					sessionProvider.CloseCurrentSession(rollback);
 				}
 			}
 		}

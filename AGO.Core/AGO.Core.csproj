@@ -69,10 +69,13 @@
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\AuthController.cs" />
+    <Compile Include="Controllers\Extensions.cs" />
+    <Compile Include="Controllers\LookupEntry.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="Controllers\Exceptions.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
+    <Compile Include="Execution\IActionResultTransformer.cs" />
     <Compile Include="Execution\FilterParameterTransformer.cs" />
     <Compile Include="Execution\IActionExecutor.cs" />
     <Compile Include="Execution\IActionParameterResolver.cs" />

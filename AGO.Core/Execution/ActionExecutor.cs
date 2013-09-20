@@ -13,9 +13,12 @@ namespace AGO.Core.Execution
 
 		protected readonly IList<IActionParameterTransformer> _Transformers;
 
+		protected readonly IList<IActionResultTransformer> _ResultTransformers;
+
 		public ActionExecutor(
 			IEnumerable<IActionParameterResolver> resolvers,
-			IEnumerable<IActionParameterTransformer> transformers)
+			IEnumerable<IActionParameterTransformer> transformers,
+			IEnumerable<IActionResultTransformer> resultTransformers)
 		{
 			if (resolvers == null)
 				throw new ArgumentNullException("resolvers");
@@ -24,6 +27,10 @@ namespace AGO.Core.Execution
 			if (transformers == null)
 				throw new ArgumentNullException("transformers");
 			_Transformers = new List<IActionParameterTransformer>(transformers);
+
+			if (resultTransformers == null)
+				throw new ArgumentNullException("resultTransformers");
+			_ResultTransformers = new List<IActionResultTransformer>(resultTransformers);
 		}
 
 		#endregion
@@ -42,12 +49,12 @@ namespace AGO.Core.Execution
 					methodInfo = callee.GetType().GetMethod(methodInfo.Name) ?? methodInfo;
 
 				var parametersInfo = methodInfo.GetParameters();
-				var transformedParams = new object[parametersInfo.Length];
+				var resolvedParams = new object[parametersInfo.Length];
 
 				foreach (var info in parametersInfo)
 				{
 					var parameterInfo = info;
-					transformedParams[parameterInfo.Position] = null;
+					resolvedParams[parameterInfo.Position] = null;
 
 					object resolvedParam = null;
 					foreach (var parameterResolver in _Resolvers.Where(
@@ -58,18 +65,24 @@ namespace AGO.Core.Execution
 						break;
 					}
 
-					foreach (var transformer in _Transformers.Where(
-						parameterTransformer => parameterTransformer.Accepts(parameterInfo, resolvedParam)))
+					foreach (var transformer in _Transformers)
 					{
-						var transformedParam = resolvedParam;
-						if (!transformer.Transform(parameterInfo, ref transformedParam))
+						if (!transformer.Accepts(parameterInfo, resolvedParam))
 							continue;
-						transformedParams[parameterInfo.Position] = transformedParam;
-						break;
+						resolvedParam = transformer.Transform(parameterInfo, resolvedParam);
 					}
+
+					resolvedParams[parameterInfo.Position] = resolvedParam;
 				}
 
-				var result = methodInfo.Invoke(callee, transformedParams);
+				var result = methodInfo.Invoke(callee, resolvedParams);
+
+				foreach (var transformer in _ResultTransformers)
+				{
+					if (!transformer.Accepts(methodInfo.ReturnType, result))
+						continue;
+					result = transformer.Transform(methodInfo.ReturnType, result);
+				}
 
 				return result;
 			}

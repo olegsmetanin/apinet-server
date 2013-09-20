@@ -51,11 +51,11 @@ namespace AGO.Core.Execution
 				parameterValue is JObject;
 		}
 
-		public bool Transform(
+		public object Transform(
 			ParameterInfo parameterInfo, 
-			ref object parameterValue)
+			object parameterValue)
 		{
-			var filterObject = (JObject)parameterValue;
+			var filterObject = (JObject) parameterValue;
 			var result = new List<IModelFilterNode>();
 
 			if (filterObject != null)
@@ -73,8 +73,7 @@ namespace AGO.Core.Execution
 					result.Add(ParseUserFilter(userFilterProperty));
 			}
 
-			parameterValue = result;
-			return true;
+			return result;
 		}
 
 		#endregion

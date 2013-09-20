@@ -59,7 +59,7 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint]
-		public object Login([NotEmpty] string email, [NotEmpty] string password)
+		public UserModel Login([NotEmpty] string email, [NotEmpty] string password)
 		{
 			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.Login == email.TrimSafe()).Take(1).List().FirstOrDefault();
@@ -74,50 +74,34 @@ namespace AGO.Core.Controllers
 
 			HttpContext.Current.Session["CurrentUser"] = user;
 
-			return new
-			{
-				user = UserToJsonUser(user)
-			};
+			return user;
 		}
 
 		[JsonEndpoint]
-		public void Logout()
+		public bool Logout()
 		{
 			HttpContext.Current.Session["CurrentUser"] = null;
+			return true;
+		}
+
+		[JsonEndpoint]
+		public bool IsAuthenticated()
+		{
+			return CurrentUser() != null;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object CurrentUser()
-		{
-			return new
-			{
-				user = UserToJsonUser(GetCurrentUser())
-			};
-		}
-
-		#endregion
-
-		#region Public methods
-
-		public bool IsAuthenticated
-		{
-			get { return GetCurrentUser() != null; }
-		}
-
-		public bool IsAdmin
-		{
-			get
-			{
-				var currentUser = GetCurrentUser();
-				return currentUser != null && currentUser.SystemRole == SystemRole.Administrator;	
-			}
-		}
-
-		public UserModel GetCurrentUser()
+		public UserModel CurrentUser()
 		{
 			return HttpContext.Current.Session["CurrentUser"] as UserModel;
 		}
-		
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool IsAdmin()
+		{
+			return CurrentUser().SystemRole == SystemRole.Administrator;
+		}
+
 		#endregion
 
 		#region Helper methods

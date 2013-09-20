@@ -6,6 +6,6 @@ namespace AGO.Core.Execution
 	{
 		bool Accepts(ParameterInfo parameterInfo, object parameterValue);
 
-		bool Transform(ParameterInfo parameterInfo, ref object parameterValue);
+		object Transform(ParameterInfo parameterInfo, object parameterValue);
 	}
 }

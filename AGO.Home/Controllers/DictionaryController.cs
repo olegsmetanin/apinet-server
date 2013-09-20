@@ -43,27 +43,7 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectStatuses(
-			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
-			string term)
-		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>();
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			var result = new List<object>();
-
-			foreach (var model in query.Skip(page * pageSize).Take(pageSize).List())
-				result.Add(new {id = model.Id, text = model.Name});
-
-			return new {rows = result};
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectStatusDescriptions(
+		public IEnumerable<LookupEntry> LookupProjectStatuses(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
@@ -71,20 +51,32 @@ namespace AGO.Home.Controllers
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
-				.Select(Projections.Distinct(Projections.Property("Description")));
+				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Description).IsLike(term, MatchMode.Anywhere);
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			var result = new List<object>();
-
-			foreach (var str in query.Skip(page * pageSize).Take(pageSize).List<string>())
-				result.Add(new { id = str, text = str });
-
-			return new { rows = result };
+			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjectStatuses(
+		public IEnumerable<LookupEntry> LookupProjectStatusDescriptions(
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize,
+			string term)
+		{
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
+
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
+				.Select(Projections.Distinct(Projections.Property("Description")))
+				.OrderBy(m => m.Description).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Description).IsLike(term, MatchMode.Anywhere);
+
+			return query.Skip(page*pageSize).Take(pageSize).LookupList(m => m.Description);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<ProjectStatusModel> GetProjectStatuses(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
@@ -92,16 +84,12 @@ namespace AGO.Home.Controllers
 		{
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
-			return new
+			return _FilteringDao.List<ProjectStatusModel>(filter, new FilteringOptions
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectStatusModel>(filter),
-				rows = _FilteringDao.List<ProjectStatusModel>(filter, new FilteringOptions
-				{
-					Skip = page * pageSize,
-					Take = pageSize,
-					Sorters = sorters
-				})
-			};
+				Skip = page * pageSize,
+				Take = pageSize,
+				Sorters = sorters
+			});
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -124,7 +112,7 @@ namespace AGO.Home.Controllers
 			try
 			{
 				var persistentModel = default(Guid).Equals(model.Id)
-					? new ProjectStatusModel { Creator = _AuthController.GetCurrentUser() }
+					? new ProjectStatusModel { Creator = _AuthController.CurrentUser() }
 					: _CrudDao.Get<ProjectStatusModel>(model.Id, true);
 
 				var name = model.Name.TrimSafe();
@@ -150,7 +138,7 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public void DeleteProjectStatus([NotEmpty] Guid id)
+		public bool DeleteProjectStatus([NotEmpty] Guid id)
 		{
 			var model = _CrudDao.Get<ProjectStatusModel>(id, true);
 			
@@ -163,10 +151,12 @@ namespace AGO.Home.Controllers
 				throw new CannotDeleteReferencedItemException();
 
 			_CrudDao.Delete(model);
+
+			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjectTags(
+		public IEnumerable<ProjectTagModel> GetProjectTags(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
@@ -182,7 +172,7 @@ namespace AGO.Home.Controllers
 				{
 					Path = "Owner", 
 					Operator = ValueFilterOperators.Eq, 
-					Operand = _AuthController.GetCurrentUser().Id.ToString()
+					Operand = _AuthController.CurrentUser().Id.ToString()
 				});
 			}
 			else
@@ -196,16 +186,12 @@ namespace AGO.Home.Controllers
 			}
 			filter.Add(modeFilter);
 
-			return new
+			return _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectTagModel>(filter),
-				rows = _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
-				{
-					Skip = page * pageSize,
-					Take = pageSize,
-					Sorters = sorters
-				})
-			};
+				Skip = page * pageSize,
+				Take = pageSize,
+				Sorters = sorters
+			});
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -215,23 +201,19 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object LookupProjectTags(
+		public IEnumerable<LookupEntry> LookupProjectTags(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
 		{
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>();
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
+				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			var result = new List<object>();
-
-			foreach (var model in query.Skip(page * pageSize).Take(pageSize).List())
-				result.Add(new { id = model.Id, text = model.Name });
-
-			return new { rows = result };
+			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -247,7 +229,7 @@ namespace AGO.Home.Controllers
 
 			try
 			{
-				var currentUser = _AuthController.GetCurrentUser();				
+				var currentUser = _AuthController.CurrentUser();				
 				var persistentModel = default(Guid).Equals(model.Id) 
 					? new ProjectTagModel
 						{
@@ -301,11 +283,11 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteProjectTag([NotEmpty] Guid id)
+		public bool DeleteProjectTag([NotEmpty] Guid id)
 		{
 			var model = _CrudDao.Get<ProjectTagModel>(id, true);
 
-			var currentUser = _AuthController.GetCurrentUser();
+			var currentUser = _AuthController.CurrentUser();
 			if (model.Owner != null && !currentUser.Equals(model.Owner) && currentUser.SystemRole != SystemRole.Administrator)
 				throw new AccessForbiddenException();
 
@@ -314,10 +296,12 @@ namespace AGO.Home.Controllers
 				throw new CannotDeleteReferencedItemException();
 
 			_CrudDao.Delete(model);
+
+			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetProjectTypes(
+		public IEnumerable<ProjectTypeModel> GetProjectTypes(
 			[InRange(0, null)] int page,
 			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
@@ -325,16 +309,12 @@ namespace AGO.Home.Controllers
 		{
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
-			return new
+			return _FilteringDao.List<ProjectTypeModel>(filter, new FilteringOptions
 			{
-				totalRowsCount = _FilteringDao.RowCount<ProjectTypeModel>(filter),
-				rows = _FilteringDao.List<ProjectTypeModel>(filter, new FilteringOptions
-				{
-					Skip = page * pageSize,
-					Take = pageSize,
-					Sorters = sorters
-				})
-			};
+				Skip = page * pageSize,
+				Take = pageSize,
+				Sorters = sorters
+			});
 		}
 
 		[JsonEndpoint, RequireAuthorization]
