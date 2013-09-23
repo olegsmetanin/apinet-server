@@ -32,7 +32,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ModelsResponse<TaskTypeDTO> GetTaskTypes(
+		public IEnumerable<TaskTypeDTO> GetTaskTypes(
 			[NotEmpty] string project,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters, 
@@ -44,23 +44,16 @@ namespace AGO.Tasks.Controllers
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] {projectPredicate}).ToArray();
 
-			return new ModelsResponse<TaskTypeDTO>
-			{
-				totalRowsCount = _FilteringDao.RowCount<TaskTypeModel>(predicate),
-				rows = _FilteringDao.List<TaskTypeModel>(predicate, new FilteringOptions
+			return _FilteringDao.List<TaskTypeModel>(predicate, 
+				new FilteringOptions { Skip = page*pageSize, Take = pageSize, Sorters = sorters})
+				.Select(m => new TaskTypeDTO
 				{
-					Skip = page * pageSize,
-					Take = pageSize,
-					Sorters = sorters
-				}).Select(m => new TaskTypeDTO
-				               	{
-									Id = m.Id,
-				               		Name = m.Name, 
-									Author = (m.Creator != null ? m.Creator.ShortName : string.Empty), 
-									CreationTime = m.CreationTime,
-									ModelVersion = m.ModelVersion
-				               	})
-			};
+					Id = m.Id,
+					Name = m.Name,
+					Author = (m.Creator != null ? m.Creator.ShortName : string.Empty),
+					CreationTime = m.CreationTime,
+					ModelVersion = m.ModelVersion
+				});
 		}
 
 		[JsonEndpoint, RequireAuthorization]

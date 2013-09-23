@@ -63,8 +63,7 @@ namespace AGO.Tasks.Test
 				0, 10);
 
 			Assert.IsNotNull(result);
-			Assert.AreEqual(0, result.totalRowsCount);
-			Assert.IsFalse(result.rows.Any());
+			Assert.IsFalse(result.Any());
 		}
 		
 		[Test]
@@ -80,13 +79,12 @@ namespace AGO.Tasks.Test
 				testProject,
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
 				new [] { new SortInfo {Property = "Name"} }, //need ordered result for assertion
-				0, 10); 
+				0, 10).ToArray(); 
 
 			Assert.IsNotNull(result);
-			Assert.AreEqual(2, result.totalRowsCount);
-			Assert.AreEqual(2, result.rows.Count());
-			Assert.AreEqual("tt1", result.rows.ElementAt(0).Name);
-			Assert.AreEqual("tt2", result.rows.ElementAt(1).Name);
+			Assert.AreEqual(2, result.Length);
+			Assert.AreEqual("tt1", result[0].Name);
+			Assert.AreEqual("tt2", result[1].Name);
 		}
 		
 		[Test]
