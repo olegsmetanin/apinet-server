@@ -88,17 +88,33 @@ namespace AGO.Tasks.Controllers
 			return validationResult;
 		}
 
+    	private void InternalDeleteTaskType(Guid id)
+    	{
+    		var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
+
+    		if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
+    		    	.Where(m => m.TaskType == taskType).RowCount() > 0)
+    			throw new CannotDeleteReferencedItemException();
+
+    		_CrudDao.Delete(taskType);
+    	}
+
 		[JsonEndpoint, RequireAuthorization]
 		public bool DeleteTaskType([NotEmpty] Guid id)
 		{
-			var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
+			InternalDeleteTaskType(id);
 
-			if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
-					.Where(m => m.TaskType == taskType).RowCount() > 0)
-				throw new CannotDeleteReferencedItemException();
+			return true;
+		}
 
-			_CrudDao.Delete(taskType);
-
+		//TODO transaction management???
+    	[JsonEndpoint, RequireAuthorization]
+		public bool DeleteTaskTypes([NotEmpty] string project, [NotNull] ICollection<Guid> ids)
+		{
+			foreach (var id in ids)
+			{
+				InternalDeleteTaskType(id);
+			}
 			return true;
 		}
 
