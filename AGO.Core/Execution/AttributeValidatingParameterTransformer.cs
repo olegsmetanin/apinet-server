@@ -2,7 +2,6 @@
 using System.Reflection;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AGO.Core.Execution
 {
@@ -37,23 +36,13 @@ namespace AGO.Core.Execution
 			var result = parameterValue;
 			var paramType = parameterInfo.ParameterType;
 
-			var token = result as JToken;
-			if (token != null)
-			{
-				var tokenReader = new JTokenReader(token) { CloseInput = false };
-				result = _JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
-			}
-
 			if (result != null)
 			{
 				if (!paramType.IsInstanceOfType(result))
 					result = result.ConvertSafe(paramType);
 			}
-			else
-			{
-				if (paramType.IsValueType)
-					result = Activator.CreateInstance(paramType);
-			}
+			else if (paramType.IsValueType)
+				result = Activator.CreateInstance(paramType);
 
 			var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttribute(result);
 			if (invalidAttribute != null)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using AGO.Core.Application;
 using AGO.Core.Filters;
 using AGO.Core.Model.Example;
@@ -8,13 +7,17 @@ using NUnit.Framework;
 namespace AGO.Core.Tests
 {
 	[TestFixture]
-	public class FilteringTests : AbstractApplication
+	public class FilteringTests : AbstractTestFixture
 	{
+		[SetUp]
+		public void Init()
+		{
+			InitContainer();
+		}
+
 		[Test]
 		public void SimpleFiltersTest()
 		{
-			InitContainer();
-
 			var models = _FilteringService.Filter<PrimitiveModel>()
 				.Where(m => m.StringProperty == "PrimitiveModel1" && m.BoolProperty)
 				.List(_FilteringDao);			
@@ -70,8 +73,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void JoinedFiltersTest()
 		{
-			InitContainer();
-
 			var manyEndModels = _FilteringService.Filter<ManyEndModel>()
 				.WhereCollection(m => m.OneEndModels).Where(m => m.Name == "OneEndModel1").End()
 				.List(_FilteringDao);
@@ -110,8 +111,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void HierarchyFiltersTest()
 		{
-			InitContainer();
-
 			var rootModels = _FilteringService.Filter<HierarchicalModel>()
 				.WhereProperty(m => m.Parent).Not().Exists()
 				.List(_FilteringDao);
@@ -135,8 +134,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void NestedWhereFiltersTest()
 		{
-			InitContainer();
-
 			var models = _FilteringService.Filter<PrimitiveModel>()
 				.Where(m => m.ManyEnd.Name == "ManyEndModel2" && m.StringProperty == "PrimitiveModel2")
 				.List(_FilteringDao);
@@ -154,8 +151,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void FilterSerializationTest()
 		{
-			InitContainer();
-
 			var filter = _FilteringService.Filter<ManyEndModel>()
 				.WhereCollection(m => m.OneEndModels).Where(m => m.Name == "OneEndModel2").End()
 				.WhereCollection(m => m.PrimitiveModels).Where(m => m.StringProperty == "PrimitiveModel2").End()
@@ -167,8 +162,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void FilterDeserializationAndQueryTest()
 		{
-			InitContainer();
-
 			const string json = @"
 			{
 				'items': [
@@ -199,8 +192,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void FilterDeserializationAndQueryTest2()
 		{
-			InitContainer();
-
 			const string json = @"
 			{
 				'items': [
@@ -264,8 +255,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void FilterDeserializationAndQueryTest3()
 		{
-			InitContainer();
-
 			const string json = @"
 			{
 				op: '||',
@@ -294,8 +283,6 @@ namespace AGO.Core.Tests
 		[Test]
 		public void FilterConcatenationTest()
 		{
-			InitContainer();
-
 			const string json = @"
 			{
 				'items': [
@@ -322,21 +309,5 @@ namespace AGO.Core.Tests
 			var models = _FilteringDao.List<PrimitiveModel>(new[] { jsonFilter, fixedFilter });
 			Assert.AreEqual(1, models.Count);
 		}
-
-		#region Container initialization
-
-		protected override void Register()
-		{
-			RegisterEnvironment();
-			RegisterPersistence();
-		}
-
-		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
-		{
-			InitializeEnvironment(initializedServices);
-			InitializePersistence(initializedServices);
-		}
-
-		#endregion
 	}
 }

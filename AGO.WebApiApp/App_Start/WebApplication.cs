@@ -10,7 +10,7 @@ using AGO.Core.Application;
 using AGO.Core.Config;
 using AGO.Core.Modules;
 using AGO.WebApiApp.App_Start;
-using AGO.WebApiApp.Controllers;
+using AGO.WebApiApp.Execution;
 using Common.Logging;
 using SimpleInjector.Integration.Web.Mvc;
 using WebActivator;
@@ -31,24 +31,15 @@ namespace AGO.WebApiApp.App_Start
 
 		protected override void Register()
 		{
-			var config = WebConfigurationManager.OpenWebConfiguration("~/Web.config");
-			var setting = config.AppSettings.Settings["DevMode"];
-			if (setting != null)
-			{
-				DevMode result;
-				if (Enum.TryParse(setting.Value, out result))
-					DevMode = result;
-			}
+			base.Register();
 
-			RegisterEnvironment();
-			RegisterPersistence();
-			RegisterControllers();
-			RegisterActionExecution();
+			DevMode = GetKeyValueProvider().Value("DevMode").ParseEnumSafe(DevMode.Dev);
 		}
 
 		protected override IEnumerable<Type> AllActionParameterResolvers
 		{
-			get { return base.AllActionParameterResolvers.Concat(new[] {typeof (JsonBodyParameterResolver)}); }
+			get { return base.AllActionParameterResolvers.Concat(
+				new[] {typeof (JsonBodyParameterResolver)}); }
 		}
 
 		public IKeyValueProvider KeyValueProvider { get; private set; }
@@ -129,12 +120,6 @@ namespace AGO.WebApiApp.App_Start
 				foreach (var serviceDescriptor in moduleDescriptor.Services.OrderBy(s => s.Priority))
 					serviceDescriptor.Register(this);
 			}
-		}
-
-		protected override void AfterSingletonsInitialized(IList<IInitializable> initializedServices)
-		{
-			InitializeEnvironment(initializedServices);
-			InitializePersistence(initializedServices);
 		}
 
 		protected override void Initialize()

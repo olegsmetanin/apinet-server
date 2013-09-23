@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using AGO.Core;
 
-namespace AGO.WebApiApp.Controllers
+namespace AGO.WebApiApp.Execution
 {
 	public class JsonBodyParameterResolver : IActionParameterResolver
 	{
@@ -82,7 +82,7 @@ namespace AGO.WebApiApp.Controllers
 				var jsonProperty = jsonBody != null ? jsonBody.Property(parameterInfo.Name) : null;
 
 				parameterValue = jsonProperty != null
-					? (jsonProperty.Value is JValue ? (object)jsonProperty.TokenValue() : jsonProperty.Value)
+					? (jsonProperty.Value is JValue ? jsonProperty.TokenValue() : jsonProperty.Value)
 					: null;
 			}
 

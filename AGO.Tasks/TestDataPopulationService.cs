@@ -6,20 +6,20 @@ using NHibernate;
 
 namespace AGO.Tasks
 {
-	public class TestDataPopulationService: AbstractService
+	public class TestDataPopulationService : AbstractService, ITestDataPopulationService
 	{
-		private ISessionProvider sp;
+		private readonly ISessionProvider _SessionProvider;
 
-		private ISession CurrentSession { get { return sp.CurrentSession; } }
+		private ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
 
 		public TestDataPopulationService(ISessionProvider sessionProvider)
 		{
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
-			sp = sessionProvider;
+			_SessionProvider = sessionProvider;
 		}
 
-		public void PopulateTasks()
+		public void Populate()
 		{
 			var admin = CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.SystemRole == SystemRole.Administrator).SingleOrDefault();
@@ -30,8 +30,6 @@ namespace AGO.Tasks
 			PopulateTaskTypes("Docs2", admin);
 
 			//TODO other models
-
-			CurrentSession.Flush();
 		}
 
 		private void PopulateTaskTypes(string project, UserModel admin)

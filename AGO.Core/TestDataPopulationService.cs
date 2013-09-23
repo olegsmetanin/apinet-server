@@ -7,7 +7,7 @@ using NHibernate;
 
 namespace AGO.Core
 {
-	public class TestDataPopulationService : AbstractService
+	public class TestDataPopulationService : AbstractService, ITestDataPopulationService
 	{
 		#region Properties, fields, constructors
 
@@ -26,12 +26,10 @@ namespace AGO.Core
 
 		#region Public methods
 
-		public void PopulateCore()
+		public void Populate()
 		{
 			var admin = PopulateOrgStructure();
 			PopulateCustomProperties(admin);
-
-			CurrentSession.Flush();
 		}
 
 		#endregion

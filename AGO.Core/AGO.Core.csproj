@@ -33,6 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Application\AbstractApplication.cs" />
+    <Compile Include="Application\AbstractTestFixture.cs" />
     <Compile Include="Attributes\Constraints\InRangeAttribute.cs" />
     <Compile Include="Attributes\Constraints\NotEmptyAttribute.cs" />
     <Compile Include="Attributes\Constraints\NotLongerAttribute.cs" />
@@ -80,6 +81,8 @@
     <Compile Include="Execution\IActionExecutor.cs" />
     <Compile Include="Execution\IActionParameterResolver.cs" />
     <Compile Include="Execution\IActionParameterTransformer.cs" />
+    <Compile Include="Execution\JsonTokenParameterTransformer.cs" />
+    <Compile Include="ITestDataPopulationService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
