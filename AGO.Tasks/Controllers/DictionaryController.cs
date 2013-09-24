@@ -51,7 +51,7 @@ namespace AGO.Tasks.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
+			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name).ToArray();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -76,7 +76,8 @@ namespace AGO.Tasks.Controllers
 					Author = (m.Creator != null ? m.Creator.ShortName : string.Empty),
 					CreationTime = m.CreationTime,
 					ModelVersion = m.ModelVersion
-				});
+				})
+				.ToArray();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -87,7 +88,7 @@ namespace AGO.Tasks.Controllers
 			try
 			{
 				var persistentModel = default(Guid).Equals(model.Id)
-					? new TaskTypeModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.CurrentUser() }
+					? new TaskTypeModel { ProjectCode = project, Creator = _AuthController.CurrentUser() }
 					: _CrudDao.Get<TaskTypeModel>(model.Id, true);
 				persistentModel.Name = model.Name.TrimSafe();
 
@@ -184,7 +185,7 @@ namespace AGO.Tasks.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
+			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name).ToArray();
     	}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -210,7 +211,8 @@ namespace AGO.Tasks.Controllers
 					Author = (m.Creator != null ? m.Creator.ShortName : string.Empty),
 					CreationTime = m.CreationTime,
 					ModelVersion = m.ModelVersion
-				});
+				})
+				.ToArray();
     	}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -221,7 +223,7 @@ namespace AGO.Tasks.Controllers
 			try
 			{
 				var persistentModel = default(Guid).Equals(model.Id)
-					? new CustomTaskStatusModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.CurrentUser() }
+					? new CustomTaskStatusModel { ProjectCode = project, Creator = _AuthController.CurrentUser() }
 					: _CrudDao.Get<CustomTaskStatusModel>(model.Id, true);
 				persistentModel.Name = model.Name.TrimSafe();
 				persistentModel.ViewOrder = model.ViewOrder;
