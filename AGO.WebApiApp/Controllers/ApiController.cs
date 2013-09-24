@@ -11,6 +11,7 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Execution;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 
 namespace AGO.WebApiApp.Controllers
 {
@@ -20,9 +21,6 @@ namespace AGO.WebApiApp.Controllers
 		{
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
 			{
-				var sessionProvider = DependencyResolver.Current.GetService<ISessionProvider>();
-				var rollback = false;
-
 				try
 				{
 					var serviceType = RouteData.Values["serviceType"] as Type;
@@ -62,34 +60,20 @@ namespace AGO.WebApiApp.Controllers
 
 					return Content(stringBuilder.ToString(), "application/json", Encoding.UTF8);
 				}
-				catch (NotAuthorizedException e)
-				{
-					rollback = true;
-					HttpContext.Response.StatusCode = 401;
-					return Json(new {message = e.Message}, JsonRequestBehavior.AllowGet);
-				}
-				catch (AccessForbiddenException e)
-				{
-					rollback = true;
-					HttpContext.Response.StatusCode = 403;
-					return Json(new {message = e.Message}, JsonRequestBehavior.AllowGet);
-				}
-				catch (HttpException e)
-				{
-					rollback = true;
-					HttpContext.Response.StatusCode = e.GetHttpCode();
-					return Json(new {error = e.InnerException != null ? e.InnerException.Message : e.Message},
-					            JsonRequestBehavior.AllowGet);
-				}
 				catch (Exception e)
 				{
-					rollback = true;
 					HttpContext.Response.StatusCode = 500;
-					return Json(new {message = e.Message}, JsonRequestBehavior.AllowGet);
-				}
-				finally
-				{
-					sessionProvider.CloseCurrentSession(rollback);
+					if (e is NotAuthorizedException)
+						HttpContext.Response.StatusCode = 401;
+					if (e is AccessForbiddenException)
+						HttpContext.Response.StatusCode = 403;
+					
+					var httpException = e as HttpException;
+					if (httpException != null)
+						HttpContext.Response.StatusCode = httpException.GetHttpCode();
+
+					return Json(new {message = 
+						DependencyResolver.Current.GetService<ILocalizationService>().MessageForException(e) });
 				}
 			}
 		}

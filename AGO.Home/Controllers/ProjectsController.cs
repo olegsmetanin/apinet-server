@@ -5,6 +5,8 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Filters.Metadata;
+using AGO.Core.Localization;
+using AGO.Core.Validation;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using AGO.Core;
@@ -31,8 +33,10 @@ namespace AGO.Home.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
+			ILocalizationService localizationService,
+			IValidationService validationService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
 		{
 		}
 
@@ -43,7 +47,7 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization(true)]
 		public ValidationResult CreateProject([NotNull] ProjectModel model)
 		{
-			var validationResult = new ValidationResult();
+			var validation = new ValidationResult();
 
 			try
 			{
@@ -52,35 +56,22 @@ namespace AGO.Home.Controllers
 				if (initialStatus == null)
 					throw new NoInitialProjectStatusException();
 
-				var projectType = model.TypeId != null && !default(Guid).Equals(model.TypeId)
-					? _CrudDao.Get<ProjectTypeModel>(model.TypeId)
-					: null;
-				if (projectType == null)
-					validationResult.FieldErrors["Type"] = new RequiredFieldException().Message;
-
-				var projectCode = model.ProjectCode.TrimSafe();
-				if (projectCode.IsNullOrEmpty())
-					validationResult.FieldErrors["ProjectCode"] = new RequiredFieldException().Message;
-				if (_SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-						.Where(m => m.ProjectCode == projectCode).RowCount() > 0)
-					validationResult.FieldErrors["ProjectCode"] = new UniqueFieldException().Message;
-
-				var name = model.Name.TrimSafe();
-				if (name.IsNullOrEmpty())
-					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
-
-				if (!validationResult.Success)
-					return validationResult;
-				
 				var newProject = new ProjectModel
 				{
 					Creator = _AuthController.CurrentUser(),
-					ProjectCode = projectCode,
-					Name = name,
+					ProjectCode = model.ProjectCode.TrimSafe(),
+					Name = model.Name.TrimSafe(),
 					Description = model.Description.TrimSafe(),
-					Type = projectType,
+					Type = model.TypeId != null && !default(Guid).Equals(model.TypeId)
+						? _CrudDao.Get<ProjectTypeModel>(model.TypeId)
+						: null,
 					Status = initialStatus,
 				};
+
+				_ValidationService.ValidateModel(newProject, validation);
+				if (!validation.Success)
+					return validation;
+
 				_CrudDao.Store(newProject);
 
 				var statusHistoryRow = new ProjectStatusHistoryModel
@@ -93,10 +84,10 @@ namespace AGO.Home.Controllers
 			}
 			catch (Exception e)
 			{
-				validationResult.GeneralError = e.Message;
+				validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
 			
-			return validationResult;
+			return validation;
 		}
 
 		/*[JsonEndpoint, RequireAuthorization(true)]

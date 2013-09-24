@@ -4,7 +4,9 @@ using System.Linq;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Filters;
+using AGO.Core.Localization;
 using AGO.Core.Model;
+using AGO.Core.Validation;
 
 namespace AGO.Core.Controllers
 {
@@ -30,6 +32,10 @@ namespace AGO.Core.Controllers
 
 		protected readonly ISessionProvider _SessionProvider;
 
+		protected readonly ILocalizationService _LocalizationService;
+
+		protected readonly IValidationService _ValidationService;
+
 		protected readonly AuthController _AuthController;
 
 		protected AbstractController(
@@ -38,6 +44,8 @@ namespace AGO.Core.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
+			ILocalizationService localizationService,
+			IValidationService validationService,
 			AuthController authController)
 		{
 			if (jsonService == null)
@@ -59,6 +67,14 @@ namespace AGO.Core.Controllers
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (localizationService == null)
+				throw new ArgumentNullException("localizationService");
+			_LocalizationService = localizationService;
+
+			if (validationService == null)
+				throw new ArgumentNullException("validationService");
+			_ValidationService = validationService;
 
 			if (authController == null)
 				throw new ArgumentNullException("authController");

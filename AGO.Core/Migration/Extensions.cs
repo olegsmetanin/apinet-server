@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using AGO.Core.AutoMapping;
 using AGO.Core.Model;
 using AGO.Core.Model.Security;
 using FluentMigrator.Builders.Alter;
@@ -14,6 +15,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Lob;
+using FluentMigrator.Builders.Delete.Index;
 
 namespace AGO.Core.Migration
 {
@@ -35,7 +37,10 @@ namespace AGO.Core.Migration
 		{
 			var type = typeof(TModel);
 
-			var table = root.Table(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withoutSchema = root.Table(TableName<TModel>());
+			var withSchema = withoutSchema as ICreateTableWithColumnSyntax;
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
 
 			var idProperty = type.GetProperty("Id");
 			if (idProperty != null)
@@ -47,11 +52,11 @@ namespace AGO.Core.Migration
 
 				var idType = idProperty.PropertyType;
 				if (typeof(string).IsAssignableFrom(idType))
-					table = table.WithColumn("Id").AsString(length).NotNullable().PrimaryKey();
+					withSchema = withSchema.WithColumn("Id").AsString(length).NotNullable().PrimaryKey();
 				else if (typeof(int?).IsAssignableFrom(idType))
-					table = table.WithColumn("Id").AsInt32().NotNullable().PrimaryKey().Identity();
+					withSchema = withSchema.WithColumn("Id").AsInt32().NotNullable().PrimaryKey().Identity();
 				else if (typeof(Guid?).IsAssignableFrom(idType))
-					table = table.WithColumn("Id").AsGuid().NotNullable().PrimaryKey();
+					withSchema = withSchema.WithColumn("Id").AsGuid().NotNullable().PrimaryKey();
 			}
 
 			var versionProperty = type.GetProperty("ModelVersion") ?? type.GetProperty("TimeStamp");
@@ -61,18 +66,18 @@ namespace AGO.Core.Migration
 			{
 				var versionType = versionProperty.PropertyType;
 				if (typeof(DateTime?).IsAssignableFrom(versionType))
-					table = table.WithColumn(versionProperty.Name).AsDateTime().Nullable();
+					withSchema = withSchema.WithColumn(versionProperty.Name).AsDateTime().Nullable();
 				else if (typeof(int?).IsAssignableFrom(versionType))
-					table = table.WithColumn(versionProperty.Name).AsInt32().Nullable();
+					withSchema = withSchema.WithColumn(versionProperty.Name).AsInt32().Nullable();
 				else if (typeof(Guid?).IsAssignableFrom(versionType))
-					table = table.WithColumn(versionProperty.Name).AsGuid().Nullable();
+					withSchema = withSchema.WithColumn(versionProperty.Name).AsGuid().Nullable();
 			}
 		
 			var tablePerSubclassAttribute = type.FirstAttribute<TablePerSubclassAttribute>(true);
 			if (tablePerSubclassAttribute != null)
-				table = table.WithColumn(tablePerSubclassAttribute.DiscriminatorColumn).AsString(128);
+				withSchema = withSchema.WithColumn(tablePerSubclassAttribute.DiscriminatorColumn).AsString(128);
 
-			return table;
+			return withSchema;
 		}
 
 		public static ICreateTableColumnAsTypeSyntax WithColumn<TModel>(
@@ -194,7 +199,10 @@ namespace AGO.Core.Migration
 			if (isForeignKey)
 			{
 			    var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
+				if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
 				result.ForeignKey(fkName, SchemaName(foreignType), TableName(foreignType), "Id");
+				else
+					result.ForeignKey(fkName, TableName(foreignType), "Id");
 			}
 			return result.ColumnOptions<TModel>(propertyInfo);
 		}
@@ -245,7 +253,12 @@ namespace AGO.Core.Migration
 
 		public static IAlterTableAddColumnOrAlterColumnSyntax ModelTable<TModel>(this IAlterExpressionRoot root)
 		{
-			return root.Table(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withoutSchema = root.Table(TableName<TModel>());
+			var withSchema = withoutSchema as IAlterTableAddColumnOrAlterColumnSyntax;
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+
+			return withSchema;
 		}
 
 		public static IAlterTableColumnAsTypeSyntax AddColumn<TModel>(
@@ -369,8 +382,12 @@ namespace AGO.Core.Migration
 			if (isForeignKey)
 			{
 				var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
+				if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
 				result.ForeignKey(fkName, SchemaName(foreignType), TableName(foreignType), "Id");
+				else
+					result.ForeignKey(fkName, TableName(foreignType), "Id");
 			}
+
 			return result.ColumnOptions<TModel>(propertyInfo);
 		}
 
@@ -380,7 +397,9 @@ namespace AGO.Core.Migration
 
 		public static void ModelTable<TModel>(this IDeleteExpressionRoot root)
 		{
-			root.Table(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withSchema = root.Table(TableName<TModel>());
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema.InSchema(SchemaName<TModel>());
 		}
 
 		public static IDeleteColumnFromTableSyntax Column<TModel>(
@@ -397,18 +416,30 @@ namespace AGO.Core.Migration
 
 		public static void FromModelTable<TModel>(this IDeleteColumnFromTableSyntax self)
 		{
-			self.FromTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withSchema = self.FromTable(TableName<TModel>());
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema.InSchema(SchemaName<TModel>());
 		}
 
 		public static IDeleteDataSyntax FromModelTable<TModel>(this IDeleteExpressionRoot root)
 		{
-			return root.FromTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withoutSchema = root.FromTable(TableName<TModel>());
+			var withSchema = withoutSchema as IDeleteDataSyntax;
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+
+			return withSchema;
 		}
 
 		public static IDeleteExpressionRoot NullPropertyRows<TModel>(
 			this IDeleteExpressionRoot root, Expression<Func<TModel, object>> expression)
 		{
-			root.FromTable(TableName<TModel>()).IsNull(ColumnName(expression));
+			var withoutSchema = root.FromTable(TableName<TModel>());
+			var withSchema = withoutSchema as IDeleteDataSyntax;
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+
+			withSchema.IsNull(ColumnName(expression));
 			return root;
 		}
 
@@ -416,9 +447,15 @@ namespace AGO.Core.Migration
 			this IDeleteExpressionRoot root, 
 			Expression<Func<TModel, object>> expression)
 		{
-			root.ForeignKey("FK_" + TableName<TModel>() + "_" + ColumnName(expression))
-				.OnTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
-			root.Column(expression).FromTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withSchema = root.ForeignKey("FK_" + TableName<TModel>() + "_" + ColumnName(expression))
+			    .OnTable(TableName<TModel>());
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema.InSchema(SchemaName<TModel>());
+
+			var withSchema2 = root.Column(expression).FromTable(TableName<TModel>());
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema2.InSchema(SchemaName<TModel>());
+
 			return root;
 		}
 
@@ -427,8 +464,13 @@ namespace AGO.Core.Migration
 		{
 			foreach (var expression in expressions)
 			{
-				self.Index("IX_" + TableName<TModel>() + "_" + ColumnName(expression))
-					.OnTable(TableName<TModel>()).InSchema(SchemaName<TModel>()).OnColumn(ColumnName(expression));
+				var withoutSchema = self.Index("IX_" + TableName<TModel>() + "_" + ColumnName(expression))
+					.OnTable(TableName<TModel>());
+				var withSchema = withoutSchema as IDeleteIndexOnColumnSyntax;
+				if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+					withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+
+				withSchema.OnColumn(ColumnName(expression));
 			}
 			return self;
 		}
@@ -439,30 +481,15 @@ namespace AGO.Core.Migration
 			var indexName = "IX_" + TableName<TModel>();
 			indexName += expressions.Aggregate("", (current, expression) => current + ("_" + ColumnName(expression)));
 
-			var tempResult = self.Index(indexName).OnTable(TableName<TModel>()).InSchema(SchemaName<TModel>());
+			var withoutSchema = self.Index(indexName).OnTable(TableName<TModel>());
+			var withSchema = withoutSchema as IDeleteIndexOnColumnSyntax;
+			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+
 			foreach (var expression in expressions)
-				tempResult.OnColumn(ColumnName(expression));
+				withSchema.OnColumn(ColumnName(expression));
 
 			return self;
-		}
-
-		#endregion
-
-		#region Docstore
-
-        public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(this ICreateExpressionRoot root)
-			where TModel : IDocstoreModel
-        {
-			return root.ModelTable<TModel>().WithValueColumn<TModel>(m => m.CreationTime);
-        }
-
-        public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
-			where TModel : ISecureModel
-		{
-			return root.DocstoreModelTable<TModel>()
-				.WithRefColumn<TModel>(m => m.Creator)
-				.WithValueColumn<TModel>(m => m.LastChangeTime)
-                .WithRefColumn<TModel>(m => m.LastChanger);
 		}
 
 		#endregion
@@ -508,11 +535,11 @@ namespace AGO.Core.Migration
 			if (type == null)
 				throw new ArgumentNullException("type");
 
-			var table = type.Name;
+			var withSchema = type.Name;
 
 			var tableAttribute = type.FirstAttribute<TableAttribute>(false);
 			if (tableAttribute != null && !tableAttribute.TableName.IsNullOrWhiteSpace())
-				table = tableAttribute.TableName.TrimSafe();
+				withSchema = tableAttribute.TableName.TrimSafe();
 
 			var tablePerSubclass = type.FirstAttribute<TablePerSubclassAttribute>(true);
 			if(tablePerSubclass!=null)
@@ -521,10 +548,10 @@ namespace AGO.Core.Migration
 				if (tablePerSubclass == null)
 					return TableName(type.BaseType);
 				if (!tablePerSubclass.TableName.IsNullOrWhiteSpace())
-					table = tablePerSubclass.TableName.TrimSafe();
+					withSchema = tablePerSubclass.TableName.TrimSafe();
 			}
 
-			return table;
+			return withSchema;
 		}
 
 		public static string ColumnName<TModel>(Expression<Func<TModel, object>> expression)
@@ -576,6 +603,25 @@ namespace AGO.Core.Migration
 			return result;
 		}
 		
+		#endregion
+
+		#region Docstore
+
+		public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(this ICreateExpressionRoot root)
+			where TModel : IDocstoreModel
+		{
+			return root.ModelTable<TModel>().WithValueColumn<TModel>(m => m.CreationTime);
+		}
+
+		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
+			where TModel : ISecureModel
+		{
+			return root.DocstoreModelTable<TModel>()
+				.WithRefColumn<TModel>(m => m.Creator)
+				.WithValueColumn<TModel>(m => m.LastChangeTime)
+				.WithRefColumn<TModel>(m => m.LastChanger);
+		}
+
 		#endregion
 	} 
 }

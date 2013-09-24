@@ -13,6 +13,10 @@ namespace AGO.System
 		public int Priority { get { return 0; } }
 
 		public IEnumerable<IServiceDescriptor> Services { get; private set; }
+		
+		public void Register(IModuleConsumer consumer)
+		{
+		}
 
 		public ModuleDescriptor()
 		{

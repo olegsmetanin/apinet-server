@@ -7,7 +7,9 @@ using AGO.Core.Controllers;
 using AGO.Core.Execution;
 using AGO.Core.Filters;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 using AGO.Core.Migration;
+using AGO.Core.Validation;
 using SimpleInjector;
 
 namespace AGO.Core.Application
@@ -25,6 +27,15 @@ namespace AGO.Core.Application
 
 		protected Container _Container;
 		public Container Container { get { return _Container; } }
+
+		protected IEnvironmentService _EnvironmentService;
+		public IEnvironmentService EnvironmentService { get { return _EnvironmentService; } }
+
+		protected ILocalizationService _LocalizationService;
+		public ILocalizationService LocalizationService { get { return _LocalizationService; } }
+
+		protected IValidationService _ValidationService;
+		public IValidationService ValidationService { get { return _ValidationService; } }
 
 		protected IJsonService _JsonService;
 		public IJsonService JsonService { get { return _JsonService; } }
@@ -86,6 +97,9 @@ namespace AGO.Core.Application
 
 		protected virtual void RegisterEnvironment()
 		{
+			_Container.RegisterSingle<IEnvironmentService, LocalEnvironmentService>();
+			_Container.RegisterSingle<ILocalizationService, LocalizationService>();
+			_Container.RegisterSingle<IValidationService, ValidationService>();
 			_Container.RegisterSingle<IJsonService, JsonService>();
 			_Container.RegisterSingle<IFilteringService, FilteringService>();
 		}
@@ -125,6 +139,12 @@ namespace AGO.Core.Application
 
 		protected void ConfigureEnvironment(IKeyValueProvider keyValueProvider)
 		{
+			_Container.RegisterInitializer<LocalEnvironmentService>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^Environment_(.*)", keyValueProvider)).ApplyTo(service));
+			_Container.RegisterInitializer<LocalizationService>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^Localization_(.*)", keyValueProvider)).ApplyTo(service));
+			_Container.RegisterInitializer<ValidationService>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^Validation_(.*)", keyValueProvider)).ApplyTo(service));
 			_Container.RegisterInitializer<JsonService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Json_(.*)", keyValueProvider)).ApplyTo(service));
 			_Container.RegisterInitializer<FilteringService>(service =>
@@ -178,6 +198,9 @@ namespace AGO.Core.Application
 
 		protected virtual void InitializeEnvironment(IList<IInitializable> initializedServices)
 		{
+			_EnvironmentService = _Container.GetInstance<IEnvironmentService>();
+			_LocalizationService = _Container.GetInstance<ILocalizationService>();
+			_ValidationService = _Container.GetInstance<IValidationService>();
 			_JsonService = _Container.GetInstance<IJsonService>();
 			_FilteringService = _Container.GetInstance<IFilteringService>();
 		}

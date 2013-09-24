@@ -8,9 +8,11 @@ using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Validation;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using NHibernate.Criterion;
@@ -33,8 +35,10 @@ namespace AGO.Home.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
+			ILocalizationService localizationService,
+			IValidationService validationService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
 		{
 		}
 
@@ -107,34 +111,28 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization(true)]
 		public ValidationResult EditProjectStatus([NotNull] ProjectStatusModel model)
 		{
-			var validationResult = new ValidationResult();
+			var validation = new ValidationResult();
 
 			try
 			{
 				var persistentModel = default(Guid).Equals(model.Id)
 					? new ProjectStatusModel { Creator = _AuthController.CurrentUser() }
 					: _CrudDao.Get<ProjectStatusModel>(model.Id, true);
-
-				var name = model.Name.TrimSafe();
-				if (name.IsNullOrEmpty())
-					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
-				if (_SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
-						.Where(m => m.Name == name && m.Id != model.Id).RowCount() > 0)
-					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
-
-				if (!validationResult.Success)
-					return validationResult;
-
-				persistentModel.Name = name;
+				persistentModel.Name = model.Name.TrimSafe();
 				persistentModel.Description = model.Description.TrimSafe();
+
+				_ValidationService.ValidateModel(persistentModel, validation);
+				if (!validation.Success)
+					return validation;
+				
 				_CrudDao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
-				validationResult.GeneralError = e.Message;
+				validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
 
-			return validationResult;
+			return validation;
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
@@ -208,7 +206,7 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult EditProjectTag([NotNull] ProjectTagModel model, TagsRequestMode mode)
 		{
-			var validationResult = new ValidationResult();
+			var validation = new ValidationResult();
 
 			try
 			{
@@ -223,18 +221,15 @@ namespace AGO.Home.Controllers
 
 				if (persistentModel.Owner != null && !currentUser.Equals(persistentModel.Owner) && currentUser.SystemRole != SystemRole.Administrator)
 					throw new AccessForbiddenException();
+				persistentModel.Name = model.Name.TrimSafe();
 
-				var name = model.Name.TrimSafe();
-				if (name.IsNullOrEmpty())
-					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
 				if (_SessionProvider.CurrentSession.QueryOver<ProjectTagModel>().Where(
-						m => m.Name == name && m.Owner == model.Owner && m.Id != model.Id).RowCount() > 0)
-					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
+						m => m.Name == persistentModel.Name && m.Owner == persistentModel.Owner && m.Id != persistentModel.Id).RowCount() > 0)
+					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 
-				if (!validationResult.Success)
-					return validationResult;
-
-				persistentModel.Name = name;
+				_ValidationService.ValidateModel(persistentModel, validation);
+				if (!validation.Success)
+					return validation;
 
 				var parentsStack = new Stack<TagModel>();
 
@@ -259,10 +254,10 @@ namespace AGO.Home.Controllers
 			}
 			catch (Exception e)
 			{
-				validationResult.GeneralError = e.Message;
+				validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
 			
-			return validationResult;
+			return validation;
 		}
 
 		[JsonEndpoint, RequireAuthorization]

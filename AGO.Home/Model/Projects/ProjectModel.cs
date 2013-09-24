@@ -16,7 +16,7 @@ namespace AGO.Home.Model.Projects
 
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(PROJECT_CODE_SIZE), NotEmpty]
+		[DisplayName("Код проекта"), JsonProperty, UniqueProperty, NotLonger(PROJECT_CODE_SIZE), NotEmpty]
 		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), NotLonger(64), JsonProperty, NotEmpty]

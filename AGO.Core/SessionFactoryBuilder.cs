@@ -106,11 +106,18 @@ namespace AGO.Core
 				if (!_Ready)
 					throw new ServiceNotInitializedException();
 
+				try
+				{
 				if (CurrentSessionContext.HasBind(_SessionFactory))
 					return _SessionFactory.GetCurrentSession();
 
 				CurrentSessionContext.Bind(_SessionFactory.OpenSession());
 				return _SessionFactory.GetCurrentSession();
+			}
+				catch (HibernateException e)
+				{
+					throw new DataAccessException(e);
+				}
 			}
 		}
 
@@ -119,6 +126,8 @@ namespace AGO.Core
 			if (!_Ready)
 				throw new ServiceNotInitializedException();
 
+			try
+			{
 			if (!CurrentSessionContext.HasBind(_SessionFactory))
 				return;
 
@@ -132,6 +141,11 @@ namespace AGO.Core
 			}
 
 			CurrentSessionContext.Unbind(_SessionFactory);
+		}
+			catch (HibernateException e)
+			{
+				throw new DataAccessException(e);
+			}
 		}
 
 		public ISessionFactory SessionFactory

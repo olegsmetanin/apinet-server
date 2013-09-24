@@ -32,8 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AbstractApplicationException.cs" />
     <Compile Include="Application\AbstractApplication.cs" />
     <Compile Include="Application\AbstractTestFixture.cs" />
+    <Compile Include="Attributes\Constraints\UniquePropertyAttribute.cs" />
     <Compile Include="Attributes\Constraints\InRangeAttribute.cs" />
     <Compile Include="Attributes\Constraints\NotEmptyAttribute.cs" />
     <Compile Include="Attributes\Constraints\NotLongerAttribute.cs" />
@@ -82,7 +84,9 @@
     <Compile Include="Execution\IActionParameterResolver.cs" />
     <Compile Include="Execution\IActionParameterTransformer.cs" />
     <Compile Include="Execution\JsonTokenParameterTransformer.cs" />
+    <Compile Include="IEnvironmentService.cs" />
     <Compile Include="ITestDataPopulationService.cs" />
+    <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
@@ -205,6 +209,10 @@
     <Compile Include="Json\JsonService.cs" />
     <Compile Include="Json\IJsonService.cs" />
     <Compile Include="SessionFactoryBuilder.cs" />
+    <Compile Include="Validation\ValidationService.cs" />
+    <Compile Include="Validation\AttributeValidatingModelValidator.cs" />
+    <Compile Include="Validation\IModelValidator.cs" />
+    <Compile Include="Validation\IValidationService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Common.Logging">
@@ -243,6 +251,12 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="AbstractApplicationException.resx">
+      <DependentUpon>AbstractApplicationException.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AbstractApplicationException.ru.resx">
+      <DependentUpon>AbstractApplicationException.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Filters\ModelFilterNodeSchema.json" />
   </ItemGroup>
   <ItemGroup>

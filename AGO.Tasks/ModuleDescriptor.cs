@@ -24,6 +24,10 @@ namespace AGO.Tasks
             get { return 0; }
         }
 
+		public void Register(IModuleConsumer consumer)
+		{
+		}
+
         public IEnumerable<IServiceDescriptor> Services { get; private set; }
 
         public ModuleDescriptor()

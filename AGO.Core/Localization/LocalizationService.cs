@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace AGO.Core.Localization
@@ -9,8 +10,8 @@ namespace AGO.Core.Localization
 	{
 		#region Static properties
 
-		/*protected static IList<CultureInfo> _SatelliteAssemblyCultures = new List<CultureInfo>();
-		public static IList<CultureInfo> SatelliteAssemblyCultures { get { return _SatelliteAssemblyCultures; } }*/
+		protected static IList<CultureInfo> _SatelliteAssemblyCultures = new List<CultureInfo>();
+		public static IList<CultureInfo> SatelliteAssemblyCultures { get { return _SatelliteAssemblyCultures; } }
 
 		#endregion
 
@@ -37,7 +38,7 @@ namespace AGO.Core.Localization
 
 		#region Properties, fields, constructors
 
-		/*protected readonly IEnvironmentService _EnvironmentService;*/
+		protected readonly IEnvironmentService _EnvironmentService;
 
 		protected readonly IDictionary<CultureInfo, IList<ILocalizerByKey>> _LocalizersByKey =
 			new Dictionary<CultureInfo, IList<ILocalizerByKey>>();
@@ -58,7 +59,7 @@ namespace AGO.Core.Localization
 			new Dictionary<CultureInfo, IList<IExceptionLocalizer>>();
 
 		public LocalizationService(
-			/*IEnvironmentService environmentService,*/
+			IEnvironmentService environmentService,
 			IEnumerable<ILocalizerByKey> localizersByKey,
 			IEnumerable<IObjectLocalizer> objectLocalizers,
 			IEnumerable<IObjectLocalizerByKey> objectLocalizersByKey,
@@ -66,9 +67,9 @@ namespace AGO.Core.Localization
 			IEnumerable<ITypeLocalizerByKey> typeLocalizersByKey,
 			IEnumerable<IExceptionLocalizer> exceptionLocalizers)
 		{
-			/*if (environmentService == null)
+			if (environmentService == null)
 				throw new ArgumentNullException("environmentService");
-			_EnvironmentService = environmentService;*/
+			_EnvironmentService = environmentService;
 
 			RegisterLocalizers(localizersByKey);
 			RegisterLocalizers(objectLocalizers);
@@ -192,7 +193,9 @@ namespace AGO.Core.Localization
 
 			return localizer != null 
 				? localizer.Message(exception, culture) 
-				: (MessageFor(exception, null, culture) ?? MessageFor(exception, exception.GetType().Name, culture));
+				: (MessageFor(exception, null, culture) ?? 
+					MessageFor(exception, exception.GetType().Name, culture)) ??
+					exception.Message;
 		}
 
 		public void RegisterLocalizers(IEnumerable<ILocalizer> localizers)
@@ -264,20 +267,18 @@ namespace AGO.Core.Localization
 
 		#region Template methods
 
-		/*protected override void DoInitialize()
+		protected override void DoInitialize()
 		{
 			base.DoInitialize();
 
-			var initializable = _EnvironmentService as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
+			_EnvironmentService.TryInitialize();
 
 			_SatelliteAssemblyCultures = CultureInfo.GetCultures(CultureTypes.AllCultures)
 				.Where(c => !c.Name.IsNullOrWhiteSpace() && (
 					Directory.Exists(Path.Combine(_EnvironmentService.ApplicationAssembliesPath, c.Name)) ||
 					Directory.Exists(Path.Combine(_EnvironmentService.ApplicationAssembliesPath, c.TwoLetterISOLanguageName))))
 				.ToList();
-		}*/
+		}
 		
 		#endregion
 	}

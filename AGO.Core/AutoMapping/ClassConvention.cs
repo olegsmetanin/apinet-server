@@ -27,7 +27,8 @@ namespace AGO.Core.AutoMapping
 				schema = tableAttribute.SchemaName.TrimSafe();
 			
 			instance.Table(table);
-			instance.Schema(schema);
+			if(!AutoMappedSessionFactoryBuilder.DisableSchemas)
+				instance.Schema(schema);
 
 			var optimisticLockAttribute = instance.EntityType.FirstAttribute<OptimisticLockAttribute>(true);
 			if (optimisticLockAttribute == null)

@@ -7,7 +7,9 @@ using AGO.Core.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Validation;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -26,8 +28,10 @@ namespace AGO.Tasks.Controllers
             ICrudDao crudDao, 
             IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
+			ILocalizationService localizationService,
+			IValidationService validationService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
 		{
 		}
 
@@ -59,33 +63,27 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult EditTaskType([NotEmpty] string project, [NotNull] TaskTypeDTO model)
 		{
-			var validationResult = new ValidationResult();
+			var validation = new ValidationResult();
 
 			try
 			{
 				var persistentModel = default(Guid).Equals(model.Id)
 					? new TaskTypeModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.CurrentUser() }
 					: _CrudDao.Get<TaskTypeModel>(model.Id, true);
+				persistentModel.Name = model.Name.TrimSafe();
 
-				var name = model.Name.TrimSafe();
-				if (name.IsNullOrEmpty())
-					validationResult.FieldErrors["Name"] = new RequiredFieldException().Message;
-				if (_SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
-						.Where(m => m.ProjectCode == project && m.Name == name && m.Id != model.Id).RowCount() > 0)
-					validationResult.FieldErrors["Name"] = new UniqueFieldException().Message;
+				_ValidationService.ValidateModel(persistentModel, validation);
+				if (!validation.Success)
+					return validation;
 
-				if (!validationResult.Success)
-					return validationResult;
-
-				persistentModel.Name = name;
 				_CrudDao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
-				validationResult.GeneralError = e.Message;
+				validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
 
-			return validationResult;
+			return validation;
 		}
 
     	private void InternalDeleteTaskType(Guid id)

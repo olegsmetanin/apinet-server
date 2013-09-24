@@ -9,6 +9,8 @@ namespace AGO.Core.Execution
 	{
 		#region Properties, fields, constructors
 
+		protected readonly ISessionProvider _SessionProvider;
+
 		protected readonly IList<IActionParameterResolver> _Resolvers;
 
 		protected readonly IList<IActionParameterTransformer> _Transformers;
@@ -16,10 +18,15 @@ namespace AGO.Core.Execution
 		protected readonly IList<IActionResultTransformer> _ResultTransformers;
 
 		public ActionExecutor(
+			ISessionProvider sessionProvider,
 			IEnumerable<IActionParameterResolver> resolvers,
 			IEnumerable<IActionParameterTransformer> transformers,
 			IEnumerable<IActionResultTransformer> resultTransformers)
 		{
+			if (sessionProvider == null)
+				throw new ArgumentNullException("sessionProvider");
+			_SessionProvider = sessionProvider;
+
 			if (resolvers == null)
 				throw new ArgumentNullException("resolvers");
 			_Resolvers = new List<IActionParameterResolver>(resolvers);
@@ -43,6 +50,8 @@ namespace AGO.Core.Execution
 				throw new ArgumentNullException("callee");
 			if (methodInfo == null || methodInfo.DeclaringType == null)
 				throw new ArgumentNullException("methodInfo");
+			var rollback = false;
+
 			try
 			{
 				if (methodInfo.DeclaringType.IsInterface)
@@ -75,7 +84,15 @@ namespace AGO.Core.Execution
 					resolvedParams[parameterInfo.Position] = resolvedParam;
 				}
 
-				var result = methodInfo.Invoke(callee, resolvedParams);
+				object result;
+				try
+				{
+					result = methodInfo.Invoke(callee, resolvedParams);
+				}
+				catch (TargetInvocationException e)
+				{
+					throw e.InnerException;
+				}
 
 				foreach (var transformer in _ResultTransformers)
 				{
@@ -84,11 +101,24 @@ namespace AGO.Core.Execution
 					result = transformer.Transform(methodInfo.ReturnType, result);
 				}
 
+				var validationResult = result as ValidationResult;
+				if (validationResult != null)
+					rollback = !validationResult.Success;
+
+				if (!rollback)
+					_SessionProvider.CloseCurrentSession();
+
 				return result;
 			}
-			catch (TargetInvocationException e)
+			catch (Exception)
 			{
-				throw e.InnerException;
+				rollback = true;
+				throw;
+			}
+			finally
+			{
+				if(rollback)
+					_SessionProvider.CloseCurrentSession(true);
 			}
 		}
 

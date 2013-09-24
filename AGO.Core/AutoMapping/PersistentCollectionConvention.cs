@@ -47,6 +47,9 @@ namespace AGO.Core.AutoMapping
 				instance.Table(first + "To" + second);
 			}
 
+			if (AutoMappedSessionFactoryBuilder.DisableSchemas)
+				return;
+
 			if (!attribute.LinkSchema.IsNullOrWhiteSpace())
 				instance.Schema(attribute.LinkSchema.TrimSafe());
 			else

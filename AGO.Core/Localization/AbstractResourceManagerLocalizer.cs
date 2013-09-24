@@ -50,7 +50,7 @@ namespace AGO.Core.Localization
 		{
 			get
 			{
-				var result = new List<CultureInfo>() /*LocalizationService.SatelliteAssemblyCultures*/ as IEnumerable<CultureInfo>;
+				var result = LocalizationService.SatelliteAssemblyCultures as IEnumerable<CultureInfo>;
 				
 				var current = _NeutralCulture;
 				while (current != null && !current.Equals(current.Parent))

@@ -4,9 +4,11 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Filters;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Validation;
 
 namespace AGO.Core.Controllers
 {
@@ -20,8 +22,10 @@ namespace AGO.Core.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
+			ILocalizationService localizationService,
+			IValidationService validationService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
 		{
 		}
 

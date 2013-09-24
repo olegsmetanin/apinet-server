@@ -7,7 +7,9 @@ using AGO.Core.Controllers;
 using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Validation;
 using AGO.System.Model;
 using Newtonsoft.Json.Linq;
 
@@ -23,8 +25,10 @@ namespace AGO.System.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
+			ILocalizationService localizationService,
+			IValidationService validationService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
 		{
 		}
 
@@ -52,33 +56,35 @@ namespace AGO.System.Controllers
 			[NotEmpty] string group, 
 			[NotNull] JToken filter)
 		{
-			var validationResult = new ValidationResult();
+			var validation = new ValidationResult();
 
 			try
 			{
 				//TODO: Валидации длины
 				var currentUser = _AuthController.CurrentUser();
 
-				var filterModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
+				var persistentModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 					.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
-					.Take(1).List().FirstOrDefault();
-
-				filterModel = filterModel ?? new UserFilterModel
+					.Take(1).List().FirstOrDefault() ?? new UserFilterModel
 				{
 					Name = name,
 					GroupName = group,
 					User = currentUser
 				};
-				filterModel.Filter = filter.ToString();
+				persistentModel.Filter = filter.ToString();
 
-				_CrudDao.Store(filterModel);
+				_ValidationService.ValidateModel(persistentModel, validation);			
+				if (!validation.Success)
+					return validation;
+
+				_CrudDao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
-				validationResult.GeneralError = e.Message;
+				validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
 			
-			return validationResult;
+			return validation;
 		}
 
 		[JsonEndpoint, RequireAuthorization]

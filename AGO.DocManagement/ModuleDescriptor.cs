@@ -14,6 +14,10 @@ namespace AGO.DocManagement
 
 		public IEnumerable<IServiceDescriptor> Services { get; private set; }
 
+		public void Register(IModuleConsumer consumer)
+		{
+		}
+
 		public ModuleDescriptor()
 		{
 			Services = new List<IServiceDescriptor>

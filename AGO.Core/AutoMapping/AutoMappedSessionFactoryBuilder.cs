@@ -16,6 +16,8 @@ namespace AGO.Core.AutoMapping
 
 		public string AutoMappingsDumpPath { get; set; }
 
+		public static bool DisableSchemas { get; set; }
+
 		protected readonly ISet<Type> _AutoMappingConventions = new HashSet<Type>();
 		public ISet<Type> AutoMappingConventions
 		{
@@ -51,6 +53,12 @@ namespace AGO.Core.AutoMapping
 				return;
 			}
 
+			if ("DisableSchemas".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			{
+				DisableSchemas = value.ConvertSafe<bool>();
+				return;
+			}
+
 			base.DoSetConfigProperty(key, value);
 		}
 
@@ -74,6 +82,9 @@ namespace AGO.Core.AutoMapping
 					result.AppendLine(type.AssemblyQualifiedName);
 				return result.ToString();
 			}
+
+			if ("DisableSchemas".Equals(key, StringComparison.InvariantCulture))
+				return DisableSchemas.ToString();
 
 			return base.DoGetConfigProperty(key);
 		}

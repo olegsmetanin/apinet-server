@@ -23,7 +23,7 @@ namespace AGO.Tasks.Model.Dictionary
 		/// <summary>
 		/// Наименование
 		/// </summary>
-		[DisplayName("Наименование"), JsonProperty, NotEmpty, NotLonger(256)]
+		[DisplayName("Наименование"), JsonProperty, UniqueProperty, NotEmpty, NotLonger(256)]
 		public virtual string Name { get; set; }
 	}
 }

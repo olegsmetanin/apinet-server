@@ -8,6 +8,7 @@ using System.Web.Routing;
 using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Config;
+using AGO.Core.Localization;
 using AGO.Core.Modules;
 using AGO.WebApiApp.App_Start;
 using AGO.WebApiApp.Execution;
@@ -34,6 +35,13 @@ namespace AGO.WebApiApp.App_Start
 			base.Register();
 
 			DevMode = GetKeyValueProvider().Value("DevMode").ParseEnumSafe(DevMode.Dev);
+		}
+
+		protected override void RegisterEnvironment()
+		{
+			base.RegisterEnvironment();
+
+			_Container.RegisterSingle<IEnvironmentService, HostingEnvironmentService>();
 		}
 
 		protected override IEnumerable<Type> AllActionParameterResolvers
@@ -117,8 +125,20 @@ namespace AGO.WebApiApp.App_Start
 					.Select(Activator.CreateInstance).OfType<IModuleDescriptor>()
 					.OrderBy(m => m.Priority))
 			{
+				moduleDescriptor.Register(this);
+
 				foreach (var serviceDescriptor in moduleDescriptor.Services.OrderBy(s => s.Priority))
 					serviceDescriptor.Register(this);
+			}
+		}
+
+		protected void RegisterModuleAddons()
+		{
+			foreach (var module in AppDomain.CurrentDomain.GetAssemblies()
+				.Where(a => !a.IsDynamic && a.GetExportedTypes()
+					.Any(t => t.IsClass && t.IsPublic && typeof(IModuleDescriptor).IsAssignableFrom(t))))
+			{
+				StandardLocalizersRegistrator.Register(_LocalizationService, module);
 			}
 		}
 
@@ -129,6 +149,8 @@ namespace AGO.WebApiApp.App_Start
 			RegisterModules();
 
 			base.Initialize();
+
+			RegisterModuleAddons();
 
 			RegisterDefaultRoute(RouteTable.Routes);		
 
