@@ -18,6 +18,13 @@ namespace AGO.WebApi.Tests
 			DoPopulateDatabase();
 		}
 
+		[Test]
+		public void PopulateDatabase()
+		{
+			InitContainer();
+			DoPopulateDatabase();
+		}
+
 		protected override IEnumerable<Type> TestDataPopulationServices
 		{
 			get
