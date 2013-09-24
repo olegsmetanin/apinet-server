@@ -19,7 +19,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Дата изменения статуса на заданный
 		/// </summary>
-		[DisplayName("Дата начала"), JsonProperty/*, InRange(new DateTime(2000, 01, 01), new DateTime(2200, 01, 01))*/]
+		[DisplayName("Дата начала"), JsonProperty, NotNull/*, InRange(new DateTime(2000, 01, 01), new DateTime(2200, 01, 01))*/]
 		public virtual DateTime Start { get; set; }
 
 		/// <summary>
@@ -27,7 +27,7 @@ namespace AGO.Tasks.Model.Task
 		/// задачи в заданном статусе. Может быть null, если задача все еще находится
 		/// в заданном статусе
 		/// </summary>
-		[DisplayName("Дата окончания"), JsonProperty, NotNull]
+		[DisplayName("Дата окончания"), JsonProperty]
 		public virtual DateTime? Finish { get; set; }
 
 		/// <summary>

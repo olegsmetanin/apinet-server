@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\DictionaryController.cs" />
+    <Compile Include="Controllers\DTO\CustomStatusDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
     <Compile Include="Controllers\ModelsResponse.cs" />
     <Compile Include="Controllers\TasksController.cs" />

@@ -168,5 +168,151 @@ namespace AGO.Tasks.Controllers
 		{
 			return MetadataForModelAndRelations<TaskTypeModel>();
 		}
+
+		[JsonEndpoint, RequireAuthorization]
+    	public IEnumerable<LookupEntry> LookupCustomStatuses(
+			[NotEmpty] string project, 
+			string term, 
+			[InRange(0, null)] int page, 
+			[InRange(0, MaxPageSize)] int pageSize)
+    	{
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
+
+			var query = _SessionProvider.CurrentSession.QueryOver<CustomTaskStatusModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
+    	}
+
+		[JsonEndpoint, RequireAuthorization]
+    	public IEnumerable<CustomStatusDTO> GetCustomStatuses(
+			[NotEmpty] string project, 
+			[NotNull] ICollection<IModelFilterNode> filter, 
+			[NotNull] ICollection<SortInfo> sorters, 
+			[InRange(0, null)] int page, 
+			[InRange(0, MaxPageSize)] int pageSize)
+    	{
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
+
+			var projectPredicate = _FilteringService.Filter<CustomTaskStatusModel>().Where(m => m.ProjectCode == project);
+			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+
+			return _FilteringDao.List<CustomTaskStatusModel>(predicate,
+				new FilteringOptions { Skip = page * pageSize, Take = pageSize, Sorters = sorters })
+				.Select(m => new CustomStatusDTO
+				{
+					Id = m.Id,
+					Name = m.Name,
+					ViewOrder = m.ViewOrder,
+					Author = (m.Creator != null ? m.Creator.ShortName : string.Empty),
+					CreationTime = m.CreationTime,
+					ModelVersion = m.ModelVersion
+				});
+    	}
+
+		[JsonEndpoint, RequireAuthorization]
+		public ValidationResult EditCustomStatus([NotEmpty] string project, [NotNull] CustomStatusDTO model)
+		{
+			var validation = new ValidationResult();
+
+			try
+			{
+				var persistentModel = default(Guid).Equals(model.Id)
+					? new CustomTaskStatusModel { ProjectCode = project }//TODO improve AuthController for work without http context { Creator = authController.CurrentUser() }
+					: _CrudDao.Get<CustomTaskStatusModel>(model.Id, true);
+				persistentModel.Name = model.Name.TrimSafe();
+				persistentModel.ViewOrder = model.ViewOrder;
+
+				_ValidationService.ValidateModel(persistentModel, validation);
+				if (!validation.Success)
+					return validation;
+
+				_CrudDao.Store(persistentModel);
+			}
+			catch (Exception e)
+			{
+				validation.AddErrors(_LocalizationService.MessageForException(e));
+			}
+
+			return validation;
+		}
+
+		private void InternalDeleteCustomStatus(Guid id)
+		{
+			var status = _CrudDao.Get<CustomTaskStatusModel>(id, true);
+
+			if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
+					.Where(m => m.CustomStatus == status).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			if (_SessionProvider.CurrentSession.QueryOver<CustomTaskStatusHistoryModel>()
+					.Where(m => m.Status == status).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			_CrudDao.Delete(status);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteCustomStatus([NotEmpty] Guid id)
+		{
+			InternalDeleteCustomStatus(id);
+
+			return true;
+		}
+
+		//TODO transaction management???
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteCustomStatuses([NotEmpty] string project, [NotNull] ICollection<Guid> ids, Guid? replacementStatusId)
+		{
+			if (replacementStatusId.HasValue && ids.Contains(replacementStatusId.Value))
+				throw new InvalidOperationException(string.Format("Can't replace with custom status, that will be deleted too"));
+
+			var s = _SessionProvider.CurrentSession;
+			var trn = s.BeginTransaction();
+			try
+			{
+				const string hqlTaskUpdate =
+					"update versioned TaskModel set CustomStatusId = :newStatusId where ProjectCode = :project and CustomStatusId = :oldStatusId";
+				const string hqlHistoryUpdate =
+					"update versioned CustomTaskStatusHistoryModel set StatusId = :newStatusId where StatusId = :oldStatusId";
+				var taskUpdateQuery = s.CreateQuery(hqlTaskUpdate);
+				var historyUpdateQuery = s.CreateQuery(hqlHistoryUpdate);
+
+				foreach (var id in ids)
+				{
+					if (replacementStatusId.HasValue)
+					{
+						taskUpdateQuery
+							.SetGuid("newStatusId", replacementStatusId.Value)
+							.SetString("project", project)
+							.SetGuid("oldStatusId", id)
+							.ExecuteUpdate();
+						historyUpdateQuery
+							.SetGuid("newStatusId", replacementStatusId.Value)
+							.SetGuid("oldStatusId", id)
+							.ExecuteUpdate();
+					}
+
+					InternalDeleteCustomStatus(id);
+				}
+
+				trn.Commit();
+			}
+			catch (Exception)
+			{
+				trn.Rollback();
+				throw;
+			}
+			return true;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<IModelMetadata> CustomTaskStatusMetadata()
+		{
+			return MetadataForModelAndRelations<CustomTaskStatusModel>();
+		}
     }
 }
