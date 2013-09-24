@@ -7,7 +7,7 @@ namespace AGO.Core.Localization
 {
 	public static class StandardLocalizersRegistrator
 	{
-		public static void Register(LocalizationService localizationService, params Assembly[] assemblies)
+		public static void Register(ILocalizationService localizationService, params Assembly[] assemblies)
 		{
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");

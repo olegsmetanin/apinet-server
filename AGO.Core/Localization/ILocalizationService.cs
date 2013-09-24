@@ -18,5 +18,7 @@ namespace AGO.Core.Localization
 		string MessageFor(object obj, object key = null, CultureInfo culture = null);	
 
 		string MessageForException(Exception exception, CultureInfo culture = null);
+
+		void RegisterLocalizers(IEnumerable<ILocalizer> localizers);
 	}
 }

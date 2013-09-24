@@ -7,19 +7,6 @@ namespace AGO.Core.Execution
 {
 	public class AttributeValidatingParameterTransformer : IActionParameterTransformer
 	{
-		#region Properties, fields, constructors
-		
-		protected readonly IJsonService _JsonService;
-
-		public AttributeValidatingParameterTransformer(IJsonService jsonService)
-		{
-			if (jsonService == null)
-				throw new ArgumentNullException("jsonService");
-			_JsonService = jsonService;
-		}
-
-		#endregion
-
 		#region Interfaces implementation
 
 		public bool Accepts(

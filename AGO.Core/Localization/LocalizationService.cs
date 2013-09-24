@@ -195,10 +195,6 @@ namespace AGO.Core.Localization
 				: (MessageFor(exception, null, culture) ?? MessageFor(exception, exception.GetType().Name, culture));
 		}
 
-		#endregion
-
-		#region Public methods
-
 		public void RegisterLocalizers(IEnumerable<ILocalizer> localizers)
 		{
 			localizers = (localizers ?? Enumerable.Empty<ILocalizer>()).ToList();

@@ -164,27 +164,8 @@ namespace AGO.Home.Controllers
 			TagsRequestMode mode)
 		{
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
-			IModelFilterNode modeFilter = new ModelFilterNode();
-			if (mode == TagsRequestMode.Personal)
-			{
-				modeFilter.AddItem(new ValueFilterNode
-				{
-					Path = "Owner", 
-					Operator = ValueFilterOperators.Eq, 
-					Operand = _AuthController.CurrentUser().Id.ToString()
-				});
-			}
-			else
-			{
-				modeFilter.AddItem(new ValueFilterNode
-				{
-					Path = "Owner",
-					Operator = ValueFilterOperators.Exists,
-					Negative = true
-				});
-			}
-			filter.Add(modeFilter);
+			
+			filter.Add(ProjectTagModeFilter(mode));
 
 			return _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
 			{
@@ -209,7 +190,9 @@ namespace AGO.Home.Controllers
 			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
 
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
+				.Where(m => m.Owner == _AuthController.CurrentUser() || m.Owner == null)
 				.OrderBy(m => m.Name).Asc;
+
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
@@ -321,6 +304,34 @@ namespace AGO.Home.Controllers
 		public ProjectTypeModel GetProjectType([NotEmpty] Guid id, bool dontFetchReferences)
 		{
 			return GetModel<ProjectTypeModel, Guid>(id, dontFetchReferences);
+		}
+
+		#endregion
+
+		#region Helper methods
+
+		protected IModelFilterNode ProjectTagModeFilter(TagsRequestMode mode)
+		{
+			var result = new ModelFilterNode();
+			if (mode == TagsRequestMode.Personal)
+			{
+				result.AddItem(new ValueFilterNode
+				{
+					Path = "Owner",
+					Operator = ValueFilterOperators.Eq,
+					Operand = _AuthController.CurrentUser().Id.ToString()
+				});
+			}
+			else
+			{
+				result.AddItem(new ValueFilterNode
+				{
+					Path = "Owner",
+					Operator = ValueFilterOperators.Exists,
+					Negative = true
+				});
+			}
+			return result;
 		}
 
 		#endregion
