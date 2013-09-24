@@ -12,6 +12,7 @@ using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using System.Linq;
+using NHibernate.Criterion;
 
 namespace AGO.Tasks.Controllers
 {
@@ -29,6 +30,24 @@ namespace AGO.Tasks.Controllers
 			AuthController authController)
 			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, authController)
 		{
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupTaskTypes(
+			[NotEmpty] string project,
+			string term,
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize)
+		{
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
+
+			var query = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -109,12 +128,37 @@ namespace AGO.Tasks.Controllers
 
 		//TODO transaction management???
     	[JsonEndpoint, RequireAuthorization]
-		public bool DeleteTaskTypes([NotEmpty] string project, [NotNull] ICollection<Guid> ids)
-		{
-			foreach (var id in ids)
-			{
-				InternalDeleteTaskType(id);
-			}
+		public bool DeleteTaskTypes([NotEmpty] string project, [NotNull] ICollection<Guid> ids, Guid? replacementTypeId)
+    	{
+    		var s = _SessionProvider.CurrentSession;
+    		var trn = s.BeginTransaction();
+    		try
+    		{
+    			const string hqlUpdate =
+    				"update versioned TaskModel set TaskTypeId = :newTypeId where ProjectCode = :project and TaskTypeId = :oldTypeId";
+    			var updateQuery = s.CreateQuery(hqlUpdate);
+
+    			foreach (var id in ids)
+    			{
+    				if (replacementTypeId.HasValue)
+    				{
+    					updateQuery
+    						.SetGuid("newTypeId", replacementTypeId.Value)
+    						.SetString("project", project)
+    						.SetGuid("oldTypeId", id)
+    						.ExecuteUpdate();
+    				}
+
+					InternalDeleteTaskType(id);
+    			}
+
+    			trn.Commit();
+    		}
+    		catch (Exception)
+    		{
+				trn.Rollback();
+    			throw;
+    		}
 			return true;
 		}
 
