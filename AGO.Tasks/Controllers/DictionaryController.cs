@@ -130,6 +130,9 @@ namespace AGO.Tasks.Controllers
     	[JsonEndpoint, RequireAuthorization]
 		public bool DeleteTaskTypes([NotEmpty] string project, [NotNull] ICollection<Guid> ids, Guid? replacementTypeId)
     	{
+			if (replacementTypeId.HasValue && ids.Contains(replacementTypeId.Value))
+				throw new InvalidOperationException(string.Format("Can't replace with task type, that will be deleted too"));
+
     		var s = _SessionProvider.CurrentSession;
     		var trn = s.BeginTransaction();
     		try
