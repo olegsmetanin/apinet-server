@@ -144,7 +144,7 @@ namespace AGO.Core
 			{
 				throw new DataAccessException(e);
 			}
-			}
+		}
 
 		public void CloseCurrentSession(bool forceRollback = false)
 		{
@@ -157,8 +157,13 @@ namespace AGO.Core
 			{
 				if (!CurrentSessionContext.HasBind(_SessionFactory))
 					return;
-			CurrentSessionContext.Unbind(_SessionFactory);
-		}
+
+				var session = _SessionFactory.GetCurrentSession();
+				if (session != null)
+					session.Close();
+
+				CurrentSessionContext.Unbind(_SessionFactory);
+			}
 			catch (HibernateException e)
 			{
 				throw new DataAccessException(e);
