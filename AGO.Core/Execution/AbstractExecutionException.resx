@@ -117,40 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AccessForbiddenException" xml:space="preserve">
-    <value>Access forbidden</value>
-  </data>
-  <data name="CannotDeleteReferencedItemException" xml:space="preserve">
-    <value>Cannot delete referenced item while it's in use</value>
-  </data>
-  <data name="DataAccessException" xml:space="preserve">
-    <value>Error while accessing database</value>
-  </data>
-  <data name="MustBeBetweenException" xml:space="preserve">
-    <value>Must be between {0} and {1}</value>
-  </data>
-  <data name="MustBeGreaterOrEqualToException" xml:space="preserve">
-    <value>Must be not lower than {0}</value>
-  </data>
-  <data name="MustBeGreaterThanException" xml:space="preserve">
-    <value>Must be greater than {0}</value>
-  </data>
-  <data name="MustBeInRangeException" xml:space="preserve">
-    <value>Must be in range from {0} to {1}</value>
-  </data>
-  <data name="MustBeLowerOrEqualToException" xml:space="preserve">
-    <value>Must be not greater than {0}</value>
-  </data>
-  <data name="MustBeLowerThanException" xml:space="preserve">
-    <value>Must be lower than {0}</value>
-  </data>
-  <data name="MustBeUniqueException" xml:space="preserve">
-    <value>Already exists</value>
-  </data>
-  <data name="NotAuthenticatedException" xml:space="preserve">
-    <value>You are not authorized to execute this action</value>
-  </data>
-  <data name="RequiredValueException" xml:space="preserve">
-    <value>Required value</value>
+  <data name="ControllerActionParameterException" xml:space="preserve">
+    <value>Invalid request parameter: {0}</value>
   </data>
 </root>

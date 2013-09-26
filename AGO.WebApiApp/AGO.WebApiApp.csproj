@@ -82,6 +82,7 @@
     <Compile Include="App_Start\WebApplication.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ApiController.cs" />
+    <Compile Include="Controllers\WebSessionStateStorage.cs" />
     <Compile Include="Execution\JsonBodyParameterResolver.cs" />
     <Compile Include="Controllers\SysConfigData.cs" />
     <Compile Include="Controllers\StaticFilesController.cs" />

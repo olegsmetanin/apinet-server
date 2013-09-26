@@ -34,7 +34,13 @@
   <ItemGroup>
     <Compile Include="AbstractApplicationException.cs" />
     <Compile Include="Application\AbstractApplication.cs" />
+    <Compile Include="Application\AbstractControllersApplication.cs" />
+    <Compile Include="Application\AbstractPersistenceApplication.cs" />
     <Compile Include="Application\AbstractTestFixture.cs" />
+    <Compile Include="Application\IWebApplication.cs" />
+    <Compile Include="Application\IApplication.cs" />
+    <Compile Include="Application\IControllersApplication.cs" />
+    <Compile Include="Application\IPersistenceApplication.cs" />
     <Compile Include="Attributes\Constraints\UniquePropertyAttribute.cs" />
     <Compile Include="Attributes\Constraints\InRangeAttribute.cs" />
     <Compile Include="Attributes\Constraints\NotEmptyAttribute.cs" />
@@ -72,10 +78,13 @@
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\AuthController.cs" />
+    <Compile Include="Controllers\DictionaryStateStorage.cs" />
     <Compile Include="Controllers\Extensions.cs" />
+    <Compile Include="Controllers\IStateStorage.cs" />
     <Compile Include="Controllers\LookupEntry.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="Controllers\Exceptions.cs" />
+    <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
     <Compile Include="Execution\IActionResultTransformer.cs" />
@@ -88,6 +97,11 @@
     <Compile Include="ITestDataPopulationService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
+    <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
+    <Compile Include="Model\Processing\IModelProcessingService.cs" />
+    <Compile Include="Model\Processing\IModelValidator.cs" />
+    <Compile Include="Model\Processing\ModelProcessingService.cs" />
+    <Compile Include="Modules\IWebServiceDescriptor.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
     <Compile Include="TestDataPopulationService.cs" />
@@ -152,7 +166,6 @@
     <Compile Include="Localization\LocalizationServiceOptions.cs" />
     <Compile Include="Localization\ResourceManagerLocalizerByKey.cs" />
     <Compile Include="Localization\ResourceManagerTypeLocalizer.cs" />
-    <Compile Include="Localization\StandardLocalizersRegistrator.cs" />
     <Compile Include="Migrations\CoreMigration.cs" />
     <Compile Include="Migrations\VersionTableMetadata.cs" />
     <Compile Include="Migration\Extensions.cs" />
@@ -196,10 +209,9 @@
     <Compile Include="Model\Security\UserModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Modules\Attributes\JsonEndpointAttribute.cs" />
-    <Compile Include="Modules\IModuleConsumer.cs" />
     <Compile Include="Modules\IModuleDescriptor.cs" />
     <Compile Include="Modules\IServiceDescriptor.cs" />
-    <Compile Include="Modules\AttributedServiceDescriptor.cs" />
+    <Compile Include="Modules\AttributedWebServiceDescriptor.cs" />
     <Compile Include="Net4Collections.cs" />
     <Compile Include="Nullables\NullableDateTime.cs" />
     <Compile Include="Nullables\NullableType.cs" />
@@ -209,10 +221,6 @@
     <Compile Include="Json\JsonService.cs" />
     <Compile Include="Json\IJsonService.cs" />
     <Compile Include="SessionFactoryBuilder.cs" />
-    <Compile Include="Validation\ValidationService.cs" />
-    <Compile Include="Validation\AttributeValidatingModelValidator.cs" />
-    <Compile Include="Validation\IModelValidator.cs" />
-    <Compile Include="Validation\IValidationService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Common.Logging">
@@ -247,7 +255,6 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Web" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
@@ -256,6 +263,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AbstractApplicationException.ru.resx">
       <DependentUpon>AbstractApplicationException.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Execution\AbstractExecutionException.resx">
+      <DependentUpon>AbstractExecutionException.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Execution\AbstractExecutionException.ru.resx">
+      <DependentUpon>AbstractExecutionException.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Filters\ModelFilterNodeSchema.json" />
   </ItemGroup>

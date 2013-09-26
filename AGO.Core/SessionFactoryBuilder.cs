@@ -121,7 +121,7 @@ namespace AGO.Core
 			}
 		}
 
-		public void CloseCurrentSession(bool forceRollback = false)
+		public void FlushCurrentSession(bool forceRollback = false)
 		{
 			if (!_Ready)
 				throw new ServiceNotInitializedException();
@@ -132,16 +132,38 @@ namespace AGO.Core
 				return;
 
 			var session = _SessionFactory.GetCurrentSession();
-			if (session != null)
-			{
+				if (session == null || !session.IsDirty())
+					return;
+
 				var flushMode = session.FlushMode;
 				if (!forceRollback && flushMode != FlushMode.Never && flushMode != FlushMode.Unspecified)
 					session.Flush();
-				session.Close();
+				session.Clear();
 			}
-
-			CurrentSessionContext.Unbind(_SessionFactory);
+			catch (HibernateException e)
+			{
+				throw new DataAccessException(e);
+			}
 		}
+
+		public void CloseCurrentSession(bool forceRollback = false)
+		{
+			if (!_Ready)
+				throw new ServiceNotInitializedException();
+
+			FlushCurrentSession(forceRollback);
+
+			try
+			{
+				if (!CurrentSessionContext.HasBind(_SessionFactory))
+					return;
+
+				var session = _SessionFactory.GetCurrentSession();
+				if (session != null)
+					session.Close();
+
+				CurrentSessionContext.Unbind(_SessionFactory);
+			}
 			catch (HibernateException e)
 			{
 				throw new DataAccessException(e);

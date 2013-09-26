@@ -7,29 +7,33 @@ using System.Text;
 
 namespace AGO.Core.Application
 {
-	public abstract class AbstractTestFixture : AbstractApplication
+	public abstract class AbstractTestFixture : AbstractControllersApplication
 	{
 		#region Template methods
 
 		protected virtual void DoCreateDatabase()
 		{
-			var masterConnectionStr = GetKeyValueProvider().Value("MasterConnectionString").TrimSafe();
+			var masterConnectionStr = KeyValueProvider.Value("MasterConnectionString").TrimSafe();
 			if (masterConnectionStr.IsNullOrWhiteSpace())
 				throw new Exception("masterConnectionStr is empty");
 
-			var databaseName = GetKeyValueProvider().Value("DatabaseName").TrimSafe();
+			var databaseName = KeyValueProvider.Value("DatabaseName").TrimSafe();
 			if (databaseName.IsNullOrWhiteSpace())
 				throw new Exception("databaseName is empty");
 
-			var loginName = GetKeyValueProvider().Value("LoginName").TrimSafe();
+			var loginName = KeyValueProvider.Value("LoginName").TrimSafe();
 			if (loginName.IsNullOrWhiteSpace())
 				throw new Exception("loginName is empty");
+
+			var loginPwd = KeyValueProvider.Value("LoginPwd").TrimSafe();
+			if (loginPwd.IsNullOrWhiteSpace())
+				throw new Exception("loginPwd is empty");
 
 			var masterConnection = new SqlConnection(masterConnectionStr);
 			try
 			{
 				masterConnection.Open();
-				DoExecuteCreateDatabaseScript(masterConnection, databaseName, loginName);
+				DoExecuteCreateDatabaseScript(masterConnection, databaseName, loginName, loginPwd);
 			}
 			finally
 			{
@@ -40,7 +44,8 @@ namespace AGO.Core.Application
 		protected virtual void DoExecuteCreateDatabaseScript(
 			IDbConnection masterConnection,
 			string databaseName,
-			string loginName)
+			string loginName,
+			string loginPwd)
 		{
 			ExecuteNonQuery(string.Format(@"
 				IF EXISTS(SELECT name FROM sys.databases WHERE name = '{0}') BEGIN
@@ -61,7 +66,7 @@ namespace AGO.Core.Application
 				GO
 				if not exists(select 1 from sys.sql_logins where name = N'{1}')
 					create login [{1}]
-					with password=N'123', default_database=[master], check_expiration=off, check_policy=off
+					with password=N'{2}', default_database=[master], check_expiration=off, check_policy=off
 				go
 				alter login [{1}] enable
 				go
@@ -70,13 +75,13 @@ namespace AGO.Core.Application
 				create user [{1}] for login [{1}] with default_schema=[dbo]
 				go
 				exec sp_addrolemember N'db_owner', N'{1}'
-				go", databaseName, loginName), masterConnection);
+				go", databaseName, loginName, loginPwd), masterConnection);
 		}
 
 		protected virtual void DoPopulateDatabase()
 		{
 			DoMigrateUp();
-			
+
 			DoExecutePopulateDatabaseScript();
 
 			_SessionProvider.CloseCurrentSession();
@@ -90,18 +95,18 @@ namespace AGO.Core.Application
 
 		protected virtual void DoExecutePopulateDatabaseScript()
 		{
-			foreach (var service in _Container.GetAllInstances<ITestDataPopulationService>())
+			foreach (var service in IocContainer.GetAllInstances<ITestDataPopulationService>())
 			{
 				service.Populate();
-				_SessionProvider.CloseCurrentSession();
+				_SessionProvider.FlushCurrentSession();
 			}
 		}
 
-		protected override void Register()
+		protected override void DoRegisterCoreServices()
 		{
-			base.Register();
+			base.DoRegisterCoreServices();
 
-			_Container.RegisterAll<ITestDataPopulationService>(TestDataPopulationServices);
+			IocContainer.RegisterAll<ITestDataPopulationService>(TestDataPopulationServices);
 		}
 
 		protected virtual IEnumerable<Type> TestDataPopulationServices

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using AGO.Core.Filters;
 using AGO.Core.Model.Security;
@@ -21,29 +20,30 @@ namespace AGO.Tasks.Test
 	{
 		private TasksController controller;
 
-		[SetUp]
+		[TestFixtureSetUp]
 		public new void Init()
 		{
 			base.Init();
-			controller = _Container.GetInstance<TasksController>();
+			controller = IocContainer.GetInstance<TasksController>();
 		}
 
-		[TearDown]
+		[TestFixtureTearDown]
 		public new void Cleanup()
 		{
 			base.Cleanup();
 		}
 
-		private UserModel Admin
+		[TearDown]
+		public new void TearDown()
 		{
-			get { return Session.QueryOver<UserModel>().Where(m => m.LastName == "admin@agosystems.com").SingleOrDefault(); }
+			base.TearDown();
 		}
 
 		private TaskTypeModel MakeType(string name)
 		{
 			var type = new TaskTypeModel
 			       	{
-			       		Creator = Admin,
+			       		Creator = CurrentUser,
 			       		ProjectCode = TestProject,
 			       		Name = name
 			       	};
@@ -55,7 +55,7 @@ namespace AGO.Tasks.Test
 		{
 			var task = new TaskModel
 			           	{
-			           		Creator = Admin,
+			           		Creator = CurrentUser,
 			           		ProjectCode = TestProject,
 			           		InternalSeqNumber = num,
 			           		SeqNumber = "t0-" + num,
@@ -121,6 +121,7 @@ namespace AGO.Tasks.Test
 			var model = new CreateTaskDTO();
 
 			var vr = controller.CreateTask(TestProject, model);
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "TaskType").Value.Any());
@@ -132,6 +133,7 @@ namespace AGO.Tasks.Test
 			var model = new CreateTaskDTO { TaskType = Guid.NewGuid(), Executors = new [] { Guid.NewGuid()}};
 
 			var vr = controller.CreateTask(TestProject, model);
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "TaskType").Value.Any());
@@ -141,10 +143,11 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithoutExecutorsReturnError()
 		{
 			var tt = MakeType("tt");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO {TaskType = tt.Id};
 
 			var vr = controller.CreateTask(TestProject, model);
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Executors").Value.Any());
@@ -152,6 +155,7 @@ namespace AGO.Tasks.Test
 			model.Executors = new Guid[0];
 
 			vr = controller.CreateTask(TestProject, model);
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Executors").Value.Any());
@@ -161,10 +165,11 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithWrongExecutorsReturnError()
 		{
 			var tt = MakeType("tt");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO { TaskType = tt.Id, Executors = new [] { Guid.NewGuid() } };
 
 			var vr = controller.CreateTask(TestProject, model);
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Executors").Value.Any());
@@ -177,13 +182,13 @@ namespace AGO.Tasks.Test
 			var status = new CustomTaskStatusModel
 			             	{
 			             		ProjectCode = TestProject,
-			             		Creator = Admin,
+			             		Creator = CurrentUser,
 			             		Name = "s"
 			             	};
 			Session.Save(status);
 			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
 			var participant = project.Participants.First();
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var model = new CreateTaskDTO
 			            	{
@@ -195,7 +200,7 @@ namespace AGO.Tasks.Test
 			            		Priority = TaskPriority.Low
 			            	};
 			var vr = controller.CreateTask(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsTrue(vr.Success);
 			var task = Session.QueryOver<TaskModel>().Where(m => m.ProjectCode == TestProject).Take(1).SingleOrDefault();

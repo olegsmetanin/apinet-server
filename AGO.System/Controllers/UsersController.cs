@@ -8,8 +8,8 @@ using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
-using AGO.Core.Validation;
 using AGO.System.Model;
 using Newtonsoft.Json.Linq;
 
@@ -26,9 +26,9 @@ namespace AGO.System.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 		}
 
@@ -73,7 +73,7 @@ namespace AGO.System.Controllers
 				};
 				persistentModel.Filter = filter.ToString();
 
-				_ValidationService.ValidateModel(persistentModel, validation);			
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);			
 				if (!validation.Success)
 					return validation;
 

@@ -147,7 +147,7 @@
   <data name="MustBeUniqueException" xml:space="preserve">
     <value>Значение уже используется</value>
   </data>
-  <data name="NotAuthorizedException" xml:space="preserve">
+  <data name="NotAuthenticatedException" xml:space="preserve">
     <value>У вас недостаточно прав для выполнения данного действия</value>
   </data>
   <data name="RequiredValueException" xml:space="preserve">

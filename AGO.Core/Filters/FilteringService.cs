@@ -232,9 +232,7 @@ namespace AGO.Core.Filters
 		{
 			base.DoInitialize();
 
-			var initializable = _JsonService as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
+			_JsonService.TryInitialize();
 		}
 
 		#endregion

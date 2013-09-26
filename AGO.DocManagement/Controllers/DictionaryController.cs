@@ -4,7 +4,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Localization;
-using AGO.Core.Validation;
+using AGO.Core.Model.Processing;
 using AGO.DocManagement.Model.Dictionary.Documents;
 using AGO.Core;
 using AGO.Core.Filters;
@@ -24,9 +24,9 @@ namespace AGO.DocManagement.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 		}
 

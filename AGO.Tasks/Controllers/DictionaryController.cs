@@ -8,8 +8,8 @@ using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
-using AGO.Core.Validation;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -30,9 +30,9 @@ namespace AGO.Tasks.Controllers
             IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 		}
 
@@ -92,7 +92,7 @@ namespace AGO.Tasks.Controllers
 					: _CrudDao.Get<TaskTypeModel>(model.Id, true);
 				persistentModel.Name = model.Name.TrimSafe();
 
-				_ValidationService.ValidateModel(persistentModel, validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
 				if (!validation.Success)
 					return validation;
 
@@ -228,7 +228,7 @@ namespace AGO.Tasks.Controllers
 				persistentModel.Name = model.Name.TrimSafe();
 				persistentModel.ViewOrder = model.ViewOrder;
 
-				_ValidationService.ValidateModel(persistentModel, validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
 				if (!validation.Success)
 					return validation;
 

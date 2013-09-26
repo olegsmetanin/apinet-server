@@ -21,6 +21,8 @@ namespace AGO.Core
 		TModel Merge<TModel>(TModel model)
 			where TModel : class, IIdentifiedModel;
 
+		void FlushCurrentSession(bool forceRollback = false);
+
 		void CloseCurrentSession(bool forceRollback = false);
 	}
 }

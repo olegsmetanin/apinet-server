@@ -15,16 +15,31 @@ namespace AGO.Tasks.Test
 	[TestFixture]
 	public class TaskTypeCRUDTest: AbstractDictionaryTest
 	{
-		[SetUp]
+		[TestFixtureSetUp]
 		public new void Init()
 		{
 			base.Init();
 		}
 
-		[TearDown]
+		[TestFixtureTearDown]
 		public new void Cleanup()
 		{
 			base.Cleanup();
+		}
+
+		[TearDown]
+		public new void TearDown()
+		{
+			base.TearDown();
+		}
+		private TaskTypeModel Make(string name = "TestTaskType")
+		{
+			return new TaskTypeModel
+			       	{
+						Creator = CurrentUser,
+			       		ProjectCode = TestProject, 
+						Name = name
+			       	};
 		}
 
 		[Test]
@@ -42,11 +57,11 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void ReadTaskTypes()
 		{
-			var tt1 = new TaskTypeModel { ProjectCode = TestProject, Name = "tt1" };
-			var tt2 = new TaskTypeModel { ProjectCode = TestProject, Name = "tt2" };
+			var tt1 = Make("tt1");
+			var tt2 = Make("tt2");
 			_SessionProvider.CurrentSession.Save(tt1);
 			_SessionProvider.CurrentSession.Save(tt2);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.GetTaskTypes(
 				TestProject,
@@ -63,10 +78,10 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskType()
 		{
-			var model = new TaskTypeDTO { Name = "TestTaskType" };
+			var model = new TaskTypeDTO {Name = "TestTaskType"};
 
 			var vr = Controller.EditTaskType(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == TestProject && m.Name == "TestTaskType")
@@ -80,13 +95,13 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void UpdateTaskType()
 		{
-			var testTaskType = new TaskTypeModel { ProjectCode = TestProject, Name = "TestTaskType" };
+			var testTaskType = Make();
 			_SessionProvider.CurrentSession.Save(testTaskType);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
 			var vr = Controller.EditTaskType(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.AreEqual("NewName", testTaskType.Name);
@@ -96,12 +111,12 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void DeleteTaskType()
 		{
-			var testTaskType = new TaskTypeModel {ProjectCode = TestProject, Name = "TestTaskType"};
+			var testTaskType = Make();
 			_SessionProvider.CurrentSession.Save(testTaskType);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Controller.DeleteTaskType(testTaskType.Id);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var notExisted = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.IsNull(notExisted);
@@ -110,7 +125,7 @@ namespace AGO.Tasks.Test
 		[Test, ExpectedException(typeof(CannotDeleteReferencedItemException))]
 		public void CantDeleteReferencedTaskType()
 		{
-			var testTaskType = new TaskTypeModel { ProjectCode = TestProject, Name = "TestTaskType" };
+			var testTaskType = Make();
 			var testTask = new TaskModel
 			               	{
 			               		ProjectCode = TestProject, 
@@ -120,7 +135,7 @@ namespace AGO.Tasks.Test
 			               	};
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CurrentSession.Save(testTask);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 			
 			Controller.DeleteTaskType(testTaskType.Id);
 		}

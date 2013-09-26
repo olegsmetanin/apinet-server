@@ -9,7 +9,7 @@ namespace AGO.Tasks.Test
 		protected override void Init()
 		{
 			base.Init();
-			Controller = _Container.GetInstance<DictionaryController>();
+			Controller = IocContainer.GetInstance<DictionaryController>();
 		}
 	}
 }

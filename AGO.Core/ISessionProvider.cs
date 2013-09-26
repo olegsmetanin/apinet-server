@@ -9,6 +9,8 @@ namespace AGO.Core
 	{
 		ISession CurrentSession { get; }
 
+		void FlushCurrentSession(bool forceRollback = false);
+
 		void CloseCurrentSession(bool forceRollback = false);
 
 		ISessionFactory SessionFactory { get; }

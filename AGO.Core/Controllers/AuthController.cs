@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters;
@@ -26,12 +25,15 @@ namespace AGO.Core.Controllers
 
 		protected readonly ISessionProvider _SessionProvider;
 
+		protected readonly IStateStorage _StateStorage;
+
 		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider)
+			ISessionProvider sessionProvider,
+			IStateStorage stateStorage)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -52,6 +54,10 @@ namespace AGO.Core.Controllers
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (stateStorage == null)
+				throw new ArgumentNullException("stateStorage");
+			_StateStorage = stateStorage;
 		}
 
 		#endregion
@@ -72,7 +78,7 @@ namespace AGO.Core.Controllers
 			if (!string.Equals(user.PwdHash, pwdHash))
 				throw new InvalidPwdException();
 
-			HttpContext.Current.Session["CurrentUser"] = user;
+			_StateStorage["CurrentUser"] = user;
 
 			return user;
 		}
@@ -80,7 +86,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint]
 		public bool Logout()
 		{
-			HttpContext.Current.Session["CurrentUser"] = null;
+			_StateStorage.Remove("CurrentUser");
 			return true;
 		}
 
@@ -93,7 +99,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public UserModel CurrentUser()
 		{
-			return HttpContext.Current.Session["CurrentUser"] as UserModel;
+			return _StateStorage["CurrentUser"] as UserModel;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
