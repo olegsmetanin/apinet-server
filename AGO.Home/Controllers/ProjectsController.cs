@@ -6,7 +6,7 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
-using AGO.Core.Validation;
+using AGO.Core.Model.Processing;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using AGO.Core;
@@ -34,9 +34,9 @@ namespace AGO.Home.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 		}
 
@@ -68,7 +68,7 @@ namespace AGO.Home.Controllers
 					Status = initialStatus,
 				};
 
-				_ValidationService.ValidateModel(newProject, validation);
+				_ModelProcessingService.ValidateModelSaving(newProject, validation);
 				if (!validation.Success)
 					return validation;
 

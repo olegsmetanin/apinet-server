@@ -9,10 +9,10 @@ namespace AGO.Core.Tests
 	[TestFixture]
 	public class FilteringTests : AbstractTestFixture
 	{
-		[SetUp]
-		public void Init()
+		[TestFixtureSetUp]
+		public void SetUp()
 		{
-			InitContainer();
+			Initialize();
 		}
 
 		[Test]
@@ -156,7 +156,7 @@ namespace AGO.Core.Tests
 				.WhereCollection(m => m.PrimitiveModels).Where(m => m.StringProperty == "PrimitiveModel2").End()
 				.WhereCollection(m => m.HierarchicalModels).Where(m => m.Name == "HierarchicalModel2").End();
 
-			_JsonService.CreateSerializer().Serialize(Console.Out, filter);
+			JsonService.CreateSerializer().Serialize(Console.Out, filter);
 		}
 
 		[Test]

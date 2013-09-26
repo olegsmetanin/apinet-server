@@ -41,10 +41,10 @@ namespace AGO.WebApiApp.Controllers
 					{
 						var authController = DependencyResolver.Current.GetService<AuthController>();
 						if (authController == null)
-							throw new NotAuthorizedException();
+							throw new NotAuthenticatedException();
 
 						if (!authController.IsAuthenticated())
-							throw new NotAuthorizedException();
+							throw new NotAuthenticatedException();
 
 						if (requireAuthorizationAttribute.RequireAdmin && !authController.IsAdmin())
 							throw new AccessForbiddenException();
@@ -63,7 +63,7 @@ namespace AGO.WebApiApp.Controllers
 				catch (Exception e)
 				{
 					HttpContext.Response.StatusCode = 500;
-					if (e is NotAuthorizedException)
+					if (e is NotAuthenticatedException)
 						HttpContext.Response.StatusCode = 401;
 					if (e is AccessForbiddenException)
 						HttpContext.Response.StatusCode = 403;

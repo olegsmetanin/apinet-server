@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using AGO.Core.Application;
+using AGO.Core.Localization;
 using AGO.Core.Modules;
 using AGO.Core.Controllers;
-using AGO.Core.Validation;
 
 namespace AGO.Core
 {
@@ -15,17 +16,21 @@ namespace AGO.Core
 
 		public IEnumerable<IServiceDescriptor> Services { get; private set; }
 
-		public void Register(IModuleConsumer consumer)
+		public void Register(IApplication app)
 		{
-			consumer.RegisterModelValidator<AttributeValidatingModelValidator>();
+		}
+
+		public void Initialize(IApplication app)
+		{
+			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
 		}
 
 		public ModuleDescriptor()
 		{
 			Services = new List<IServiceDescriptor>
 			{
-				new AttributedServiceDescriptor<DictionaryController>(this),
-				new AttributedServiceDescriptor<AuthController>(this)
+				new AttributedWebServiceDescriptor<DictionaryController>(this),
+				new AttributedWebServiceDescriptor<AuthController>(this)
 			};
 		}
 	}

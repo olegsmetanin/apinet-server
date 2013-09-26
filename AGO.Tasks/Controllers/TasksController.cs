@@ -3,7 +3,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
-using AGO.Core.Validation;
+using AGO.Core.Model.Processing;
 
 namespace AGO.Tasks.Controllers
 {
@@ -19,9 +19,9 @@ namespace AGO.Tasks.Controllers
             IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController) 
-            : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+            : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
         {
         }
     }

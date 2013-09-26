@@ -3,13 +3,14 @@ using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Localization;
-using AGO.Core.Model;
 using NHibernate.Criterion;
 
-namespace AGO.Core.Validation
+namespace AGO.Core.Model.Processing
 {
 	public class AttributeValidatingModelValidator : IModelValidator
 	{
+		#region Properties, fields, constructors
+
 		protected readonly ILocalizationService _LocalizationService;
 
 		protected readonly ISessionProvider _SessionProvider;
@@ -18,7 +19,7 @@ namespace AGO.Core.Validation
 			ILocalizationService localizationService,
 			ISessionProvider sessionProvider)
 		{
-			if(localizationService == null)
+			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
 			_LocalizationService = localizationService;
 
@@ -27,6 +28,10 @@ namespace AGO.Core.Validation
 			_SessionProvider = sessionProvider;
 		}
 
+		#endregion
+
+		#region Interfaces implementation
+
 		public int Priority { get { return int.MinValue; } }
 
 		public bool Accepts(IIdentifiedModel model)
@@ -34,16 +39,57 @@ namespace AGO.Core.Validation
 			return true;
 		}
 
-		public void ValidateModel(IIdentifiedModel model, ValidationResult validation)
+		public void ValidateModel(
+			IIdentifiedModel model, 
+			ValidationResult validation,
+			object capability = null)
+		{
+			if (model == null)
+				throw new ArgumentNullException("model");
+			if (validation == null)
+				throw new ArgumentNullException("validation");
+
+			DoValidateModelSaving(model, validation, capability, null);
+		}
+
+		#endregion
+
+		#region Template methods
+
+		protected virtual void DoValidateModelSaving(
+			object model,
+			ValidationResult validation,
+			object capability,
+			string namePrefix)
 		{
 			var properties = model.GetType().GetProperties().Where(
 				pi => pi.FirstAttribute<NotMappedAttribute>(true) == null && pi.CanRead && pi.CanWrite).ToArray();
 
 			foreach (var propertyInfo in properties)
 			{
+				var refIdProperty = typeof(IIdentifiedModel).IsAssignableFrom(propertyInfo.PropertyType)
+					? model.GetType().GetProperty(propertyInfo.Name + "Id")
+					: null;
+				if (refIdProperty != null && !refIdProperty.CanWrite)
+					refIdProperty = null;
+
 				try
 				{
+					var capabilityProperty = capability != null 
+						? capability.GetType().GetProperty(propertyInfo.Name)
+						: null;
+					var capabilityObj = capabilityProperty != null 
+						? capabilityProperty.GetValue(capability, null) 
+						: null;
+					var capabilityValue = capabilityObj as bool?;
+
 					var value = propertyInfo.GetValue(model, null);
+					var component = value as IComponent;
+					if (component != null)
+					{
+						DoValidateModelSaving(component, validation, capabilityObj, propertyInfo.Name);
+						continue;
+					}
 
 					var uniquePropertyAttribute = propertyInfo.FirstAttribute<UniquePropertyAttribute>(true);
 					if (uniquePropertyAttribute != null && _SessionProvider.CurrentSession.CreateCriteria(model.GetType())
@@ -53,6 +99,11 @@ namespace AGO.Core.Validation
 						throw new MustBeUniqueException();
 
 					var invalidAttribute = propertyInfo.FindInvalidPropertyConstraintAttribute(value);
+					invalidAttribute = invalidAttribute ?? (capabilityValue != null && capabilityValue.Value
+						? Extensions.FindInvalidItemConstraintAttribute(
+							propertyInfo.PropertyType, value, null, new NotEmptyAttribute(), Enumerable.Empty<InRangeAttribute>())
+						: null);
+
 					if (invalidAttribute == null)
 						continue;
 
@@ -84,9 +135,13 @@ namespace AGO.Core.Validation
 				catch (Exception e)
 				{
 					var msg = _LocalizationService.MessageForException(e);
-					validation.AddFieldErrors(propertyInfo.Name, msg);
+					validation.AddFieldErrors(string.Format("{0}{1}", namePrefix, propertyInfo.Name), msg);
+					if (refIdProperty != null)
+						validation.AddFieldErrors(string.Format("{0}{1}", namePrefix, refIdProperty.Name), msg);
 				}
 			}
 		}
+
+		#endregion
 	}
 }

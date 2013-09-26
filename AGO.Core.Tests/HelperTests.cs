@@ -10,21 +10,26 @@ namespace AGO.Core.Tests
 	[TestFixture]
 	public class HelperTests : AbstractTestFixture
 	{
+		[TestFixtureSetUp]
+		public void SetUp()
+		{
+			Initialize();
+		}
+
 		[Test]
 		public void CreateAndPopulateDatabase()
 		{
 			DoCreateDatabase();
-
-			InitContainer();
 			DoPopulateDatabase();
 		}
 
 		protected override void DoExecuteCreateDatabaseScript(
 			IDbConnection masterConnection,
-			string databaseName, 
-			string loginName)
+			string databaseName,
+			string loginName,
+			string loginPwd)
 		{
-			base.DoExecuteCreateDatabaseScript(masterConnection, databaseName, loginName);
+			base.DoExecuteCreateDatabaseScript(masterConnection, databaseName, loginName, loginPwd);
 
 			var createSchemaStream = typeof(FilteringTests).Assembly.GetManifestResourceStream(
 				typeof(FilteringTests).Assembly.GetName().Name + ".CreateSchema.sql");

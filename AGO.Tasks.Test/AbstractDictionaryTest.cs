@@ -12,9 +12,9 @@ namespace AGO.Tasks.Test
 
 		protected virtual void Init()
 		{
-			InitContainer();
+			Initialize();
 			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);
-			Controller = _Container.GetInstance<DictionaryController>();
+			Controller = IocContainer.GetInstance<DictionaryController>();
 		}
 
 		protected virtual void Cleanup()

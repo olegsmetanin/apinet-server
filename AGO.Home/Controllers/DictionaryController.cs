@@ -10,9 +10,9 @@ using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
-using AGO.Core.Validation;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using NHibernate.Criterion;
@@ -36,9 +36,9 @@ namespace AGO.Home.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 		}
 
@@ -121,7 +121,7 @@ namespace AGO.Home.Controllers
 				persistentModel.Name = model.Name.TrimSafe();
 				persistentModel.Description = model.Description.TrimSafe();
 
-				_ValidationService.ValidateModel(persistentModel, validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
 				if (!validation.Success)
 					return validation;
 				
@@ -227,7 +227,7 @@ namespace AGO.Home.Controllers
 						m => m.Name == persistentModel.Name && m.Owner == persistentModel.Owner && m.Id != persistentModel.Id).RowCount() > 0)
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 
-				_ValidationService.ValidateModel(persistentModel, validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
 				if (!validation.Success)
 					return validation;
 

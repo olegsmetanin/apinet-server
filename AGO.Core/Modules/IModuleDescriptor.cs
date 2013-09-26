@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using AGO.Core.Validation;
+using AGO.Core.Application;
 
 namespace AGO.Core.Modules
 {
@@ -13,20 +13,8 @@ namespace AGO.Core.Modules
 
 		IEnumerable<IServiceDescriptor> Services { get; }
 
-		void Register(IModuleConsumer consumer);
-	}
+		void Register(IApplication app);
 
-	public static class ModuleDescriptorExtensions
-	{
-		public static void RegisterModelValidator<TType>(this IModuleConsumer consumer)
-			where TType: class, IModelValidator
-		{
-			if (consumer == null)
-				return;
-
-			consumer.Container.RegisterSingle<TType, TType>();
-			consumer.Container.RegisterInitializer<TType>(validator =>
-				consumer.Container.GetInstance<IValidationService>().RegisterModelValidator(validator));
-		}
+		void Initialize(IApplication app);
 	}
 }

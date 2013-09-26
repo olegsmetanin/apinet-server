@@ -14,14 +14,14 @@ namespace AGO.WebApi.Tests
 		{
 			DoCreateDatabase();
 
-			InitContainer();
+			Initialize();
 			DoPopulateDatabase();
 		}
 
 		[Test]
 		public void PopulateDatabase()
 		{
-			InitContainer();
+			Initialize();
 			DoPopulateDatabase();
 		}
 

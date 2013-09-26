@@ -15,7 +15,7 @@ namespace AGO.Core
 		}
 	}
 
-	public class NotAuthorizedException : AbstractApplicationException
+	public class NotAuthenticatedException : AbstractApplicationException
 	{
 	}
 

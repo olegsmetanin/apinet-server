@@ -6,7 +6,7 @@ using AGO.Core.Json;
 using AGO.Core.Filters;
 using AGO.Core.Localization;
 using AGO.Core.Model;
-using AGO.Core.Validation;
+using AGO.Core.Model.Processing;
 
 namespace AGO.Core.Controllers
 {
@@ -34,7 +34,7 @@ namespace AGO.Core.Controllers
 
 		protected readonly ILocalizationService _LocalizationService;
 
-		protected readonly IValidationService _ValidationService;
+		protected readonly IModelProcessingService _ModelProcessingService;
 
 		protected readonly AuthController _AuthController;
 
@@ -45,7 +45,7 @@ namespace AGO.Core.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
 		{
 			if (jsonService == null)
@@ -72,9 +72,9 @@ namespace AGO.Core.Controllers
 				throw new ArgumentNullException("localizationService");
 			_LocalizationService = localizationService;
 
-			if (validationService == null)
-				throw new ArgumentNullException("validationService");
-			_ValidationService = validationService;
+			if (modelProcessingService == null)
+				throw new ArgumentNullException("modelProcessingService");
+			_ModelProcessingService = modelProcessingService;
 
 			if (authController == null)
 				throw new ArgumentNullException("authController");

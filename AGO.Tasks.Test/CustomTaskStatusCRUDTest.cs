@@ -15,13 +15,13 @@ namespace AGO.Tasks.Test
 	[TestFixture]
 	public class CustomTaskStatusCRUDTest: AbstractDictionaryTest
 	{
-		[SetUp]
+		[TestFixtureSetUp]
 		public new void Init()
 		{
 			base.Init();
 		}
 
-		[TearDown]
+		[TestFixtureTearDown]
 		public new void Cleanup()
 		{
 			base.Cleanup();

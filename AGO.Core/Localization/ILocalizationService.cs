@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
 
 namespace AGO.Core.Localization
 {
@@ -20,5 +22,32 @@ namespace AGO.Core.Localization
 		string MessageForException(Exception exception, CultureInfo culture = null);
 
 		void RegisterLocalizers(IEnumerable<ILocalizer> localizers);
+	}
+
+	public static class LocalizationServiceExtensions
+	{
+		public static void RegisterModuleLocalizers(this ILocalizationService localizationService, Assembly assembly)
+		{
+			if (localizationService == null)
+				throw new ArgumentNullException("localizationService");
+			if (assembly == null)
+				throw new ArgumentNullException("assembly");
+
+			var localizers = new List<ILocalizer>();
+			foreach (var resourceName in assembly.GetManifestResourceNames().Where(
+					s => s.EndsWith(".resources")).Select(s => s.RemoveSuffix(".resources")))
+			{
+				var type = assembly.GetType(resourceName, false);
+				if (type != null && !type.IsValueType)
+				{
+					localizers.Add(new ResourceManagerTypeLocalizer(type));
+					continue;
+				}
+
+				localizers.Add(new ResourceManagerLocalizerByKey(resourceName, assembly));
+			}
+
+			localizationService.RegisterLocalizers(localizers);
+		}
 	}
 }

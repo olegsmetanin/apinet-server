@@ -7,8 +7,8 @@ using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Filters;
+using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
-using AGO.Core.Validation;
 
 namespace AGO.Core.Controllers
 {
@@ -23,9 +23,9 @@ namespace AGO.Core.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
-			IValidationService validationService,
+			IModelProcessingService modelProcessingService,
 			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, validationService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 		}
 

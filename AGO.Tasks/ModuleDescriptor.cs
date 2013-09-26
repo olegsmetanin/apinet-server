@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using AGO.Core.Application;
 using AGO.Core.Modules;
+using AGO.Core.Localization;
 using AGO.Tasks.Controllers;
 
 namespace AGO.Tasks
@@ -24,8 +26,13 @@ namespace AGO.Tasks
             get { return 0; }
         }
 
-		public void Register(IModuleConsumer consumer)
+		public void Register(IApplication app)
 		{
+		}
+
+		public void Initialize(IApplication app)
+		{
+			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
 		}
 
         public IEnumerable<IServiceDescriptor> Services { get; private set; }
@@ -34,8 +41,8 @@ namespace AGO.Tasks
         {
             Services = new List<IServiceDescriptor>
             {
-                new AttributedServiceDescriptor<DictionaryController>(this),
-                new AttributedServiceDescriptor<TasksController>(this)
+                new AttributedWebServiceDescriptor<DictionaryController>(this),
+                new AttributedWebServiceDescriptor<TasksController>(this)
             };
         }
     }

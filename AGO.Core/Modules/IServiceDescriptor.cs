@@ -1,4 +1,5 @@
 ﻿using System;
+using AGO.Core.Application;
 
 namespace AGO.Core.Modules
 {
@@ -12,6 +13,8 @@ namespace AGO.Core.Modules
 
 		int Priority { get; }
 
-		void Register(IModuleConsumer consumer);
+		void Register(IApplication app);
+
+		void Initialize(IApplication app);
 	}
 }
