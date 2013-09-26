@@ -63,7 +63,7 @@ namespace AGO.Tasks.Controllers
 			var u = executor.Executor.User;
 			return new TaskListItemDTO.Executor
 			{
-			    Name = u.ShortName,
+			    Name = u.FIO,
 			    Description = u.FullName + (u.Departments.Count > 0
 			       		? " (" + string.Join("; ", u.Departments.Select(d => d.FullName)) + ")"
 			       		: string.Empty)
@@ -109,7 +109,7 @@ namespace AGO.Tasks.Controllers
 			var vr = new ValidationResult();
 			try
 			{
-				if (model.TaskTypeId == default(Guid))
+				if (model.TaskType == default(Guid))
 					vr.AddFieldErrors("TaskType", "Не задан тип задачи");
 				if (model.Executors == null || model.Executors.Length <= 0)
 					vr.AddFieldErrors("Executors", "Не заданы исполнители");
@@ -122,20 +122,19 @@ namespace AGO.Tasks.Controllers
 					// _AuthController.CurrentUser();
 
 				//FIXME: это надо переделать на sequence или свой аналог
-				int num = _SessionProvider.CurrentSession.QueryOver<TaskModel>()
-					.Where(m => m.ProjectCode == project)
-					.Select(Projections
-								.ProjectionList()
-								.Add(Projections.Max<TaskModel>(m => m.InternalSeqNumber)))
-					.List<int?>().FirstOrDefault().GetValueOrDefault(0) + 1;
-
+				var predicate = _FilteringService.Filter<TaskModel>().WhereProperty(m => m.ProjectCode).Eq(project);
+				var num = _FilteringService.CompileFilter(predicate, typeof (TaskModel))
+				          	.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
+				          	.GetExecutableCriteria(_SessionProvider.CurrentSession)
+				          	.UniqueResult<long?>().GetValueOrDefault(0) + 1;
+					
 				var task = new TaskModel
 				           	{
 				           		Creator = currentUser,
 				           		ProjectCode = project,
 								InternalSeqNumber = num,
 								SeqNumber = "t0-" + num,
-				           		TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskTypeId),
+				           		TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskType),
 								DueDate = model.DueDate,
 				           		Content = model.Content,
 								Priority = model.Priority

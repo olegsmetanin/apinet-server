@@ -11,6 +11,26 @@ namespace AGO.Core.Controllers
 {
 	public static class Extensions
 	{
+		public static IEnumerable<LookupEntry> LookupList<TModel, TAliasedModel>(
+			this IQueryOver<TModel> query,
+			Expression<Func<TModel, object>> idProperty,
+			string alias,
+			Expression<Func<TAliasedModel, object>> textProperty)
+		{
+			if (query == null || idProperty == null)
+				return Enumerable.Empty<LookupEntry>();
+
+			query.UnderlyingCriteria
+				.SetProjection(Projections.ProjectionList()
+					.Add(Projections.Cast(NHibernateUtil.String, Projections.Property(idProperty)), "Id")
+					.Add(Projections.Cast(NHibernateUtil.String, 
+						Projections.Property(alias + "." + textProperty.PropertyInfoFromExpression().Name)), "Text")
+					)
+				.SetResultTransformer(Transformers.AliasToBean(typeof(LookupEntry)));
+
+			return query.List<LookupEntry>();
+		}
+
 		public static IEnumerable<LookupEntry> LookupList<TModel>(
 			this IQueryOver<TModel> query,
 			Expression<Func<TModel, object>> idProperty,

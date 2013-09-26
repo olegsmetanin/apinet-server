@@ -7,7 +7,7 @@ namespace AGO.Tasks.Controllers.DTO
 	public class CreateTaskDTO
 	{
 		[NotEmpty]
-		public Guid TaskTypeId { get; set; }
+		public Guid TaskType { get; set; }
 
 		[NotEmpty]
 		public Guid[] Executors { get; set; }

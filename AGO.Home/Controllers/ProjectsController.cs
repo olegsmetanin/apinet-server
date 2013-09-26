@@ -6,6 +6,7 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
+using AGO.Core.Model.Security;
 using AGO.Core.Validation;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
@@ -14,6 +15,7 @@ using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using NHibernate.Criterion;
+
 
 namespace AGO.Home.Controllers
 {
@@ -146,6 +148,41 @@ namespace AGO.Home.Controllers
 			return query.Skip(page*pageSize).Take(pageSize).LookupList(m => m.Name);
 		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupParticipant(
+			[NotEmpty] string project,
+			string term,
+			[InRange(0, null)] int page,
+			[InRange(0, MaxPageSize)] int pageSize)
+		{
+			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
+
+//			var filter = _FilteringService.Filter<ProjectParticipantModel>()
+//				.And()
+//				.Where(m => m.Project.ProjectCode == project);
+//			if (!term.IsNullOrWhiteSpace())
+//				filter = filter.WhereString(m => m.User.FullName).Like("%" + term.TrimSafe() + "%");
+//
+//			var criteria = _FilteringService
+//				.CompileFilter(filter, typeof (ProjectParticipantModel))
+//				.AddOrder(Order.Asc(Projections.Property<ProjectParticipantModel>(m => m.User.FullName)))
+//				.SetResultTransformer(Transformers.AliasToBean(typeof (LookupEntry)));
+
+			ProjectParticipantModel ppm = null;
+			ProjectModel pm = null;
+			UserModel um = null;
+			var query = _SessionProvider.CurrentSession.QueryOver(() => ppm)
+				.JoinAlias(() => ppm.Project, () => pm)
+				.JoinAlias(() => ppm.User, () => um)
+				.Where(() => pm.ProjectCode == project)
+				.OrderBy(() =>  um.FullName).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(() => um.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
+
+			return query.Skip(page * pageSize).Take(pageSize)
+				.LookupList<ProjectParticipantModel, UserModel>(m => m.Id, "um", u => u.FullName).ToArray();
+		}
+			
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<IModelMetadata> ProjectMetadata()
 		{

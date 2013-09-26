@@ -73,7 +73,7 @@ namespace AGO.Tasks.Controllers
 				{
 					Id = m.Id,
 					Name = m.Name,
-					Author = (m.Creator != null ? m.Creator.ShortName : string.Empty),
+					Author = (m.Creator != null ? m.Creator.FIO : string.Empty),
 					CreationTime = m.CreationTime,
 					ModelVersion = m.ModelVersion
 				})
@@ -208,7 +208,7 @@ namespace AGO.Tasks.Controllers
 					Id = m.Id,
 					Name = m.Name,
 					ViewOrder = m.ViewOrder,
-					Author = (m.Creator != null ? m.Creator.ShortName : string.Empty),
+					Author = (m.Creator != null ? m.Creator.FIO : string.Empty),
 					CreationTime = m.CreationTime,
 					ModelVersion = m.ModelVersion
 				})

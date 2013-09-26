@@ -24,6 +24,7 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.Name)
 				.AddValueColumn<UserModel>(m => m.LastName)
 				.AddValueColumn<UserModel>(m => m.MiddleName)
+				.AddValueColumn<UserModel>(m => m.FullName)
 				.AddValueColumn<UserModel>(m => m.FIO)
 				.AddValueColumn<UserModel>(m => m.WhomFIO)
 				.AddValueColumn<UserModel>(m => m.JobName)

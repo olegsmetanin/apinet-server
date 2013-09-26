@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
-using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Dictionary;
 using Newtonsoft.Json;
 
@@ -12,6 +11,10 @@ namespace AGO.Core.Model.Security
 	public class UserModel : SecureModel<Guid>
 	{
 		#region Persistent
+
+		private string lastName;
+		private string name;
+		private string middleName;
 
 		[DisplayName("Логин"), JsonProperty, NotLonger(64), NotEmpty]
 		public virtual string Login { get; set; }
@@ -23,16 +26,49 @@ namespace AGO.Core.Model.Security
 		public virtual bool Active { get; set; }
 
 		[DisplayName("Имя"), JsonProperty, NotLonger(64), NotEmpty]
-		public virtual string Name { get; set; }
+		public virtual string Name
+		{
+			get { return name; }
+			set
+			{
+				if (name == value) return;
+
+				name = value;
+				CalculateNames();
+			}
+		}
 
 		[DisplayName("Фамилия"), JsonProperty, NotLonger(64), NotEmpty]
-		public virtual string LastName { get; set; }
+		public virtual string LastName
+		{
+			get { return lastName; }
+			set
+			{
+				if (lastName == value) return;
+
+				lastName = value;
+				CalculateNames();
+			}
+		}
 
 		[DisplayName("Отчество"), JsonProperty, NotLonger(64)]
-		public virtual string MiddleName { get; set; }
+		public virtual string MiddleName
+		{
+			get { return middleName; } 
+			set
+			{
+				if (middleName == value) return;
+
+				middleName = value;
+				CalculateNames();
+			}
+		}
 
 		[DisplayName("ФИО"), JsonProperty, NotLonger(256)]
-		public virtual string FIO { get; set; }
+		public virtual string FullName { get; protected internal set; }
+
+		[DisplayName("Фамилия с инициалами (именительный)"), JsonProperty, NotLonger(256)]
+		public virtual string FIO { get; protected internal set; }
 
 		[DisplayName("Фамилия с инициалами (родительный)"), JsonProperty, NotLonger(256)]
 		public virtual string WhomFIO { get; set; }
@@ -52,22 +88,13 @@ namespace AGO.Core.Model.Security
 
 		#endregion
 
-		[NotMapped]
-		public virtual string FullName
+		private void CalculateNames()
 		{
-			get { return string.Join(" ", LastName, Name, MiddleName); }
-		}
+			FullName =  string.Join(" ", LastName, Name, MiddleName);
 
-		[NotMapped]
-		public virtual string ShortName
-		{
-			get
-			{
-				var ni = !Name.IsNullOrWhiteSpace() ? Name.Substring(0, 1).ToUpper() + ". " : null;
-				var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
-
-				return ni != null && mi != null ? LastName + ni + mi : LastName;
-			}
+			var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + ". " : null;
+			var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
+			FIO = ni != null && mi != null ? LastName + ni + mi : LastName;
 		}
 	}
 }

@@ -129,7 +129,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskWithWrongTypeReturnError()
 		{
-			var model = new CreateTaskDTO { TaskTypeId = Guid.NewGuid(), Executors = new [] { Guid.NewGuid()}};
+			var model = new CreateTaskDTO { TaskType = Guid.NewGuid(), Executors = new [] { Guid.NewGuid()}};
 
 			var vr = controller.CreateTask(TestProject, model);
 
@@ -142,7 +142,7 @@ namespace AGO.Tasks.Test
 		{
 			var tt = MakeType("tt");
 			_SessionProvider.CloseCurrentSession();
-			var model = new CreateTaskDTO {TaskTypeId = tt.Id};
+			var model = new CreateTaskDTO {TaskType = tt.Id};
 
 			var vr = controller.CreateTask(TestProject, model);
 
@@ -162,7 +162,7 @@ namespace AGO.Tasks.Test
 		{
 			var tt = MakeType("tt");
 			_SessionProvider.CloseCurrentSession();
-			var model = new CreateTaskDTO { TaskTypeId = tt.Id, Executors = new [] { Guid.NewGuid() } };
+			var model = new CreateTaskDTO { TaskType = tt.Id, Executors = new [] { Guid.NewGuid() } };
 
 			var vr = controller.CreateTask(TestProject, model);
 
@@ -187,7 +187,7 @@ namespace AGO.Tasks.Test
 
 			var model = new CreateTaskDTO
 			            	{
-			            		TaskTypeId = tt.Id,
+			            		TaskType = tt.Id,
 			            		Executors = new[] {participant.Id},
 			            		DueDate = new DateTime(2013, 01, 01),
 			            		Content = "test task",
