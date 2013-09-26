@@ -119,7 +119,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Исполнители задачи
 		/// </summary>
-		[DisplayName("Исполнители"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+		[DisplayName("Исполнители"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan), NotEmpty]
     	public virtual ISet<TaskExecutorModel> Executors
     	{
     		get { return executorsStore; }

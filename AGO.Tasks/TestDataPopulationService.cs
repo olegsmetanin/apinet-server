@@ -2,6 +2,7 @@
 using AGO.Core;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Dictionary;
+using AGO.Tasks.Model.Task;
 using NHibernate;
 
 namespace AGO.Tasks
@@ -29,7 +30,45 @@ namespace AGO.Tasks
 			PopulateTaskTypes("Docs1", admin);
 			PopulateTaskTypes("Docs2", admin);
 
-			//TODO other models
+			PopulateCustomStatuses("Docs1", admin);
+			PopulateCustomStatuses("Docs2", admin);
+
+			_SessionProvider.CloseCurrentSession();
+
+			PopulateTasks("Docs1", admin);
+			PopulateTasks("Docs2", admin);
+		}
+
+		private void PopulateTasks(string project, UserModel admin)
+		{
+			var seqnum = 1;
+			Func<string, TaskStatus, TaskPriority, string, DateTime?, TaskModel> factory =
+				(type, status, priority, content, dueDate) =>
+					{
+						var task = new TaskModel
+						           	{
+						           		Creator = admin,
+						           		ProjectCode = project,
+						           		InternalSeqNumber = seqnum,
+						           		SeqNumber = "t0-" + seqnum,
+						           		Status = status,
+						           		Priority = priority,
+						           		Content = content,
+						           		DueDate = dueDate
+						           	};
+						task.TaskType = CurrentSession.QueryOver<TaskTypeModel>()
+							.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault();
+
+						seqnum++;
+						return task;
+					};
+
+			var t1 = factory("Инвентаризация", TaskStatus.NotStarted, TaskPriority.Normal, null, null);
+			var t2 = factory("Расчет по схеме", TaskStatus.InWork, TaskPriority.High, "Расчет по схеме 2",
+			                 DateTime.Now.AddDays(2));
+
+			CurrentSession.Save(t1);
+			CurrentSession.Save(t2);
 		}
 
 		private void PopulateTaskTypes(string project, UserModel admin)
@@ -50,6 +89,27 @@ namespace AGO.Tasks
 			CurrentSession.Save(payment);
 			CurrentSession.Save(clean);
 			CurrentSession.Save(prep);
+		}
+
+		private void PopulateCustomStatuses(string project, UserModel admin)
+		{
+			byte order = 0;
+			Func<string, CustomTaskStatusModel> factory =
+				name => new CustomTaskStatusModel {Creator = admin, ProjectCode = project, Name = name, ViewOrder = order++};
+
+			var prep = factory("Подготовка");
+			var towork = factory("Передано в работу");
+			var progress = factory("Исполнение");
+			var complete = factory("Выполнено");
+			var closed = factory("Закрыто");
+			var susp = factory("Приостановлено");
+
+			CurrentSession.Save(prep);
+			CurrentSession.Save(towork);
+			CurrentSession.Save(progress);
+			CurrentSession.Save(complete);
+			CurrentSession.Save(closed);
+			CurrentSession.Save(susp);
 		}
 	}
 }
