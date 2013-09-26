@@ -98,7 +98,7 @@ namespace AGO.Core.Application
 			foreach (var service in IocContainer.GetAllInstances<ITestDataPopulationService>())
 			{
 				service.Populate();
-				_SessionProvider.CloseCurrentSession();
+				_SessionProvider.FlushCurrentSession();
 			}
 		}
 

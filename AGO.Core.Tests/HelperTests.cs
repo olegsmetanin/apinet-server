@@ -143,7 +143,7 @@ namespace AGO.Core.Tests
 			manyToMany1Model.AssociatedModels.Add(manyToMany2Model);
 			_CrudDao.Store(manyToMany1Model);
 
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 		}
 	}
 }

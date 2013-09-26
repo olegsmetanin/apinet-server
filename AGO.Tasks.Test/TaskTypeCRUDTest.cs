@@ -46,7 +46,7 @@ namespace AGO.Tasks.Test
 			var tt2 = new TaskTypeModel { ProjectCode = TestProject, Name = "tt2" };
 			_SessionProvider.CurrentSession.Save(tt1);
 			_SessionProvider.CurrentSession.Save(tt2);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.GetTaskTypes(
 				TestProject,
@@ -66,7 +66,7 @@ namespace AGO.Tasks.Test
 			var model = new TaskTypeDTO { Name = "TestTaskType" };
 
 			var vr = Controller.EditTaskType(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == TestProject && m.Name == "TestTaskType")
@@ -82,11 +82,11 @@ namespace AGO.Tasks.Test
 		{
 			var testTaskType = new TaskTypeModel { ProjectCode = TestProject, Name = "TestTaskType" };
 			_SessionProvider.CurrentSession.Save(testTaskType);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
 			var vr = Controller.EditTaskType(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.AreEqual("NewName", testTaskType.Name);
@@ -98,10 +98,10 @@ namespace AGO.Tasks.Test
 		{
 			var testTaskType = new TaskTypeModel {ProjectCode = TestProject, Name = "TestTaskType"};
 			_SessionProvider.CurrentSession.Save(testTaskType);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Controller.DeleteTaskType(testTaskType.Id);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var notExisted = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.IsNull(notExisted);
@@ -120,7 +120,7 @@ namespace AGO.Tasks.Test
 			               	};
 			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CurrentSession.Save(testTask);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 			
 			Controller.DeleteTaskType(testTaskType.Id);
 		}

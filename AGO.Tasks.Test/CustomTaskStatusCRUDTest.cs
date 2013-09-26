@@ -46,7 +46,7 @@ namespace AGO.Tasks.Test
 			Make("s1");
 			Make("s2");
 			Make("s3");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			//assume ordered result
 			var items = Controller.LookupCustomStatuses(TestProject, null, 0, 10).ToArray();
@@ -63,7 +63,7 @@ namespace AGO.Tasks.Test
 			Make("s1");
 			Make("s2");
 			Make("a3");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			//assume ordered result
 			var items = Controller.LookupCustomStatuses(TestProject, "s", 0, 10).ToArray();
@@ -79,7 +79,7 @@ namespace AGO.Tasks.Test
 			Make("s1");
 			Make("s2");
 			Make("s3");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var items = Controller.LookupCustomStatuses("asdfgh", "s", 0, 10).ToArray();
 
@@ -94,7 +94,7 @@ namespace AGO.Tasks.Test
 			var m1 = Make("s1");
 			var m2 = Make("s2");
 			var m3 = Make("s3");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var items = Controller.GetCustomStatuses(TestProject, 
 				Enumerable.Empty<IModelFilterNode>().ToArray(), 
@@ -116,7 +116,7 @@ namespace AGO.Tasks.Test
 			Make("s1");
 			Make("s2");
 			Make("s3");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var items = Controller.GetCustomStatuses("asdfgh",
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
@@ -132,7 +132,7 @@ namespace AGO.Tasks.Test
 			var m1 = Make("s1");
 			Make("s2");
 			var m3 = Make("s3");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var predicate = _FilteringService
 				.Filter<CustomTaskStatusModel>()
@@ -152,7 +152,6 @@ namespace AGO.Tasks.Test
 			Assert.AreEqual(m3.Name, items[1].Name);
 		}
 
-
 		//edit
 		[Test]
 		public void CreateValidStatusReturnSuccess()
@@ -160,7 +159,7 @@ namespace AGO.Tasks.Test
 			var model = new CustomStatusDTO {Name = "new", ViewOrder = 1};
 
 			var vr = Controller.EditCustomStatus(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsTrue(vr.Success);
 		}
@@ -171,7 +170,7 @@ namespace AGO.Tasks.Test
 			var model = new CustomStatusDTO { Name = string.Empty, ViewOrder = 1 };
 
 			var vr = Controller.EditCustomStatus(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsFalse(vr.Success);
 		}
@@ -180,11 +179,11 @@ namespace AGO.Tasks.Test
 		public void UpdateValidStatusReturnSuccess()
 		{
 			var s = Make("status");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 			var model = new CustomStatusDTO {Id = s.Id, Name = "newName", ViewOrder = s.ViewOrder};
 
 			var vr = Controller.EditCustomStatus(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsTrue(vr.Success);
 			s = Session.Get<CustomTaskStatusModel>(s.Id);
@@ -196,11 +195,11 @@ namespace AGO.Tasks.Test
 		public void UpdateStatusWithoutNameReturnError()
 		{
 			var s = Make("status");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 			var model = new CustomStatusDTO { Id = s.Id, Name = string.Empty, ViewOrder = s.ViewOrder };
 
 			var vr = Controller.EditCustomStatus(TestProject, model);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsFalse(vr.Success);
 			s = Session.Get<CustomTaskStatusModel>(s.Id);
@@ -214,10 +213,10 @@ namespace AGO.Tasks.Test
 		public void DeleteStatusWithoutRefsReturnSuccess()
 		{
 			var s = Make("status");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatus(s.Id);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsTrue(result);
 			s = Session.Get<CustomTaskStatusModel>(s.Id);
@@ -241,10 +240,10 @@ namespace AGO.Tasks.Test
 			Session.Save(task);
 			var history = new CustomTaskStatusHistoryModel {Task = task, Status = s, Start = DateTime.Now};
 			Session.Save(history);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatus(s.Id);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsTrue(result);
 			s = Session.Get<CustomTaskStatusModel>(s.Id);
@@ -256,10 +255,10 @@ namespace AGO.Tasks.Test
 		{
 			var s1 = Make("s1");
 			var s2 = Make("s2");
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatuses(TestProject, new[] {s1.Id, s2.Id}, null);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsTrue(result);
 			s1 = Session.Get<CustomTaskStatusModel>(s1.Id);
@@ -283,7 +282,7 @@ namespace AGO.Tasks.Test
 				TaskType = tt
 			};
 			Session.Save(task);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Controller.DeleteCustomStatuses(TestProject, new[] { s.Id }, null);
 		}
@@ -306,10 +305,10 @@ namespace AGO.Tasks.Test
 			Session.Save(task);
 			var history = new CustomTaskStatusHistoryModel { Task = task, Status = s1, Start = DateTime.Now };
 			Session.Save(history);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatuses(TestProject, new[] { s1.Id }, s2.Id);
-			_SessionProvider.CloseCurrentSession();
+			_SessionProvider.FlushCurrentSession();
 
 			Assert.IsTrue(result);
 			s1 = Session.Get<CustomTaskStatusModel>(s1.Id);

@@ -178,6 +178,11 @@ namespace AGO.Core
 				.UniqueResult<int>();
 		}
 
+		public void FlushCurrentSession(bool forceRollback = false)
+		{
+			_SessionProvider.FlushCurrentSession(forceRollback);
+		}
+
 		public void CloseCurrentSession(bool forceRollback = false)
 		{
 			_SessionProvider.CloseCurrentSession(forceRollback);
@@ -199,13 +204,8 @@ namespace AGO.Core
 		{
 			base.DoInitialize();
 
-			var initializable = _SessionProvider as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
-			initializable = _FilteringService as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
+			_SessionProvider.TryInitialize();
+			_FilteringService.TryInitialize();
 		}
 
 		#endregion
