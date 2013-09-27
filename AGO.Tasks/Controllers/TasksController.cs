@@ -58,10 +58,10 @@ namespace AGO.Tasks.Controllers
 			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.SeqNumber).ToArray();
 		}
 
-		private static TaskListItemDTO.Executor ToExecutor(TaskExecutorModel executor)
+		private static BaseTaskDTO.Executor ToExecutor(TaskExecutorModel executor)
 		{
 			var u = executor.Executor.User;
-			return new TaskListItemDTO.Executor
+			return new BaseTaskDTO.Executor
 			{
 			    Name = u.FIO,
 			    Description = u.FullName + (u.Departments.Count > 0
@@ -95,9 +95,37 @@ namespace AGO.Tasks.Controllers
 					Executors = m.Executors.Select(ToExecutor).ToArray(),
 					DueDate = m.DueDate,
 					Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, m.Status),
-					CustomStatus = (m.CustomStatus != null ? m.CustomStatus.Name : string.Empty)
+					CustomStatus = (m.CustomStatus != null ? m.CustomStatus.Name : string.Empty),
+					ModelVersion = m.ModelVersion
 				})
 				.ToArray();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public TaskViewDTO GetTask([NotEmpty] string project, [NotEmpty] string numpp)
+		{
+			var task = _SessionProvider.CurrentSession.QueryOver<TaskModel>()
+				.Where(m => m.ProjectCode == project && m.SeqNumber == numpp)
+				.SingleOrDefault();
+			
+			if (task == null)
+				throw new NoSuchEntityException();
+
+			var meta = _SessionProvider.ModelMetadata(typeof(TaskModel));
+			return new TaskViewDTO
+			       	{
+			       		Id = task.Id,
+			       		SeqNumber = task.SeqNumber,
+			       		TaskType = (task.TaskType != null ? task.TaskType.Name : string.Empty),
+			       		Content = task.Content,
+			       		Executors = task.Executors.Select(ToExecutor).ToArray(),
+			       		DueDate = task.DueDate,
+			       		Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, task.Status),
+			       		CustomStatus = (task.CustomStatus != null ? task.CustomStatus.Name : string.Empty),
+			       		ModelVersion = task.ModelVersion,
+						Author = (task.Creator != null ? task.Creator.FIO : null),
+						CreationTime = task.CreationTime
+			       	};
 		}
 
 		[JsonEndpoint, RequireAuthorization]

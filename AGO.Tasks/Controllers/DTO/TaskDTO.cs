@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace AGO.Tasks.Controllers.DTO
 {
-	public class TaskListItemDTO
+	public class BaseTaskDTO : ModelDTO
 	{
-		public Guid Id { get; set; }
-
 		public string SeqNumber { get; set; }
 
 		public string TaskType { get; set; }
@@ -27,5 +25,16 @@ namespace AGO.Tasks.Controllers.DTO
 
 			public string Description { get; set; }
 		}
+	}
+
+	public class TaskListItemDTO: BaseTaskDTO
+	{
+	}
+
+	public class TaskViewDTO: BaseTaskDTO
+	{
+		public string Author { get; set; }
+
+		public DateTime? CreationTime { get; set; }
 	}
 }

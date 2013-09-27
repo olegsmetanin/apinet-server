@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Home;
 using AGO.Home.Model.Projects;
@@ -74,6 +75,34 @@ namespace AGO.Tasks.Test
 			StringAssert.AreEqualIgnoringCase(t1.SeqNumber, result[0].Text);
 			StringAssert.AreEqualIgnoringCase(t2.Id.ToString(), result[1].Id);
 			StringAssert.AreEqualIgnoringCase(t2.SeqNumber, result[1].Text);
+		}
+
+		[Test]
+		public void GetTaskByNumberReturnModel()
+		{
+			var task = M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			var result = controller.GetTask(TestProject, "t0-1");
+
+			Assert.IsNotNull(result);
+			Assert.AreEqual(task.Id, result.Id);
+			Assert.AreEqual(task.SeqNumber, result.SeqNumber);
+		}
+
+		[Test, ExpectedException(typeof(NoSuchEntityException))]
+		public void GetTaskByInvalidNumberThrow()
+		{
+			controller.GetTask(TestProject, "not existing number");
+		}
+
+		[Test, ExpectedException(typeof(NoSuchEntityException))]
+		public void GetTaskByInvalidProjectThrow()
+		{
+			M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			controller.GetTask("not existing project", "t0-1");
 		}
 
 		[Test, ExpectedException(typeof(NoSuchProjectException))]

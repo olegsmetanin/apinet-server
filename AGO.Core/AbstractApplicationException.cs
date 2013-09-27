@@ -92,4 +92,8 @@ namespace AGO.Core
 		{
 		}
 	}
+
+	public class NoSuchEntityException : AbstractApplicationException
+	{
+	}
 }
