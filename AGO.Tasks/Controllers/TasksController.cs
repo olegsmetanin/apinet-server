@@ -191,6 +191,44 @@ namespace AGO.Tasks.Controllers
 			return vr;
 		}
 
+		private void InternalDeleteTask(Guid id)
+		{
+			var task = _CrudDao.Get<TaskModel>(id, true);
+
+			//TODO: security and other checks
+
+			_CrudDao.Delete(task);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteTask([NotEmpty] Guid id)
+		{
+			InternalDeleteTask(id);
+
+			return true;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteTasks([NotEmpty] string project, [NotNull] ICollection<Guid> ids)
+		{
+			var s = _SessionProvider.CurrentSession;
+			var trn = s.BeginTransaction();
+			try
+			{
+				//TODO use project for security
+				foreach (var id in ids)
+					InternalDeleteTask(id);
+
+				trn.Commit();
+			}
+			catch (Exception)
+			{
+				trn.Rollback();
+				throw;
+			}
+			return true;
+		}
+
 		[JsonEndpointAttribute, RequireAuthorizationAttribute]
 		public IEnumerable<IModelMetadata> TaskMetadata()
 		{

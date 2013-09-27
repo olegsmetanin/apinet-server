@@ -179,5 +179,39 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(task.CustomStatusHistory.Any(h => h.Task.Id == task.Id && h.Status.Id == status.Id));
 			Assert.AreEqual(TaskPriority.Low, task.Priority);
 		}
+
+		[Test]
+		public void DeleteTaskReturnSuccess()
+		{
+			var t = M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			var res = controller.DeleteTask(t.Id);
+			_SessionProvider.FlushCurrentSession(!res);
+
+			Assert.IsTrue(res);
+			t = Session.Get<TaskModel>(t.Id);
+			Assert.IsNull(t);
+		}
+
+		[Test]
+		public void DeleteSeveralTaskReturnSuccess()
+		{
+			var t1 = M.Task(1);
+			var t2 = M.Task(2);
+			var t3 = M.Task(3);
+			_SessionProvider.FlushCurrentSession();
+
+			var res = controller.DeleteTasks(TestProject, new [] { t1.Id, t3.Id});
+			_SessionProvider.FlushCurrentSession(!res);
+
+			Assert.IsTrue(res);
+			t1 = Session.Get<TaskModel>(t1.Id);
+			t2 = Session.Get<TaskModel>(t2.Id);
+			t3 = Session.Get<TaskModel>(t3.Id);
+			Assert.IsNull(t1);
+			Assert.IsNotNull(t2);
+			Assert.IsNull(t3);
+		}
 	}
 }
