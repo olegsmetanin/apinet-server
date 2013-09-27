@@ -82,6 +82,7 @@ namespace AGO.Tasks.Controllers
 
 			var projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+			var meta = _SessionProvider.ModelMetadata(typeof(TaskModel));
 
 			return _FilteringDao.List<TaskModel>(predicate,
 				new FilteringOptions { Skip = page * pageSize, Take = pageSize, Sorters = sorters })
@@ -93,7 +94,7 @@ namespace AGO.Tasks.Controllers
 					Content = m.Content,
 					Executors = m.Executors.Select(ToExecutor).ToArray(),
 					DueDate = m.DueDate,
-					Status = m.Status.ToString(),
+					Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, m.Status),
 					CustomStatus = (m.CustomStatus != null ? m.CustomStatus.Name : string.Empty)
 				})
 				.ToArray();
