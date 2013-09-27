@@ -56,6 +56,7 @@
     <Compile Include="AbstractDictionaryTest.cs" />
     <Compile Include="AbstractTest.cs" />
     <Compile Include="CustomTaskStatusCRUDTest.cs" />
+    <Compile Include="ModelHelper.cs" />
     <Compile Include="TaskCRUDTest.cs" />
     <Compile Include="TaskTypeCRUDTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

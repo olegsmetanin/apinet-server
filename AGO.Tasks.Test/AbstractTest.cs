@@ -17,10 +17,13 @@ namespace AGO.Tasks.Test
 			get { return _SessionProvider.CurrentSession; }
 		}
 
+		protected ModelHelper M { get; private set; }
+
 		protected virtual void Init()
 		{
 			Initialize();
 			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);
+			M = new ModelHelper(() => _SessionProvider.CurrentSession, TestProject, () => CurrentUser);
 
 			var admin = LoginAdmin();
 			var type = new ProjectTypeModel

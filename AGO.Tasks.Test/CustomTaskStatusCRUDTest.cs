@@ -33,26 +33,22 @@ namespace AGO.Tasks.Test
 			base.TearDown();
 		}
 
-		private CustomTaskStatusModel Make(string name)
+		private CustomTaskStatusModel[] MakeSeveral(params string[] names)
 		{
-			var m = new CustomTaskStatusModel
-			        	{
-							Creator = CurrentUser,
-			        		ProjectCode = TestProject,
-			        		Name = name
-			        	};
-			Session.Save(m);
-			return m;
+			var result = new CustomTaskStatusModel[names.Length];
+			for (int i = 0; i < names.Length; i++)
+			{
+				result[i] = M.CustomStatus(names[i]);
+			}
+			return result;
 		}
 
-
+		
 		//lookup
 		[Test]
 		public void LookupWithoutTermReturnAllRecords()
 		{
-			Make("s1");
-			Make("s2");
-			Make("s3");
+			MakeSeveral("s1", "s2", "s3");
 			_SessionProvider.FlushCurrentSession();
 
 			//assume ordered result
@@ -67,9 +63,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupWithTermReturnMatchedRecords()
 		{
-			Make("s1");
-			Make("s2");
-			Make("a3");
+			MakeSeveral("s1", "s2", "a3");
 			_SessionProvider.FlushCurrentSession();
 
 			//assume ordered result
@@ -83,9 +77,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupInNotExistingProjectReturnEmpty()
 		{
-			Make("s1");
-			Make("s2");
-			Make("s3");
+			MakeSeveral("s1", "s2", "s3");
 			_SessionProvider.FlushCurrentSession();
 
 			var items = Controller.LookupCustomStatuses("asdfgh", "s", 0, 10).ToArray();
@@ -98,9 +90,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void GetStatusesReturnAllRecords()
 		{
-			var m1 = Make("s1");
-			var m2 = Make("s2");
-			var m3 = Make("s3");
+			var ss = MakeSeveral("s1", "s2", "s3");
 			_SessionProvider.FlushCurrentSession();
 
 			var items = Controller.GetCustomStatuses(TestProject, 
@@ -109,20 +99,18 @@ namespace AGO.Tasks.Test
 				0, 10).ToArray();
 
 			Assert.AreEqual(3, items.Length);
-			Assert.AreEqual(m1.Id, items[0].Id);
-			Assert.AreEqual(m1.Name, items[0].Name);
-			Assert.AreEqual(m2.Id, items[1].Id);
-			Assert.AreEqual(m2.Name, items[1].Name);
-			Assert.AreEqual(m3.Id, items[2].Id);
-			Assert.AreEqual(m3.Name, items[2].Name);
+			Assert.AreEqual(ss[0].Id, items[0].Id);
+			Assert.AreEqual(ss[0].Name, items[0].Name);
+			Assert.AreEqual(ss[1].Id, items[1].Id);
+			Assert.AreEqual(ss[1].Name, items[1].Name);
+			Assert.AreEqual(ss[2].Id, items[2].Id);
+			Assert.AreEqual(ss[2].Name, items[2].Name);
 		}
 
 		[Test]
 		public void GetStatusesWithoutProjectReturnEmpty()
 		{
-			Make("s1");
-			Make("s2");
-			Make("s3");
+			MakeSeveral("s1", "s2", "s3");
 			_SessionProvider.FlushCurrentSession();
 
 			var items = Controller.GetCustomStatuses("asdfgh",
@@ -136,9 +124,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void GetStatusesWithFilterReturnMatchedRecords()
 		{
-			var m1 = Make("s1");
-			Make("s2");
-			var m3 = Make("s3");
+			var ss = MakeSeveral("s1", "s2", "s3");
 			_SessionProvider.FlushCurrentSession();
 
 			var predicate = _FilteringService
@@ -153,10 +139,10 @@ namespace AGO.Tasks.Test
 				0, 10).ToArray();
 
 			Assert.AreEqual(2, items.Length);
-			Assert.AreEqual(m1.Id, items[0].Id);
-			Assert.AreEqual(m1.Name, items[0].Name);
-			Assert.AreEqual(m3.Id, items[1].Id);
-			Assert.AreEqual(m3.Name, items[1].Name);
+			Assert.AreEqual(ss[0].Id, items[0].Id);
+			Assert.AreEqual(ss[0].Name, items[0].Name);
+			Assert.AreEqual(ss[2].Id, items[1].Id);
+			Assert.AreEqual(ss[2].Name, items[1].Name);
 		}
 
 
@@ -186,7 +172,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void UpdateValidStatusReturnSuccess()
 		{
-			var s = Make("status");
+			var s = M.CustomStatus();
 			_SessionProvider.FlushCurrentSession();
 			var model = new CustomStatusDTO {Id = s.Id, Name = "newName", ViewOrder = s.ViewOrder};
 
@@ -202,7 +188,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void UpdateStatusWithoutNameReturnError()
 		{
-			var s = Make("status");
+			var s = M.CustomStatus();
 			_SessionProvider.FlushCurrentSession();
 			var model = new CustomStatusDTO { Id = s.Id, Name = string.Empty, ViewOrder = s.ViewOrder };
 
@@ -220,7 +206,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void DeleteStatusWithoutRefsReturnSuccess()
 		{
-			var s = Make("status");
+			var s = M.CustomStatus();
 			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatus(s.Id);
@@ -234,7 +220,7 @@ namespace AGO.Tasks.Test
 		[Test, ExpectedException(typeof(CannotDeleteReferencedItemException))]
 		public void DeleteStatusWithRefsThrow()
 		{
-			var s = Make("status");
+			var s = M.CustomStatus();
 			var tt = new TaskTypeModel {ProjectCode = TestProject, Name = "tt"};
 			Session.Save(tt);
 			var task = new TaskModel
@@ -261,24 +247,23 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void DeleteTaskStatusesWithoutRefsReturnSuccess()
 		{
-			var s1 = Make("s1");
-			var s2 = Make("s2");
+			var ss = MakeSeveral("s1", "s2");
 			_SessionProvider.FlushCurrentSession();
 
-			var result = Controller.DeleteCustomStatuses(TestProject, new[] {s1.Id, s2.Id}, null);
+			var result = Controller.DeleteCustomStatuses(TestProject, new[] {ss[0].Id, ss[1].Id}, null);
 			_SessionProvider.FlushCurrentSession(!result);
 
 			Assert.IsTrue(result);
-			s1 = Session.Get<CustomTaskStatusModel>(s1.Id);
-			s2 = Session.Get<CustomTaskStatusModel>(s2.Id);
-			Assert.IsNull(s1);
-			Assert.IsNull(s2);
+			ss[0] = Session.Get<CustomTaskStatusModel>(ss[0].Id);
+			ss[1] = Session.Get<CustomTaskStatusModel>(ss[1].Id);
+			Assert.IsNull(ss[0]);
+			Assert.IsNull(ss[1]);
 		}
 
 		[Test, ExpectedException(typeof(CannotDeleteReferencedItemException))]
 		public void DeleteTaskStatusesWithRefsThrow()
 		{
-			var s = Make("s");
+			var s = M.CustomStatus();
 			var tt = new TaskTypeModel { ProjectCode = TestProject, Name = "tt" };
 			Session.Save(tt);
 			var task = new TaskModel
@@ -298,8 +283,8 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void DeleteTaskStatusesWithRefsAndReplacementReturnSuccess()
 		{
-			var s1 = Make("s1");
-			var s2 = Make("s2");
+			var s1 = M.CustomStatus("duplicate");
+			var s2 = M.CustomStatus("replacement");
 			var tt = new TaskTypeModel { ProjectCode = TestProject, Name = "tt" };
 			Session.Save(tt);
 			var task = new TaskModel

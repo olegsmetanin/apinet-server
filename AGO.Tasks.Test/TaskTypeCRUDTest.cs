@@ -32,15 +32,6 @@ namespace AGO.Tasks.Test
 		{
 			base.TearDown();
 		}
-		private TaskTypeModel Make(string name = "TestTaskType")
-		{
-			return new TaskTypeModel
-			       	{
-						Creator = CurrentUser,
-			       		ProjectCode = TestProject, 
-						Name = name
-			       	};
-		}
 
 		[Test]
 		public void ReadTaskTypesFromEmptyReturnEmptyData()
@@ -57,10 +48,8 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void ReadTaskTypes()
 		{
-			var tt1 = Make("tt1");
-			var tt2 = Make("tt2");
-			_SessionProvider.CurrentSession.Save(tt1);
-			_SessionProvider.CurrentSession.Save(tt2);
+			M.TaskType("tt1");
+			M.TaskType("tt2");
 			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.GetTaskTypes(
@@ -95,8 +84,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void UpdateTaskType()
 		{
-			var testTaskType = Make();
-			_SessionProvider.CurrentSession.Save(testTaskType);
+			var testTaskType = M.TaskType();
 			_SessionProvider.FlushCurrentSession();
 
 			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
@@ -111,8 +99,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void DeleteTaskType()
 		{
-			var testTaskType = Make();
-			_SessionProvider.CurrentSession.Save(testTaskType);
+			var testTaskType = M.TaskType();
 			_SessionProvider.FlushCurrentSession();
 
 			Controller.DeleteTaskType(testTaskType.Id);
@@ -125,7 +112,7 @@ namespace AGO.Tasks.Test
 		[Test, ExpectedException(typeof(CannotDeleteReferencedItemException))]
 		public void CantDeleteReferencedTaskType()
 		{
-			var testTaskType = Make();
+			var testTaskType = M.TaskType();
 			var testTask = new TaskModel
 			               	{
 			               		ProjectCode = TestProject, 
@@ -133,7 +120,6 @@ namespace AGO.Tasks.Test
 								InternalSeqNumber = 1,
 								TaskType = testTaskType
 			               	};
-			_SessionProvider.CurrentSession.Save(testTaskType);
 			_SessionProvider.CurrentSession.Save(testTask);
 			_SessionProvider.FlushCurrentSession();
 			

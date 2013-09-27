@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Linq;
 using AGO.Core.Filters;
-using AGO.Core.Model.Security;
 using AGO.Home;
 using AGO.Home.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.DTO;
-using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
 
@@ -39,40 +37,12 @@ namespace AGO.Tasks.Test
 			base.TearDown();
 		}
 
-		private TaskTypeModel MakeType(string name)
-		{
-			var type = new TaskTypeModel
-			       	{
-			       		Creator = CurrentUser,
-			       		ProjectCode = TestProject,
-			       		Name = name
-			       	};
-			Session.Save(type);
-			return type;
-		}
-
-		private TaskModel Make(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.NotStarted)
-		{
-			var task = new TaskModel
-			           	{
-			           		Creator = CurrentUser,
-			           		ProjectCode = TestProject,
-			           		InternalSeqNumber = num,
-			           		SeqNumber = "t0-" + num,
-			           		TaskType = type,
-			           		Content = content,
-			           		Status = status
-			           	};
-			Session.Save(task);
-			return task;
-		}
 
 		[Test]
 		public void GetTasksReturnAllRecords()
 		{
-			var tt = MakeType("tt");
-			var t1 = Make(1, tt);
-			var t2 = Make(2, tt);
+			var t1 = M.Task(1);
+			var t2 = M.Task(2);
 			_SessionProvider.CloseCurrentSession();
 
 			var result = controller.GetTasks(
@@ -89,9 +59,8 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTasksWithoutTermReturnAllRecords()
 		{
-			var tt = MakeType("tt");
-			var t1 = Make(1, tt);
-			var t2 = Make(2, tt);
+			var t1 = M.Task(1);
+			var t2 = M.Task(2);
 			_SessionProvider.CloseCurrentSession();
 
 			var result = controller.LookupTasks(
@@ -142,7 +111,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskWithoutExecutorsReturnError()
 		{
-			var tt = MakeType("tt");
+			var tt = M.TaskType();
 			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO {TaskType = tt.Id};
 
@@ -164,7 +133,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskWithWrongExecutorsReturnError()
 		{
-			var tt = MakeType("tt");
+			var tt = M.TaskType();
 			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO { TaskType = tt.Id, Executors = new [] { Guid.NewGuid() } };
 
@@ -178,14 +147,8 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateTaskWithValidParamsReturnSuccess()
 		{
-			var tt = MakeType("tt");
-			var status = new CustomTaskStatusModel
-			             	{
-			             		ProjectCode = TestProject,
-			             		Creator = CurrentUser,
-			             		Name = "s"
-			             	};
-			Session.Save(status);
+			var tt = M.TaskType();
+			var status = M.CustomStatus();
 			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
 			var participant = project.Participants.First();
 			_SessionProvider.FlushCurrentSession();
