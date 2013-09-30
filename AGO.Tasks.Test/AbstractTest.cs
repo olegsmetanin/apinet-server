@@ -26,6 +26,7 @@ namespace AGO.Tasks.Test
 			M = new ModelHelper(() => _SessionProvider.CurrentSession, TestProject, () => CurrentUser);
 
 			var admin = LoginAdmin();
+			
 			var type = new ProjectTypeModel
 			           	{
 			           		Creator = admin,
@@ -95,6 +96,11 @@ namespace AGO.Tasks.Test
 					go
 					delete from Tasks.TaskExecutorModel where
 						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					go
+					delete from Core.CustomPropertyInstanceModel where
+						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					go
+					delete from Core.CustomPropertyTypeModel where ProjectCode = '{0}'
 					go
 					delete from Tasks.TaskModel where ProjectCode = '{0}'
 					go

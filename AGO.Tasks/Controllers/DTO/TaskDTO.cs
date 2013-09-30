@@ -33,6 +33,14 @@ namespace AGO.Tasks.Controllers.DTO
 
 	public class TaskViewDTO: BaseTaskDTO
 	{
+		public string Priority { get; set; }
+
+		public StatusHistoryDTO StatusHistory { get; set; }
+
+		public StatusHistoryDTO CustomStatusHistory { get; set; }
+
+		public IEnumerable<CustomParameterDTO> Parameters { get; set; }
+
 		public string Author { get; set; }
 
 		public DateTime? CreationTime { get; set; }

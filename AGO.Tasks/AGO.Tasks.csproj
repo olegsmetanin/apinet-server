@@ -66,8 +66,10 @@
   <ItemGroup>
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="Controllers\DTO\CreateTaskDTO.cs" />
+    <Compile Include="Controllers\DTO\CustomParameterDTO.cs" />
     <Compile Include="Controllers\DTO\CustomStatusDTO.cs" />
     <Compile Include="Controllers\DTO\ModelDTO.cs" />
+    <Compile Include="Controllers\DTO\StatusHistoryDTO.cs" />
     <Compile Include="Controllers\DTO\TaskDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
     <Compile Include="Controllers\Extensions.cs" />
@@ -77,6 +79,8 @@
     <Compile Include="Migrations\VersionTableMetaData.cs" />
     <Compile Include="Model\Dictionary\CustomTaskStatusModel.cs" />
     <Compile Include="Model\Dictionary\TaskTypeModel.cs" />
+    <Compile Include="Model\IStatusHistoryRecordModel.cs" />
+    <Compile Include="Model\StatusChangeHelper.cs" />
     <Compile Include="Model\Task\CustomTaskStatusHistoryModel.cs" />
     <Compile Include="Model\Task\TaskAgreementModel.cs" />
     <Compile Include="Model\Task\TaskCustomPropertyModel.cs" />

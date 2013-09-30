@@ -11,7 +11,7 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Запись в истории изменения статусов задачи
     /// </summary>
-    public class TaskStatusHistoryModel: SecureModel<Guid>
+    public class TaskStatusHistoryModel: SecureModel<Guid>, IStatusHistoryRecordModel<TaskModel, TaskStatus>
     {
         #region Persistent
 
@@ -29,7 +29,7 @@ namespace AGO.Tasks.Model.Task
         [DisplayName("Дата окончания"), JsonProperty]
         public virtual DateTime? Finish { get; set; }
 
-        /// <summary>
+    	/// <summary>
         /// Задачи, изменение статуса которой регистрируется
         /// </summary>
         [DisplayName("Задача"), JsonProperty, NotNull]
@@ -37,12 +37,28 @@ namespace AGO.Tasks.Model.Task
         [ReadOnlyProperty, MetadataExclude]
         public virtual Guid? TaskId { get; set; }
 
-        /// <summary>
+    	/// <summary>
         /// Установленный задаче статус
         /// </summary>
         [DisplayName("Статус"), JsonProperty, NotNull]
         public virtual TaskStatus Status { get; set; }
 
         #endregion
+
+		[NotMapped]
+		TaskModel IStatusHistoryRecordModel<TaskModel, TaskStatus>.Holder
+		{
+			get { return Task; }
+			set { Task = value; }
+		}
+
+		/// <summary>
+		/// Открытая запись - запись о текущем статусе объекта
+		/// </summary>
+		[NotMapped]
+		public virtual bool IsOpen
+		{
+			get { return !Finish.HasValue; }
+		}
     }
 }

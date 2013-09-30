@@ -70,6 +70,73 @@ namespace AGO.Tasks.Controllers
 			};
 		}
 
+		private static CustomParameterDTO ParamToDTO(TaskCustomPropertyModel param)
+		{
+			return new CustomParameterDTO
+			       	{
+			       		Id = param.Id,
+			       		TypeName = param.PropertyType.FullName,
+			       		ValueType = param.PropertyType.ValueType,
+			       		Value = param.Value.ConvertSafe<string>(),
+			       		ModelVersion = param.ModelVersion
+			       	};
+		}
+
+		private static StatusHistoryDTO StatusHistoryToDTO(TaskModel task, IModelMetadata meta)
+		{
+			return new StatusHistoryDTO
+			       	{
+			       		Current = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, task.Status),
+			       		History = task.StatusHistory
+			       			.OrderBy(h => h.Start)
+			       			.Select(h => new StatusHistoryDTO.StatusHistoryItemDTO
+			       			             	{
+			       			             		Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, h.Status),
+			       			             		Start = h.Start,
+			       			             		Finish = h.Finish,
+			       			             		Author = (h.Creator != null ? h.Creator.FIO : null)
+			       			             	})
+			       			.ToArray(),
+			       		Next = Enum.GetValues(typeof (TaskStatus)) //TODO это должно браться из workflow
+			       			.OfType<TaskStatus>()
+							.Where(en => en != task.Status)
+							.OrderBy(en => (int)en)
+			       			.Select(s => new LookupEntry
+			       			             	{
+			       			             		Id = s.ToString(),
+			       			             		Text = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, s)
+			       			             	})
+			       			.ToArray()
+			       	};
+		}
+
+		private StatusHistoryDTO CustomStatusHistoryToDTO(TaskModel task)
+		{
+
+			var query = _SessionProvider.CurrentSession.QueryOver<CustomTaskStatusModel>()
+				.Where(m => m.ProjectCode == task.ProjectCode);
+			if (task.CustomStatus != null)
+				query = query.Where(m => m.Id != task.CustomStatus.Id);
+
+			query = query.OrderBy(m => m.ViewOrder).Asc.ThenBy(m => m.Name).Asc;
+
+			return new StatusHistoryDTO
+			{
+				Current = (task.CustomStatus != null ? task.CustomStatus.Name : null),
+				History = task.CustomStatusHistory
+					.OrderBy(h => h.Start)
+					.Select(h => new StatusHistoryDTO.StatusHistoryItemDTO
+					{
+						Status = h.Status.Name,
+						Start = h.Start,
+						Finish = h.Finish,
+						Author = (h.Creator != null ? h.Creator.FIO : null)
+					})
+					.ToArray(),
+				Next = query.List<CustomTaskStatusModel>().Select(s => new LookupEntry { Id = s.Id.ToString(), Text = s.Name}).ToArray()
+			};
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<TaskListItemDTO> GetTasks(
 			[NotEmpty] string project,
@@ -118,10 +185,14 @@ namespace AGO.Tasks.Controllers
 			       		SeqNumber = task.SeqNumber,
 			       		TaskType = (task.TaskType != null ? task.TaskType.Name : string.Empty),
 			       		Content = task.Content,
-			       		Executors = task.Executors.Select(ToExecutor).ToArray(),
+			       		Executors = task.Executors.OrderBy(e => e.Executor.User.FullName).Select(ToExecutor).ToArray(),
 			       		DueDate = task.DueDate,
 			       		Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, task.Status),
 			       		CustomStatus = (task.CustomStatus != null ? task.CustomStatus.Name : string.Empty),
+						Priority = meta.EnumDisplayValue<TaskModel, TaskPriority>(mm => mm.Priority, task.Priority),
+						StatusHistory = StatusHistoryToDTO(task, meta),
+						CustomStatusHistory = CustomStatusHistoryToDTO(task),
+						Parameters = task.CustomProperties.OrderBy(p => p.PropertyType.FullName).Select(ParamToDTO).ToArray(),
 			       		ModelVersion = task.ModelVersion,
 						Author = (task.Creator != null ? task.Creator.FIO : null),
 						CreationTime = task.CreationTime
@@ -172,7 +243,7 @@ namespace AGO.Tasks.Controllers
 				if (model.CustomStatus.HasValue)
 				{
 					var cs = _CrudDao.Get<CustomTaskStatusModel>(model.CustomStatus.Value);
-					task.CustomStatus = cs;
+					task.ChangeCustomStatus(cs, _AuthController.CurrentUser());
 					var history = new CustomTaskStatusHistoryModel
 					              	{
 					              		Creator = currentUser,

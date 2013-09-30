@@ -1,4 +1,5 @@
 ﻿using System;
+using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -28,9 +29,9 @@ namespace AGO.Tasks.Test
 				InternalSeqNumber = num,
 				SeqNumber = "t0-" + num,
 				TaskType = type,
-				Content = content,
-				Status = status
+				Content = content
 			};
+			task.ChangeStatus(status, currentUser());
 			session().Save(task);
 
 			return task;
@@ -69,6 +70,48 @@ namespace AGO.Tasks.Test
 			session().Save(m);
 
 			return m;
+		}
+
+		public TaskCustomPropertyModel Param(TaskModel task, string name, object value)
+		{
+			var pvt = value is DateTime
+			          	? CustomPropertyValueType.Date
+			          	: value is decimal
+			          	  	? CustomPropertyValueType.Number
+			          	  	: CustomPropertyValueType.String;
+			var paramType = session().QueryOver<CustomPropertyTypeModel>()
+				.Where(m => m.ProjectCode == project && m.FullName == name).SingleOrDefault() ?? ParamType(name, pvt);
+
+			return Param(task, paramType, value);
+		}
+
+		public TaskCustomPropertyModel Param(TaskModel task, CustomPropertyTypeModel paramType, object value)
+		{
+			var p = new TaskCustomPropertyModel
+			        	{
+			        		Task = task,
+			        		Creator = currentUser(),
+			        		PropertyType = paramType,
+			        		Value = value
+			        	};
+			session().Save(p);
+
+			return p;
+		}
+
+		public CustomPropertyTypeModel ParamType(string name = "strParam", CustomPropertyValueType type = CustomPropertyValueType.String)
+		{
+			var pt = new CustomPropertyTypeModel
+			         	{
+			         		ProjectCode = project,
+			         		Creator = currentUser(),
+			         		Name = name,
+							FullName = name,
+			         		ValueType = type
+			         	};
+			session().Save(pt);
+
+			return pt;
 		}
 	}
 }

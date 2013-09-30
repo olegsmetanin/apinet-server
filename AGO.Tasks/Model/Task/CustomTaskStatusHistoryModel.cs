@@ -12,7 +12,7 @@ namespace AGO.Tasks.Model.Task
 	/// <summary>
 	/// Запись в истории изменения пользовательского статуса задачи
 	/// </summary>
-	public class CustomTaskStatusHistoryModel: SecureModel<Guid>
+	public class CustomTaskStatusHistoryModel: SecureModel<Guid>, IStatusHistoryRecordModel<TaskModel, CustomTaskStatusModel>
 	{
 		#region Persistent
 
@@ -45,5 +45,21 @@ namespace AGO.Tasks.Model.Task
 		public virtual CustomTaskStatusModel Status { get; set; }
 
 		#endregion
+		
+		[NotMapped]
+		TaskModel IStatusHistoryRecordModel<TaskModel, CustomTaskStatusModel>.Holder
+		{
+			get { return Task; }
+			set { Task = value; }
+		}
+
+		/// <summary>
+		/// Открытая запись - запись о текущем статусе объекта
+		/// </summary>
+		[NotMapped]
+		public virtual bool IsOpen
+		{
+			get { return !Finish.HasValue; }
+		}
 	}
 }

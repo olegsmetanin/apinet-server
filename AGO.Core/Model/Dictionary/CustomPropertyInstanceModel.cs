@@ -42,6 +42,46 @@ namespace AGO.Core.Model.Dictionary
 
 			return string.Format("{0} - {1}", PropertyType.ToStringSafe(), value);
 		}
+
+		[NotMapped]
+		public virtual object Value
+		{
+			get
+			{
+				if (PropertyType == null)
+					throw new InvalidOperationException("Can not read parameter value without type");
+				switch (PropertyType.ValueType)
+				{
+					case CustomPropertyValueType.String:
+						return StringValue;
+					case CustomPropertyValueType.Number:
+						return NumberValue;
+					case CustomPropertyValueType.Date:
+						return DateValue;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+			set
+			{
+				if (PropertyType == null)
+					throw new InvalidOperationException("Can not read parameter value without type");
+				switch (PropertyType.ValueType)
+				{
+					case CustomPropertyValueType.String:
+						StringValue = value.ConvertSafe<string>();
+						break;
+					case CustomPropertyValueType.Number:
+						NumberValue = value.ConvertSafe<decimal?>();
+						break;
+					case CustomPropertyValueType.Date:
+						DateValue = value.ConvertSafe<DateTime?>();
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
 		
 		#endregion
 	}

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Tasks.Controllers.DTO;
@@ -221,19 +220,8 @@ namespace AGO.Tasks.Test
 		public void DeleteStatusWithRefsThrow()
 		{
 			var s = M.CustomStatus();
-			var tt = new TaskTypeModel {ProjectCode = TestProject, Name = "tt"};
-			Session.Save(tt);
-			var task = new TaskModel
-			           	{
-			           		ProjectCode = TestProject, 
-							CustomStatus = s,
-							SeqNumber = "1",
-							InternalSeqNumber = 1,
-							TaskType = tt
-			           	};
-			Session.Save(task);
-			var history = new CustomTaskStatusHistoryModel {Task = task, Status = s, Start = DateTime.Now};
-			Session.Save(history);
+			var task = M.Task(1);
+			task.ChangeCustomStatus(s, CurrentUser);
 			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatus(s.Id);
@@ -264,17 +252,8 @@ namespace AGO.Tasks.Test
 		public void DeleteTaskStatusesWithRefsThrow()
 		{
 			var s = M.CustomStatus();
-			var tt = new TaskTypeModel { ProjectCode = TestProject, Name = "tt" };
-			Session.Save(tt);
-			var task = new TaskModel
-			{
-				ProjectCode = TestProject,
-				CustomStatus = s,
-				SeqNumber = "1",
-				InternalSeqNumber = 1,
-				TaskType = tt
-			};
-			Session.Save(task);
+			var task = M.Task(1);
+			task.ChangeCustomStatus(s, CurrentUser);
 			_SessionProvider.FlushCurrentSession();
 
 			Controller.DeleteCustomStatuses(TestProject, new[] { s.Id }, null);
@@ -285,19 +264,8 @@ namespace AGO.Tasks.Test
 		{
 			var s1 = M.CustomStatus("duplicate");
 			var s2 = M.CustomStatus("replacement");
-			var tt = new TaskTypeModel { ProjectCode = TestProject, Name = "tt" };
-			Session.Save(tt);
-			var task = new TaskModel
-			{
-				ProjectCode = TestProject,
-				CustomStatus = s1,
-				SeqNumber = "1",
-				InternalSeqNumber = 1,
-				TaskType = tt
-			};
-			Session.Save(task);
-			var history = new CustomTaskStatusHistoryModel { Task = task, Status = s1, Start = DateTime.Now };
-			Session.Save(history);
+			var task = M.Task(1);
+			task.ChangeCustomStatus(s1, CurrentUser);
 			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.DeleteCustomStatuses(TestProject, new[] { s1.Id }, s2.Id);
@@ -310,8 +278,8 @@ namespace AGO.Tasks.Test
 			Assert.IsNotNull(s2);
 			task = Session.Get<TaskModel>(task.Id);
 			Assert.AreEqual(s2.Id, task.CustomStatus.Id);
-			Assert.AreEqual(2, task.ModelVersion);
-			history = Session.Get<CustomTaskStatusHistoryModel>(history.Id);
+			Assert.AreEqual(3, task.ModelVersion);
+			var history = task.CustomStatusHistory.First();
 			Assert.AreEqual(s2.Id, history.Status.Id);
 			Assert.AreEqual(2, history.ModelVersion);
 		}

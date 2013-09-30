@@ -47,7 +47,7 @@ namespace AGO.Tasks.Model.Task
             "Closed", "Закрыта",
             "Suspended", "Приостановлена"
 		})]
-        public virtual TaskStatus Status { get; set; }
+        public virtual TaskStatus Status { get; protected set; }
 
         /// <summary>
         /// История изменения статуса задачи
@@ -101,7 +101,7 @@ namespace AGO.Tasks.Model.Task
 		/// Пользовательский статус задачи
 		/// </summary>
 		[DisplayName("Пользовательский статус"), JsonProperty]
-		public virtual CustomTaskStatusModel CustomStatus { get; set; }
+		public virtual CustomTaskStatusModel CustomStatus { get; protected set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? CustomStatusId { get; set; }
 
@@ -150,5 +150,15 @@ namespace AGO.Tasks.Model.Task
     	private ISet<TaskCustomPropertyModel> customPropsStore = new HashSet<TaskCustomPropertyModel>();
 
     	#endregion
+
+		public virtual void ChangeStatus(TaskStatus newStatus, UserModel changer)
+		{
+			StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
+		}
+
+		public virtual void ChangeCustomStatus(CustomTaskStatusModel newStatus, UserModel changer)
+		{
+			StatusChangeHelper.Change(this, newStatus, CustomStatusHistory, changer, m => m.CustomStatus);
+		}
     }
 }

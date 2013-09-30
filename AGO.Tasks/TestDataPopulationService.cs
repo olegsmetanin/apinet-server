@@ -1,5 +1,6 @@
 ﻿using System;
 using AGO.Core;
+using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -33,6 +34,9 @@ namespace AGO.Tasks
 			PopulateCustomStatuses("Docs1", admin);
 			PopulateCustomStatuses("Docs2", admin);
 
+			PopulateParamTypes("Docs1", admin);
+			PopulateParamTypes("Docs2", admin);
+
 			_SessionProvider.CloseCurrentSession();
 
 			PopulateTasks("Docs1", admin);
@@ -51,11 +55,11 @@ namespace AGO.Tasks
 						           		ProjectCode = project,
 						           		InternalSeqNumber = seqnum,
 						           		SeqNumber = "t0-" + seqnum,
-						           		Status = status,
 						           		Priority = priority,
 						           		Content = content,
 						           		DueDate = dueDate
 						           	};
+						task.ChangeStatus(status, admin);
 						task.TaskType = CurrentSession.QueryOver<TaskTypeModel>()
 							.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault();
 
@@ -66,9 +70,46 @@ namespace AGO.Tasks
 			var t1 = factory("Инвентаризация", TaskStatus.NotStarted, TaskPriority.Normal, null, null);
 			var t2 = factory("Расчет по схеме", TaskStatus.InWork, TaskPriority.High, "Расчет по схеме 2",
 			                 DateTime.Now.AddDays(2));
+			var t3 = factory("Обмер на объекте", TaskStatus.Completed, TaskPriority.Low, "Выполнить обмеры на объекте по адресу МО, Королев, Космонавтов 12, вл. 2",
+							 DateTime.Now.AddDays(3));
+			var t4 = factory("Инвентаризация", TaskStatus.NotStarted, TaskPriority.High, null, DateTime.Now.AddDays(-1));
 
 			CurrentSession.Save(t1);
 			CurrentSession.Save(t2);
+			CurrentSession.Save(t3);
+			CurrentSession.Save(t4);
+
+			Func<TaskModel, string, object, TaskCustomPropertyModel> paramFactory =
+				(task, name, value) => new TaskCustomPropertyModel
+				    {
+				        Task = task,
+				        Creator = admin,
+				        PropertyType = CurrentSession.QueryOver<CustomPropertyTypeModel>()
+				            .Where(m => m.ProjectCode == project && m.FullName == name).SingleOrDefault(),
+				        Value = value
+				    };
+
+			var sp1 = paramFactory(t1, "str", "some string data");
+			var np1 = paramFactory(t1, "num", 12.3);
+			var dp1 = paramFactory(t1, "date", new DateTime(2013, 01, 01));
+
+			CurrentSession.Save(sp1);
+			CurrentSession.Save(np1);
+			CurrentSession.Save(dp1);
+		}
+
+		private void PopulateParamTypes(string project, UserModel admin)
+		{
+			Func<string, CustomPropertyValueType, CustomPropertyTypeModel> factory =
+				(name, type) => new CustomPropertyTypeModel {ProjectCode = project, Creator = admin, Name = name,  FullName = name, ValueType = type};
+
+			var strParam = factory("str", CustomPropertyValueType.String);
+			var numParam = factory("num", CustomPropertyValueType.Number);
+			var dateParam = factory("date", CustomPropertyValueType.Date);
+
+			CurrentSession.Save(strParam);
+			CurrentSession.Save(numParam);
+			CurrentSession.Save(dateParam);
 		}
 
 		private void PopulateTaskTypes(string project, UserModel admin)
