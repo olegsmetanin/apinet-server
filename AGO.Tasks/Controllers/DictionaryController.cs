@@ -40,18 +40,15 @@ namespace AGO.Tasks.Controllers
 		public IEnumerable<LookupEntry> LookupTaskTypes(
 			[NotEmpty] string project,
 			string term,
-			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize)
+			[InRange(0, null)] int page)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var query = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == project)
 				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name).ToArray();
+			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name).ToArray();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -59,16 +56,17 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] string project,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters, 
-			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize)
+			[InRange(0, null)] int page)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] {projectPredicate}).ToArray();
 
 			return _FilteringDao.List<TaskTypeModel>(predicate, 
-				new FilteringOptions { Skip = page*pageSize, Take = pageSize, Sorters = sorters})
+				new FilteringOptions
+					{
+						Page = page,
+						Sorters = sorters
+					})
 				.Select(m => new TaskTypeDTO
 				{
 					Id = m.Id,
@@ -174,18 +172,15 @@ namespace AGO.Tasks.Controllers
     	public IEnumerable<LookupEntry> LookupCustomStatuses(
 			[NotEmpty] string project, 
 			string term, 
-			[InRange(0, null)] int page, 
-			[InRange(0, MaxPageSize)] int pageSize)
+			[InRange(0, null)] int page)
     	{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var query = _SessionProvider.CurrentSession.QueryOver<CustomTaskStatusModel>()
 				.Where(m => m.ProjectCode == project)
 				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name).ToArray();
+			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name).ToArray();
     	}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -193,16 +188,17 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] string project, 
 			[NotNull] ICollection<IModelFilterNode> filter, 
 			[NotNull] ICollection<SortInfo> sorters, 
-			[InRange(0, null)] int page, 
-			[InRange(0, MaxPageSize)] int pageSize)
+			[InRange(0, null)] int page)
     	{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var projectPredicate = _FilteringService.Filter<CustomTaskStatusModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
 
 			return _FilteringDao.List<CustomTaskStatusModel>(predicate,
-				new FilteringOptions { Skip = page * pageSize, Take = pageSize, Sorters = sorters })
+				new FilteringOptions
+					{
+						Page = page,
+						Sorters = sorters
+					})
 				.Select(m => new CustomStatusDTO
 				{
 					Id = m.Id,

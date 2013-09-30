@@ -50,7 +50,7 @@ namespace AGO.Tasks.Test
 				TestProject,
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
 				new[] {new SortInfo {Property = "InternalSeqNumber"}},
-				0, 10).ToArray();
+				0).ToArray();
 
 			Assert.AreEqual(2, result.Length);
 			Assert.AreEqual(t1.Id, result[0].Id);
@@ -67,7 +67,7 @@ namespace AGO.Tasks.Test
 			var result = controller.LookupTasks(
 				TestProject,
 				null,
-				0, 10).ToArray();
+				0).ToArray();
 
 			//assume order by InternalSeqNumber as default sort
 			Assert.AreEqual(2, result.Length);

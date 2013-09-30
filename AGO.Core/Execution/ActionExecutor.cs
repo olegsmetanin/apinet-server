@@ -50,7 +50,6 @@ namespace AGO.Core.Execution
 				throw new ArgumentNullException("callee");
 			if (methodInfo == null || methodInfo.DeclaringType == null)
 				throw new ArgumentNullException("methodInfo");
-			var rollback = false;
 
 			try
 			{
@@ -101,24 +100,14 @@ namespace AGO.Core.Execution
 					result = transformer.Transform(methodInfo.ReturnType, result);
 				}
 
-				var validationResult = result as ValidationResult;
-				if (validationResult != null)
-					rollback = !validationResult.Success;
-
-				if (!rollback)
-					_SessionProvider.CloseCurrentSession();
+				_SessionProvider.CloseCurrentSession();
 
 				return result;
 			}
 			catch (Exception)
 			{
-				rollback = true;
+				_SessionProvider.CloseCurrentSession(true);
 				throw;
-			}
-			finally
-			{
-				if(rollback)
-					_SessionProvider.CloseCurrentSession(true);
 			}
 		}
 

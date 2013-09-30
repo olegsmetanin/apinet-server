@@ -49,49 +49,39 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupProjectStatuses(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
 				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
+			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupProjectStatusDescriptions(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
 				.Select(Projections.Distinct(Projections.Property("Description")))
 				.OrderBy(m => m.Description).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Description).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page*pageSize).Take(pageSize).LookupList(m => m.Description);
+			return query.PagedQuery(_CrudDao, page).LookupList(m => m.Description);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectStatusModel> GetProjectStatuses(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			return _FilteringDao.List<ProjectStatusModel>(filter, new FilteringOptions
 			{
-				Skip = page * pageSize,
-				Take = pageSize,
+				Page = page,
 				Sorters = sorters
 			});
 		}
@@ -156,19 +146,15 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectTagModel> GetProjectTags(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters,
 			TagsRequestMode mode)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-			
 			filter.Add(ProjectTagModeFilter(mode));
 
 			return _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
 			{
-				Skip = page * pageSize,
-				Take = pageSize,
+				Page = page,
 				Sorters = sorters
 			});
 		}
@@ -182,11 +168,8 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupProjectTags(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
 				.Where(m => m.Owner == _AuthController.CurrentUser() || m.Owner == null)
 				.OrderBy(m => m.Name).Asc;
@@ -194,7 +177,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize).LookupModelsList(m => m.Name);
+			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -281,16 +264,12 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectTypeModel> GetProjectTypes(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			return _FilteringDao.List<ProjectTypeModel>(filter, new FilteringOptions
 			{
-				Skip = page * pageSize,
-				Take = pageSize,
+				Page = page,
 				Sorters = sorters
 			});
 		}

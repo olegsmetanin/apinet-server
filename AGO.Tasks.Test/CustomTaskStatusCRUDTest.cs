@@ -52,7 +52,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			//assume ordered result
-			var items = Controller.LookupCustomStatuses(TestProject, null, 0, 10).ToArray();
+			var items = Controller.LookupCustomStatuses(TestProject, null, 0).ToArray();
 
 			Assert.AreEqual(3, items.Length);
 			Assert.AreEqual("s1", items[0].Text);
@@ -67,7 +67,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			//assume ordered result
-			var items = Controller.LookupCustomStatuses(TestProject, "s", 0, 10).ToArray();
+			var items = Controller.LookupCustomStatuses(TestProject, "s", 0).ToArray();
 
 			Assert.AreEqual(2, items.Length);
 			Assert.AreEqual("s1", items[0].Text);
@@ -80,7 +80,7 @@ namespace AGO.Tasks.Test
 			MakeSeveral("s1", "s2", "s3");
 			_SessionProvider.FlushCurrentSession();
 
-			var items = Controller.LookupCustomStatuses("asdfgh", "s", 0, 10).ToArray();
+			var items = Controller.LookupCustomStatuses("asdfgh", "s", 0).ToArray();
 
 			Assert.AreEqual(0, items.Length);
 		}
@@ -96,7 +96,7 @@ namespace AGO.Tasks.Test
 			var items = Controller.GetCustomStatuses(TestProject, 
 				Enumerable.Empty<IModelFilterNode>().ToArray(), 
 				new []{new SortInfo{ Property = "Name"}},
-				0, 10).ToArray();
+				0).ToArray();
 
 			Assert.AreEqual(3, items.Length);
 			Assert.AreEqual(ss[0].Id, items[0].Id);
@@ -116,7 +116,7 @@ namespace AGO.Tasks.Test
 			var items = Controller.GetCustomStatuses("asdfgh",
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
 				new[] { new SortInfo { Property = "Name" } },
-				0, 10).ToArray();
+				0).ToArray();
 
 			Assert.AreEqual(0, items.Length);
 		}
@@ -136,7 +136,7 @@ namespace AGO.Tasks.Test
 			var items = Controller.GetCustomStatuses(TestProject,
 				new [] { predicate },
 				new[] { new SortInfo { Property = "Name" } },
-				0, 10).ToArray();
+				0).ToArray();
 
 			Assert.AreEqual(2, items.Length);
 			Assert.AreEqual(ss[0].Id, items[0].Id);
