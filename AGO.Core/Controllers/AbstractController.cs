@@ -12,14 +12,6 @@ namespace AGO.Core.Controllers
 {
 	public abstract class AbstractController : AbstractService
 	{
-		#region Constants
-
-		public const int DefaultPageSize = 15;
-
-		public const int MaxPageSize = 100;
-
-		#endregion
-
 		#region Properties, fields, constructors
 
 		protected readonly IJsonService _JsonService;
@@ -161,7 +153,7 @@ namespace AGO.Core.Controllers
 
 			return _FilteringDao.List<TModel>(new[] { filter }, new FilteringOptions
 			{
-				Take = 1,
+				PageSize = 1,
 				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
 			}).FirstOrDefault();
 		}

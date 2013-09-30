@@ -104,13 +104,10 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectModel> GetProjects(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters,
 			ProjectsRequestMode mode)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			if (mode == ProjectsRequestMode.Participated)
 			{
 				var modeFilter = new ModelFilterNode { Path = "Participants" };
@@ -125,8 +122,7 @@ namespace AGO.Home.Controllers
 
 			return _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
 			{
-				Skip = page * pageSize,
-				Take = pageSize,
+				Page = page,
 				Sorters = sorters
 			});
 		}
@@ -134,29 +130,23 @@ namespace AGO.Home.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupProjectNames(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			string term)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
 				.Select(Projections.Distinct(Projections.Property("Name")))
 				.OrderBy(m => m.Name).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
-			return query.Skip(page*pageSize).Take(pageSize).LookupList(m => m.Name);
+			return query.PagedQuery(_CrudDao, page).LookupList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupParticipant(
 			[NotEmpty] string project,
 			string term,
-			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize)
+			[InRange(0, null)] int page)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 //			var filter = _FilteringService.Filter<ProjectParticipantModel>()
 //				.And()
 //				.Where(m => m.Project.ProjectCode == project);
@@ -179,7 +169,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(() => um.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
-			return query.Skip(page * pageSize).Take(pageSize)
+			return query.PagedQuery(_CrudDao, page)
 				.LookupList<ProjectParticipantModel, UserModel>(m => m.Id, "um", u => u.FullName).ToArray();
 		}
 			

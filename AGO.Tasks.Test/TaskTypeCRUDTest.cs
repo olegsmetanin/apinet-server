@@ -39,7 +39,7 @@ namespace AGO.Tasks.Test
 			var result = Controller.GetTaskTypes(TestProject, 
 				Enumerable.Empty<IModelFilterNode>().ToArray(), 
 				Enumerable.Empty<SortInfo>().ToArray(), 
-				0, 10);
+				0);
 
 			Assert.IsNotNull(result);
 			Assert.IsFalse(result.Any());
@@ -56,7 +56,7 @@ namespace AGO.Tasks.Test
 				TestProject,
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
 				new [] { new SortInfo {Property = "Name"} }, //need ordered result for assertion
-				0, 10).ToArray(); 
+				0).ToArray(); 
 
 			Assert.IsNotNull(result);
 			Assert.AreEqual(2, result.Length);

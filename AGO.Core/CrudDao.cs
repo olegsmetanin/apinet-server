@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using NHibernate;
 using NHibernate.Criterion;
@@ -9,44 +8,17 @@ using AGO.Core.Model;
 
 namespace AGO.Core
 {
-	public class CrudDao : AbstractService, ICrudDao, IFilteringDao
+	public class CrudDao : AbstractDao, ICrudDao, IFilteringDao
 	{
-		#region Configuration properties, fields and methods
-
-		private const int DefaultMaxPageSize = 100;
-		protected int _MaxPageSize = DefaultMaxPageSize;
-
-		protected override void DoSetConfigProperty(string key, string value)
-		{
-			if ("MaxPageSize".Equals(key, StringComparison.InvariantCultureIgnoreCase))
-				_MaxPageSize = value.ConvertSafe<int>();
-		}
-
-		protected override string DoGetConfigProperty(string key)
-		{
-			if ("MaxPageSize".Equals(key, StringComparison.InvariantCultureIgnoreCase))
-				return _MaxPageSize.ToString(CultureInfo.InvariantCulture);
-			return null;
-		}
-
-		#endregion
-
 		#region Properties, fields, constructors
 
-		protected ISessionProvider _SessionProvider;
-
 		protected readonly IFilteringService _FilteringService;
-
-		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
 
 		public CrudDao(
 			ISessionProvider sessionProvider,
 			IFilteringService filteringService)
+			: base(sessionProvider)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
-
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
 			_FilteringService = filteringService;
@@ -98,6 +70,63 @@ namespace AGO.Core
 			return model;
 		}
 
+		public IQueryOver<TModel> PagedQuery<TModel>(IQueryOver<TModel> query, int page, int pageSize = 0)
+			where TModel : class, IIdentifiedModel
+		{
+			if (query == null)
+				throw new ArgumentNullException("query");
+
+			if (page < 0)
+				page = 0;
+
+			if (pageSize <= 0)
+				pageSize = _DefaultPageSize;
+			if (pageSize > _MaxPageSize)
+				pageSize = _MaxPageSize;
+
+			return query.Skip(page * pageSize).Take(pageSize);
+		}
+
+		public IEnumerable<TModel> PagedFuture<TModel>(IQueryOver<TModel> query, int page, int pageSize = 0)
+			where TModel : class, IIdentifiedModel
+		{
+			if (query == null)
+				throw new ArgumentNullException("query");
+
+			return PagedQuery(query, page, pageSize).Future();
+		}
+
+		public IList<TModel> PagedList<TModel>(IQueryOver<TModel> query, int page, int pageSize = 0) 
+			where TModel : class, IIdentifiedModel
+		{
+			return PagedFuture(query, page, pageSize).ToList();
+		}
+
+		public IEnumerable<TModel> PagedFuture<TModel>(ICriteria criteria, int page, int pageSize = 0) 
+			where TModel : class, IIdentifiedModel
+		{
+			if (criteria == null)
+				throw new ArgumentNullException("criteria");
+
+			if (page < 0)
+				page = 0;
+
+			if (pageSize <= 0)
+				pageSize = _DefaultPageSize;
+			if (pageSize > _MaxPageSize)
+				pageSize = _MaxPageSize;
+
+			return criteria.SetFirstResult(page * pageSize)
+				.SetMaxResults(pageSize)
+				.Future<TModel>();
+		}
+
+		public IList<TModel> PagedList<TModel>(ICriteria criteria, int page, int pageSize = 0) 
+			where TModel : class, IIdentifiedModel
+		{
+			return PagedFuture<TModel>(criteria, page, pageSize).ToList();
+		}
+
 		public virtual void Store(IIdentifiedModel model)
 		{
 			if (model == null)
@@ -129,15 +158,7 @@ namespace AGO.Core
 			if (filters == null)
 				throw new ArgumentNullException("filters");
 
-			options = options ?? new FilteringOptions();
-
-			var skip = options.Skip ?? 0;
-			var take = options.Take ?? 0;
-
-			if (skip < 0)
-				skip = 0;
-			if (take <= 0 || take > _MaxPageSize)
-				take = _MaxPageSize;
+			options = options ?? new FilteringOptions();	
 
 			var compiled = _FilteringService.CompileFilter(
 				_FilteringService.ConcatFilters(filters), options.ModelType ?? typeof(TModel));
@@ -157,9 +178,7 @@ namespace AGO.Core
 					FetchStrategy.FetchRootReferences ? FetchMode.Join : FetchMode.Lazy);
 			}
 
-			return criteria.SetFirstResult(skip)
-				.SetMaxResults(take)
-				.Future<TModel>();
+			return PagedFuture<TModel>(criteria, options.Page, options.PageSize);
 		}
 
 		public int RowCount<TModel>(
@@ -192,19 +211,10 @@ namespace AGO.Core
 
 		#region Template methods
 
-		protected override void DoFinalizeConfig()
-		{
-			base.DoFinalizeConfig();
-
-			if (_MaxPageSize <= 0)
-				_MaxPageSize = DefaultMaxPageSize;
-		}
-
 		protected override void DoInitialize()
 		{
 			base.DoInitialize();
 
-			_SessionProvider.TryInitialize();
 			_FilteringService.TryInitialize();
 		}
 

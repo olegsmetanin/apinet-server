@@ -37,19 +37,15 @@ namespace AGO.DocManagement.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public object GetDocumentStatuses(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<DocumentStatusModel>(filter),
 				rows = _FilteringDao.List<DocumentStatusModel>(filter, new FilteringOptions
 				{
-					Skip = page * pageSize,
-					Take = pageSize,
+					Page = page,
 					Sorters = sorters
 				})
 			};
@@ -64,19 +60,15 @@ namespace AGO.DocManagement.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public object GetDocumentCategories(
 			[InRange(0, null)] int page,
-			[InRange(0, MaxPageSize)] int pageSize,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			pageSize = pageSize == 0 ? DefaultPageSize : pageSize;
-
 			return new
 			{
 				totalRowsCount = _FilteringDao.RowCount<DocumentCategoryModel>(filter),
 				rows = _FilteringDao.List<DocumentCategoryModel>(filter, new FilteringOptions
 				{
-					Skip = page * pageSize,
-					Take = pageSize,
+					Page = page,
 					Sorters = sorters
 				})
 			};

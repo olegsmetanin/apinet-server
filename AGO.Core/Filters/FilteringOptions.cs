@@ -51,9 +51,9 @@ namespace AGO.Core.Filters
 
 		public virtual IEnumerable<SortInfo> ActualSorters { get { return _Sorters; } }
 
-		public int? Skip { get; set; }
+		public int Page { get; set; }
 
-		public int? Take { get; set; }
+		public int PageSize { get; set; }
 
 		public Type ModelType { get; set; }
 
