@@ -45,6 +45,32 @@ namespace AGO.Core
 			return result;
 		}
 
+		public bool Exists<TModel>(IQueryOver<TModel> query) where TModel : class
+		{
+			//Solution without havy count(*) operation, only
+			//select top (1) 1 from xxx where...
+			//May be more elegant way to write this in nhibernate
+			return query.UnderlyingCriteria
+				.SetProjection(Projections.Constant(1, NHibernateUtil.Int32))
+				.SetMaxResults(1)
+				.List<int>()
+				.Count > 0;
+		}
+
+		public bool Exists<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class
+		{
+			var q = _SessionProvider.CurrentSession.QueryOver<TModel>();
+			q = query(q);
+			return Exists(q);
+		}
+
+		public TModel Find<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class
+		{
+			var q = _SessionProvider.CurrentSession.QueryOver<TModel>();
+			q = query(q);
+			return q.SingleOrDefault();
+		}
+
 		public virtual TModel Refresh<TModel>(TModel model)
 			where TModel : class, IIdentifiedModel
 		{

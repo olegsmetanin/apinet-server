@@ -14,6 +14,12 @@ namespace AGO.Core
 			Type modelType = null)
 			where TModel : class, IIdentifiedModel;
 
+		bool Exists<TModel>(IQueryOver<TModel> query) where TModel : class;
+
+		bool Exists<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class;
+
+		TModel Find<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class;
+
 		void Store(IIdentifiedModel model);
 
 		void Delete(IIdentifiedModel model);
