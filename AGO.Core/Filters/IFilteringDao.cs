@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using AGO.Core.Filters.Metadata;
 using AGO.Core.Model;
 
 namespace AGO.Core.Filters
@@ -12,6 +11,11 @@ namespace AGO.Core.Filters
 		IList<TModel> List<TModel>(
 			IEnumerable<IModelFilterNode> filters,
 			FilteringOptions options = null)
+			where TModel : class, IIdentifiedModel;
+
+		IList<TModel> List<TModel>(
+			IEnumerable<IModelFilterNode> filters,
+			int page, ICollection<SortInfo> sorters)
 			where TModel : class, IIdentifiedModel;
 
 		IEnumerable<TModel> Future<TModel>(

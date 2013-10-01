@@ -151,6 +151,17 @@ namespace AGO.Core
 			return Future<TModel>(filters, options).ToList();
 		}
 
+		public IList<TModel> List<TModel>(IEnumerable<IModelFilterNode> filters, 
+			int page = 0, ICollection<SortInfo> sorters = null) where TModel : class, IIdentifiedModel
+		{
+			var options = new FilteringOptions
+			              	{
+			              		Page = page,
+			              		Sorters = sorters ?? Enumerable.Empty<SortInfo>().ToArray()
+			              	};
+			return List<TModel>(filters, options);
+		}
+
 		public IEnumerable<TModel> Future<TModel>(
 			IEnumerable<IModelFilterNode> filters,
 			FilteringOptions options = null) where TModel : class, IIdentifiedModel
