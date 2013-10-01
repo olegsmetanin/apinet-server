@@ -36,6 +36,36 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
+		private LookupEntry[] taskStatuses;
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupTaskStatuses(string term)
+		{
+			if (taskStatuses == null)
+			{
+				var meta = _SessionProvider.ModelMetadata(typeof(TaskModel));
+				
+				//no need to locking - replace with same value from another thread has no negative effect
+				taskStatuses = Enum.GetValues(typeof(TaskStatus))
+					.OfType<TaskStatus>()
+					.OrderBy(en => (int)en)
+					.Select(s => new LookupEntry
+					{
+						Id = s.ToString(),
+						Text = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, s)
+					})
+					.ToArray();
+			}
+
+			if (term.IsNullOrWhiteSpace())
+				return taskStatuses;
+
+			return taskStatuses
+				.Where(l => l.Text.IndexOf(term, StringComparison.InvariantCultureIgnoreCase) >= 0)
+				.ToArray();
+
+		}
+			
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupTaskTypes(
 			[NotEmpty] string project,
