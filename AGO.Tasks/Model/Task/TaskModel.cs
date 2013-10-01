@@ -151,14 +151,14 @@ namespace AGO.Tasks.Model.Task
 
     	#endregion
 
-		public virtual void ChangeStatus(TaskStatus newStatus, UserModel changer)
+		public virtual TaskStatusHistoryModel ChangeStatus(TaskStatus newStatus, UserModel changer)
 		{
-			StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
+			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
 		}
 
-		public virtual void ChangeCustomStatus(CustomTaskStatusModel newStatus, UserModel changer)
+		public virtual CustomTaskStatusHistoryModel ChangeCustomStatus(CustomTaskStatusModel newStatus, UserModel changer)
 		{
-			StatusChangeHelper.Change(this, newStatus, CustomStatusHistory, changer, m => m.CustomStatus);
+			return StatusChangeHelper.Change(this, newStatus, CustomStatusHistory, changer, m => m.CustomStatus);
 		}
     }
 }
