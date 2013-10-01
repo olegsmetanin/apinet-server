@@ -94,6 +94,21 @@ namespace AGO.Home
 			};
 			CurrentSession.Save(project1);
 
+			/*for (var i = 0; i < 150; i++)
+			{
+				var tempProject = new ProjectModel
+				{
+					Creator = admin,
+					ProjectCode = "tempProject_" + i,
+					Name = "Временный проект " + i,
+					Description = "Описание временного проекта " + i,
+					Type = docStoreType,
+					Status = inWorkStatus,
+
+				};
+				CurrentSession.Save(tempProject);
+			}*/
+
 			var historyEntry1 = new ProjectStatusHistoryModel
 			{
 				Creator = admin,

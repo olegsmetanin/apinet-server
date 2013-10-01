@@ -52,29 +52,39 @@ namespace AGO.Core.Application
 					ALTER DATABASE [{0}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 					DROP DATABASE [{0}]
 				END
-				GO", databaseName), masterConnection);
+				GO
 
-			ExecuteNonQuery(string.Format(@"
 				declare @Path nvarchar(500)
 				set @Path = (select physical_name from sys.master_files WHERE name = 'master' AND type_desc ='ROWS')
 				set @Path = (select SUBSTRING(@Path, 1, CHARINDEX('master.mdf', LOWER(@Path)) - 1))
-
-				EXEC('CREATE DATABASE [{0}] ON  PRIMARY 
+				EXEC('CREATE DATABASE [{0}] ON PRIMARY 
 				( NAME = N''{0}'', FILENAME = N''' + @Path + '{0}.mdf'', SIZE = 3072KB , MAXSIZE = UNLIMITED, FILEGROWTH = 1024KB )
 					LOG ON 
 				( NAME = N''{0}_log'', FILENAME = N''' + @Path + '{0}_log.ldf'', SIZE = 1024KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)')
 				GO
-				if not exists(select 1 from sys.sql_logins where name = N'{1}')
-					create login [{1}]
-					with password=N'{2}', default_database=[master], check_expiration=off, check_policy=off
+
+				if not exists(select 1 from sys.sql_logins where name = N'{1}') begin
+					BEGIN TRY
+						create login [{1}]
+						with password=N'{2}', default_database=[master], check_expiration=off, check_policy=off
+						alter login [{1}] enable
+					END TRY
+					BEGIN CATCH
+					END CATCH
+				end
 				go
-				alter login [{1}] enable
-				go
+
 				use [{0}]
 				go
-				create user [{1}] for login [{1}] with default_schema=[dbo]
-				go
-				exec sp_addrolemember N'db_owner', N'{1}'
+
+				if not exists(select 1 from sys.database_principals where name = N'{1}') begin
+					BEGIN TRY
+						create user [{1}] for login [{1}] with default_schema=[dbo]
+						exec sp_addrolemember N'db_owner', N'{1}'
+					END TRY
+					BEGIN CATCH
+					END CATCH
+				end			
 				go", databaseName, loginName, loginPwd), masterConnection);
 		}
 

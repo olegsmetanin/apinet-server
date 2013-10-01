@@ -1,7 +1,7 @@
 ﻿using System;
-using AGO.Core.Application;
 using AGO.Core.Filters;
 using AGO.Core.Model.Example;
+using AGO.Core.Application;
 using NUnit.Framework;
 
 namespace AGO.Core.Tests

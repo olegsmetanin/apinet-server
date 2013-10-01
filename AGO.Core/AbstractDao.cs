@@ -10,7 +10,7 @@ namespace AGO.Core
 
 		private const int MaxPageSize = 100;
 
-		private const int DefaultPageSize = 10;
+		private const int DefaultPageSize = 20;
 
 		#endregion
 
@@ -64,8 +64,6 @@ namespace AGO.Core
 				_MaxPageSize = MaxPageSize;
 			if (_DefaultPageSize <= 0)
 				_DefaultPageSize = DefaultPageSize;
-			if (_DefaultPageSize < _MaxPageSize)
-				_DefaultPageSize = _MaxPageSize;
 		}
 
 		protected override void DoInitialize()
