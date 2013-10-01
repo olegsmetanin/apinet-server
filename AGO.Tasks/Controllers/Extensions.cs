@@ -15,7 +15,7 @@ namespace AGO.Tasks.Controllers
 			var name = property.PropertyInfoFromExpression().Name;
 			var prop = meta.PrimitiveProperties.FirstOrDefault(p => p.Name == name);
 			if (prop == null)
-				throw new ArgumentException("Invalid property for retriev enum display value", "property");
+				throw new ArgumentException("Invalid property for retrive enum display value", "property");
 
 			return prop.PossibleValues[value.ToString()];
 		}
