@@ -23,7 +23,7 @@ namespace AGO.Tasks.Controllers
     /// <summary>
     /// Контроллер работы с задачами модуля задач
     /// </summary>
-    public class TasksController: AbstractController
+    public class TasksController: AbstractTasksController
     {
         public TasksController(
             IJsonService jsonService, 
@@ -44,17 +44,8 @@ namespace AGO.Tasks.Controllers
 			string term,
 			[InRange(0, null)] int page)
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<TaskModel>()
-				.Where(m => m.ProjectCode == project)
-				.OrderBy(m => m.InternalSeqNumber).Asc.
-				ThenBy(m => m.SeqNumber).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.SeqNumber).IsLike(term, MatchMode.Anywhere);
-
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.SeqNumber).ToArray();
+			return Lookup<TaskModel>(project, term, page, m => m.SeqNumber, null, m => m.InternalSeqNumber, m => m.SeqNumber);
 		}
-
-
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<TaskListItemDTO> GetTasks(
@@ -75,97 +66,78 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public TaskViewDTO GetTask([NotEmpty] string project, [NotEmpty] string numpp)
 		{
-			var task = _SessionProvider.CurrentSession.QueryOver<TaskModel>()
-				.Where(m => m.ProjectCode == project && m.SeqNumber == numpp)
-				.SingleOrDefault();
+			var task = _CrudDao.Find<TaskModel>(q => q.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
 			
 			if (task == null)
 				throw new NoSuchEntityException();
 
-			var adapter = new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), _SessionProvider.CurrentSession);
+			var adapter = new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), Session);
 			return adapter.Fill(task);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult CreateTask([NotEmpty] string project, [NotNull] CreateTaskDTO model)
 		{
-			if (_SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-				.Where(m => m.ProjectCode == project).RowCount() <= 0)
+			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
 
-			var vr = new ValidationResult();
-			try
-			{
-				if (model.TaskType == default(Guid))
-					vr.AddFieldErrors("TaskType", "Не задан тип задачи");
-				if (model.Executors == null || model.Executors.Length <= 0)
-					vr.AddFieldErrors("Executors", "Не заданы исполнители");
-				if (!vr.Success)
-					return vr;
-
-				//FIXME: это надо переделать на sequence или свой аналог
-				var predicate = _FilteringService.Filter<TaskModel>().WhereProperty(m => m.ProjectCode).Eq(project);
-				var num = _FilteringService.CompileFilter(predicate, typeof (TaskModel))
-				          	.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
-				          	.GetExecutableCriteria(_SessionProvider.CurrentSession)
-				          	.UniqueResult<long?>().GetValueOrDefault(0) + 1;
-
-				var currentUser = _AuthController.CurrentUser();
-	
-				var task = new TaskModel
-				           	{
-				           		Creator = currentUser,
-				           		ProjectCode = project,
-								InternalSeqNumber = num,
-								SeqNumber = "t0-" + num,
-				           		TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskType),
-								DueDate = model.DueDate,
-				           		Content = model.Content,
-								Priority = model.Priority
-				           	};
-				task.ChangeStatus(TaskStatus.NotStarted, currentUser);
-
-				if (model.CustomStatus.HasValue)
-				{
-					var cs = _CrudDao.Get<CustomTaskStatusModel>(model.CustomStatus.Value);
-					task.ChangeCustomStatus(cs, _AuthController.CurrentUser());
-				}
-
-				foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
-				{
-					var participant = _CrudDao.Get<ProjectParticipantModel>(id);
-					if (participant == null)
+			return Edit<TaskModel>(default(Guid), project,
+				(task, vr) =>
 					{
-						vr.AddFieldErrors("Executors", "Участник проекта по заданному идентификатору не найден");
-						continue;
-					}
-					//TODO это лучше бы делать через _CrudDao.Get<>(project, id), а не так проверять
-					if (participant.Project.ProjectCode != task.ProjectCode)
-					{
-						vr.AddFieldErrors("Executors", "Не учавствует в проекте задачи");
-						continue;
-					}
+						if (model.TaskType == default(Guid))
+							vr.AddFieldErrors("TaskType", "Не задан тип задачи");
+						if (model.Executors == null || model.Executors.Length <= 0)
+							vr.AddFieldErrors("Executors", "Не заданы исполнители");
+						if (!vr.Success)
+							return;
 
-					var executor = new TaskExecutorModel
-					               	{
-					               		Creator = currentUser,
-					               		Task = task,
-					               		Executor = participant
-					               	};
-					task.Executors.Add(executor);
-				}
+			            //FIXME: это надо переделать на sequence или свой аналог
+						var num = Session.QueryOver<TaskModel>()
+							.Where(m => m.ProjectCode == project)
+							.UnderlyingCriteria
+							.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
+							.UniqueResult<long?>().GetValueOrDefault(0) + 1;
 
-				_ModelProcessingService.ValidateModelSaving(task, vr);
-				if (!vr.Success)
-					return vr;
+			            task.InternalSeqNumber = num;
+			            task.SeqNumber = "t0-" + num;
+			            task.TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskType);
+			            task.DueDate = model.DueDate;
+			            task.Content = model.Content;
+			            task.Priority = model.Priority;
 
-				_CrudDao.Store(task);
-			} 
-			catch(Exception ex)
-			{
-				vr.AddErrors(_LocalizationService.MessageForException(ex));
-			}
-			return vr;
+			            task.ChangeStatus(TaskStatus.NotStarted, task.Creator);
+
+			            if (model.CustomStatus.HasValue)
+			            {
+			                var cs = _CrudDao.Get<CustomTaskStatusModel>(model.CustomStatus.Value);
+			                task.ChangeCustomStatus(cs, task.Creator);
+			            }
+
+			            foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
+			            {
+			                var participant = _CrudDao.Get<ProjectParticipantModel>(id);
+			                if (participant == null)
+			                {
+			                    vr.AddFieldErrors("Executors", "Участник проекта по заданному идентификатору не найден");
+			                    continue;
+			                }
+			                //TODO это лучше бы делать через _CrudDao.Get<>(project, id), а не так проверять
+			                if (participant.Project.ProjectCode != task.ProjectCode)
+			                {
+			                    vr.AddFieldErrors("Executors", "Не учавствует в проекте задачи");
+			                    continue;
+			                }
+
+			                var executor = new TaskExecutorModel
+			                       			{
+			                       			    Creator = task.Creator,
+			                       			    Task = task,
+			                       			    Executor = participant
+			                       			};
+			                task.Executors.Add(executor);
+			            }
+
+			        });
 		}
 
 		private void InternalDeleteTask(Guid id)

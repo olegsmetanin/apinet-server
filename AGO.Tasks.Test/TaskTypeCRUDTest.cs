@@ -34,6 +34,18 @@ namespace AGO.Tasks.Test
 		}
 
 		[Test]
+		public void LookupTaskTypesWithoutTermReturnAll()
+		{
+			M.TaskType("tt1");
+			M.TaskType("tt2");
+			_SessionProvider.FlushCurrentSession();
+
+			var result = Controller.LookupTaskTypes(TestProject, null, 0).ToArray();
+
+			Assert.AreEqual(2, result.Length);
+		}
+
+		[Test]
 		public void ReadTaskTypesFromEmptyReturnEmptyData()
 		{
 			var result = Controller.GetTaskTypes(TestProject, 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -13,15 +14,14 @@ using AGO.Core.Modules.Attributes;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using System.Linq;
-using NHibernate.Criterion;
+
 
 namespace AGO.Tasks.Controllers
 {
-    /// <summary>
+	/// <summary>
     /// Контроллер справочников модуля задач
     /// </summary>
-    public class DictionaryController: AbstractController
+    public class DictionaryController: AbstractTasksController
     {
         public DictionaryController(
             IJsonService jsonService, 
@@ -42,13 +42,7 @@ namespace AGO.Tasks.Controllers
 			string term,
 			[InRange(0, null)] int page)
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
-				.Where(m => m.ProjectCode == project)
-				.OrderBy(m => m.Name).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name).ToArray();
+			return Lookup<TaskTypeModel>(project, term, page, m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -62,12 +56,7 @@ namespace AGO.Tasks.Controllers
 			var predicate = filter.Concat(new[] {projectPredicate}).ToArray();
 			var adapter = new TaskTypeAdapter();
 
-			return _FilteringDao.List<TaskTypeModel>(predicate, 
-				new FilteringOptions
-					{
-						Page = page,
-						Sorters = sorters
-					})
+			return _FilteringDao.List<TaskTypeModel>(predicate, page, sorters)
 				.Select(adapter.Fill)
 				.ToArray();
 		}
@@ -75,35 +64,14 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult EditTaskType([NotEmpty] string project, [NotNull] TaskTypeDTO model)
 		{
-			var validation = new ValidationResult();
-
-			try
-			{
-				var persistentModel = default(Guid).Equals(model.Id)
-					? new TaskTypeModel { ProjectCode = project, Creator = _AuthController.CurrentUser() }
-					: _CrudDao.Get<TaskTypeModel>(model.Id, true);
-				persistentModel.Name = model.Name.TrimSafe();
-
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
-				if (!validation.Success)
-					return validation;
-
-				_CrudDao.Store(persistentModel);
-			}
-			catch (Exception e)
-			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
-			}
-
-			return validation;
+			return Edit<TaskTypeModel>(model.Id, project, (taskType, vr) => { taskType.Name = model.Name.TrimSafe(); });
 		}
 
     	private void InternalDeleteTaskType(Guid id)
     	{
     		var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
 
-    		if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
-    		    	.Where(m => m.TaskType == taskType).RowCount() > 0)
+    		if (_CrudDao.Exists<TaskModel>(q => q.Where(m => m.TaskType == taskType)))
     			throw new CannotDeleteReferencedItemException();
 
     		_CrudDao.Delete(taskType);
@@ -167,14 +135,8 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] string project, 
 			string term, 
 			[InRange(0, null)] int page)
-    	{
-			var query = _SessionProvider.CurrentSession.QueryOver<CustomTaskStatusModel>()
-				.Where(m => m.ProjectCode == project)
-				.OrderBy(m => m.Name).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name).ToArray();
+		{
+			return Lookup<CustomTaskStatusModel>(project, term, page, m => m.Name);
     	}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -197,40 +159,22 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult EditCustomStatus([NotEmpty] string project, [NotNull] CustomStatusDTO model)
 		{
-			var validation = new ValidationResult();
-
-			try
-			{
-				var persistentModel = default(Guid).Equals(model.Id)
-					? new CustomTaskStatusModel { ProjectCode = project, Creator = _AuthController.CurrentUser() }
-					: _CrudDao.Get<CustomTaskStatusModel>(model.Id, true);
-				persistentModel.Name = model.Name.TrimSafe();
-				persistentModel.ViewOrder = model.ViewOrder;
-
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
-				if (!validation.Success)
-					return validation;
-
-				_CrudDao.Store(persistentModel);
-			}
-			catch (Exception e)
-			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
-			}
-
-			return validation;
+			return Edit<CustomTaskStatusModel>(model.Id, project, 
+				(status, vr) => 
+					{
+						status.Name = model.Name.TrimSafe();
+						status.ViewOrder = model.ViewOrder;
+					});
 		}
 
 		private void InternalDeleteCustomStatus(Guid id)
 		{
 			var status = _CrudDao.Get<CustomTaskStatusModel>(id, true);
 
-			if (_SessionProvider.CurrentSession.QueryOver<TaskModel>()
-					.Where(m => m.CustomStatus == status).RowCount() > 0)
+			if (_CrudDao.Exists<TaskModel>(q => q.Where(m => m.CustomStatus == status)))
 				throw new CannotDeleteReferencedItemException();
 
-			if (_SessionProvider.CurrentSession.QueryOver<CustomTaskStatusHistoryModel>()
-					.Where(m => m.Status == status).RowCount() > 0)
+			if (_CrudDao.Exists<CustomTaskStatusHistoryModel>(q => q.Where(m => m.Status == status)))
 				throw new CannotDeleteReferencedItemException();
 
 			_CrudDao.Delete(status);
@@ -251,16 +195,15 @@ namespace AGO.Tasks.Controllers
 			if (replacementStatusId.HasValue && ids.Contains(replacementStatusId.Value))
 				throw new InvalidOperationException(string.Format("Can't replace with custom status, that will be deleted too"));
 
-			var s = _SessionProvider.CurrentSession;
-			var trn = s.BeginTransaction();
+			var trn = Session.BeginTransaction();
 			try
 			{
 				const string hqlTaskUpdate =
 					"update versioned TaskModel set CustomStatusId = :newStatusId where ProjectCode = :project and CustomStatusId = :oldStatusId";
 				const string hqlHistoryUpdate =
 					"update versioned CustomTaskStatusHistoryModel set StatusId = :newStatusId where StatusId = :oldStatusId";
-				var taskUpdateQuery = s.CreateQuery(hqlTaskUpdate);
-				var historyUpdateQuery = s.CreateQuery(hqlHistoryUpdate);
+				var taskUpdateQuery = Session.CreateQuery(hqlTaskUpdate);
+				var historyUpdateQuery = Session.CreateQuery(hqlHistoryUpdate);
 
 				foreach (var id in ids)
 				{
