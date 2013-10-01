@@ -10,7 +10,6 @@ using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
-using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Home;
 using AGO.Home.Model.Projects;
@@ -55,84 +54,7 @@ namespace AGO.Tasks.Controllers
 			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.SeqNumber).ToArray();
 		}
 
-		private static BaseTaskDTO.Executor ToExecutor(TaskExecutorModel executor)
-		{
-			var u = executor.Executor.User;
-			return new BaseTaskDTO.Executor
-			{
-			    Name = u.FIO,
-			    Description = u.FullName + (u.Departments.Count > 0
-			       		? " (" + string.Join("; ", u.Departments.Select(d => d.FullName)) + ")"
-			       		: string.Empty)
-			};
-		}
 
-		private static CustomParameterDTO ParamToDTO(TaskCustomPropertyModel param)
-		{
-			return new CustomParameterDTO
-			       	{
-			       		Id = param.Id,
-			       		TypeName = param.PropertyType.FullName,
-			       		ValueType = param.PropertyType.ValueType,
-			       		Value = param.Value.ConvertSafe<string>(),
-			       		ModelVersion = param.ModelVersion
-			       	};
-		}
-
-		private static StatusHistoryDTO StatusHistoryToDTO(TaskModel task, IModelMetadata meta)
-		{
-			return new StatusHistoryDTO
-			       	{
-			       		Current = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, task.Status),
-			       		History = task.StatusHistory
-			       			.OrderBy(h => h.Start)
-			       			.Select(h => new StatusHistoryDTO.StatusHistoryItemDTO
-			       			             	{
-			       			             		Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, h.Status),
-			       			             		Start = h.Start,
-			       			             		Finish = h.Finish,
-			       			             		Author = (h.Creator != null ? h.Creator.FIO : null)
-			       			             	})
-			       			.ToArray(),
-			       		Next = Enum.GetValues(typeof (TaskStatus)) //TODO это должно браться из workflow
-			       			.OfType<TaskStatus>()
-							.Where(en => en != task.Status)
-							.OrderBy(en => (int)en)
-			       			.Select(s => new LookupEntry
-			       			             	{
-			       			             		Id = s.ToString(),
-			       			             		Text = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, s)
-			       			             	})
-			       			.ToArray()
-			       	};
-		}
-
-		private StatusHistoryDTO CustomStatusHistoryToDTO(TaskModel task)
-		{
-
-			var query = _SessionProvider.CurrentSession.QueryOver<CustomTaskStatusModel>()
-				.Where(m => m.ProjectCode == task.ProjectCode);
-			if (task.CustomStatus != null)
-				query = query.Where(m => m.Id != task.CustomStatus.Id);
-
-			query = query.OrderBy(m => m.ViewOrder).Asc.ThenBy(m => m.Name).Asc;
-
-			return new StatusHistoryDTO
-			{
-				Current = (task.CustomStatus != null ? task.CustomStatus.Name : null),
-				History = task.CustomStatusHistory
-					.OrderBy(h => h.Start)
-					.Select(h => new StatusHistoryDTO.StatusHistoryItemDTO
-					{
-						Status = h.Status.Name,
-						Start = h.Start,
-						Finish = h.Finish,
-						Author = (h.Creator != null ? h.Creator.FIO : null)
-					})
-					.ToArray(),
-				Next = query.List<CustomTaskStatusModel>().Select(s => new LookupEntry { Id = s.Id.ToString(), Text = s.Name}).ToArray()
-			};
-		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<TaskListItemDTO> GetTasks(
@@ -143,26 +65,10 @@ namespace AGO.Tasks.Controllers
 		{
 			var projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
-			var meta = _SessionProvider.ModelMetadata(typeof(TaskModel));
+			var adapter = new TaskListItemAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)));
 
-			return _FilteringDao.List<TaskModel>(predicate,
-				new FilteringOptions
-					{
-						Page = page,
-						Sorters = sorters
-					})
-				.Select(m => new TaskListItemDTO
-				{
-					Id = m.Id,
-					SeqNumber = m.SeqNumber,
-					TaskType = (m.TaskType != null ? m.TaskType.Name : string.Empty),
-					Content = m.Content,
-					Executors = m.Executors.Select(ToExecutor).ToArray(),
-					DueDate = m.DueDate,
-					Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, m.Status),
-					CustomStatus = (m.CustomStatus != null ? m.CustomStatus.Name : string.Empty),
-					ModelVersion = m.ModelVersion
-				})
+			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
+				.Select(adapter.Fill)
 				.ToArray();
 		}
 
@@ -176,25 +82,8 @@ namespace AGO.Tasks.Controllers
 			if (task == null)
 				throw new NoSuchEntityException();
 
-			var meta = _SessionProvider.ModelMetadata(typeof(TaskModel));
-			return new TaskViewDTO
-			       	{
-			       		Id = task.Id,
-			       		SeqNumber = task.SeqNumber,
-			       		TaskType = (task.TaskType != null ? task.TaskType.Name : string.Empty),
-			       		Content = task.Content,
-			       		Executors = task.Executors.OrderBy(e => e.Executor.User.FullName).Select(ToExecutor).ToArray(),
-			       		DueDate = task.DueDate,
-			       		Status = meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, task.Status),
-			       		CustomStatus = (task.CustomStatus != null ? task.CustomStatus.Name : string.Empty),
-						Priority = meta.EnumDisplayValue<TaskModel, TaskPriority>(mm => mm.Priority, task.Priority),
-						StatusHistory = StatusHistoryToDTO(task, meta),
-						CustomStatusHistory = CustomStatusHistoryToDTO(task),
-						Parameters = task.CustomProperties.OrderBy(p => p.PropertyType.FullName).Select(ParamToDTO).ToArray(),
-			       		ModelVersion = task.ModelVersion,
-						Author = (task.Creator != null ? task.Creator.FIO : null),
-						CreationTime = task.CreationTime
-			       	};
+			var adapter = new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), _SessionProvider.CurrentSession);
+			return adapter.Fill(task);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -214,18 +103,15 @@ namespace AGO.Tasks.Controllers
 				if (!vr.Success)
 					return vr;
 
-				//FIXME: replace when authController will work without http context
-				var currentUser = _SessionProvider.CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "admin@agosystems.com").SingleOrDefault();
-					// _AuthController.CurrentUser();
-
 				//FIXME: это надо переделать на sequence или свой аналог
 				var predicate = _FilteringService.Filter<TaskModel>().WhereProperty(m => m.ProjectCode).Eq(project);
 				var num = _FilteringService.CompileFilter(predicate, typeof (TaskModel))
 				          	.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
 				          	.GetExecutableCriteria(_SessionProvider.CurrentSession)
 				          	.UniqueResult<long?>().GetValueOrDefault(0) + 1;
-					
+
+				var currentUser = _AuthController.CurrentUser();
+	
 				var task = new TaskModel
 				           	{
 				           		Creator = currentUser,
@@ -237,19 +123,12 @@ namespace AGO.Tasks.Controllers
 				           		Content = model.Content,
 								Priority = model.Priority
 				           	};
+				task.ChangeStatus(TaskStatus.NotStarted, currentUser);
 
 				if (model.CustomStatus.HasValue)
 				{
 					var cs = _CrudDao.Get<CustomTaskStatusModel>(model.CustomStatus.Value);
 					task.ChangeCustomStatus(cs, _AuthController.CurrentUser());
-					var history = new CustomTaskStatusHistoryModel
-					              	{
-					              		Creator = currentUser,
-					              		Task = task,
-					              		Status = cs,
-					              		Start = DateTime.Now
-					              	};
-					task.CustomStatusHistory.Add(history);
 				}
 
 				foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())

@@ -68,8 +68,11 @@
     <Compile Include="Controllers\DTO\CreateTaskDTO.cs" />
     <Compile Include="Controllers\DTO\CustomParameterDTO.cs" />
     <Compile Include="Controllers\DTO\CustomStatusDTO.cs" />
+    <Compile Include="Controllers\DTO\DictionaryAdapters.cs" />
+    <Compile Include="Controllers\DTO\ModelAdapter.cs" />
     <Compile Include="Controllers\DTO\ModelDTO.cs" />
     <Compile Include="Controllers\DTO\StatusHistoryDTO.cs" />
+    <Compile Include="Controllers\DTO\TaskAdapter.cs" />
     <Compile Include="Controllers\DTO\TaskDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
     <Compile Include="Controllers\Extensions.cs" />

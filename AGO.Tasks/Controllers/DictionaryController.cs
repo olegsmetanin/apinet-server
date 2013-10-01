@@ -60,6 +60,7 @@ namespace AGO.Tasks.Controllers
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] {projectPredicate}).ToArray();
+			var adapter = new TaskTypeAdapter();
 
 			return _FilteringDao.List<TaskTypeModel>(predicate, 
 				new FilteringOptions
@@ -67,14 +68,7 @@ namespace AGO.Tasks.Controllers
 						Page = page,
 						Sorters = sorters
 					})
-				.Select(m => new TaskTypeDTO
-				{
-					Id = m.Id,
-					Name = m.Name,
-					Author = (m.Creator != null ? m.Creator.FIO : string.Empty),
-					CreationTime = m.CreationTime,
-					ModelVersion = m.ModelVersion
-				})
+				.Select(adapter.Fill)
 				.ToArray();
 		}
 
@@ -192,22 +186,11 @@ namespace AGO.Tasks.Controllers
     	{
 			var projectPredicate = _FilteringService.Filter<CustomTaskStatusModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+			var adapter = new CustomStatusAdapter();
 
-			return _FilteringDao.List<CustomTaskStatusModel>(predicate,
-				new FilteringOptions
-					{
-						Page = page,
-						Sorters = sorters
-					})
-				.Select(m => new CustomStatusDTO
-				{
-					Id = m.Id,
-					Name = m.Name,
-					ViewOrder = m.ViewOrder,
-					Author = (m.Creator != null ? m.Creator.FIO : string.Empty),
-					CreationTime = m.CreationTime,
-					ModelVersion = m.ModelVersion
-				})
+			return _FilteringDao
+				.List<CustomTaskStatusModel>(predicate, page, sorters)
+				.Select(adapter.Fill)
 				.ToArray();
     	}
 
