@@ -10,12 +10,9 @@ using Newtonsoft.Json;
 namespace AGO.Core.Model.Dictionary
 {
 	[TablePerSubclass("ModelType")]
-	public class TagModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
+	public class TagModel : SecureProjectBoundModel<Guid>, IHierarchicalDictionaryItemModel
 	{
 		#region Persistent
-
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32)]
-		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), JsonProperty, NotLonger(128), NotEmpty]
 		public virtual string Name { get; set; }

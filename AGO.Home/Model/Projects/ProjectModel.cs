@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using AGO.Core.Model;
 using AGO.Core.Model.Security;
 using AGO.Home.Model.Dictionary.Projects;
 using AGO.Core.Attributes.Constraints;
@@ -10,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace AGO.Home.Model.Projects
 {
-	public class ProjectModel : SecureModel<Guid>
+	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel
 	{
 		public const int PROJECT_CODE_SIZE = 32;
 

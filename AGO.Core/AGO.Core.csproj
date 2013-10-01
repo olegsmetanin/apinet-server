@@ -98,10 +98,12 @@
     <Compile Include="ITestDataPopulationService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
+    <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
+    <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />

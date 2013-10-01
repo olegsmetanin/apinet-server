@@ -7,12 +7,9 @@ using Newtonsoft.Json;
 
 namespace AGO.DocManagement.Model.Dictionary.Documents
 {
-	public class DocumentStatusModel : SecureModel<Guid>, IDictionaryItemModel
+	public class DocumentStatusModel : SecureProjectBoundModel<Guid>, IDictionaryItemModel
 	{
 		#region Persistent
-
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32)]
-		public virtual string ProjectCode { get; set; }
 
 		[DisplayName("Наименование"), NotEmpty, NotLonger(64), JsonProperty]
 		public virtual string Name { get; set; }

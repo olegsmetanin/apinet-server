@@ -3,7 +3,6 @@ using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Projects;
 using Newtonsoft.Json;
 
 namespace AGO.Tasks.Model.Dictionary
@@ -11,14 +10,8 @@ namespace AGO.Tasks.Model.Dictionary
 	/// <summary>
 	/// Пользовательский (произвольный) статус задачи, не ограниченный рамками workflow
 	/// </summary>
-	public class CustomTaskStatusModel: SecureModel<Guid>, IDictionaryItemModel
+	public class CustomTaskStatusModel: SecureProjectBoundModel<Guid>, IDictionaryItemModel
 	{
-		/// <summary>
-		/// Код проекта
-		/// </summary>
-		[DisplayName("Код проекта"), JsonProperty, NotEmpty, NotLonger(ProjectModel.PROJECT_CODE_SIZE)]
-		public virtual string ProjectCode { get; set; }
-
 		/// <summary>
 		/// Наименование
 		/// </summary>

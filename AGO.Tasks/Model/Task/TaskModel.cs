@@ -5,7 +5,6 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using Newtonsoft.Json;
 
@@ -14,15 +13,9 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Задача - основная запись основного реестра модуля
     /// </summary>
-    public class TaskModel: SecureModel<Guid>
+    public class TaskModel: SecureProjectBoundModel<Guid>
     {
         #region Persistent
-
-		/// <summary>
-		/// Код проекта, к которому относится задача
-		/// </summary>
-		[DisplayName("Код проекта"), JsonProperty, NotEmpty, NotLonger(ProjectModel.PROJECT_CODE_SIZE)]
-		public virtual string ProjectCode { get; set; }
 
         /// <summary>
         /// Номер п/п задачи
