@@ -69,6 +69,45 @@ namespace AGO.Tasks.Controllers.DTO
 		}
 	}
 
+	public class TaskListItemDetailsAdapter
+	{
+		private readonly IModelMetadata meta;
+
+		public TaskListItemDetailsAdapter(IModelMetadata meta)
+		{
+			if (meta == null)
+				throw new ArgumentNullException("meta");
+			this.meta = meta;
+		}
+
+		private TaskListItemDetailsDTO.Agreement ToAgreement(TaskAgreementModel agreement)
+		{
+			return new TaskListItemDetailsDTO.Agreement
+			       	{
+			       		Agreemer = agreement.Agreemer.User.FIO,
+			       		Done = agreement.Done
+			       	};
+		}
+
+		public TaskListItemDetailsDTO Fill(TaskModel task)
+		{
+			return new TaskListItemDetailsDTO
+			       	{
+			       		Priority = meta.EnumDisplayValue<TaskModel, TaskPriority>(m => m.Priority, task.Priority),
+			       		Content = task.Content,
+			       		Note = task.Note,
+			       		Agreements = task.Agreements
+							.Select(ToAgreement)
+							.Concat(new [] 
+								{
+									new TaskListItemDetailsDTO.Agreement { Agreemer = "Пупкин В.В.", Done = true},
+									new TaskListItemDetailsDTO.Agreement { Agreemer = "Вовкин П.П."}
+								}).ToArray(),
+			       		Files = new[] {"Договор.docx", "Смета.xlsx", "Летчик.jpg"}
+			       	};
+		}
+	}
+
 	/// <summary>
 	/// Адаптер моделей задач для формы сводной информации
 	/// </summary>

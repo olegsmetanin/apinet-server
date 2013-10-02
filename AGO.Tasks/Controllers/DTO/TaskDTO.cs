@@ -31,6 +31,26 @@ namespace AGO.Tasks.Controllers.DTO
 	{
 	}
 
+	public class TaskListItemDetailsDTO
+	{
+		public string Priority { get; set; }
+
+		public string Content { get; set; }
+
+		public string Note { get; set; }
+
+		public IEnumerable<Agreement> Agreements { get; set; }
+
+		public IEnumerable<string> Files { get; set; }
+
+		public class Agreement
+		{
+			public string Agreemer { get; set; }
+
+			public bool Done{ get; set; }
+		}
+	}
+
 	public class TaskViewDTO: BaseTaskDTO
 	{
 		public string Priority { get; set; }

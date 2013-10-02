@@ -105,6 +105,33 @@ namespace AGO.Tasks.Test
 			controller.GetTask("not existing project", "t0-1");
 		}
 
+		[Test]
+		public void GetTaskDetailsByNumberReturnModel()
+		{
+			var task = M.Task(1, content: "some content");
+			_SessionProvider.FlushCurrentSession();
+
+			var result = controller.GetTaskDetails(TestProject, "t0-1");
+
+			Assert.IsNotNull(result);
+			Assert.AreEqual(task.Content, result.Content);
+		}
+
+		[Test, ExpectedException(typeof(NoSuchEntityException))]
+		public void GetTaskdetailsByInvalidNumberThrow()
+		{
+			controller.GetTaskDetails(TestProject, "not existing number");
+		}
+
+		[Test, ExpectedException(typeof(NoSuchEntityException))]
+		public void GetTaskDetailsByInvalidProjectThrow()
+		{
+			M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			controller.GetTaskDetails("not existing project", "t0-1");
+		}
+
 		[Test, ExpectedException(typeof(NoSuchProjectException))]
 		public void CreateTaskWithoutProjectThrow()
 		{

@@ -64,6 +64,18 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public TaskListItemDetailsDTO GetTaskDetails([NotEmpty] string project, [NotEmpty] string numpp)
+		{
+			var task = _CrudDao.Find<TaskModel>(q => q.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
+
+			if (task == null)
+				throw new NoSuchEntityException();
+
+			var adapter = new TaskListItemDetailsAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)));
+			return adapter.Fill(task);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public TaskViewDTO GetTask([NotEmpty] string project, [NotEmpty] string numpp)
 		{
 			var task = _CrudDao.Find<TaskModel>(q => q.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
