@@ -26,10 +26,10 @@ namespace AGO.Tasks.Controllers.DTO
 			Meta = meta;
 		}
 
-		protected static BaseTaskDTO.Executor ToExecutor(TaskExecutorModel executor)
+		protected static Executor ToExecutor(TaskExecutorModel executor)
 		{
 			var u = executor.Executor.User;
-			return new BaseTaskDTO.Executor
+			return new Executor
 			       	{
 			       		Name = u.FIO,
 			       		Description = u.FullName + (u.Departments.Count > 0
@@ -80,9 +80,9 @@ namespace AGO.Tasks.Controllers.DTO
 			this.meta = meta;
 		}
 
-		private TaskListItemDetailsDTO.Agreement ToAgreement(TaskAgreementModel agreement)
+		private AgreementView ToAgreement(TaskAgreementModel agreement)
 		{
-			return new TaskListItemDetailsDTO.Agreement
+			return new AgreementView
 			       	{
 			       		Agreemer = agreement.Agreemer.User.FIO,
 			       		Done = agreement.Done
@@ -100,8 +100,8 @@ namespace AGO.Tasks.Controllers.DTO
 							.Select(ToAgreement)
 							.Concat(new [] 
 								{
-									new TaskListItemDetailsDTO.Agreement { Agreemer = "Пупкин В.В.", Done = true},
-									new TaskListItemDetailsDTO.Agreement { Agreemer = "Вовкин П.П."}
+									new AgreementView { Agreemer = "Пупкин В.В.", Done = true},
+									new AgreementView { Agreemer = "Вовкин П.П."}
 								}).ToArray(),
 			       		Files = new[] {"Договор.docx", "Смета.xlsx", "Летчик.jpg"}
 			       	};
@@ -193,11 +193,23 @@ namespace AGO.Tasks.Controllers.DTO
 			};
 		}
 
+		private Agreement ToAgreement(TaskAgreementModel agreement)
+		{
+			return new Agreement
+			{
+				Agreemer = agreement.Agreemer.User.FIO,
+				Done = agreement.Done,
+				AgreedAt = agreement.AgreedAt,
+				Comment = agreement.Comment
+			};
+		}
+
 		public override TaskViewDTO Fill(TaskModel model)
 		{
 			var dto = base.Fill(model);
 
 			dto.Priority = Meta.EnumDisplayValue<TaskModel, TaskPriority>(mm => mm.Priority, model.Priority);
+			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
 			dto.CustomStatusHistory = CustomStatusHistoryToDTO(model);
 			dto.Parameters = model.CustomProperties.OrderBy(p => p.PropertyType.FullName).Select(ParamToDTO).ToArray();
