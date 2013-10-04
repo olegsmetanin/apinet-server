@@ -176,7 +176,8 @@ namespace AGO.Core.Filters
 				ValidateModelFilterNode(node, modelType);
 
 				var criteria = DetachedCriteria.For(modelType);
-				criteria.Add(CompileModelFilterNode(node, criteria, modelType, null, new HashSet<string>(), false));
+				if (node.Items.Count > 0)
+					criteria.Add(CompileModelFilterNode(node, criteria, modelType, null, new HashSet<string>(), false));
 				return criteria;
 			}
 			catch (Exception e)
@@ -370,11 +371,8 @@ namespace AGO.Core.Filters
 
 			negative = node.Negative ? !negative : negative;
 
-			var itemsCount = 0;
 			foreach (var item in node.Items)
 			{
-				itemsCount++;
-
 				PropertyInfo propertyInfo = null;
 				if (!item.Path.IsNullOrEmpty())
 				{
@@ -386,7 +384,7 @@ namespace AGO.Core.Filters
 				var modelFilterItem = item as IModelFilterNode;
 				var valueFilterItem = item as IValueFilterNode;
 
-				if (modelFilterItem != null)
+				if (modelFilterItem != null && modelFilterItem.Items.Count > 0)
 				{
 					var newModelType = modelType;
 					var newAlias = alias;
@@ -423,9 +421,6 @@ namespace AGO.Core.Filters
 				result.Add(CompileValueFilterNode(valueFilterItem, criteria,
 					propertyInfo, valueFilterItem.Path, alias, registeredAliases, negative));		
 			}
-
-			if (itemsCount == 0)
-				result.Add(Restrictions.IsNotNull("Id"));
 
 			return result;
 		}

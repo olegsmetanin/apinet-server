@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using NHibernate;
 using NHibernate.Criterion;
 using AGO.Core.Filters;
@@ -202,7 +203,33 @@ namespace AGO.Core
 
 			var criteria = compiled.GetExecutableCriteria(CurrentSession);
 			foreach (var sortInfo in options.ActualSorters.Where(sortInfo => !sortInfo.Property.IsNullOrWhiteSpace()))
-				criteria = criteria.AddOrder(new Order(sortInfo.Property.TrimSafe(), !sortInfo.Descending));
+			{
+				var finalSortProperty = sortInfo.Property.TrimSafe();
+				var parts = finalSortProperty.Split('.');
+				if (parts.Length > 1)
+				{
+					var currentAlias = new StringBuilder();
+					for (var i = 0; i < parts.Length - 1; i++)
+					{
+						var path = currentAlias.ToString();
+						if (path.Length > 0)
+							path += ".";
+						path += parts[i];
+
+						if (currentAlias.Length > 0)
+							currentAlias.Append('_');
+						currentAlias.Append(parts[i]);
+
+						if (criteria.GetCriteriaByAlias(currentAlias.ToString()) == null)
+							criteria.CreateAlias(path, currentAlias.ToString());
+
+					}
+					currentAlias.Append('.');
+					currentAlias.Append(parts[parts.Length - 1]);
+					finalSortProperty = currentAlias.ToString();
+				}
+				criteria = criteria.AddOrder(new Order(finalSortProperty, !sortInfo.Descending));
+			}
 
 			if (options.FetchStrategy == FetchStrategy.FetchRootReferences || options.FetchStrategy == FetchStrategy.DontFetchReferences)
 			{
