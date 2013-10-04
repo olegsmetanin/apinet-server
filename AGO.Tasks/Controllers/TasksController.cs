@@ -88,12 +88,12 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ValidationResult CreateTask([NotEmpty] string project, [NotNull] CreateTaskDTO model)
+		public UpdateResult<string> CreateTask([NotEmpty] string project, [NotNull] CreateTaskDTO model)
 		{
 			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
 
-			return Edit<TaskModel>(default(Guid), project,
+			return Edit<TaskModel, string>(default(Guid), project,
 				(task, vr) =>
 					{
 						if (model.TaskType == default(Guid))
@@ -148,8 +148,116 @@ namespace AGO.Tasks.Controllers
 			                       			};
 			                task.Executors.Add(executor);
 			            }
+					}, task => task.SeqNumber);
+		}
 
-			        });
+		[JsonEndpoint, RequireAuthorization]
+		public UpdateResult<TaskViewDTO> UpdateTask([NotEmpty] string project, [NotNull] TaskPropChangeDTO data)
+		{
+			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
+				throw new NoSuchProjectException();
+
+			return Edit<TaskModel, TaskViewDTO>(data.Id, project,
+			    (task, vr) =>
+			    	{
+						if (data.Prop.IsNullOrWhiteSpace())
+						{
+							vr.AddErrors("Property name required");
+							return;
+						}
+
+						try
+						{
+							switch (data.Prop)
+							{
+								case "Content":
+									task.Content = (string)data.Value;
+									break;
+								case "Priority":
+									task.Priority = (TaskPriority)Enum.Parse(typeof(TaskPriority), (string)data.Value);
+									break;
+								case "Status":
+									var newStatus = (TaskStatus)Enum.Parse(typeof(TaskStatus), (string)data.Value);
+									task.ChangeStatus(newStatus, _AuthController.CurrentUser());
+									break;
+								case "TaskType":
+									task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
+									break;
+								case "DueDate":
+									task.DueDate = data.Value.ConvertSafe<DateTime?>();
+									break;
+								default:
+									vr.AddErrors(string.Format("Unsupported prop for update: '{0}'", data.Prop));
+									break;
+							}
+						}
+						catch (InvalidCastException cex)
+						{
+							vr.AddFieldErrors(data.Prop, cex.GetBaseException().Message);
+						}
+						catch (OverflowException oex)
+						{
+							vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
+						}
+			        }, 
+					task => new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), Session).Fill(task),
+					() => { throw new NotSupportedException(); });
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId)
+		{
+			try
+			{
+				var task = _CrudDao.Get<TaskModel>(taskId, true);
+				var participant = _CrudDao.Get<ProjectParticipantModel>(participantId, true);
+
+				if (task.IsAgreemer(participant))
+					throw new LogicException(string.Format("Участник '{0}' уже является согласующим задачи '{1}'", 
+						participant.User.FIO, task.SeqNumber));
+
+				var agreement = new TaskAgreementModel
+				                	{
+				                		Creator = _AuthController.CurrentUser(),
+				                		Task = task,
+				                		Agreemer = participant
+				                	};
+				task.Agreements.Add(agreement);
+
+				_CrudDao.Store(agreement);
+				_CrudDao.Store(task);
+
+				return TaskViewAdapter.ToAgreement(agreement);
+			}
+			catch (Exception e)
+			{
+				throw new LogicException(_LocalizationService.MessageForException(e), e);
+			}
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool RemoveAgreement([NotEmpty] Guid taskId, [NotEmpty] Guid agreementId)
+		{
+			try
+			{
+				var task = _CrudDao.Get<TaskModel>(taskId, true);
+				var agreement = task.Agreements.FirstOrDefault(a => a.Id == agreementId);
+
+				if (agreement == null) return false;
+					
+				//TODO check security rules, task status etc.
+
+				task.Agreements.Remove(agreement);
+
+				//_CrudDao.Delete(agreement);
+				_CrudDao.Store(task);
+
+				return true;
+			}
+			catch (Exception e)
+			{
+				throw new LogicException(_LocalizationService.MessageForException(e), e);
+			}
 		}
 
 		private void InternalDeleteTask(Guid id)

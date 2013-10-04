@@ -96,4 +96,9 @@ namespace AGO.Core
 	public class NoSuchEntityException : AbstractApplicationException
 	{
 	}
+
+	public class LogicException: AbstractApplicationException
+	{
+		public LogicException(string message, Exception innerException = null):base(message, innerException) { }
+	}
 }

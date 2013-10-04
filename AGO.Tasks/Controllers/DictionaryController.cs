@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -36,34 +37,43 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		private LookupEntry[] taskStatuses;
+		private static LookupEntry[] taskStatuses;
+		private static LookupEntry[] taskPriorities;
 
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupTaskStatuses(string term)
+		private IEnumerable<LookupEntry> LookupEnum<TModel, TEnum>(
+			string term, 
+			Expression<Func<TModel, TEnum>> prop, 
+			ref LookupEntry[] cache)
 		{
-			if (taskStatuses == null)
+			if (cache == null)
 			{
-				var meta = _SessionProvider.ModelMetadata(typeof(TaskModel));
-				
+				var meta = _SessionProvider.ModelMetadata(typeof(TModel));
+
 				//no need to locking - replace with same value from another thread has no negative effect
-				taskStatuses = Enum.GetValues(typeof(TaskStatus))
-					.OfType<TaskStatus>()
-					.OrderBy(en => (int)en)
-					.Select(s => new LookupEntry
-					{
-						Id = s.ToString(),
-						Text = meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, s)
-					})
+				cache = Enum.GetValues(typeof(TEnum))
+					.OfType<TEnum>() //GetValues preserve enum order, no OrderBy used
+					.Select(s => meta.EnumLookupEntry(prop, s))
 					.ToArray();
 			}
 
 			if (term.IsNullOrWhiteSpace())
-				return taskStatuses;
+				return cache;
 
-			return taskStatuses
+			return cache
 				.Where(l => l.Text.IndexOf(term, StringComparison.InvariantCultureIgnoreCase) >= 0)
 				.ToArray();
+		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupTaskStatuses(string term)
+		{
+			return LookupEnum<TaskModel, TaskStatus>(term, m => m.Status, ref taskStatuses);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupTaskPriorities(string term)
+		{
+			return LookupEnum<TaskModel, TaskPriority>(term, m => m.Priority, ref taskPriorities);
 		}
 			
 		[JsonEndpoint, RequireAuthorization]
@@ -92,9 +102,11 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ValidationResult EditTaskType([NotEmpty] string project, [NotNull] TaskTypeDTO model)
+		public UpdateResult<TaskTypeDTO> EditTaskType([NotEmpty] string project, [NotNull] TaskTypeDTO model)
 		{
-			return Edit<TaskTypeModel>(model.Id, project, (taskType, vr) => { taskType.Name = model.Name.TrimSafe(); });
+			return Edit<TaskTypeModel, TaskTypeDTO>(model.Id, project, 
+				(taskType, vr) => { taskType.Name = model.Name.TrimSafe(); },
+				taskType => new TaskTypeAdapter().Fill(taskType));
 		}
 
     	private void InternalDeleteTaskType(Guid id)
@@ -187,14 +199,11 @@ namespace AGO.Tasks.Controllers
     	}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ValidationResult EditCustomStatus([NotEmpty] string project, [NotNull] CustomStatusDTO model)
+		public UpdateResult<CustomStatusDTO> EditCustomStatus([NotEmpty] string project, [NotNull] CustomStatusDTO model)
 		{
-			return Edit<CustomTaskStatusModel>(model.Id, project, 
-				(status, vr) => 
-					{
-						status.Name = model.Name.TrimSafe();
-						status.ViewOrder = model.ViewOrder;
-					});
+			return Edit<CustomTaskStatusModel, CustomStatusDTO>(model.Id, project, 
+				(status, vr) => { status.Name = model.Name.TrimSafe(); status.ViewOrder = model.ViewOrder; }, 
+				status => new CustomStatusAdapter().Fill(status));
 		}
 
 		private void InternalDeleteCustomStatus(Guid id)

@@ -81,7 +81,7 @@ namespace AGO.Tasks.Test
 		{
 			var model = new TaskTypeDTO {Name = "TestTaskType"};
 
-			var vr = Controller.EditTaskType(TestProject, model);
+			var vr = Controller.EditTaskType(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
@@ -100,7 +100,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
-			var vr = Controller.EditTaskType(TestProject, model);
+			var vr = Controller.EditTaskType(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);

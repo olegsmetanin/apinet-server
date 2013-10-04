@@ -151,7 +151,7 @@ namespace AGO.Tasks.Test
 		{
 			var model = new CustomStatusDTO {Name = "new", ViewOrder = 1};
 
-			var vr = Controller.EditCustomStatus(TestProject, model);
+			var vr = Controller.EditCustomStatus(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsTrue(vr.Success);
@@ -162,7 +162,7 @@ namespace AGO.Tasks.Test
 		{
 			var model = new CustomStatusDTO { Name = string.Empty, ViewOrder = 1 };
 
-			var vr = Controller.EditCustomStatus(TestProject, model);
+			var vr = Controller.EditCustomStatus(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
@@ -175,7 +175,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 			var model = new CustomStatusDTO {Id = s.Id, Name = "newName", ViewOrder = s.ViewOrder};
 
-			var vr = Controller.EditCustomStatus(TestProject, model);
+			var vr = Controller.EditCustomStatus(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsTrue(vr.Success);
@@ -191,7 +191,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 			var model = new CustomStatusDTO { Id = s.Id, Name = string.Empty, ViewOrder = s.ViewOrder };
 
-			var vr = Controller.EditCustomStatus(TestProject, model);
+			var vr = Controller.EditCustomStatus(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);

@@ -10,6 +10,7 @@ using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
+using AGO.Tasks.Controllers.DTO;
 using NHibernate;
 using NHibernate.Criterion;
 
@@ -62,12 +63,13 @@ namespace AGO.Tasks.Controllers
 			return query.PagedQuery(_CrudDao, page).LookupModelsList(textProperty).ToArray();
 		}
 
-		protected ValidationResult Edit<TModel>(Guid id, string project, 
-		                                        Action<TModel, ValidationResult> update,
-		                                        Func<TModel> factory = null) 
+		protected UpdateResult<TDTO> Edit<TModel, TDTO>(Guid id, string project, 
+			Action<TModel, ValidationResult> update,
+			Func<TModel, TDTO> convert, 
+			Func<TModel> factory = null) where TDTO: class
 			where TModel: SecureProjectBoundModel<Guid>, new()
 		{
-			var validation = new ValidationResult();
+			var result = new UpdateResult<TDTO> {Validation = new ValidationResult()};
 			Func<TModel> defaultFactory = () => new TModel {ProjectCode = project, Creator = _AuthController.CurrentUser()};
 
 			try
@@ -76,20 +78,21 @@ namespace AGO.Tasks.Controllers
 				                      	?  (factory ?? defaultFactory)()
 				                      	: _CrudDao.Get<TModel>(id, true);
 
-				update(persistentModel, validation);
+				update(persistentModel, result.Validation);
 
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
-				if (!validation.Success)
-					return validation;
+				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation);
+				if (!result.Validation.Success)
+					return result;
 
 				_CrudDao.Store(persistentModel);
+				result.Model = convert(persistentModel);
 			}
 			catch (Exception e)
 			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
+				result.Validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
 
-			return validation;
+			return result;
 		}
 	}
 }

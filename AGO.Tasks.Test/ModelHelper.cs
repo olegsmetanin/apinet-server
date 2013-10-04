@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
+using AGO.Home.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NHibernate;
@@ -32,6 +34,14 @@ namespace AGO.Tasks.Test
 				Content = content
 			};
 			task.ChangeStatus(status, currentUser());
+			ProjectParticipantModel ppm = null;
+			ProjectModel pm = null;
+			var participant = session().QueryOver(() => ppm)
+				.JoinAlias(() => ppm.Project, () => pm)
+				.Where(() => pm.ProjectCode == project)
+				.List<ProjectParticipantModel>().FirstOrDefault();
+			var executor = new TaskExecutorModel {Creator = currentUser(), Task = task, Executor = participant};
+			task.Executors.Add(executor);
 			session().Save(task);
 
 			return task;

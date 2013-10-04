@@ -145,7 +145,7 @@ namespace AGO.Tasks.Test
 		{
 			var model = new CreateTaskDTO();
 
-			var vr = controller.CreateTask(TestProject, model);
+			var vr = controller.CreateTask(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
@@ -157,7 +157,7 @@ namespace AGO.Tasks.Test
 		{
 			var model = new CreateTaskDTO { TaskType = Guid.NewGuid(), Executors = new [] { Guid.NewGuid()}};
 
-			var vr = controller.CreateTask(TestProject, model);
+			var vr = controller.CreateTask(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
@@ -171,7 +171,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO {TaskType = tt.Id};
 
-			var vr = controller.CreateTask(TestProject, model);
+			var vr = controller.CreateTask(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
@@ -179,7 +179,7 @@ namespace AGO.Tasks.Test
 
 			model.Executors = new Guid[0];
 
-			vr = controller.CreateTask(TestProject, model);
+			vr = controller.CreateTask(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
@@ -193,7 +193,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO { TaskType = tt.Id, Executors = new [] { Guid.NewGuid() } };
 
-			var vr = controller.CreateTask(TestProject, model);
+			var vr = controller.CreateTask(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
@@ -218,7 +218,7 @@ namespace AGO.Tasks.Test
 			            		CustomStatus = status.Id,
 			            		Priority = TaskPriority.Low
 			            	};
-			var vr = controller.CreateTask(TestProject, model);
+			var vr = controller.CreateTask(TestProject, model).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsTrue(vr.Success);
@@ -268,6 +268,60 @@ namespace AGO.Tasks.Test
 			Assert.IsNull(t1);
 			Assert.IsNotNull(t2);
 			Assert.IsNull(t3);
+		}
+
+		//TODO Test editing
+		[Test, ExpectedException(typeof(NoSuchProjectException))]
+		public void UpdateWithInvalidProjectReturnError()
+		{
+			var t = M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			var inf = new TaskPropChangeDTO(t.Id, t.ModelVersion, "Content", "bla bla");
+			controller.UpdateTask("not existing proj", inf);
+		}
+
+		[Test]
+		public void UpdateWithInvalidIdReturnError()
+		{
+			var t = M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			var inf = new TaskPropChangeDTO(Guid.NewGuid(), t.ModelVersion, "Content", "bla bla");
+			var ur = controller.UpdateTask(TestProject, inf);
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.IsFalse(ur.Validation.Success);
+			Assert.IsTrue(ur.Validation.Errors.Any());
+		}
+
+		[Test]
+		public void UpdateContentWithInvalidTypeReturnError()
+		{
+			var t = M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			var inf = new TaskPropChangeDTO(t.Id, t.ModelVersion, "Content", new {a = 1});
+			var ur = controller.UpdateTask(TestProject, inf);
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.IsFalse(ur.Validation.Success);
+			Assert.IsTrue(ur.Validation.FieldErrors.First(e => e.Key == "Content").Value.Any());
+		}
+
+		[Test]
+		public void UpdateContentReturnSuccess()
+		{
+			var t = M.Task(1);
+			_SessionProvider.FlushCurrentSession();
+
+			var inf = new TaskPropChangeDTO(t.Id, t.ModelVersion, "Content", "some test string");
+			var ur = controller.UpdateTask(TestProject, inf);
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.IsTrue(ur.Validation.Success);
+			t = Session.Get<TaskModel>(t.Id);
+			Assert.AreEqual("some test string", t.Content);
 		}
 	}
 }

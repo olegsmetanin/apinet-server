@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace AGO.Tasks.Test
 {
 	/// <summary>
-	/// Тесты cRud статусов задач (только R, т.к. набор фиксированный
+	/// Тесты cRud статусов задач (только R, т.к. набор фиксированный)
 	/// </summary>
 	public class TaskStatusesTest: AbstractDictionaryTest
 	{

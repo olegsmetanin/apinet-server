@@ -145,7 +145,7 @@ namespace AGO.Tasks.Controllers.DTO
 			Func<TStatus, string> status)
 		{
 			return history
-				.OrderBy(h => h.Start)
+				.OrderByDescending(h => h.Start)
 				.Select(h => new StatusHistoryDTO.StatusHistoryItemDTO
 				             	{
 				             		Status = status(h.Status),
@@ -193,10 +193,12 @@ namespace AGO.Tasks.Controllers.DTO
 			};
 		}
 
-		private Agreement ToAgreement(TaskAgreementModel agreement)
+		public static Agreement ToAgreement(TaskAgreementModel agreement)
 		{
 			return new Agreement
 			{
+				Id = agreement.Id,
+				ModelVersion = agreement.ModelVersion,
 				Agreemer = agreement.Agreemer.User.FIO,
 				Done = agreement.Done,
 				AgreedAt = agreement.AgreedAt,
@@ -208,7 +210,9 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			var dto = base.Fill(model);
 
-			dto.Priority = Meta.EnumDisplayValue<TaskModel, TaskPriority>(mm => mm.Priority, model.Priority);
+			dto.TaskType = new LookupEntry {Id = model.TaskType.Id.ToString(), Text = model.TaskType.Name};
+			dto.Status = Meta.EnumLookupEntry<TaskModel, TaskStatus>(mm => mm.Status, model.Status);
+			dto.Priority = Meta.EnumLookupEntry<TaskModel, TaskPriority>(mm => mm.Priority, model.Priority);
 			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
 			dto.CustomStatusHistory = CustomStatusHistoryToDTO(model);

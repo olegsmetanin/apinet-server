@@ -375,10 +375,20 @@ namespace AGO.Core
 			return null;
 		}
 
+		private static object ConvertValue(object value, Type toType, bool safe)
+		{
+			return value == null
+			       	? null
+			       	: safe
+			       	  	? value.ConvertSafe(toType)
+			       	  	: Convert.ChangeType(value, toType);
+		}
+
 		public static void SetMemberValue(
 			this object obj,
 			string memberName,
-			object value)
+			object value,
+			bool convertSafe = true)
 		{
 			if (obj == null || !obj.GetType().IsClass)
 				return;
@@ -386,13 +396,13 @@ namespace AGO.Core
 			var prop = obj.GetType().GetProperty(memberName);
 			if (prop != null)
 			{
-				prop.SetValue(obj, value != null ? value.ConvertSafe(prop.PropertyType) : null, null);
+				prop.SetValue(obj, ConvertValue(value, prop.PropertyType, convertSafe) , null);
 				return;
 			}
 			var field = obj.GetType().GetField(memberName);
 			if (field == null)
 				return;
-			field.SetValue(obj, value != null ? value.ConvertSafe(field.FieldType) : null);
+			field.SetValue(obj, ConvertValue(value, field.FieldType, convertSafe));
 		}
 
 		public static object GetMemberValue(

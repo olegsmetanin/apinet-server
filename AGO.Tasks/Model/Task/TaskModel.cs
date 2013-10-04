@@ -5,8 +5,10 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Security;
+using AGO.Home.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace AGO.Tasks.Model.Task
 {
@@ -152,6 +154,11 @@ namespace AGO.Tasks.Model.Task
 		public virtual CustomTaskStatusHistoryModel ChangeCustomStatus(CustomTaskStatusModel newStatus, UserModel changer)
 		{
 			return StatusChangeHelper.Change(this, newStatus, CustomStatusHistory, changer, m => m.CustomStatus);
+		}
+
+		public virtual bool IsAgreemer(ProjectParticipantModel participant)
+		{
+			return participant != null && Agreements.Any(a => participant.Equals(a.Agreemer));
 		}
     }
 }
