@@ -42,7 +42,5 @@ namespace AGO.Core.Filters
 					Operator == ValueFilterOperators.Ge; 
 			}
 		}
-
-		public bool IsTernary { get { return !IsUnary && !IsBinary; } }
 	}
 }

@@ -176,14 +176,17 @@ namespace AGO.Core.Filters
 				ValidateModelFilterNode(node, modelType);
 
 				var criteria = DetachedCriteria.For(modelType);
-				if (node.Items.Count > 0)
-					criteria.Add(CompileModelFilterNode(node, criteria, modelType, null, new HashSet<string>(), false));
+				
+				var junction = CompileModelFilterNode(node, criteria, modelType, null, new HashSet<string>(), false);
+				if (junction != null)
+					criteria.Add(junction);
+
 				return criteria;
 			}
 			catch (Exception e)
 			{
 				throw new FilterCompilationException(e);
-			}	
+			}
 		}
 
 		public IModelFilterNode ConcatFilters(
@@ -371,6 +374,7 @@ namespace AGO.Core.Filters
 
 			negative = node.Negative ? !negative : negative;
 
+			var hasSubCriterias = false;
 			foreach (var item in node.Items)
 			{
 				PropertyInfo propertyInfo = null;
@@ -384,10 +388,11 @@ namespace AGO.Core.Filters
 				var modelFilterItem = item as IModelFilterNode;
 				var valueFilterItem = item as IValueFilterNode;
 
-				if (modelFilterItem != null && modelFilterItem.Items.Count > 0)
+				if (modelFilterItem != null)
 				{
 					var newModelType = modelType;
 					var newAlias = alias;
+					var newPath = alias;
 
 					if (propertyInfo != null)
 					{
@@ -395,21 +400,25 @@ namespace AGO.Core.Filters
 						if (typeof (IEnumerable).IsAssignableFrom(propertyInfo.PropertyType) && propertyInfo.PropertyType.IsGenericType)
 							newModelType = propertyInfo.PropertyType.GetGenericArguments()[0];
 
-						var newPath = alias;
 						if (!newPath.IsNullOrEmpty())
 							newPath += '.';
 						newPath += item.Path;
 
 						newAlias = newPath.Replace('.', '_');
+					}
 
-						if (!registeredAliases.Contains(newAlias))
+					var junction = CompileModelFilterNode(modelFilterItem, criteria, newModelType, newAlias, registeredAliases, negative);
+					if (junction != null)
+					{
+						if (!newAlias.IsNullOrWhiteSpace() && !registeredAliases.Contains(newAlias))
 						{
 							criteria.CreateAlias(newPath, newAlias, JoinType.LeftOuterJoin);
 							registeredAliases.Add(newAlias);
 						}
-					}
 
-					result.Add(CompileModelFilterNode(modelFilterItem, criteria, newModelType, newAlias, registeredAliases, negative));
+						result.Add(junction);
+						hasSubCriterias = true;
+					}
 				}
 
 				if (valueFilterItem == null)
@@ -419,10 +428,11 @@ namespace AGO.Core.Filters
 					throw new MissingModelPropertyException(item.Path, modelType);
 
 				result.Add(CompileValueFilterNode(valueFilterItem, criteria,
-					propertyInfo, valueFilterItem.Path, alias, registeredAliases, negative));		
+					propertyInfo, valueFilterItem.Path, alias, registeredAliases, negative));
+				hasSubCriterias = true;
 			}
 
-			return result;
+			return hasSubCriterias ? result : null;
 		}
 
 		protected ICriterion CompileValueFilterNode(

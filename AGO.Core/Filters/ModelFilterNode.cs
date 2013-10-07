@@ -19,7 +19,7 @@ namespace AGO.Core.Filters
 		
 		protected readonly IList<IFilterNode> _Items = new List<IFilterNode>();
 		[JsonProperty(PropertyName = "items")]
-		public ICollection<IFilterNode> Items { get { return _Items; } }
+		public IEnumerable<IFilterNode> Items { get { return _Items; } }
 
 		public void AddItem(IFilterNode node)
 		{

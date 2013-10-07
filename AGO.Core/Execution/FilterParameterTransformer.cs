@@ -61,16 +61,19 @@ namespace AGO.Core.Execution
 			if (filterObject != null)
 			{
 				var simpleFilterProperty = filterObject.Property(SimpleFilterName);
-				if (simpleFilterProperty != null)
-					result.Add(ParseSimpleFilter(simpleFilterProperty));
+				var simpleFilter = simpleFilterProperty != null ? ParseSimpleFilter(simpleFilterProperty.Value as JObject) : null;
+				if (simpleFilter != null)
+					result.Add(simpleFilter);
 
 				var complexFilterProperty = filterObject.Property(ComplexFilterName);
-				if (complexFilterProperty != null)
-					result.Add(ParseComplexFilter(complexFilterProperty));
+				var complexFilter = complexFilterProperty != null ? ParseComplexFilter(complexFilterProperty) : null;
+				if (complexFilter != null)
+					result.Add(complexFilter);
 
 				var userFilterProperty = filterObject.Property(UserFilterName);
-				if (userFilterProperty != null)
-					result.Add(ParseUserFilter(userFilterProperty));
+				var userFilter = userFilterProperty != null ? ParseUserFilter(userFilterProperty) : null;
+				if (userFilter != null)
+					result.Add(userFilter);
 			}
 
 			return result;
@@ -80,38 +83,63 @@ namespace AGO.Core.Execution
 
 		#region Helper methods
 
-		protected IModelFilterNode ParseSimpleFilter(JProperty filterProperty)
+		protected IModelFilterNode ParseSimpleFilter(JObject filterObject)
 		{
-			var result = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			var filterObject = filterProperty.Value as JObject;
 			if (filterObject == null)
-				return result;
+				return null;
+
+			var result = new ModelFilterNode { Operator = ModelFilterOperators.And };
 
 			foreach (var filterEntry in filterObject.Properties().Select(p => p.Value).OfType<JObject>())
 			{
 				string path = null;
 				ValueFilterOperators? op = null;
+				ModelFilterOperators? modelOp = null;
 				var negative = false;
 				JToken value = null;
+				IEnumerable<JToken> items = null;
 
 				foreach (var property in filterEntry.Properties())
 				{
 					if ("path".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
 						path = property.Value.TokenValue().TrimSafe();
 					else if ("op".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+					{
 						op = ValueFilterOperatorFromToken(property.Value);
+						modelOp = ModelFilterOperatorFromToken(property.Value);
+					}
 					else if ("not".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
 						negative = property.Value.TokenValue().ConvertSafe<bool>();
 					else if ("value".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
 						value = property.Value;
+					else if ("items".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+						items = property.Value;
+				}
+
+				if (modelOp != null)
+				{
+					foreach (var item in (items ?? Enumerable.Empty<JToken>()).OfType<JObject>())
+					{
+						var subFilter = ParseSimpleFilter(new JObject {new JProperty("Item", item)});
+						if (subFilter != null)
+							result.AddItem(subFilter);
+					}
+					continue;
 				}
 
 				var arrayValue = value as JArray;
 				var valValue = value as JValue;
-				if (path == null || path.IsNullOrEmpty() || op == null || (arrayValue == null && valValue == null))
-					continue;
 
-				if (arrayValue != null && arrayValue.Count == 0)
+				if (path == null || path.IsNullOrEmpty() || op == null)
+					continue;
+				
+				var needValue = new ValueFilterNode
+				{
+					Path = path,
+					Operator = op
+				}.IsBinary;
+
+				if (needValue && (arrayValue == null || arrayValue.Count == 0) && valValue == null)
 					continue;
 
 				var parent = result as IModelFilterNode;
@@ -133,6 +161,17 @@ namespace AGO.Core.Execution
 					parent = newParent;
 				}
 				path = pathParts[pathParts.Length - 1];
+
+				if (!needValue)
+				{
+					parent.AddItem(new ValueFilterNode
+					{
+						Path = path,
+						Operator = op,
+						Negative = negative
+					});
+					continue;
+				}
 
 				if (valValue != null)
 				{
@@ -189,6 +228,20 @@ namespace AGO.Core.Execution
 				return exact;
 
 			foreach (var pair in ValueFilterNode.OperatorConversionTable.Where(
+					pair => pair.Value.Equals(value, StringComparison.InvariantCultureIgnoreCase)))
+				return pair.Key;
+			return null;
+		}
+
+		protected ModelFilterOperators? ModelFilterOperatorFromToken(JToken token)
+		{
+			var value = token.TokenValue().TrimSafe();
+
+			var exact = value.ParseEnumSafe<ModelFilterOperators>();
+			if (exact != null)
+				return exact;
+
+			foreach (var pair in ModelFilterNode.OperatorConversionTable.Where(
 					pair => pair.Value.Equals(value, StringComparison.InvariantCultureIgnoreCase)))
 				return pair.Key;
 			return null;

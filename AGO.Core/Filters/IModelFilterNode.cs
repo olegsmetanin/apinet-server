@@ -6,7 +6,7 @@ namespace AGO.Core.Filters
 	{
 		ModelFilterOperators? Operator { get; }
 
-		ICollection<IFilterNode> Items { get; }
+		IEnumerable<IFilterNode> Items { get; }
 
 		void AddItem(IFilterNode node);
 	}
