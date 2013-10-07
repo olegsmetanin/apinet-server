@@ -453,6 +453,8 @@ namespace AGO.Core.Filters
 			if (!alias.IsNullOrEmpty())
 				realPath = alias + '.' + realPath;
 			var realType = propertyType;
+			
+			negative = node.Negative ? !negative : negative;
 
 			if (isModelsCollection)
 			{
@@ -493,7 +495,10 @@ namespace AGO.Core.Filters
 					: Restrictions.Eq(realPath, value);
 			}
 			else if (node.Operator == ValueFilterOperators.Exists)
-				result = Restrictions.Not(Restrictions.IsNull(realPath));
+			{
+				negative = !negative;
+				result = Restrictions.IsNull(realPath);
+			}
 			else if (node.Operator == ValueFilterOperators.Like)
 			{
 				var str = node.Operand.TrimSafe();
@@ -511,33 +516,32 @@ namespace AGO.Core.Filters
 			}
 			else if (node.Operator == ValueFilterOperators.Lt)
 			{
-				result = dayStart != null 
-					? Restrictions.Lt(realPath, dayStart.Value)
-					: Restrictions.Lt(realPath, value);
+				result = dayStart != null
+					         ? Restrictions.Lt(realPath, dayStart.Value)
+					         : Restrictions.Lt(realPath, value);
 			}
 			else if (node.Operator == ValueFilterOperators.Gt)
 			{
 				result = dayStart != null
-					? Restrictions.Ge(realPath, nextDay.Value)
-					: Restrictions.Gt(realPath, value);
+					         ? Restrictions.Ge(realPath, nextDay.Value)
+					         : Restrictions.Gt(realPath, value);
 			}
 			else if (node.Operator == ValueFilterOperators.Le)
 			{
 				result = dayStart != null
-					? Restrictions.Lt(realPath, nextDay.Value)
-					: Restrictions.Le(realPath, value);
+					         ? Restrictions.Lt(realPath, nextDay.Value)
+					         : Restrictions.Le(realPath, value);
 			}
 			else if (node.Operator == ValueFilterOperators.Ge)
 			{
 				result = dayStart != null
-					? Restrictions.Ge(realPath, dayStart.Value)
-					: Restrictions.Ge(realPath, value);
+					         ? Restrictions.Ge(realPath, dayStart.Value)
+					         : Restrictions.Ge(realPath, value);
 			}
 
 			if (result == null)
 				throw new InvalidOperationException("Unexpected operator type");
 			
-			negative = node.Negative ? !negative : negative;
 			return negative ? Restrictions.Not(result) : result;
 		}
 
