@@ -95,7 +95,7 @@ namespace AGO.Core.Json
 				writer.WriteEndObject();
 				return;
 			}
-			
+
 			writer.WritePropertyName(propertyName);
 			serializer.Serialize(writer, value);		
 		}

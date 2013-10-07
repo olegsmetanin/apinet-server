@@ -126,6 +126,9 @@
   <data name="DataAccessException" xml:space="preserve">
     <value>Произошла ошибка при доступе к базе данных</value>
   </data>
+  <data name="ExceptionDetailsHidden" xml:space="preserve">
+    <value>Произошла непредвиденная ошибка, текст ошибки скрыт в целях безопасности</value>
+  </data>
   <data name="MustBeBetweenException" xml:space="preserve">
     <value>Должно быть между {0} и {1}</value>
   </data>
@@ -148,7 +151,7 @@
     <value>Значение уже используется</value>
   </data>
   <data name="NotAuthenticatedException" xml:space="preserve">
-    <value>У вас недостаточно прав для выполнения данного действия</value>
+    <value>Требуется произвести вход в систему</value>
   </data>
   <data name="RequiredValueException" xml:space="preserve">
     <value>Обязательно для заполнения</value>

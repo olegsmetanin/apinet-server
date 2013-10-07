@@ -15,6 +15,15 @@ namespace AGO.Core.Migration
 {
 	public class MigrationService : AutoMappedSessionFactoryBuilder, IMigrationService
 	{
+		#region Properties, fields, constructors
+
+		public MigrationService(IEnvironmentService environmentService)
+			:base(environmentService)
+		{
+		}
+
+		#endregion
+
 		#region Interfaces implementation
 
 		public void MigrateUp(Version upToVersion = null, bool previewOnly = false)

@@ -44,10 +44,6 @@ namespace AGO.Core
 
 		IList<TModel> PagedList<TModel>(ICriteria criteria, int page, int pageSize = 0)
 			where TModel : class, IIdentifiedModel;
-
-		void FlushCurrentSession(bool forceRollback = false);
-
-		void CloseCurrentSession(bool forceRollback = false);
 	}
 
 	public static class CrudDaoExtensions

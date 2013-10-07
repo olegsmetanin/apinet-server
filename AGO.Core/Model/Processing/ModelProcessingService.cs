@@ -220,6 +220,34 @@ namespace AGO.Core.Model.Processing
 			return true;
 		} 
 
+		protected virtual void DoResetCapability(object capability, bool? value)
+		{
+			if (capability == null)
+				return;
+
+			foreach (var capabilityProperty in capability.GetType()
+				.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+			{
+				if (!typeof(bool?).IsAssignableFrom(capabilityProperty.PropertyType))
+				{
+					if (!capabilityProperty.CanRead)
+						continue;
+
+					var nestedCapability = capabilityProperty.GetValue(capability, null);
+					if (nestedCapability != null)
+						DoResetCapability(nestedCapability, value);
+					continue;
+				}
+
+				if (!capabilityProperty.CanWrite)
+					continue;
+				if (value == null && !capabilityProperty.PropertyType.IsNullable())
+					continue;
+
+				capabilityProperty.SetValue(capability, value, null);
+			}
+		}
+
 		#endregion
 	}
 }

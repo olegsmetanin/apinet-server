@@ -261,16 +261,6 @@ namespace AGO.Core
 				.UniqueResult<int>();
 		}
 
-		public void FlushCurrentSession(bool forceRollback = false)
-		{
-			_SessionProvider.FlushCurrentSession(forceRollback);
-		}
-
-		public void CloseCurrentSession(bool forceRollback = false)
-		{
-			_SessionProvider.CloseCurrentSession(forceRollback);
-		}
-
 		#endregion
 
 		#region Template methods

@@ -11,8 +11,8 @@ namespace AGO.Core.AutoMapping
 		{
 			instance.Column(instance.Property.MemberInfo.Name + "Id");
 
-			var lazyPropertyAttribute = instance.Property.MemberInfo.FirstAttribute<PrefetchedAttribute>(true);
-			if (lazyPropertyAttribute != null)
+			var prefetchedAttribute = instance.Property.MemberInfo.FirstAttribute<PrefetchedAttribute>(true);
+			if (prefetchedAttribute != null)
 				instance.Fetch.Join();
 			var readOnly = instance.Property.MemberInfo.FirstAttribute<ReadOnlyPropertyAttribute>(true);
 			if (readOnly != null)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters.Metadata;
@@ -55,7 +56,8 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<IModelMetadata> CustomPropertyMetadata()
 		{
-			return MetadataForModelAndRelations<CustomPropertyTypeModel>();
+			return MetadataForModelAndRelations<CustomPropertyTypeModel>().Concat(
+				MetadataForModelAndRelations<CustomPropertyInstanceModel>());
 		}
 
 		#endregion

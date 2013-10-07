@@ -91,6 +91,19 @@ namespace AGO.Core.AutoMapping
 
 		#endregion
 
+		#region Properties, fields, constructors
+
+		protected readonly IEnvironmentService _EnvironmentService;
+
+		public AutoMappedSessionFactoryBuilder(IEnvironmentService environmentService)
+		{
+			if (environmentService == null)
+				throw new ArgumentNullException("environmentService");
+			_EnvironmentService = environmentService;
+		}
+
+		#endregion
+		
 		#region Template methods
 
 		protected override void DoFinalizeConfig()
@@ -99,7 +112,9 @@ namespace AGO.Core.AutoMapping
 
 			if (!AutoMappingsDumpPath.IsNullOrWhiteSpace())
 			{
-				var dirInfo = new DirectoryInfo(AutoMappingsDumpPath);
+				var dumpPath = _EnvironmentService.PhysicalPath(AutoMappingsDumpPath);
+
+				var dirInfo = new DirectoryInfo(dumpPath);
 				if (!dirInfo.Exists)
 					dirInfo.Create();
 
@@ -126,11 +141,11 @@ namespace AGO.Core.AutoMapping
 					c.Add(type);
 			});
 
-			if (!AutoMappingsDumpPath.IsNullOrWhiteSpace())
-				autoPersistenceModel.WriteMappingsTo(AutoMappingsDumpPath);
-
 			foreach (var assembly in _AutoMappingAssemblies)
 				autoPersistenceModel.UseOverridesFromAssembly(assembly);
+
+			if (!AutoMappingsDumpPath.IsNullOrWhiteSpace())
+				autoPersistenceModel.WriteMappingsTo(AutoMappingsDumpPath);
 
 			_HibernateConfiguration = Fluently.Configure(_HibernateConfiguration).Mappings(mappingConfig =>
 			{

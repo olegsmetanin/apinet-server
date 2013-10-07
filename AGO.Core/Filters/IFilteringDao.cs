@@ -15,7 +15,8 @@ namespace AGO.Core.Filters
 
 		IList<TModel> List<TModel>(
 			IEnumerable<IModelFilterNode> filters,
-			int page, ICollection<SortInfo> sorters)
+			int page, 
+			ICollection<SortInfo> sorters)
 			where TModel : class, IIdentifiedModel;
 
 		IEnumerable<TModel> Future<TModel>(
