@@ -46,6 +46,8 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public new LookupEntry Status { get; set; }
 
+		public new LookupEntry? CustomStatus { get; set; }
+
 		public LookupEntry Priority { get; set; }
 
 		public IEnumerable<Agreement> Agreements { get; set; }

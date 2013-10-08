@@ -180,6 +180,10 @@ namespace AGO.Tasks.Controllers
 									var newStatus = (TaskStatus)Enum.Parse(typeof(TaskStatus), (string)data.Value);
 									task.ChangeStatus(newStatus, _AuthController.CurrentUser());
 									break;
+								case "CustomStatus":
+									var newCustomStatus = _CrudDao.Get<CustomTaskStatusModel>(data.Value.ConvertSafe<Guid>(), true);
+									task.ChangeCustomStatus(newCustomStatus, _AuthController.CurrentUser());
+									break;
 								case "TaskType":
 									task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
 									break;

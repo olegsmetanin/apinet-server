@@ -212,6 +212,9 @@ namespace AGO.Tasks.Controllers.DTO
 
 			dto.TaskType = new LookupEntry {Id = model.TaskType.Id.ToString(), Text = model.TaskType.Name};
 			dto.Status = Meta.EnumLookupEntry<TaskModel, TaskStatus>(mm => mm.Status, model.Status);
+			dto.CustomStatus = model.CustomStatus != null
+				? new LookupEntry { Id = model.CustomStatus.Id.ToString(), Text = model.CustomStatus.Name }
+				: (LookupEntry?) null;
 			dto.Priority = Meta.EnumLookupEntry<TaskModel, TaskPriority>(mm => mm.Priority, model.Priority);
 			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
