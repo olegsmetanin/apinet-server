@@ -31,6 +31,7 @@ namespace AGO.Tasks.Controllers.DTO
 			var u = executor.Executor.User;
 			return new Executor
 			       	{
+			       		Id = executor.Executor.Id.ToString(), //use participants instead of technical entity - TaskExecutorModel
 			       		Name = u.FIO,
 			       		Description = u.FullName + (u.Departments.Count > 0
 			       		                            	? " (" + string.Join("; ", u.Departments.Select(d => d.FullName)) + ")"

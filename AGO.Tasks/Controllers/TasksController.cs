@@ -17,6 +17,8 @@ using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NHibernate.Criterion;
+using Newtonsoft.Json.Linq;
+using NHibernate.Linq;
 
 namespace AGO.Tasks.Controllers
 {
@@ -189,6 +191,30 @@ namespace AGO.Tasks.Controllers
 									break;
 								case "DueDate":
 									task.DueDate = data.Value.ConvertSafe<DateTime?>();
+									break;
+								case "Executors":
+									var ids = (data.Value.ConvertSafe<JArray>() ?? new JArray())
+										.Select(id => id.ConvertSafe<Guid>()).ToArray();
+									var toRemove = task.Executors.Where(e => ids.Contains(e.Executor.Id)).ToArray();
+									var toAdd = ids.Where(id => !task.Executors.Any(e => e.Executor.Id == id))
+										.Select(id => _CrudDao.Get<ProjectParticipantModel>(id, true));
+
+									foreach (var removed in toRemove)
+									{
+										task.Executors.Remove(removed);
+										_CrudDao.Delete(removed);
+									}
+									foreach (var added in toAdd)
+									{
+										var executor = new TaskExecutorModel
+										         	{
+										         		Creator = _AuthController.CurrentUser(),
+										         		Task = task,
+										         		Executor = added
+										         	};
+										task.Executors.Add(executor);
+										_CrudDao.Store(executor);
+									}
 									break;
 								default:
 									vr.AddErrors(string.Format("Unsupported prop for update: '{0}'", data.Prop));
