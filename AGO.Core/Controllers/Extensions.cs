@@ -15,7 +15,8 @@ namespace AGO.Core.Controllers
 			this IQueryOver<TModel> query,
 			Expression<Func<TModel, object>> idProperty,
 			string alias,
-			Expression<Func<TAliasedModel, object>> textProperty)
+			Expression<Func<TAliasedModel, object>> textProperty,
+			bool idToLowerCase = true)
 		{
 			if (query == null || idProperty == null)
 				return Enumerable.Empty<LookupEntry>();
@@ -28,13 +29,18 @@ namespace AGO.Core.Controllers
 					)
 				.SetResultTransformer(Transformers.AliasToBean(typeof(LookupEntry)));
 
-			return query.List<LookupEntry>();
+			var result = query.List<LookupEntry>() as IEnumerable<LookupEntry>;
+			if (idToLowerCase)
+				result = result.Select(m => { m.Id = (m.Id ?? string.Empty).ToLower(); return m; });
+
+			return result;
 		}
 
 		public static IEnumerable<LookupEntry> LookupList<TModel>(
 			this IQueryOver<TModel> query,
 			Expression<Func<TModel, object>> idProperty,
-			Expression<Func<TModel, object>> textProperty = null)
+			Expression<Func<TModel, object>> textProperty = null,
+			bool idToLowerCase = true)
 		{
 			if (query == null || idProperty == null)
 				return Enumerable.Empty<LookupEntry>();
@@ -45,15 +51,20 @@ namespace AGO.Core.Controllers
 					.Add(Projections.Cast(NHibernateUtil.String, Projections.Property(textProperty ?? idProperty)), "Text"))
 				.SetResultTransformer(Transformers.AliasToBean(typeof(LookupEntry)));
 
-			return query.List<LookupEntry>();
+			var result = query.List<LookupEntry>() as IEnumerable<LookupEntry>;
+			if (idToLowerCase)
+				result = result.Select(m => { m.Id = (m.Id ?? string.Empty).ToLower(); return m; });
+
+			return result;
 		}
 
 		public static IEnumerable<LookupEntry> LookupModelsList<TModel>(
 			this IQueryOver<TModel> query,
-			Expression<Func<TModel, object>> textProperty)
+			Expression<Func<TModel, object>> textProperty,
+			bool idToLowerCase = true)
 			where TModel : IIdentifiedModel<Guid>
 		{
-			return query.LookupList(m => m.Id, textProperty);
+			return query.LookupList(m => m.Id, textProperty, idToLowerCase);
 		}
 	}
 }
