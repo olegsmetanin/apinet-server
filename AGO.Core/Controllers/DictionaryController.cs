@@ -36,11 +36,14 @@ namespace AGO.Core.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<CustomPropertyTypeModel> GetCustomPropertyTypes(
+			[NotEmpty] string project,
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			return _FilteringDao.List<CustomPropertyTypeModel>(filter, new FilteringOptions
+			return _FilteringDao.List<CustomPropertyTypeModel>(filter.Concat(new[] {
+				_FilteringService.Filter<CustomPropertyTypeModel>().Where(m => m.ProjectCode == project) }), 
+			new FilteringOptions
 			{
 				Page = page,
 				Sorters = sorters
