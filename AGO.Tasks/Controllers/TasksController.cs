@@ -18,7 +18,6 @@ using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NHibernate.Criterion;
 using Newtonsoft.Json.Linq;
-using NHibernate.Linq;
 
 namespace AGO.Tasks.Controllers
 {
@@ -195,7 +194,7 @@ namespace AGO.Tasks.Controllers
 								case "Executors":
 									var ids = (data.Value.ConvertSafe<JArray>() ?? new JArray())
 										.Select(id => id.ConvertSafe<Guid>()).ToArray();
-									var toRemove = task.Executors.Where(e => ids.Contains(e.Executor.Id)).ToArray();
+									var toRemove = task.Executors.Where(e => !ids.Contains(e.Executor.Id)).ToArray();
 									var toAdd = ids.Where(id => !task.Executors.Any(e => e.Executor.Id == id))
 										.Select(id => _CrudDao.Get<ProjectParticipantModel>(id, true));
 
