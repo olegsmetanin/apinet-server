@@ -92,6 +92,22 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(vr.Success);
 		}
 
+		[Test]
+		public void CreateTaskTypeWithEmptyNameReturnError()
+		{
+			var model = new TaskTypeDTO { Name = string.Empty };
+
+			var vr = Controller.EditTaskType(TestProject, model).Validation;
+			_SessionProvider.FlushCurrentSession(!vr.Success);
+
+			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
+				.Where(m => m.ProjectCode == TestProject && m.Name == string.Empty)
+				.SingleOrDefault();
+			Assert.IsNull(tt);
+			Assert.IsFalse(vr.Success);
+			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Name").Value.Any());
+		}
+
 		
 		[Test]
 		public void UpdateTaskType()
@@ -106,6 +122,22 @@ namespace AGO.Tasks.Test
 			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.AreEqual("NewName", testTaskType.Name);
 			Assert.IsTrue(vr.Success);
+		}
+
+		[Test]
+		public void UpdateTaskTypeWithEmptyNameReturnError()
+		{
+			var tt = M.TaskType("aaa");
+			_SessionProvider.FlushCurrentSession();
+
+			var model = new TaskTypeDTO { Id = tt.Id, Name = string.Empty };
+			var vr = Controller.EditTaskType(TestProject, model).Validation;
+			_SessionProvider.FlushCurrentSession(!vr.Success);
+
+			Assert.IsFalse(vr.Success);
+			tt = Session.Get<TaskTypeModel>(tt.Id);
+			Assert.AreEqual("aaa", tt.Name);
+			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Name").Value.Any());
 		}
 
 		[Test]
