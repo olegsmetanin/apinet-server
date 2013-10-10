@@ -92,7 +92,7 @@ namespace AGO.Core.Model.Security
 		{
 			FullName =  string.Join(" ", LastName, Name, MiddleName);
 
-			var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + ". " : null;
+			var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + "." : null;
 			var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
 			FIO = ni != null && mi != null ? LastName + ni + mi : LastName;
 		}
