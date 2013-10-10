@@ -57,6 +57,7 @@
     <Compile Include="AbstractTest.cs" />
     <Compile Include="CustomTaskStatusCRUDTest.cs" />
     <Compile Include="ModelHelper.cs" />
+    <Compile Include="TaskAgreementsTest.cs" />
     <Compile Include="TaskCRUDTest.cs" />
     <Compile Include="TaskPrioritiesTest.cs" />
     <Compile Include="TaskStatusChangeTest.cs" />

@@ -68,6 +68,7 @@ namespace AGO.Home
 
 			var inWorkStatus = new ProjectStatusModel
 			{
+				ProjectCode = "TODO: remove me",
 				Creator = admin, 
 				Name = "В работе", 
 				IsInitial = true
@@ -76,6 +77,7 @@ namespace AGO.Home
 
 			var closedStatus = new ProjectStatusModel
 			{
+				ProjectCode = "TODO: remove me",
 				Creator = admin, 
 				Name = "Закрыт",
 				IsFinal = true
@@ -127,6 +129,7 @@ namespace AGO.Home
 
 			var commonTag = new ProjectTagModel
 			{
+				ProjectCode = "Docs1",
 				Creator = admin,
 				Name = "Общий тег",
 				FullName = "Общий тег",
@@ -143,6 +146,7 @@ namespace AGO.Home
 
 			var personalTag = new ProjectTagModel
 			{
+				ProjectCode = "Docs1",
 				Creator = admin,
 				Name = "Персональный тег",
 				FullName = "Персональный тег",

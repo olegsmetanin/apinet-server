@@ -53,14 +53,14 @@ namespace AGO.Tasks.Test
 			        	};
 			Session.Save(p);
 
-			var participant = new ProjectParticipantModel
+			var projAdmin = new ProjectParticipantModel
 			                  	{
 			                  		Project = p,
 			                  		User = admin,
 			                  		GroupName = "Managers",
 			                  		IsDefaultGroup = true
 			                  	};
-			Session.Save(participant);
+			Session.Save(projAdmin);
 			_SessionProvider.CloseCurrentSession();
 		}
 
@@ -95,6 +95,9 @@ namespace AGO.Tasks.Test
 						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
 					go
 					delete from Tasks.TaskExecutorModel where
+						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					go
+					delete from Tasks.TaskAgreementModel where
 						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
 					go
 					delete from Core.CustomPropertyInstanceModel where

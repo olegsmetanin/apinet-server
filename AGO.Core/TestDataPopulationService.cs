@@ -57,6 +57,7 @@ namespace AGO.Core
 
 			var primaryDepartment = new DepartmentModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Основное подразделение",
 				FullName = "Основное подразделение"
@@ -68,6 +69,7 @@ namespace AGO.Core
 
 			var childDepartment1 = new DepartmentModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Дочернее подразделение 1",
 				FullName = "Основное подразделение / Дочернее подразделение 1",
@@ -77,6 +79,7 @@ namespace AGO.Core
 
 			var childDepartment2 = new DepartmentModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Дочернее подразделение 2",
 				FullName = "Основное подразделение / Дочернее подразделение 2",
@@ -86,6 +89,7 @@ namespace AGO.Core
 
 			var childDepartment3 = new DepartmentModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Дочернее подразделение 3",
 				FullName = "Основное подразделение / Дочернее подразделение 3",
@@ -142,6 +146,7 @@ namespace AGO.Core
 		{
 			var stringPropertyType = new CustomPropertyTypeModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Строковый параметр",
 				FullName = "Строковый параметр",
@@ -151,6 +156,7 @@ namespace AGO.Core
 
 			var numberPropertyType = new CustomPropertyTypeModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Числовой параметр",
 				FullName = "Числовой параметр",
@@ -160,6 +166,7 @@ namespace AGO.Core
 
 			var datePropertyType = new CustomPropertyTypeModel
 			{
+				ProjectCode = "TODO: move me to Home module",
 				Creator = admin,
 				Name = "Параметр дата",
 				FullName = "Параметр дата",

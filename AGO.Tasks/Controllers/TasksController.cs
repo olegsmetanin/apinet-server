@@ -241,6 +241,9 @@ namespace AGO.Tasks.Controllers
 				var task = _CrudDao.Get<TaskModel>(taskId, true);
 				var participant = _CrudDao.Get<ProjectParticipantModel>(participantId, true);
 
+				if (task.Status == TaskStatus.Closed)
+					throw new LogicException("Невозможно добавить согласущего в закрытую задачу");
+
 				if (task.IsAgreemer(participant))
 					throw new LogicException(string.Format("Участник '{0}' уже является согласующим задачи '{1}'", 
 						participant.User.FIO, task.SeqNumber));
@@ -273,6 +276,8 @@ namespace AGO.Tasks.Controllers
 				var agreement = task.Agreements.FirstOrDefault(a => a.Id == agreementId);
 
 				if (agreement == null) return false;
+				if (task.Status == TaskStatus.Closed)
+					throw new LogicException("Невозможно удалить согласование в закрытой задаче");
 					
 				//TODO check security rules, task status etc.
 
@@ -282,6 +287,64 @@ namespace AGO.Tasks.Controllers
 				_CrudDao.Store(task);
 
 				return true;
+			}
+			catch (Exception e)
+			{
+				throw new LogicException(_LocalizationService.MessageForException(e), e);
+			}
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public Agreement AgreeTask([NotEmpty] Guid taskId, string comment)
+		{
+			try
+			{
+				var task = _CrudDao.Get<TaskModel>(taskId, true);
+				var cu = _AuthController.CurrentUser();
+				var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.User.Id == cu.Id);
+
+				if (agreement == null)
+					throw new LogicException("Текущий пользователь не является согласующим задачи");
+				if (task.Status == TaskStatus.Closed)
+					throw new LogicException("Невозможно согласовать закрытую задачу");
+
+				//TODO check security rules, task status etc.
+				agreement.Done = true;
+				agreement.AgreedAt = DateTime.Now;
+				agreement.Comment = comment;
+
+				_CrudDao.Store(agreement);
+
+				return TaskViewAdapter.ToAgreement(agreement);
+			}
+			catch (Exception e)
+			{
+				throw new LogicException(_LocalizationService.MessageForException(e), e);
+			}
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public Agreement RevokeAgreement([NotEmpty] Guid taskId)
+		{
+			try
+			{
+				var task = _CrudDao.Get<TaskModel>(taskId, true);
+				var cu = _AuthController.CurrentUser();
+				var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.User.Id == cu.Id);
+
+				if (agreement == null)
+					throw new LogicException("Текущий пользователь не является согласующим задачи");
+				if (task.Status == TaskStatus.Closed)
+					throw new LogicException("Невозможно отозвать согласование в закрытой задаче");
+
+				//TODO check security rules, task status etc.
+				agreement.Done = false;
+				agreement.AgreedAt = null;
+				agreement.Comment = null;
+
+				_CrudDao.Store(agreement);
+
+				return TaskViewAdapter.ToAgreement(agreement);
 			}
 			catch (Exception e)
 			{
