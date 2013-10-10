@@ -169,6 +169,20 @@ namespace AGO.Tasks.Test
 		}
 
 		[Test]
+		public void CreateDuplicateStatusReturnError()
+		{
+			M.CustomStatus("aaa");
+			_SessionProvider.FlushCurrentSession();
+			var model = new CustomStatusDTO { Name = "aaa", ViewOrder = 1 };
+
+			var vr = Controller.EditCustomStatus(TestProject, model).Validation;
+			_SessionProvider.FlushCurrentSession(!vr.Success);
+
+			Assert.IsFalse(vr.Success);
+			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Name").Value.Any());
+		}
+
+		[Test]
 		public void UpdateValidStatusReturnSuccess()
 		{
 			var s = M.CustomStatus();
@@ -199,7 +213,21 @@ namespace AGO.Tasks.Test
 			Assert.IsNotNull(s);
 			Assert.AreEqual("status", s.Name);
 		}
-		
+
+		[Test]
+		public void UpdateNameToDuplicateReturnError()
+		{
+			var aaa = M.CustomStatus("aaa");
+			var bbb = M.CustomStatus("bbb");
+			_SessionProvider.FlushCurrentSession();
+			var model = new CustomStatusDTO { Id = bbb.Id, Name = aaa.Name, ViewOrder = 1 };
+
+			var vr = Controller.EditCustomStatus(TestProject, model).Validation;
+			_SessionProvider.FlushCurrentSession(!vr.Success);
+
+			Assert.IsFalse(vr.Success);
+			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Name").Value.Any());
+		}
 
 		//delete
 		[Test]
