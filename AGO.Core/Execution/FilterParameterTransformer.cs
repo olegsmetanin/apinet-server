@@ -129,6 +129,7 @@ namespace AGO.Core.Execution
 
 				var arrayValue = value as JArray;
 				var valValue = value as JValue;
+				var objValue = value as JObject;
 
 				if (path == null || path.IsNullOrEmpty() || op == null)
 					continue;
@@ -138,6 +139,13 @@ namespace AGO.Core.Execution
 					Path = path,
 					Operator = op
 				}.IsBinary;
+
+				if (needValue && objValue != null)
+				{
+					var idProperty = objValue.Property("id");
+					if (idProperty != null)
+						valValue = idProperty.Value as JValue;
+				}
 
 				if (needValue && (arrayValue == null || arrayValue.Count == 0) && valValue == null)
 					continue;
