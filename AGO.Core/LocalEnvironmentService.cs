@@ -17,8 +17,11 @@ namespace AGO.Core
 		{
 			get
 			{
-				return Path.Combine(Path.GetDirectoryName(
-					GetType().Assembly.Location) ?? string.Empty, string.Empty);
+				var assembly = GetType().Assembly;
+				var codebase = assembly.CodeBase.TrimSafe().RemovePrefix("file:///");
+
+				return Path.Combine(Path.GetDirectoryName(codebase.IsNullOrEmpty() ? 
+					assembly.Location.TrimSafe() : codebase) ?? string.Empty, string.Empty);
 			}
 		}
 		
