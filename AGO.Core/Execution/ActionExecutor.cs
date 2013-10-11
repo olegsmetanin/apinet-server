@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Common.Logging;
+using NHibernate;
 
 namespace AGO.Core.Execution
 {
@@ -104,10 +106,18 @@ namespace AGO.Core.Execution
 
 				return result;
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
-				_SessionProvider.CloseCurrentSession(true);
-				throw;
+				_SessionProvider.FlushCurrentSession(true);
+
+				if (!(e is AbstractApplicationException))
+					LogManager.GetLogger(GetType()).Error(e.Message, e);
+
+				var objectNotFoundException = e as ObjectNotFoundException;
+				if (objectNotFoundException != null)
+					throw new NoSuchEntityException(e);
+
+				throw e is HibernateException ? new DataAccessException(e) : e;
 			}
 		}
 

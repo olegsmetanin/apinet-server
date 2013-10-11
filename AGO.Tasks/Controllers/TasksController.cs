@@ -195,7 +195,7 @@ namespace AGO.Tasks.Controllers
 									var ids = (data.Value.ConvertSafe<JArray>() ?? new JArray())
 										.Select(id => id.ConvertSafe<Guid>()).ToArray();
 									var toRemove = task.Executors.Where(e => !ids.Contains(e.Executor.Id)).ToArray();
-									var toAdd = ids.Where(id => !task.Executors.Any(e => e.Executor.Id == id))
+									var toAdd = ids.Where(id => task.Executors.All(e => !e.Executor.Id.Equals(id)))
 										.Select(id => _CrudDao.Get<ProjectParticipantModel>(id, true));
 
 									foreach (var removed in toRemove)
