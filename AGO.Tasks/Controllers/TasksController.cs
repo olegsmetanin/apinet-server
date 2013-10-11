@@ -234,7 +234,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId)
+		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId, DateTime? dueDate = null)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
 			var participant = _CrudDao.Get<ProjectParticipantModel>(participantId, true);
@@ -249,7 +249,8 @@ namespace AGO.Tasks.Controllers
 				                {
 				                	Creator = _AuthController.CurrentUser(),
 				                	Task = task,
-				                	Agreemer = participant
+				                	Agreemer = participant,
+									DueDate = dueDate
 				                };
 			task.Agreements.Add(agreement);
 

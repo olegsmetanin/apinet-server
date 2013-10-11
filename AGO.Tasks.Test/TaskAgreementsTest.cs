@@ -1,11 +1,10 @@
 ﻿using System;
-using AGO.Core;
+using System.Linq;
 using AGO.Core.Model.Security;
 using AGO.Home.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
-using System.Linq;
 
 namespace AGO.Tasks.Test
 {
@@ -79,12 +78,14 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void AddAgreementReturnSuccess()
 		{
-			controller.AddAgreemer(task.Id, pIvanov.Id);
+			var dd = new DateTime(2013, 01, 01, 0, 0, 0, DateTimeKind.Utc);
+			controller.AddAgreemer(task.Id, pIvanov.Id, dd);
 			_SessionProvider.FlushCurrentSession();
 
 			Session.Refresh(task);
 			Assert.AreEqual(1, task.Agreements.Count);
 			Assert.AreEqual(pIvanov, task.Agreements.First().Agreemer);
+			Assert.AreEqual(dd, task.Agreements.First().DueDate);
 		}
 
 		//can't add duplicate
