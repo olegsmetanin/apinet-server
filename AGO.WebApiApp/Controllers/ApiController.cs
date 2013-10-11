@@ -87,7 +87,7 @@ namespace AGO.WebApiApp.Controllers
 							message.Append(string.Format(" ({0})", subMessage.FirstCharToLower()));
 					}
 
-					return Json(new {message });
+					return Json(new { message = message.ToString() });
 				}
 			}
 		}
