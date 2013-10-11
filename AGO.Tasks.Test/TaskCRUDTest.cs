@@ -289,7 +289,7 @@ namespace AGO.Tasks.Test
 
 			var inf = new TaskPropChangeDTO(Guid.NewGuid(), t.ModelVersion, "Content", "bla bla");
 			var ur = controller.UpdateTask(TestProject, inf);
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
 
 			Assert.IsFalse(ur.Validation.Success);
 			Assert.IsTrue(ur.Validation.Errors.Any());

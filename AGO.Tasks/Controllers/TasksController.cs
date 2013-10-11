@@ -230,7 +230,7 @@ namespace AGO.Tasks.Controllers
 						}
 			        }, 
 					task => new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), Session).Fill(task),
-					() => { throw new NotSupportedException(); });
+					() => { throw new TaskCreationNotSupportedException(); });
 		}
 
 		[JsonEndpoint, RequireAuthorization]

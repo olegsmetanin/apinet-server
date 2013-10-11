@@ -76,7 +76,9 @@ namespace AGO.Tasks.Controllers
 			{
 				var persistentModel = default(Guid).Equals(id)
 				                      	?  (factory ?? defaultFactory)()
-				                      	: _CrudDao.Get<TModel>(id, true);
+				                      	: _CrudDao.Get<TModel>(id);
+				if (persistentModel == null)
+					throw new NoSuchEntityException();
 
 				update(persistentModel, result.Validation);
 

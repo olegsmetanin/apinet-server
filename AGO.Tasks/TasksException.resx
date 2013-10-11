@@ -135,4 +135,7 @@
   <data name="CurrentUserIsNotAgreemerInTaskException" xml:space="preserve">
     <value>Current user is not agreemer in task</value>
   </data>
+  <data name="TaskCreationNotSupportedException" xml:space="preserve">
+    <value>Can not create task in this method</value>
+  </data>
 </root>

@@ -11,6 +11,10 @@ namespace AGO.Tasks
 		}		 
 	}
 
+	public class TaskCreationNotSupportedException: TasksException
+	{
+	}
+
 	public class CanNotAddAgreemerToClosedTaskException: TasksException
 	{
 	}
