@@ -194,8 +194,7 @@ namespace AGO.Core.Localization
 			return localizer != null 
 				? localizer.Message(exception, culture) 
 				: (MessageFor(exception, null, culture) ?? 
-					MessageFor(exception, exception.GetType().Name, culture)) ??
-					exception.Message;
+					MessageFor(exception, exception.GetType().Name, culture));
 		}
 
 		public void RegisterLocalizers(IEnumerable<ILocalizer> localizers)

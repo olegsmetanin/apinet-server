@@ -178,8 +178,6 @@ namespace AGO.Tasks.Controllers
 			string term, 
 			[InRange(0, null)] int page)
 		{
-			if(!term.IsNullOrWhiteSpace())
-				throw new RequiredValueException();
 			return Lookup<CustomTaskStatusModel>(project, term, page, m => m.Name);
     	}
 

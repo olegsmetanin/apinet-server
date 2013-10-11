@@ -61,10 +61,6 @@ namespace AGO.Core.Execution
 
 			return result;
 		}
-			catch (AbstractApplicationException)
-			{
-				throw;
-			}
 			catch (Exception e)
 			{
 				throw new ControllerActionParameterException(parameterInfo.Name, e);

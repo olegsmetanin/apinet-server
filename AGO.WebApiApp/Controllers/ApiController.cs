@@ -72,8 +72,22 @@ namespace AGO.WebApiApp.Controllers
 					if (httpException != null)
 						HttpContext.Response.StatusCode = httpException.GetHttpCode();
 
-					return Json(new {message = 
-						DependencyResolver.Current.GetService<ILocalizationService>().MessageForException(e) });
+					var message = new StringBuilder();
+					var localizationService = DependencyResolver.Current.GetService<ILocalizationService>();
+
+					message.Append(localizationService.MessageForException(e));
+					if (message.Length == 0)
+						message.Append(localizationService.MessageForException(new ExceptionDetailsHidden()));
+					else
+					{
+						var subMessage = e.InnerException != null
+							? localizationService.MessageForException(e.InnerException)
+							: null;
+						if (!subMessage.IsNullOrEmpty())
+							message.Append(string.Format(" ({0})", subMessage.FirstCharToLower()));
+					}
+
+					return Json(new {message });
 				}
 			}
 		}

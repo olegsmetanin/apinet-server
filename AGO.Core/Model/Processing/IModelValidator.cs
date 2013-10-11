@@ -6,6 +6,8 @@
 
 		bool Accepts(IIdentifiedModel model);
 
-		void ValidateModel(IIdentifiedModel model, ValidationResult validation, object capability = null);
+		void ValidateModelSaving(IIdentifiedModel model, ValidationResult validation, object capability = null);
+
+		void ValidateModelDeletion(IIdentifiedModel model, ValidationResult validation, object capability = null);
 	}
 }

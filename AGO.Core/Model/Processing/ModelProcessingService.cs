@@ -59,7 +59,21 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("validation");
 
 			foreach (var validator in _ModelValidators.OrderBy(m => m.Priority).Where(v => v.Accepts(model)))
-				validator.ValidateModel(model, validation, capability);
+				validator.ValidateModelSaving(model, validation, capability);
+		}
+
+		public void ValidateModelDeletion(IIdentifiedModel model, ValidationResult validation, object capability = null)
+		{
+			if (!_Ready)
+				throw new ServiceNotInitializedException();
+
+			if (model == null)
+				throw new ArgumentNullException("model");
+			if (validation == null)
+				throw new ArgumentNullException("validation");
+
+			foreach (var validator in _ModelValidators.OrderBy(m => m.Priority).Where(v => v.Accepts(model)))
+				validator.ValidateModelDeletion(model, validation, capability);
 		}
 
 		public void RegisterModelValidators(IEnumerable<IModelValidator> validators)
@@ -143,11 +157,19 @@ namespace AGO.Core.Model.Processing
 				if (otherProperty == null)
 					continue;
 
+				var referenceProperty = propertyInfo.Name.EndsWith("Id")
+					? target.GetType().GetProperty(propertyInfo.Name.RemoveSuffix("Id"))
+					: null;
+				if (referenceProperty != null && (!referenceProperty.CanWrite ||
+						!typeof(IIdentifiedModel).IsAssignableFrom(referenceProperty.PropertyType)))
+					referenceProperty = null;
+
 				object capabilityObjectValue = null;
 				if (capability != null)
 				{
-					var capabilityProperty = capability.GetType().GetProperty(propertyInfo.Name, typeof(bool?))
-						?? capability.GetType().GetProperty(propertyInfo.Name);
+					var capabilityName = referenceProperty != null ? referenceProperty.Name : propertyInfo.Name;
+					var capabilityProperty = capability.GetType().GetProperty(capabilityName, typeof(bool?))
+						?? capability.GetType().GetProperty(capabilityName);
 					if (capabilityProperty == null)
 						continue;
 					capabilityObjectValue = capabilityProperty.GetValue(capability, null);
@@ -166,7 +188,7 @@ namespace AGO.Core.Model.Processing
 					continue;
 
 				var value = otherProperty.GetValue(source, null);
-				if (value == null && !isNullableValue)
+				if (value == null && !isNullableValue && referenceProperty == null)
 					continue;
 				var existingValue = propertyInfo.GetValue(target, null);
 
@@ -182,32 +204,8 @@ namespace AGO.Core.Model.Processing
 					continue;
 				propertyInfo.SetValue(target, value, null);
 
-				if (identifiedTarget == null)
+				if (identifiedTarget == null || referenceProperty == null || Equals(value, existingValue))
 					continue;
-
-				var referenceProperty = propertyInfo.Name.EndsWith("Id")
-					? target.GetType().GetProperty(propertyInfo.Name.RemoveSuffix("Id"))
-					: null;
-				if (referenceProperty != null && (!referenceProperty.CanWrite ||
-						!typeof(IIdentifiedModel).IsAssignableFrom(referenceProperty.PropertyType)))
-					referenceProperty = null;
-				
-				if (referenceProperty == null)
-					continue;
-
-				if (Equals(value, existingValue))
-					continue;
-
-				if (capability != null)
-				{
-					var capabilityProperty = capability.GetType().GetProperty(referenceProperty.Name, typeof(bool?));
-					if (capabilityProperty != null)
-					{
-						capabilityValue = capabilityObjectValue as bool?;
-						if (capabilityValue != null && !capabilityValue.Value)
-							continue;
-					}
-				}
 
 				var strVal = value as string;
 				var referenceModel = value != null && (strVal == null || !strVal.IsNullOrWhiteSpace())

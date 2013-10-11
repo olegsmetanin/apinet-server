@@ -39,7 +39,7 @@ namespace AGO.Core.Model.Processing
 			return true;
 		}
 
-		public void ValidateModel(
+		public void ValidateModelSaving(
 			IIdentifiedModel model, 
 			ValidationResult validation,
 			object capability = null)
@@ -50,6 +50,13 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("validation");
 
 			DoValidateModelSaving(model, validation, capability, null);
+		}
+
+		public void ValidateModelDeletion(
+			IIdentifiedModel model,
+			ValidationResult validation,
+			object capability = null)
+		{
 		}
 
 		#endregion
@@ -67,12 +74,6 @@ namespace AGO.Core.Model.Processing
 
 			foreach (var propertyInfo in properties)
 			{
-				var refIdProperty = typeof(IIdentifiedModel).IsAssignableFrom(propertyInfo.PropertyType)
-					? model.GetType().GetProperty(propertyInfo.Name + "Id")
-					: null;
-				if (refIdProperty != null && !refIdProperty.CanWrite)
-					refIdProperty = null;
-
 				try
 				{
 					var capabilityProperty = capability != null 
@@ -108,7 +109,11 @@ namespace AGO.Core.Model.Processing
 						continue;
 
 					if (invalidAttribute is NotNullAttribute || invalidAttribute is NotEmptyAttribute)
+					{
+						if (capabilityValue ?? true)
 						throw new RequiredValueException();
+						continue;
+					}
 
 					var inRange = invalidAttribute as InRangeAttribute;
 					if (inRange != null && inRange.Inclusive)
@@ -136,8 +141,6 @@ namespace AGO.Core.Model.Processing
 				{
 					var msg = _LocalizationService.MessageForException(e);
 					validation.AddFieldErrors(string.Format("{0}{1}", namePrefix, propertyInfo.Name), msg);
-					if (refIdProperty != null)
-						validation.AddFieldErrors(string.Format("{0}{1}", namePrefix, refIdProperty.Name), msg);
 				}
 			}
 		}

@@ -109,9 +109,11 @@ namespace AGO.Core.Model
 
 		public override bool Equals(object obj)
 		{
-			if (IsNew())
-				return base.Equals(obj);
 			var other = obj as IIdentifiedModel<TIdType>;
+
+			if (IsNew() || (other != null && other.IsNew()))
+				return base.Equals(obj);
+			
 			return other != null && Equals(Id, other.Id);
 		}
 
