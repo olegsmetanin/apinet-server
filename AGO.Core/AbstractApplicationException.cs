@@ -95,6 +95,10 @@ namespace AGO.Core
 
 	public class NoSuchEntityException : AbstractApplicationException
 	{
+		public NoSuchEntityException(Exception innerException = null)
+			: base(null, innerException)
+		{
+		}
 	}
 
 	public class ExceptionDetailsHidden : AbstractApplicationException

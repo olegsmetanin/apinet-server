@@ -150,6 +150,9 @@
   <data name="MustBeUniqueException" xml:space="preserve">
     <value>Already exists</value>
   </data>
+  <data name="NoSuchEntityException" xml:space="preserve">
+    <value>Requested object not found</value>
+  </data>
   <data name="NotAuthenticatedException" xml:space="preserve">
     <value>Authentication required</value>
   </data>
