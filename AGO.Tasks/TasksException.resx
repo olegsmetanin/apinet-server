@@ -117,10 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NoInitialProjectStatusException" xml:space="preserve">
-    <value>No initial project status found</value>
+  <data name="AgreemerAlreadyAssignedToTaskException" xml:space="preserve">
+    <value>Agreemer '{0}' already assigned to task '{1}'</value>
   </data>
-  <data name="NoSuchProjectException" xml:space="preserve">
-    <value>Requested project not found</value>
+  <data name="CanNotAddAgreemerToClosedTask" xml:space="preserve">
+    <value>Can not add agreemer to closed task</value>
+  </data>
+  <data name="CanNotAgreeClosedTaskException" xml:space="preserve">
+    <value>Can not agree closed task</value>
+  </data>
+  <data name="CanNotRemoveAgreemerFromClosedTaskException" xml:space="preserve">
+    <value>Can not remove agreemer from closed task</value>
+  </data>
+  <data name="CanNotRevokeAgreementFromClosedTaskException" xml:space="preserve">
+    <value>Can not revoke agreement from closed task</value>
+  </data>
+  <data name="CurrentUserIsNotAgreemerInTaskException" xml:space="preserve">
+    <value>Current user is not agreemer in task</value>
   </data>
 </root>

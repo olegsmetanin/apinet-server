@@ -1,11 +1,10 @@
 ﻿using System;
-using AGO.Core;
+using System.Linq;
 using AGO.Core.Model.Security;
 using AGO.Home.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
-using System.Linq;
 
 namespace AGO.Tasks.Test
 {
@@ -79,16 +78,18 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void AddAgreementReturnSuccess()
 		{
-			controller.AddAgreemer(task.Id, pIvanov.Id);
+			var dd = new DateTime(2013, 01, 01, 0, 0, 0, DateTimeKind.Utc);
+			controller.AddAgreemer(task.Id, pIvanov.Id, dd);
 			_SessionProvider.FlushCurrentSession();
 
 			Session.Refresh(task);
 			Assert.AreEqual(1, task.Agreements.Count);
 			Assert.AreEqual(pIvanov, task.Agreements.First().Agreemer);
+			Assert.AreEqual(dd, task.Agreements.First().DueDate);
 		}
 
 		//can't add duplicate
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Участник 'Иванов И.И.' уже является согласующим задачи 't0-1'")]
+		[Test, ExpectedException(typeof(AgreemerAlreadyAssignedToTaskException))]
 		public void AddDuplicateAgreementThrow()
 		{
 			var agr = new TaskAgreementModel
@@ -105,7 +106,7 @@ namespace AGO.Tasks.Test
 			controller.AddAgreemer(task.Id, pIvanov.Id);
 		}
 		//can't add to closed
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Невозможно добавить согласущего в закрытую задачу")]
+		[Test, ExpectedException(typeof(CanNotAddAgreemerToClosedTaskException))]
 		public void AddAgreementToClosedThrow()
 		{
 			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
@@ -149,7 +150,7 @@ namespace AGO.Tasks.Test
 			Assert.IsFalse(res);
 		}
 		//can't remove from closed
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Невозможно удалить согласование в закрытой задаче")]
+		[Test, ExpectedException(typeof(CanNotRemoveAgreemerFromClosedTaskException))]
 		public void RemoveAgreementFromClosedThrow()
 		{
 			var agr = new TaskAgreementModel
@@ -198,7 +199,7 @@ namespace AGO.Tasks.Test
 		}
 
 		//can't agree for other person
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Текущий пользователь не является согласующим задачи")]
+		[Test, ExpectedException(typeof(CurrentUserIsNotAgreemerInTaskException))]
 		public void AgreeFromOtherPersonThrow()
 		{
 			var agr = new TaskAgreementModel
@@ -227,7 +228,7 @@ namespace AGO.Tasks.Test
 		}
 
 		//can't agree closed
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Невозможно согласовать закрытую задачу")]
+		[Test, ExpectedException(typeof(CanNotAgreeClosedTaskException))]
 		public void AgreeClosedThrow()
 		{
 			var agr = new TaskAgreementModel
@@ -289,7 +290,7 @@ namespace AGO.Tasks.Test
 		}
 
 		//can't revoke from other user
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Текущий пользователь не является согласующим задачи")]
+		[Test, ExpectedException(typeof(CurrentUserIsNotAgreemerInTaskException))]
 		public void RevokeAgreementFromOtherPersonThrow()
 		{
 			var agr = new TaskAgreementModel
@@ -321,7 +322,7 @@ namespace AGO.Tasks.Test
 		}
 
 		//can't revoke from closed
-		[Test, ExpectedException(typeof(LogicException), ExpectedMessage = @"Невозможно отозвать согласование в закрытой задаче")]
+		[Test, ExpectedException(typeof(CanNotRevokeAgreementFromClosedTaskException))]
 		public void RevokeFromClosedThrow()
 		{
 			var agr = new TaskAgreementModel

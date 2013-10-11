@@ -201,6 +201,7 @@ namespace AGO.Tasks.Controllers.DTO
 				Id = agreement.Id,
 				ModelVersion = agreement.ModelVersion,
 				Agreemer = agreement.Agreemer.User.FIO,
+				DueDate = agreement.DueDate,
 				Done = agreement.Done,
 				AgreedAt = agreement.AgreedAt,
 				Comment = agreement.Comment

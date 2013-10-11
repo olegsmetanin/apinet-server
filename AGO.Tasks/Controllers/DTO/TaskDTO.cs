@@ -86,10 +86,14 @@ namespace AGO.Tasks.Controllers.DTO
 	{
 		public string Agreemer { get; set; }
 
+		public DateTime? DueDate { get; set; }
+
 		public bool Done { get; set; }
 
+		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public DateTime? AgreedAt { get; set; }
 
+		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public string Comment;
 	}
 
