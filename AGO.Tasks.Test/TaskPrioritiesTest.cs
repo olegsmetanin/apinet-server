@@ -31,7 +31,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskPrioritiesWithoutTermReturnAll()
 		{
-			var result = Controller.LookupTaskPriorities(null).ToArray();
+			var result = Controller.LookupTaskPriorities(null, 0).ToArray();
 
 			Assert.AreEqual(3, result.Length);
 			Assert.AreEqual(TaskPriority.Low.ToString(), result[0].Id);
@@ -42,7 +42,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskPrioritiesFilterByTerm()
 		{
-			var result = Controller.LookupTaskPriorities("ки").ToArray();
+			var result = Controller.LookupTaskPriorities("ки", 0).ToArray();
 
 			Assert.AreEqual(2, result.Length);
 			Assert.AreEqual(TaskPriority.Low.ToString(), result[0].Id); //НизКИй

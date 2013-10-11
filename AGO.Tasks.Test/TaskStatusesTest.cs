@@ -30,7 +30,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskStatusesWithoutTermReturnAll()
 		{
-			var result = Controller.LookupTaskStatuses(null).ToArray();
+			var result = Controller.LookupTaskStatuses(null, 0).ToArray();
 
 			Assert.AreEqual(5, result.Length);
 			Assert.AreEqual(TaskStatus.NotStarted.ToString(), result[0].Id);
@@ -43,7 +43,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskStatusesFilterByTerm()
 		{
-			var result = Controller.LookupTaskStatuses("та").ToArray();
+			var result = Controller.LookupTaskStatuses("та", 0).ToArray();
 
 			Assert.AreEqual(3, result.Length);
 			Assert.AreEqual(TaskStatus.NotStarted.ToString(), result[0].Id); //Не начаТА

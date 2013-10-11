@@ -42,9 +42,12 @@ namespace AGO.Tasks.Controllers
 
 		private IEnumerable<LookupEntry> LookupEnum<TModel, TEnum>(
 			string term, 
+			int page,
 			Expression<Func<TModel, TEnum>> prop, 
 			ref LookupEntry[] cache)
 		{
+			if (page > 0) return Enumerable.Empty<LookupEntry>(); //while size of enum less than defaul page size (10)
+
 			if (cache == null)
 			{
 				var meta = _SessionProvider.ModelMetadata(typeof(TModel));
@@ -65,15 +68,15 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupTaskStatuses(string term)
+		public IEnumerable<LookupEntry> LookupTaskStatuses(string term, [InRange(0, null)] int page)
 		{
-			return LookupEnum<TaskModel, TaskStatus>(term, m => m.Status, ref taskStatuses);
+			return LookupEnum<TaskModel, TaskStatus>(term, page, m => m.Status, ref taskStatuses);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupTaskPriorities(string term)
+		public IEnumerable<LookupEntry> LookupTaskPriorities(string term, [InRange(0, null)] int page)
 		{
-			return LookupEnum<TaskModel, TaskPriority>(term, m => m.Priority, ref taskPriorities);
+			return LookupEnum<TaskModel, TaskPriority>(term, page, m => m.Priority, ref taskPriorities);
 		}
 			
 		[JsonEndpoint, RequireAuthorization]
