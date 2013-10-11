@@ -120,4 +120,7 @@
   <data name="NoInitialProjectStatusException" xml:space="preserve">
     <value>Ни один статус проекта в справочнике не указан начальным</value>
   </data>
+  <data name="NoSuchProjectException" xml:space="preserve">
+    <value>Запрашиваемый проект не найден</value>
+  </data>
 </root>

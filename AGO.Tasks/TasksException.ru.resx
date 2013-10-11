@@ -117,10 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="NoInitialProjectStatusException" xml:space="preserve">
-    <value>No initial project status found</value>
+  <data name="AgreemerAlreadyAssignedToTaskException" xml:space="preserve">
+    <value>Участник '{0}' уже является согласующим задачи '{1}'</value>
   </data>
-  <data name="NoSuchProjectException" xml:space="preserve">
-    <value>Requested project not found</value>
+  <data name="CanNotAddAgreemerToClosedTask" xml:space="preserve">
+    <value>Невозможно добавить согласующего в закрытую задачу</value>
+  </data>
+  <data name="CanNotAgreeClosedTaskException" xml:space="preserve">
+    <value>Невозможно согласовать закрытую задачу</value>
+  </data>
+  <data name="CanNotRemoveAgreemerFromClosedTaskException" xml:space="preserve">
+    <value>Невозможно удалить согласующего из закрытой задачи</value>
+  </data>
+  <data name="CanNotRevokeAgreementFromClosedTaskException" xml:space="preserve">
+    <value>Невозможно отозвать согласование в закрытой задаче</value>
+  </data>
+  <data name="CurrentUserIsNotAgreemerInTaskException" xml:space="preserve">
+    <value>Текущий пользователь не является согласующим задачи</value>
   </data>
 </root>
