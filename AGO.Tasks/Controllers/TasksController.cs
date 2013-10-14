@@ -161,8 +161,6 @@ namespace AGO.Tasks.Controllers
 			return Edit<TaskModel, TaskViewDTO>(data.Id, project,
 			    (task, vr) =>
 			    	{
-						System.Threading.Thread.Sleep(2000);
-
 						if (data.Prop.IsNullOrWhiteSpace())
 						{
 							vr.AddErrors("Property name required");
@@ -194,6 +192,7 @@ namespace AGO.Tasks.Controllers
 									var dd = data.Value.ConvertSafe<DateTime?>();
 									if (dd != null && dd.Value < DateTime.Today.ToUniversalTime())
 									{
+										//TODO localization??
 										vr.AddFieldErrors("DueDate", "Due date can't be before today");
 										break;
 									}
