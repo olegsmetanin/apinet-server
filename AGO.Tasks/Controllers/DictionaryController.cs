@@ -205,7 +205,11 @@ namespace AGO.Tasks.Controllers
 		public UpdateResult<CustomStatusDTO> EditCustomStatus([NotEmpty] string project, [NotNull] CustomStatusDTO model)
 		{
 			return Edit<CustomTaskStatusModel, CustomStatusDTO>(model.Id, project, 
-				(status, vr) => { status.Name = model.Name.TrimSafe(); status.ViewOrder = model.ViewOrder; }, 
+				(status, vr) =>
+					{
+						status.Name = model.Name.TrimSafe(); 
+						status.ViewOrder = model.ViewOrder;
+					}, 
 				status => new CustomStatusAdapter().Fill(status));
 		}
 

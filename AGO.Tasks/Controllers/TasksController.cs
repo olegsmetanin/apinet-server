@@ -161,6 +161,8 @@ namespace AGO.Tasks.Controllers
 			return Edit<TaskModel, TaskViewDTO>(data.Id, project,
 			    (task, vr) =>
 			    	{
+						System.Threading.Thread.Sleep(2000);
+
 						if (data.Prop.IsNullOrWhiteSpace())
 						{
 							vr.AddErrors("Property name required");
@@ -189,7 +191,13 @@ namespace AGO.Tasks.Controllers
 									task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
 									break;
 								case "DueDate":
-									task.DueDate = data.Value.ConvertSafe<DateTime?>();
+									var dd = data.Value.ConvertSafe<DateTime?>();
+									if (dd != null && dd.Value < DateTime.Today.ToUniversalTime())
+									{
+										vr.AddFieldErrors("DueDate", "Due date can't be before today");
+										break;
+									}
+									task.DueDate = dd;
 									break;
 								case "Executors":
 									var ids = (data.Value.ConvertSafe<JArray>() ?? new JArray())
