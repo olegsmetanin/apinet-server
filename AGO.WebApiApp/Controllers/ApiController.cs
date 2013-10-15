@@ -22,6 +22,7 @@ namespace AGO.WebApiApp.Controllers
 		{
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
 			{
+				var logged = false;
 				try
 				{
 					var serviceType = RouteData.Values["serviceType"] as Type;
@@ -52,7 +53,16 @@ namespace AGO.WebApiApp.Controllers
 					}
 
 					var executor = DependencyResolver.Current.GetService<IActionExecutor>();
-					var result = executor.Execute(service, method);
+					object result;
+					try
+					{
+						result = executor.Execute(service, method);
+					}
+					catch (Exception ex)
+					{
+						logged = true;
+						throw;
+					}
 
 					var jsonService = DependencyResolver.Current.GetService<IJsonService>();
 					var stringBuilder = new StringBuilder();
@@ -63,6 +73,10 @@ namespace AGO.WebApiApp.Controllers
 				}
 				catch (Exception e)
 				{
+					//may be logged in IActionExecutor with more detailed info
+					if (!logged)
+						LogException(e);
+
 					try
 					{
 						HttpContext.Response.TrySkipIisCustomErrors = true;
@@ -96,7 +110,7 @@ namespace AGO.WebApiApp.Controllers
 					}
 					catch (Exception ex)
 					{
-						LogException(ex);
+						LogException(ex);//fatal, but we need cause of exception in log
 						throw;
 					}
 				}
