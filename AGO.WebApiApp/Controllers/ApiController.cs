@@ -12,6 +12,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Execution;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using Common.Logging;
 
 namespace AGO.WebApiApp.Controllers
 {
@@ -62,34 +63,52 @@ namespace AGO.WebApiApp.Controllers
 				}
 				catch (Exception e)
 				{
-					HttpContext.Response.StatusCode = 500;
-					if (e is NotAuthenticatedException)
-						HttpContext.Response.StatusCode = 401;
-					if (e is AccessForbiddenException)
-						HttpContext.Response.StatusCode = 403;
-					
-					var httpException = e as HttpException;
-					if (httpException != null)
-						HttpContext.Response.StatusCode = httpException.GetHttpCode();
-
-					var message = new StringBuilder();
-					var localizationService = DependencyResolver.Current.GetService<ILocalizationService>();
-
-					message.Append(localizationService.MessageForException(e));
-					if (message.Length == 0)
-						message.Append(localizationService.MessageForException(new ExceptionDetailsHidden()));
-					else
+					try
 					{
-						var subMessage = e.InnerException != null
-							? localizationService.MessageForException(e.InnerException)
-							: null;
-						if (!subMessage.IsNullOrEmpty())
-							message.Append(string.Format(" ({0})", subMessage.FirstCharToLower()));
-					}
+						HttpContext.Response.TrySkipIisCustomErrors = true;
 
-					return Json(new { message = message.ToString() });
+						HttpContext.Response.StatusCode = 500;
+						if (e is NotAuthenticatedException)
+							HttpContext.Response.StatusCode = 401;
+						if (e is AccessForbiddenException)
+							HttpContext.Response.StatusCode = 403;
+					
+						var httpException = e as HttpException;
+						if (httpException != null)
+							HttpContext.Response.StatusCode = httpException.GetHttpCode();
+
+						var message = new StringBuilder();
+						var localizationService = DependencyResolver.Current.GetService<ILocalizationService>();
+
+						message.Append(localizationService.MessageForException(e));
+						if (message.Length == 0)
+							message.Append(localizationService.MessageForException(new ExceptionDetailsHidden()));
+						else
+						{
+							var subMessage = e.InnerException != null
+							                 	? localizationService.MessageForException(e.InnerException)
+							                 	: null;
+							if (!subMessage.IsNullOrEmpty())
+								message.Append(string.Format(" ({0})", subMessage.FirstCharToLower()));
+						}
+
+						return Json(new { message = message.ToString() });
+					}
+					catch (Exception ex)
+					{
+						LogException(ex);
+						throw;
+					}
 				}
 			}
+		}
+
+		private void LogException(Exception e)
+		{
+			if (e is AbstractApplicationException)
+				LogManager.GetLogger(GetType()).Info(e.GetBaseException().Message, e);
+			else
+				LogManager.GetLogger(GetType()).Error(e.GetBaseException().Message, e);
 		}
 	}
 }

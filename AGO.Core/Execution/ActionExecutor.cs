@@ -53,6 +53,7 @@ namespace AGO.Core.Execution
 			if (methodInfo == null || methodInfo.DeclaringType == null)
 				throw new ArgumentNullException("methodInfo");
 
+			var logged = false;
 			try
 			{
 				if (methodInfo.DeclaringType.IsInterface)
@@ -92,6 +93,10 @@ namespace AGO.Core.Execution
 				}
 				catch (TargetInvocationException e)
 				{
+					//Log here for catchig source line number in stack trace (lost when rethrow)
+					LogException(e.InnerException);
+					logged = true;
+
 					throw e.InnerException;
 				}
 
@@ -110,8 +115,8 @@ namespace AGO.Core.Execution
 			{
 				_SessionProvider.FlushCurrentSession(true);
 
-				if (!(e is AbstractApplicationException))
-					LogManager.GetLogger(GetType()).Error(e.Message, e);
+				if (!logged)
+					LogException(e);
 
 				var objectNotFoundException = e as ObjectNotFoundException;
 				if (objectNotFoundException != null)
@@ -119,6 +124,14 @@ namespace AGO.Core.Execution
 
 				throw e is HibernateException ? new DataAccessException(e) : e;
 			}
+		}
+
+		private void LogException(Exception e)
+		{
+			if (e is AbstractApplicationException)
+				LogManager.GetLogger(GetType()).Info(e.GetBaseException().Message, e);
+			else
+				LogManager.GetLogger(GetType()).Error(e.GetBaseException().Message, e);
 		}
 
 		#endregion
