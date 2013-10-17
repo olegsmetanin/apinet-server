@@ -293,8 +293,8 @@
         }
 
         function getLang() {
-            return (getCookie('lang') || window.navigator.userLanguage ||
-	            window.navigator.language).substring(0,2);
+            return (getCookie('currentLocale') || window.navigator.userLanguage ||
+	            window.navigator.language).substring(0, 2);
         }
 
     })();
