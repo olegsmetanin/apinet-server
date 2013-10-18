@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -15,26 +14,26 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Задача - основная запись основного реестра модуля
     /// </summary>
-    public class TaskModel: SecureProjectBoundModel<Guid>
+	public class TaskModel : SecureProjectBoundModel<Guid>, ITasksModel
     {
         #region Persistent
 
         /// <summary>
         /// Номер п/п задачи
         /// </summary>
-        [DisplayName("Номер п/п"), JsonProperty, NotEmpty, NotLonger(16)]
+        [JsonProperty, NotEmpty, NotLonger(16)]
         public virtual string SeqNumber { get; set; }
 
         /// <summary>
         /// Внутренний номер-счетчик задачи, используется для сортировки (вместо номера п/п)
         /// </summary>
-        [DisplayName("Счетчик номера п/п"), JsonProperty, NotNull]
+        [JsonProperty, NotNull]
         public virtual long InternalSeqNumber { get; set; }
 
         /// <summary>
         /// Статус задачи
         /// </summary>
-        [DisplayName("Статус"), JsonProperty, EnumDisplayNames(new[]
+        [JsonProperty, EnumDisplayNames(new[]
 		{
 			"NotStarted", "Не начата",
 			"InWork", "В работе",
@@ -47,7 +46,7 @@ namespace AGO.Tasks.Model.Task
         /// <summary>
         /// История изменения статуса задачи
         /// </summary>
-        [DisplayName("История изменения статуса"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+        [PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
         public virtual ISet<TaskStatusHistoryModel> StatusHistory
         {
             get { return statusHistoryStore; }
@@ -58,7 +57,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Приоритет
 		/// </summary>
-		[DisplayName("Приоритет"), JsonProperty, EnumDisplayNames(new[]
+		[JsonProperty, EnumDisplayNames(new[]
 		{
 			"Low", "Низкий",
 			"Normal", "Нормальный",
@@ -69,7 +68,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Тип задачи
 		/// </summary>
-		[DisplayName("Тип задачи"), JsonProperty, NotNull]
+		[JsonProperty, NotNull]
 		public virtual TaskTypeModel TaskType { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? TaskTypeId { get; set; }
@@ -77,25 +76,25 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Содержание (описание задачи)
 		/// </summary>
-		[DisplayName("Содержание"), JsonProperty, NotLonger(1024)]
+		[JsonProperty, NotLonger(1024)]
 		public virtual string Content { get; set; }
 
 		/// <summary>
 		/// Примечание
 		/// </summary>
-		[DisplayName("Примечание"), JsonProperty]
+		[JsonProperty]
 		public virtual string Note { get; set; }
 
 		/// <summary>
 		/// Срок исполнения
 		/// </summary>
-		[DisplayName("Срок исполнения"), JsonProperty]
+		[JsonProperty]
 		public virtual DateTime? DueDate { get; set; }
 
 		/// <summary>
 		/// Пользовательский статус задачи
 		/// </summary>
-		[DisplayName("Пользовательский статус"), JsonProperty]
+		[JsonProperty]
 		public virtual CustomTaskStatusModel CustomStatus { get; protected set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? CustomStatusId { get; set; }
@@ -103,7 +102,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// История изменения пользовательского статуса задачи
 		/// </summary>
-		[DisplayName("История изменения пользовательского статуса"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
 		public virtual ISet<CustomTaskStatusHistoryModel> CustomStatusHistory
 		{
 			get { return customStatusHistoryStore; }
@@ -114,7 +113,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Исполнители задачи
 		/// </summary>
-		[DisplayName("Исполнители"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan), NotEmpty]
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan), NotEmpty]
     	public virtual ISet<TaskExecutorModel> Executors
     	{
     		get { return executorsStore; }
@@ -125,7 +124,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Согласования задачи
 		/// </summary>
-		[DisplayName("Согласования"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
     	public virtual ISet<TaskAgreementModel> Agreements
     	{
 			get { return agreementsStore; }
@@ -136,7 +135,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Пользовательские свойства
 		/// </summary>
-		[DisplayName("Параметры"), PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
     	public virtual ISet<TaskCustomPropertyModel> CustomProperties
     	{
     		get { return customPropsStore; }

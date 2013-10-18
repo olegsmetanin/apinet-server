@@ -11,7 +11,7 @@ namespace AGO.Tasks.Controllers.DTO
 	/// <typeparam name="TModel">Тип модели</typeparam>
 	/// <typeparam name="TDTO">Тип DTO</typeparam>
 	public abstract class ModelAdapter<TModel, TDTO> 
-		where TModel: DocstoreModel<Guid>, ISecureModel
+		where TModel: CoreModel<Guid>, ISecureModel
 		where TDTO: ModelDTO, new()
 	{
 		public virtual TDTO Fill(TModel model)
@@ -31,7 +31,7 @@ namespace AGO.Tasks.Controllers.DTO
 	/// <typeparam name="TModel">Тип модели</typeparam>
 	/// <typeparam name="TDTO">Тип DTO</typeparam>
 	public abstract class DictionaryModelAdapter<TModel, TDTO> : ModelAdapter<TModel, TDTO> 
-		where TModel: DocstoreModel<Guid>, IDictionaryItemModel
+		where TModel: CoreModel<Guid>, IDictionaryItemModel
 		where TDTO: DictionaryDTO, new()
 	{
 		public override TDTO Fill(TModel model)

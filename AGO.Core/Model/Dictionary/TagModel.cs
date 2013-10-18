@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using AGO.Core.Model.Security;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
@@ -14,23 +13,22 @@ namespace AGO.Core.Model.Dictionary
 	{
 		#region Persistent
 
-		[DisplayName("Наименование"), JsonProperty, NotLonger(128), NotEmpty]
+		[JsonProperty, NotLonger(128), NotEmpty]
 		public virtual string Name { get; set; }
 
-		[DisplayName("Полное наименование"), JsonProperty, NotLonger(1024)]
+		[JsonProperty, NotLonger(1024)]
 		public virtual string FullName { get; set; }
 
-		[DisplayName("Владелец")]
 		public virtual UserModel Owner { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? OwnerId { get; set; }
 
-		[DisplayName("Предшественник"), JsonProperty]
+		[JsonProperty]
 		public virtual TagModel Parent { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ParentId { get; set; }
 
-		[DisplayName("Последователи"), PersistentCollection]
+		[PersistentCollection]
 		public virtual ISet<TagModel> Children { get { return _Children; } set { _Children = value; } }
 		private ISet<TagModel> _Children = new HashSet<TagModel>();
 

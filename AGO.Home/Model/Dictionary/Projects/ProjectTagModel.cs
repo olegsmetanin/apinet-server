@@ -2,7 +2,7 @@
 
 namespace AGO.Home.Model.Dictionary.Projects
 {
-	public class ProjectTagModel : TagModel
+	public class ProjectTagModel : TagModel, IHomeModel
 	{
 	}
 }

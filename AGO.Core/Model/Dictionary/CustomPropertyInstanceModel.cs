@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Globalization;
 using AGO.Core.Model.Security;
 using AGO.Core.Attributes.Constraints;
@@ -14,18 +13,18 @@ namespace AGO.Core.Model.Dictionary
 	{
 		#region Persistent
 
-		[DisplayName("Тип параметра"), JsonProperty, NotNull]
+		[JsonProperty, NotNull]
 		public virtual CustomPropertyTypeModel PropertyType { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? PropertyTypeId { get; set; }
 
-		[DisplayName("Значение-строка"), JsonProperty, NotLonger(512)]
+		[JsonProperty, NotLonger(512)]
 		public virtual string StringValue { get; set; }
 
-		[DisplayName("Значение-число"), JsonProperty]
+		[JsonProperty]
 		public virtual Decimal? NumberValue { get; set; }
 
-		[DisplayName("Значение-дата"), JsonProperty]
+		[JsonProperty]
 		public virtual DateTime? DateValue { get; set; }
 
 		#endregion

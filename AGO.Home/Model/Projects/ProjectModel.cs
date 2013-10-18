@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using AGO.Core.Model;
 using AGO.Core.Model.Security;
 using AGO.Home.Model.Dictionary.Projects;
@@ -11,49 +10,49 @@ using Newtonsoft.Json;
 
 namespace AGO.Home.Model.Projects
 {
-	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel
+	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel, IHomeModel
 	{
 		public const int PROJECT_CODE_SIZE = 32;
 
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, UniqueProperty, NotLonger(PROJECT_CODE_SIZE), NotEmpty]
+		[JsonProperty, UniqueProperty, NotLonger(PROJECT_CODE_SIZE), NotEmpty]
 		public virtual string ProjectCode { get; set; }
 
-		[DisplayName("Наименование"), NotLonger(64), JsonProperty, NotEmpty]
+		[NotLonger(64), JsonProperty, NotEmpty]
 		public virtual string Name { get; set; }
 
-		[DisplayName("Описание"), NotLonger(512), JsonProperty]
+		[NotLonger(512), JsonProperty]
 		public virtual new string Description { get; set; }
 
-		[DisplayName("Архив"), JsonProperty]
+		[JsonProperty]
 		public virtual bool IsArchive { get; set; }
 
-		[DisplayName("Горизонт событий проекта"), JsonProperty]
+		[JsonProperty]
 		public virtual DateTime? EventsHorizon { get; set; }
 
-		[DisplayName("Путь к проекту"), NotLonger(512), JsonProperty]
+		[NotLonger(512), JsonProperty]
 		public virtual string FileSystemPath { get; set; }
 
-		[DisplayName("Тип проекта"), JsonProperty, NotNull, Prefetched]
+		[JsonProperty, NotNull, Prefetched]
 		public virtual ProjectTypeModel Type { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? TypeId { get; set; }
 
-		[DisplayName("Статус проекта"), JsonProperty, NotNull, Prefetched]
+		[JsonProperty, NotNull, Prefetched]
 		public virtual ProjectStatusModel Status { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? StatusId { get; set; }
 
-		[DisplayName("История статусов учета"), PersistentCollection(CascadeType = CascadeType.Delete)]
+		[PersistentCollection(CascadeType = CascadeType.Delete)]
 		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return _StatusHistory; } set { _StatusHistory = value; } }
 		private ISet<ProjectStatusHistoryModel> _StatusHistory = new HashSet<ProjectStatusHistoryModel>();
 
-		[DisplayName("Участники проекта"), PersistentCollection(CascadeType = CascadeType.Delete)]
+		[PersistentCollection(CascadeType = CascadeType.Delete)]
 		public virtual ISet<ProjectParticipantModel> Participants { get { return _Participants; } set { _Participants = value; } }
 		private ISet<ProjectParticipantModel> _Participants = new HashSet<ProjectParticipantModel>();
 
-		[DisplayName("Теги проекта"), PersistentCollection(CascadeType = CascadeType.Delete)]
+		[PersistentCollection(CascadeType = CascadeType.Delete)]
 		public virtual ISet<ProjectToTagModel> Tags { get { return _Tags; } set { _Tags = value; } }
 		private ISet<ProjectToTagModel> _Tags = new HashSet<ProjectToTagModel>();
 

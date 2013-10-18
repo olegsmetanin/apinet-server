@@ -98,6 +98,7 @@
     <Compile Include="ITestDataPopulationService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
+    <Compile Include="Model\ICoreModel.cs" />
     <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
@@ -182,7 +183,7 @@
     <Compile Include="Model\Dictionary\IDictionaryItemModel.cs" />
     <Compile Include="Model\Dictionary\IHierarchicalDictionaryItemModel.cs" />
     <Compile Include="Model\Dictionary\DepartmentModel.cs" />
-    <Compile Include="Model\DocstoreModel.cs" />
+    <Compile Include="Model\CoreModel.cs" />
     <Compile Include="Model\Example\CommonModel.cs" />
     <Compile Include="Model\Example\ExampleEnum.cs" />
     <Compile Include="Model\Example\HierarchicalModel.cs" />
@@ -193,7 +194,6 @@
     <Compile Include="Model\Example\PrimitiveModel.cs" />
     <Compile Include="Model\IComponent.cs" />
     <Compile Include="Model\IdentifiedModel.cs" />
-    <Compile Include="Model\IDocstoreModel.cs" />
     <Compile Include="Model\IIdenitifedModel.cs" />
     <Compile Include="Model\IVirtualModel.cs" />
     <Compile Include="Model\Lob\AbstractLobType.cs" />
@@ -274,6 +274,12 @@
       <DependentUpon>AbstractExecutionException.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Filters\ModelFilterNodeSchema.json" />
+    <EmbeddedResource Include="Model\ICoreModel.resx">
+      <DependentUpon>ICoreModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\ICoreModel.ru.resx">
+      <DependentUpon>ICoreModel.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Filters\ValueFilterNodeSchema.json" />

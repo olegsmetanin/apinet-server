@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using AGO.Core.Attributes.Model;
 
 namespace AGO.Core.Model
@@ -88,7 +87,7 @@ namespace AGO.Core.Model
 	{
 		#region Persistent
 
-		[DisplayName("Идентификатор"), Identifier]
+		[Identifier]
 		public virtual TIdType Id { get; set; }
 
 		#endregion

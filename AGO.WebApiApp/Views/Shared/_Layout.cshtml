@@ -235,7 +235,9 @@
 			}
 		})(this, document);
 	
-		var sysConfig = {};
+		var sysConfig = {
+			supportedLocales: ['ru', 'en']
+		};
 
 		(function () {
 			
@@ -293,8 +295,9 @@
         }
 
         function getLang() {
-            return (getCookie('currentLocale') || window.navigator.userLanguage ||
-	            window.navigator.language).substring(0, 2);
+            var locale = (getCookie('currentLocale') || window.navigator.userLanguage ||
+				window.navigator.language).substring(0, 2);
+			return sysConfig.supportedLocales.indexOf(locale) !== -1 ? locale : sysConfig.supportedLocales[0];
         }
 
     })();

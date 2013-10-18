@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using AGO.Core.Model;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
@@ -9,20 +8,21 @@ using Newtonsoft.Json;
 
 namespace AGO.System.Model
 {
-	public class UserFilterModel : DocstoreModel<Guid>
+	[MetadataExclude]
+	public class UserFilterModel : CoreModel<Guid>
 	{
 		#region Persistent
 
-		[DisplayName("Наименование"), NotLonger(64), JsonProperty, NotEmpty]
+		[NotLonger(64), JsonProperty, NotEmpty]
 		public virtual string Name { get; set; }
 
-		[DisplayName("Группа"), NotLonger(64), JsonProperty, NotEmpty]
+		[NotLonger(64), JsonProperty, NotEmpty]
 		public virtual string GroupName { get; set; }
 
-		[DisplayName("Фильтр"), JsonProperty, NotEmpty]
+		[JsonProperty, NotEmpty]
 		public virtual string Filter { get; set; }
 
-		[DisplayName("Пользователь"), JsonProperty, NotNull]
+		[JsonProperty, NotNull]
 		public virtual UserModel User { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? UserId { get; set; }

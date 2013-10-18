@@ -2,7 +2,7 @@
 
 namespace AGO.Core.Model.Security
 {
-	public interface ISecureModel : IDocstoreModel
+	public interface ISecureModel : IIdentifiedModel
 	{
 		UserModel Creator { get; set; }
 

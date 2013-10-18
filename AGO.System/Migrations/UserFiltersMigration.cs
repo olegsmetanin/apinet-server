@@ -11,7 +11,7 @@ namespace AGO.System.Migrations
 
 		public override void Up()
 		{
-			Create.DocstoreModelTable<UserFilterModel>()
+			Create.CoreModelTable<UserFilterModel>()
 				.WithValueColumn<UserFilterModel>(m => m.Name)
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)
 				.WithValueColumn<UserFilterModel>(m => m.Filter)

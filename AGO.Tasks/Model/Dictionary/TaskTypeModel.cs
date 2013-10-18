@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
@@ -10,12 +9,12 @@ namespace AGO.Tasks.Model.Dictionary
 	/// <summary>
 	/// Тип задачи
 	/// </summary>
-	public class TaskTypeModel: SecureProjectBoundModel<Guid>, IDictionaryItemModel
+	public class TaskTypeModel : SecureProjectBoundModel<Guid>, IDictionaryItemModel, ITasksModel
 	{
 		/// <summary>
 		/// Наименование
 		/// </summary>
-		[DisplayName("Наименование"), JsonProperty, UniqueProperty, NotEmpty, NotLonger(256)]
+		[JsonProperty, UniqueProperty, NotEmpty, NotLonger(256)]
 		public virtual string Name { get; set; }
 	}
 }

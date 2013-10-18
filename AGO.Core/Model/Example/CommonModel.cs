@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using Newtonsoft.Json;
@@ -15,7 +14,7 @@ namespace AGO.Core.Model.Example
 		[ModelVersion, JsonProperty]
 		public virtual int? ModelVersion { get; set; }
 
-		[DisplayName("Дата создания"), NotNull, Timestamp, JsonProperty]
+		[NotNull, Timestamp, JsonProperty]
 		public override DateTime? CreationTime { get; set; }
 
 		#endregion
@@ -56,7 +55,7 @@ namespace AGO.Core.Model.Example
 		[ModelVersion, JsonProperty]
 		public virtual int? ModelVersion { get; set; }
 
-		[DisplayName("Дата создания"), NotNull, Timestamp, JsonProperty]
+		[NotNull, Timestamp, JsonProperty]
 		public override DateTime? CreationTime { get; set; }
 
 		#endregion

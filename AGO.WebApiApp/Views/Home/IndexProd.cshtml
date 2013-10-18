@@ -12,7 +12,8 @@ sysConfig = {
     modules: {},
     module: "@Model.Module",
 	project: "@Model.Project",
-    lang: getLang()
+    lang: getLang(),
+	supportedLocales: sysConfig.supportedLocales
 };
 
 var modules = ["components", "core", sysConfig.module];

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AGO.Core.Application;
+using AGO.Core.Localization;
+using AGO.Core.Model;
 using Newtonsoft.Json;
 using AGO.Core.Filters.Metadata;
 
@@ -8,6 +11,8 @@ namespace AGO.Core.Json
 {
 	public class ModelMetadataConverter : JsonConverter
 	{
+		protected ILocalizationService _LocalizationService;
+
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 		{
 			return null;
@@ -30,7 +35,10 @@ namespace AGO.Core.Json
 			writer.WriteEndObject();
 		}
 
-		protected void WriteModelMetaData(JsonWriter writer, IModelMetadata modelMeta, JsonSerializer serializer)
+		protected void WriteModelMetaData(
+			JsonWriter writer,
+			IModelMetadata modelMeta,
+			JsonSerializer serializer)
 		{
 			writer.WritePropertyName(modelMeta.Name);
 
@@ -39,25 +47,50 @@ namespace AGO.Core.Json
 			writer.WritePropertyName("PrimitiveProperties");
 			writer.WriteStartObject();
 			foreach (var propertyMeta in modelMeta.PrimitiveProperties)
-				WritePropertyMetaData(writer, propertyMeta, serializer);
+				WritePropertyMetaData(writer, modelMeta, propertyMeta, serializer);
 			writer.WriteEndObject();
 
 			writer.WritePropertyName("ModelProperties");
 			writer.WriteStartObject();
 			foreach (var propertyMeta in modelMeta.ModelProperties)
-				WritePropertyMetaData(writer, propertyMeta, serializer);
+				WritePropertyMetaData(writer, modelMeta, propertyMeta, serializer);
 			writer.WriteEndObject();
 
 			writer.WriteEndObject();
 		}
 
-		protected void WritePropertyMetaData(JsonWriter writer, IPropertyMetadata propertyMeta, JsonSerializer serializer)
+		protected void WritePropertyMetaData(JsonWriter writer, 
+			IModelMetadata modelMeta, 
+			IPropertyMetadata propertyMeta, 
+			JsonSerializer serializer)
 		{
 			writer.WritePropertyName(propertyMeta.Name);
 			writer.WriteStartObject();
 
+			var displayName = propertyMeta.Name;
+
+			_LocalizationService = _LocalizationService ?? AbstractApplication.Current.LocalizationService;
+			if (_LocalizationService != null)
+			{
+				var localized = _LocalizationService.MessageForType(modelMeta.ModelType, propertyMeta.Name);
+				if (localized.IsNullOrWhiteSpace())
+				{
+					var currentType = modelMeta.ModelType;
+					while (currentType!=null && typeof(ICoreModel).IsAssignableFrom(currentType))
+					{
+						localized = _LocalizationService.MessageForType(typeof(ICoreModel), 
+							currentType.Name.RemoveSuffix("`1") + "." + propertyMeta.Name);
+						if (!localized.IsNullOrWhiteSpace())
+							break;
+						currentType = currentType.BaseType;
+					}
+				}
+
+				displayName = !localized.IsNullOrWhiteSpace() ? localized.TrimSafe() : displayName;
+			}
+
 			writer.WritePropertyName("DisplayName");
-			writer.WriteValue(propertyMeta.DisplayName);
+			writer.WriteValue(displayName);
 
 			var modelPropertyMeta = propertyMeta as IModelPropertyMetadata;
 			if (modelPropertyMeta != null)

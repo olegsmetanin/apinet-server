@@ -1,5 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
+using AGO.Core.Attributes.Mapping;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Core.Attributes.Constraints;
@@ -7,20 +7,20 @@ using Newtonsoft.Json;
 
 namespace AGO.Home.Model.Dictionary.Projects
 {
-	public class ProjectTypeModel : SecureModel<Guid>, IDictionaryItemModel
+	public class ProjectTypeModel : SecureModel<Guid>, IDictionaryItemModel, IHomeModel
 	{
 		#region Persistent
 
-		[DisplayName("Код проекта"), JsonProperty, NotLonger(32)]
+		[JsonProperty, NotLonger(32)]
 		public virtual string ProjectCode { get; set; }
 
-		[DisplayName("Наименование"), NotEmpty, NotLonger(64), JsonProperty]
+		[NotEmpty, NotLonger(64), JsonProperty]
 		public virtual string Name { get; set; }
 
-		[DisplayName("Описание"), NotLonger(512), JsonProperty]
+		[NotLonger(512), JsonProperty]
 		public virtual new string Description { get; set; }
 
-		[DisplayName("Модуль"), NotLonger(1024), JsonProperty, NotEmpty]
+		[NotLonger(1024), JsonProperty, NotEmpty, MetadataExclude]
 		public virtual string Module { get; set; }
 
 		#endregion

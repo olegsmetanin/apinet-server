@@ -607,8 +607,8 @@ namespace AGO.Core.Migration
 
 		#region Docstore
 
-		public static ICreateTableWithColumnSyntax DocstoreModelTable<TModel>(this ICreateExpressionRoot root)
-			where TModel : IDocstoreModel
+		public static ICreateTableWithColumnSyntax CoreModelTable<TModel>(this ICreateExpressionRoot root)
+			where TModel : IIdentifiedModel
 		{
 			return root.ModelTable<TModel>().WithValueColumn<TModel>(m => m.CreationTime);
 		}
@@ -616,7 +616,7 @@ namespace AGO.Core.Migration
 		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
 			where TModel : ISecureModel
 		{
-			return root.DocstoreModelTable<TModel>()
+			return root.CoreModelTable<TModel>()
 				.WithRefColumn<TModel>(m => m.Creator)
 				.WithValueColumn<TModel>(m => m.LastChangeTime)
 				.WithRefColumn<TModel>(m => m.LastChanger);

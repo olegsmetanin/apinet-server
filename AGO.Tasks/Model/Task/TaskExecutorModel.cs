@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -11,12 +10,12 @@ namespace AGO.Tasks.Model.Task
 	/// <summary>
 	/// Исполнитель задачи
 	/// </summary>
-	public class TaskExecutorModel: SecureModel<Guid>
+	public class TaskExecutorModel : SecureModel<Guid>, ITasksModel
 	{
 		/// <summary>
 		/// Задача, на которую назначен исполнитель
 		/// </summary>
-		[DisplayName("Задача"), NotNull]
+		[NotNull]
 		public virtual TaskModel Task { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? TaskId { get; set; }
@@ -24,7 +23,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Исполнитель (участник проекта)
 		/// </summary>
-		[DisplayName("Исполнитель"), NotNull]
+		[NotNull]
 		public virtual ProjectParticipantModel Executor { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ExecutorId { get; set; }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
@@ -331,11 +330,6 @@ namespace AGO.Core
 			}
 
 			propertyMeta.Name = propertyName;
-			propertyMeta.DisplayName = propertyName;
-			var displayNameAttribute = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false)
-				.OfType<DisplayNameAttribute>().FirstOrDefault();
-			if (displayNameAttribute != null)
-				propertyMeta.DisplayName = displayNameAttribute.DisplayName.TrimSafe();
 		}
 
 		#endregion

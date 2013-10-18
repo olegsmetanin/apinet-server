@@ -11,7 +11,7 @@ namespace AGO.Core.Migrations
 
 		public override void Up()
 		{
-			Create.DocstoreModelTable<UserModel>();
+			Create.CoreModelTable<UserModel>();
 
 			Alter.ModelTable<UserModel>()
 				.AddRefColumn<UserModel>(m => m.Creator)

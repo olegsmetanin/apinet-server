@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -12,14 +11,14 @@ namespace AGO.Tasks.Model.Task
 	/// <summary>
 	/// Запись о согласовании задачи
 	/// </summary>
-	public class TaskAgreementModel: SecureModel<Guid>
+	public class TaskAgreementModel : SecureModel<Guid>, ITasksModel
 	{
 		#region Persistent
 
 		/// <summary>
 		/// Согласуемая задача
 		/// </summary>
-		[DisplayName("Задача"), JsonProperty, NotNull]
+		[JsonProperty, NotNull]
 		public virtual TaskModel Task { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? TaskId { get; set; }
@@ -27,7 +26,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Согласующий (участник проекта)
 		/// </summary>
-		[DisplayName("Согласующий"), JsonProperty, NotNull]
+		[JsonProperty, NotNull]
 		public virtual ProjectParticipantModel Agreemer { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? AgreemerId { get; set; }
@@ -35,25 +34,25 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Согласовать до (срок согласования)
 		/// </summary>
-		[DisplayName("Согласовать до"), JsonProperty]
+		[JsonProperty]
 		public virtual DateTime? DueDate { get; set; }
 
 		/// <summary>
 		/// Дата согласования
 		/// </summary>
-		[DisplayName("Дата согласования"), JsonProperty]
+		[JsonProperty]
 		public virtual DateTime? AgreedAt { get; set; }
 
 		/// <summary>
 		/// Признак положительного согласования
 		/// </summary>
-		[DisplayName("Согласовано"), JsonProperty]
+		[JsonProperty]
 		public virtual bool Done { get; set; }
 
 		/// <summary>
 		/// Комментарий
 		/// </summary>
-		[DisplayName("Комментарий"), JsonProperty]
+		[JsonProperty]
 		public virtual string Comment { get; set; }
 
 		#endregion

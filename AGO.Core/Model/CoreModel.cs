@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using Newtonsoft.Json;
@@ -8,14 +7,14 @@ using Newtonsoft.Json;
 namespace AGO.Core.Model
 {
 	[RelationalModel]
-	public abstract class DocstoreModel : IdentifiedModel, IDocstoreModel
+	public abstract class CoreModel : IdentifiedModel, ICoreModel
 	{
 		#region Persistent
 
 		[ModelVersion, JsonProperty]
 		public virtual int? ModelVersion { get; set; }
 
-		[DisplayName("Дата создания"), NotNull, Timestamp, JsonProperty]
+		[NotNull, Timestamp, JsonProperty]
 		public override DateTime? CreationTime { get; set; }
 
 		#endregion
@@ -30,7 +29,7 @@ namespace AGO.Core.Model
 		protected override void AfterClone(AbstractModel obj, ISet<AbstractModel> modelsToSave)
 		{
 			base.AfterClone(obj, modelsToSave);
-			var model = (DocstoreModel) obj;
+			var model = (CoreModel) obj;
 
 			model.ModelVersion = null;
 		}
@@ -49,14 +48,14 @@ namespace AGO.Core.Model
 	}
 
 	[RelationalModel]
-	public abstract class DocstoreModel<TIdType> : IdentifiedModel<TIdType>, IDocstoreModel
+	public abstract class CoreModel<TIdType> : IdentifiedModel<TIdType>, ICoreModel
 	{
 		#region Persistent
 
 		[ModelVersion, JsonProperty]
 		public virtual int? ModelVersion { get; set; }
 
-		[DisplayName("Дата создания"), NotNull, Timestamp, JsonProperty]
+		[NotNull, Timestamp, JsonProperty]
 		public override DateTime? CreationTime { get; set; }
 
 		#endregion
@@ -71,7 +70,7 @@ namespace AGO.Core.Model
 		protected override void AfterClone(AbstractModel obj, ISet<AbstractModel> modelsToSave)
 		{
 			base.AfterClone(obj, modelsToSave);
-			var model = (DocstoreModel<TIdType>)obj;
+			var model = (CoreModel<TIdType>)obj;
 
 			model.ModelVersion = null;
 		}

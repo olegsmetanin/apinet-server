@@ -41,7 +41,7 @@ namespace AGO.Home.Migrations
 				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Project)
 				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Status);
 
-			Create.DocstoreModelTable<ProjectParticipantModel>()
+			Create.CoreModelTable<ProjectParticipantModel>()
 				.WithValueColumn<ProjectParticipantModel>(m => m.GroupName)
 				.WithValueColumn<ProjectParticipantModel>(m => m.IsDefaultGroup)
 				.WithRefColumn<ProjectParticipantModel>(m => m.Project)

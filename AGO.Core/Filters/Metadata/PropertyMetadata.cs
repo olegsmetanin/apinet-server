@@ -6,8 +6,6 @@ namespace AGO.Core.Filters.Metadata
 	{
 		public string Name { get; set; }
 
-		public string DisplayName { get; set; }
-
 		public Type PropertyType { get; set; }
 	}
 }

@@ -84,6 +84,7 @@
     <Compile Include="Migrations\VersionTableMetaData.cs" />
     <Compile Include="Model\Dictionary\CustomTaskStatusModel.cs" />
     <Compile Include="Model\Dictionary\TaskTypeModel.cs" />
+    <Compile Include="Model\ITasksModel.cs" />
     <Compile Include="Model\IStatusHistoryRecordModel.cs" />
     <Compile Include="Model\StatusChangeHelper.cs" />
     <Compile Include="Model\Task\CustomTaskStatusHistoryModel.cs" />
@@ -103,6 +104,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Model\ITasksModel.resx">
+      <DependentUpon>ITasksModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\ITasksModel.ru.resx">
+      <DependentUpon>ITasksModel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TasksException.resx">
       <DependentUpon>TasksException.cs</DependentUpon>
     </EmbeddedResource>
