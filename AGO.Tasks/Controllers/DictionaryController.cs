@@ -135,7 +135,7 @@ namespace AGO.Tasks.Controllers
 		public bool DeleteTaskTypes([NotEmpty] string project, [NotNull] ICollection<Guid> ids, Guid? replacementTypeId)
     	{
 			if (replacementTypeId.HasValue && ids.Contains(replacementTypeId.Value))
-				throw new InvalidOperationException(string.Format("Can't replace with task type, that will be deleted too"));
+				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
 
     		var s = _SessionProvider.CurrentSession;
     		var trn = s.BeginTransaction();
@@ -239,7 +239,7 @@ namespace AGO.Tasks.Controllers
 		public bool DeleteCustomStatuses([NotEmpty] string project, [NotNull] ICollection<Guid> ids, Guid? replacementStatusId)
 		{
 			if (replacementStatusId.HasValue && ids.Contains(replacementStatusId.Value))
-				throw new InvalidOperationException(string.Format("Can't replace with custom status, that will be deleted too"));
+				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
 
 			var trn = Session.BeginTransaction();
 			try

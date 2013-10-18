@@ -129,6 +129,9 @@
   <data name="CanNotRemoveAgreemerFromClosedTaskException" xml:space="preserve">
     <value>Невозможно удалить согласующего из закрытой задачи</value>
   </data>
+  <data name="CanNotReplaceWithItemThatWillBeDeletedTo" xml:space="preserve">
+    <value>Невозможно заменить на удаляемую запись, т.к. она также в списке удаляемых</value>
+  </data>
   <data name="CanNotRevokeAgreementFromClosedTaskException" xml:space="preserve">
     <value>Невозможно отозвать согласование в закрытой задаче</value>
   </data>
