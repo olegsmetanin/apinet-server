@@ -10,7 +10,7 @@ namespace AGO.Home.Model.Dictionary.Projects
 	{
 		#region Persistent
 
-		[UniqueProperty, NotEmpty, NotLonger(64), JsonProperty]
+		[UniqueProperty("ProjectCode"), NotEmpty, NotLonger(64), JsonProperty]
 		public virtual string Name { get; set; }
 
 		[NotLonger(512), JsonProperty]

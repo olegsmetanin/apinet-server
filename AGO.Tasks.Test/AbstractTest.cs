@@ -34,14 +34,14 @@ namespace AGO.Tasks.Test
 			           		Name = "Управление задачами",
 			           		Module = typeof (ModuleDescriptor).Assembly.FullName
 			           	};
-			Session.Save(type);
+			_CrudDao.Store(type);
 			var status = new ProjectStatusModel
 			             	{
 			             		Creator = admin,
 			             		ProjectCode = TestProject,
 			             		Name = "В работе",
 			             	};
-			Session.Save(status);
+			_CrudDao.Store(status);
 
 			var p = new ProjectModel
 			        	{
@@ -51,7 +51,7 @@ namespace AGO.Tasks.Test
 							Type = type,
 							Status = status
 			        	};
-			Session.Save(p);
+			_CrudDao.Store(p);
 
 			var projAdmin = new ProjectParticipantModel
 			                  	{
@@ -60,7 +60,8 @@ namespace AGO.Tasks.Test
 			                  		GroupName = "Managers",
 			                  		IsDefaultGroup = true
 			                  	};
-			Session.Save(projAdmin);
+			_CrudDao.Store(projAdmin);
+
 			_SessionProvider.CloseCurrentSession();
 		}
 

@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using AGO.Core.Attributes.Mapping;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Context;
+using NHibernate.Engine;
 using NHibernate.Metadata;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Model;
+using NHibernate.Stat;
+using NHibernate.Type;
 
 namespace AGO.Core
 {
@@ -74,15 +78,25 @@ namespace AGO.Core
 			set { SetConfigProperty(DialectConfigKey, value.AssemblyQualifiedName); }
 		}
 
+		protected FlushMode _DefaultFlushMode = FlushMode.Never;
+
 		protected override void DoSetConfigProperty(string key, string value)
 		{
-			key = key.ToLower();
+			if ("DefaultFlushMode".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			{
+				_DefaultFlushMode = value.ParseEnumSafe(FlushMode.Never);
+				return;
+			}
 
+			key = key.ToLower();
 			_HibernateConfiguration.SetProperty(key, value);
 		}
 
 		protected override string DoGetConfigProperty(string key)
 		{
+			if ("DefaultFlushMode".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				return _DefaultFlushMode.ToString();
+
 			return _HibernateConfiguration.GetProperty(key);
 		}
 
@@ -107,12 +121,15 @@ namespace AGO.Core
 
 				try
 				{
-				if (CurrentSessionContext.HasBind(_SessionFactory))
-					return _SessionFactory.GetCurrentSession();
+					if (CurrentSessionContext.HasBind(_SessionFactory))
+						return _SessionFactory.GetCurrentSession();
 
-				CurrentSessionContext.Bind(_SessionFactory.OpenSession());
-				return _SessionFactory.GetCurrentSession();
-			}
+					var session = _SessionFactory.OpenSession();
+					session.FlushMode = _DefaultFlushMode;
+
+					CurrentSessionContext.Bind(session);
+					return _SessionFactory.GetCurrentSession();
+				}
 				catch (HibernateException e)
 				{
 					throw new DataAccessException(e);
@@ -127,15 +144,14 @@ namespace AGO.Core
 
 			try
 			{
-			if (!CurrentSessionContext.HasBind(_SessionFactory))
-				return;
+				if (!CurrentSessionContext.HasBind(_SessionFactory))
+					return;
 
-			var session = _SessionFactory.GetCurrentSession();
+				var session = _SessionFactory.GetCurrentSession();
 				if (session == null || !session.IsDirty())
 					return;
 
-				var flushMode = session.FlushMode;
-				if (!forceRollback && flushMode != FlushMode.Never && flushMode != FlushMode.Unspecified)
+				if (!forceRollback && session.FlushMode != FlushMode.Never)
 					session.Flush();
 				session.Clear();
 			}

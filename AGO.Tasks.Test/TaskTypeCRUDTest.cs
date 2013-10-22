@@ -164,7 +164,7 @@ namespace AGO.Tasks.Test
 								InternalSeqNumber = 1,
 								TaskType = testTaskType
 			               	};
-			_SessionProvider.CurrentSession.Save(testTask);
+			_CrudDao.Store(testTask);
 			_SessionProvider.FlushCurrentSession();
 			
 			Controller.DeleteTaskType(testTaskType.Id);

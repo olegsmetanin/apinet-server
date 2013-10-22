@@ -93,12 +93,20 @@ namespace AGO.Core.Model.Processing
 					}
 
 					var uniquePropertyAttribute = propertyInfo.FirstAttribute<UniquePropertyAttribute>(true);
-					if (uniquePropertyAttribute != null && _SessionProvider.CurrentSession.CreateCriteria(model.GetType())
-							.Add(Restrictions.Eq(propertyInfo.Name, value))
-							.Add(Restrictions.Not(Restrictions.IdEq(model.GetMemberValue("Id"))))
-							.SetProjection(Projections.RowCount()).UniqueResult<int>() > 0)
-						throw new MustBeUniqueException();
+					if (uniquePropertyAttribute != null)
+					{
+						var criteria = _SessionProvider.CurrentSession.CreateCriteria(model.GetType())
+						    .Add(Restrictions.Eq(propertyInfo.Name, value))
+						    .Add(Restrictions.Not(Restrictions.IdEq(model.GetMemberValue("Id"))));
 
+						criteria = uniquePropertyAttribute.GroupProperties.Select(model.GetType().GetProperty).Where(p => p.CanRead)
+								.Aggregate(criteria, (current, groupProperty) => current.Add(
+							Restrictions.Eq(groupProperty.Name, groupProperty.GetValue(model, null))));
+
+						if (criteria.SetProjection(Projections.RowCount()).UniqueResult<int>() > 0)
+							throw new MustBeUniqueException();
+					}
+						
 					var invalidAttribute = propertyInfo.FindInvalidPropertyConstraintAttribute(value);
 					invalidAttribute = invalidAttribute ?? (capabilityValue != null && capabilityValue.Value
 						? Extensions.FindInvalidItemConstraintAttribute(

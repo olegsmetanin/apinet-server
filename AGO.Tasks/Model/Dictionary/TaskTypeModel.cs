@@ -14,7 +14,7 @@ namespace AGO.Tasks.Model.Dictionary
 		/// <summary>
 		/// Наименование
 		/// </summary>
-		[JsonProperty, UniqueProperty, NotEmpty, NotLonger(256)]
+		[JsonProperty, UniqueProperty("ProjectCode"), NotEmpty, NotLonger(256)]
 		public virtual string Name { get; set; }
 	}
 }

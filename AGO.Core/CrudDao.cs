@@ -6,6 +6,7 @@ using NHibernate;
 using NHibernate.Criterion;
 using AGO.Core.Filters;
 using AGO.Core.Model;
+using NHibernate.SqlCommand;
 
 namespace AGO.Core
 {
@@ -160,6 +161,7 @@ namespace AGO.Core
 				throw new ArgumentNullException("model");
 
 			CurrentSession.SaveOrUpdate(model);
+			CurrentSession.FlushMode = FlushMode.Auto;
 		}
 
 		public virtual void Delete(IIdentifiedModel model)
@@ -168,6 +170,7 @@ namespace AGO.Core
 				throw new ArgumentNullException("model");
 
 			CurrentSession.Delete(model);
+			CurrentSession.FlushMode = FlushMode.Auto;
 		}
 
 		public IList<TModel> List<TModel>(
@@ -182,10 +185,10 @@ namespace AGO.Core
 			int page = 0, ICollection<SortInfo> sorters = null) where TModel : class, IIdentifiedModel
 		{
 			var options = new FilteringOptions
-			              	{
-			              		Page = page,
-			              		Sorters = sorters ?? Enumerable.Empty<SortInfo>().ToArray()
-			              	};
+			{
+			    Page = page,
+			    Sorters = sorters ?? Enumerable.Empty<SortInfo>().ToArray()
+			};
 			return List<TModel>(filters, options);
 		}
 
@@ -221,7 +224,7 @@ namespace AGO.Core
 						currentAlias.Append(parts[i]);
 
 						if (criteria.GetCriteriaByAlias(currentAlias.ToString()) == null)
-							criteria.CreateAlias(path, currentAlias.ToString());
+							criteria.CreateAlias(path, currentAlias.ToString(), JoinType.LeftOuterJoin);
 
 					}
 					currentAlias.Append('.');

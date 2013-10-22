@@ -14,13 +14,21 @@ namespace AGO.Home
 
 		protected ISessionProvider _SessionProvider;
 
+		protected ICrudDao _CrudDao;
+
 		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
 
-		public TestDataPopulationService(ISessionProvider sessionProvider)
+		public TestDataPopulationService(
+			ISessionProvider sessionProvider,
+			ICrudDao crudDao)
 		{
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			_CrudDao = crudDao;
 		}
 
 		#endregion
@@ -64,7 +72,7 @@ namespace AGO.Home
 				Name = "Проект хранилища документов",
 				Module = typeof(ProjectModel).Assembly.FullName
 			};
-			CurrentSession.Save(docStoreType);
+			_CrudDao.Store(docStoreType);
 
 			var inWorkStatus = new ProjectStatusModel
 			{
@@ -73,7 +81,7 @@ namespace AGO.Home
 				Name = "В работе", 
 				IsInitial = true
 			};
-			CurrentSession.Save(inWorkStatus);
+			_CrudDao.Store(inWorkStatus);
 
 			var closedStatus = new ProjectStatusModel
 			{
@@ -82,7 +90,7 @@ namespace AGO.Home
 				Name = "Закрыт",
 				IsFinal = true
 			};
-			CurrentSession.Save(closedStatus);
+			_CrudDao.Store(closedStatus);
 
 			var project1 = new ProjectModel
 			{
@@ -94,7 +102,7 @@ namespace AGO.Home
 				Status = inWorkStatus,
 
 			};
-			CurrentSession.Save(project1);
+			_CrudDao.Store(project1);
 
 			/*for (var i = 0; i < 150; i++)
 			{
@@ -108,7 +116,7 @@ namespace AGO.Home
 					Status = inWorkStatus,
 
 				};
-				CurrentSession.Save(tempProject);
+				_CrudDao.Store(tempProject);
 			}*/
 
 			var historyEntry1 = new ProjectStatusHistoryModel
@@ -118,14 +126,14 @@ namespace AGO.Home
 				Project = project1,
 				Status = inWorkStatus
 			};
-			CurrentSession.Save(historyEntry1);
+			_CrudDao.Store(historyEntry1);
 
 			var participant1 = new ProjectParticipantModel
 			{
 				User = user1,
 				Project = project1
 			};
-			CurrentSession.Save(participant1);
+			_CrudDao.Store(participant1);
 
 			var commonTag = new ProjectTagModel
 			{
@@ -134,7 +142,7 @@ namespace AGO.Home
 				Name = "Общий тег",
 				FullName = "Общий тег",
 			};
-			CurrentSession.Save(commonTag);
+			_CrudDao.Store(commonTag);
 			
 			var commonTagLink = new ProjectToTagModel
 			{
@@ -142,7 +150,7 @@ namespace AGO.Home
 				Project = project1,
 				Tag = commonTag
 			};
-			CurrentSession.Save(commonTagLink);
+			_CrudDao.Store(commonTagLink);
 
 			var personalTag = new ProjectTagModel
 			{
@@ -152,7 +160,7 @@ namespace AGO.Home
 				FullName = "Персональный тег",
 				Owner = admin
 			};
-			CurrentSession.Save(personalTag);
+			_CrudDao.Store(personalTag);
 
 			var personalTagLink = new ProjectToTagModel
 			{
@@ -160,7 +168,7 @@ namespace AGO.Home
 				Project = project1,
 				Tag = personalTag
 			};
-			CurrentSession.Save(personalTagLink);
+			_CrudDao.Store(personalTagLink);
 
 			var project2 = new ProjectModel
 			{
@@ -172,7 +180,7 @@ namespace AGO.Home
 				Status = closedStatus,
 
 			};
-			CurrentSession.Save(project2);
+			_CrudDao.Store(project2);
 
 			var historyEntry2 = new ProjectStatusHistoryModel
 			{
@@ -182,7 +190,7 @@ namespace AGO.Home
 				Project = project2,
 				Status = inWorkStatus
 			};
-			CurrentSession.Save(historyEntry2);
+			_CrudDao.Store(historyEntry2);
 
 			var historyEntry3 = new ProjectStatusHistoryModel
 			{
@@ -191,21 +199,21 @@ namespace AGO.Home
 				Project = project2,
 				Status = closedStatus
 			};
-			CurrentSession.Save(historyEntry3);
+			_CrudDao.Store(historyEntry3);
 
 			var participant2 = new ProjectParticipantModel
 			{
 				User = user2,
 				Project = project2
 			};
-			CurrentSession.Save(participant2);
+			_CrudDao.Store(participant2);
 
 			var participant3 = new ProjectParticipantModel
 			{
 				User = user3,
 				Project = project2
 			};
-			CurrentSession.Save(participant3);
+			_CrudDao.Store(participant3);
 		}
 
 		#endregion

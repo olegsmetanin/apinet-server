@@ -10,16 +10,28 @@ namespace AGO.Tasks
 {
 	public class TestDataPopulationService : AbstractService, ITestDataPopulationService
 	{
-		private readonly ISessionProvider _SessionProvider;
+		#region Properties, fields, constructors
 
-		private ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
+		protected ISessionProvider _SessionProvider;
 
-		public TestDataPopulationService(ISessionProvider sessionProvider)
+		protected ICrudDao _CrudDao;
+
+		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
+
+		public TestDataPopulationService(
+			ISessionProvider sessionProvider,
+			ICrudDao crudDao)
 		{
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			_CrudDao = crudDao;
 		}
+
+		#endregion
 
 		public void Populate()
 		{
@@ -74,10 +86,10 @@ namespace AGO.Tasks
 							 DateTime.Now.AddDays(3));
 			var t4 = factory("Инвентаризация", TaskStatus.NotStarted, TaskPriority.High, null, DateTime.Now.AddDays(-1));
 
-			CurrentSession.Save(t1);
-			CurrentSession.Save(t2);
-			CurrentSession.Save(t3);
-			CurrentSession.Save(t4);
+			_CrudDao.Store(t1);
+			_CrudDao.Store(t2);
+			_CrudDao.Store(t3);
+			_CrudDao.Store(t4);
 
 			Func<TaskModel, string, object, TaskCustomPropertyModel> paramFactory =
 				(task, name, value) => new TaskCustomPropertyModel
@@ -93,9 +105,9 @@ namespace AGO.Tasks
 			var np1 = paramFactory(t1, "num", 12.3);
 			var dp1 = paramFactory(t1, "date", new DateTime(2013, 01, 01));
 
-			CurrentSession.Save(sp1);
-			CurrentSession.Save(np1);
-			CurrentSession.Save(dp1);
+			_CrudDao.Store(sp1);
+			_CrudDao.Store(np1);
+			_CrudDao.Store(dp1);
 		}
 
 		private void PopulateParamTypes(string project, UserModel admin)
@@ -107,9 +119,9 @@ namespace AGO.Tasks
 			var numParam = factory("num", CustomPropertyValueType.Number);
 			var dateParam = factory("date", CustomPropertyValueType.Date);
 
-			CurrentSession.Save(strParam);
-			CurrentSession.Save(numParam);
-			CurrentSession.Save(dateParam);
+			_CrudDao.Store(strParam);
+			_CrudDao.Store(numParam);
+			_CrudDao.Store(dateParam);
 		}
 
 		private void PopulateTaskTypes(string project, UserModel admin)
@@ -124,12 +136,12 @@ namespace AGO.Tasks
 			var clean = factory("Очистка архивов");
 			var prep = factory("Подготовка места работы");
 
-			CurrentSession.Save(invent);
-			CurrentSession.Save(workout);
-			CurrentSession.Save(calc);
-			CurrentSession.Save(payment);
-			CurrentSession.Save(clean);
-			CurrentSession.Save(prep);
+			_CrudDao.Store(invent);
+			_CrudDao.Store(workout);
+			_CrudDao.Store(calc);
+			_CrudDao.Store(payment);
+			_CrudDao.Store(clean);
+			_CrudDao.Store(prep);
 		}
 
 		private void PopulateCustomStatuses(string project, UserModel admin)
@@ -145,12 +157,12 @@ namespace AGO.Tasks
 			var closed = factory("Закрыто");
 			var susp = factory("Приостановлено");
 
-			CurrentSession.Save(prep);
-			CurrentSession.Save(towork);
-			CurrentSession.Save(progress);
-			CurrentSession.Save(complete);
-			CurrentSession.Save(closed);
-			CurrentSession.Save(susp);
+			_CrudDao.Store(prep);
+			_CrudDao.Store(towork);
+			_CrudDao.Store(progress);
+			_CrudDao.Store(complete);
+			_CrudDao.Store(closed);
+			_CrudDao.Store(susp);
 		}
 	}
 }

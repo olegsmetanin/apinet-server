@@ -42,7 +42,9 @@ namespace AGO.Tasks.Test
 				.List<ProjectParticipantModel>().FirstOrDefault();
 			var executor = new TaskExecutorModel {Creator = currentUser(), Task = task, Executor = participant};
 			task.Executors.Add(executor);
+			
 			session().Save(task);
+			session().FlushMode = FlushMode.Auto;
 
 			return task;
 		}
@@ -63,7 +65,9 @@ namespace AGO.Tasks.Test
 			       		ProjectCode = project, 
 						Name = name
 			       	};
+
 			session().Save(m);
+			session().FlushMode = FlushMode.Auto;
 
 			return m;
 		}
@@ -78,6 +82,7 @@ namespace AGO.Tasks.Test
 							ViewOrder = order
 			        	};
 			session().Save(m);
+			session().FlushMode = FlushMode.Auto;
 
 			return m;
 		}
@@ -105,6 +110,7 @@ namespace AGO.Tasks.Test
 			        		Value = value
 			        	};
 			session().Save(p);
+			session().FlushMode = FlushMode.Auto;
 
 			return p;
 		}
@@ -120,6 +126,7 @@ namespace AGO.Tasks.Test
 			         		ValueType = type
 			         	};
 			session().Save(pt);
+			session().FlushMode = FlushMode.Auto;
 
 			return pt;
 		}

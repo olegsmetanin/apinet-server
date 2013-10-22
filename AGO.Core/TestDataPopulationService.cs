@@ -13,13 +13,21 @@ namespace AGO.Core
 
 		protected ISessionProvider _SessionProvider;
 
+		protected ICrudDao _CrudDao;
+
 		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
 
-		public TestDataPopulationService(ISessionProvider sessionProvider)
+		public TestDataPopulationService(
+			ISessionProvider sessionProvider,
+			ICrudDao crudDao)
 		{
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			_CrudDao = crudDao;
 		}
 
 		#endregion
@@ -53,7 +61,7 @@ namespace AGO.Core
 				SystemRole = SystemRole.Administrator
 			};
 			admin.Creator = admin;
-			CurrentSession.Save(admin);
+			_CrudDao.Store(admin);
 
 			var primaryDepartment = new DepartmentModel
 			{
@@ -62,10 +70,10 @@ namespace AGO.Core
 				Name = "Основное подразделение",
 				FullName = "Основное подразделение"
 			};		
-			CurrentSession.Save(primaryDepartment);
+			_CrudDao.Store(primaryDepartment);
 
 			admin.Departments.Add(primaryDepartment);
-			CurrentSession.Update(admin);
+			_CrudDao.Store(admin);
 
 			var childDepartment1 = new DepartmentModel
 			{
@@ -75,7 +83,7 @@ namespace AGO.Core
 				FullName = "Основное подразделение / Дочернее подразделение 1",
 				Parent = primaryDepartment
 			};
-			CurrentSession.Save(childDepartment1);
+			_CrudDao.Store(childDepartment1);
 
 			var childDepartment2 = new DepartmentModel
 			{
@@ -85,7 +93,7 @@ namespace AGO.Core
 				FullName = "Основное подразделение / Дочернее подразделение 2",
 				Parent = primaryDepartment
 			};
-			CurrentSession.Save(childDepartment2);
+			_CrudDao.Store(childDepartment2);
 
 			var childDepartment3 = new DepartmentModel
 			{
@@ -95,7 +103,7 @@ namespace AGO.Core
 				FullName = "Основное подразделение / Дочернее подразделение 3",
 				Parent = primaryDepartment
 			};
-			CurrentSession.Save(childDepartment3);
+			_CrudDao.Store(childDepartment3);
 
 			var user1 = new UserModel
 			{
@@ -109,7 +117,7 @@ namespace AGO.Core
 				SystemRole = SystemRole.Member
 			};
 			user1.Departments.Add(childDepartment1);
-			CurrentSession.Save(user1);
+			_CrudDao.Store(user1);
 
 			var user2 = new UserModel
 			{
@@ -123,7 +131,7 @@ namespace AGO.Core
 				SystemRole = SystemRole.Member
 			};
 			user2.Departments.Add(childDepartment2);
-			CurrentSession.Save(user2);
+			_CrudDao.Store(user2);
 
 			var user3 = new UserModel
 			{
@@ -137,7 +145,7 @@ namespace AGO.Core
 				SystemRole = SystemRole.Member
 			};
 			user3.Departments.Add(childDepartment3);
-			CurrentSession.Save(user3);
+			_CrudDao.Store(user3);
 
 			return admin;
 		}
@@ -152,7 +160,7 @@ namespace AGO.Core
 				FullName = "Строковый параметр",
 				ValueType = CustomPropertyValueType.String
 			};
-			CurrentSession.Save(stringPropertyType);
+			_CrudDao.Store(stringPropertyType);
 
 			var numberPropertyType = new CustomPropertyTypeModel
 			{
@@ -162,7 +170,7 @@ namespace AGO.Core
 				FullName = "Числовой параметр",
 				ValueType = CustomPropertyValueType.Number
 			};
-			CurrentSession.Save(numberPropertyType);
+			_CrudDao.Store(numberPropertyType);
 
 			var datePropertyType = new CustomPropertyTypeModel
 			{
@@ -172,7 +180,7 @@ namespace AGO.Core
 				FullName = "Параметр дата",
 				ValueType = CustomPropertyValueType.Date
 			};
-			CurrentSession.Save(datePropertyType);		
+			_CrudDao.Store(datePropertyType);		
 		}
 
 		#endregion

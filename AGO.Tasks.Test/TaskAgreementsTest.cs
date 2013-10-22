@@ -4,6 +4,7 @@ using AGO.Core.Model.Security;
 using AGO.Home.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
+using NHibernate;
 using NUnit.Framework;
 
 namespace AGO.Tasks.Test
@@ -40,7 +41,7 @@ namespace AGO.Tasks.Test
 			          		GroupName = "Executors",
 			          		IsDefaultGroup = true
 			          	};
-			Session.Save(pIvanov);
+			_CrudDao.Store(pIvanov);
 			pPetrov = new ProjectParticipantModel
 			          	{
 			          		Project = project,
@@ -48,7 +49,7 @@ namespace AGO.Tasks.Test
 			          		GroupName = "Executors",
 			          		IsDefaultGroup = true
 			          	};
-			Session.Save(pPetrov);
+			_CrudDao.Store(pPetrov);
 			project.Participants.Add(pIvanov);
 			project.Participants.Add(pPetrov);
 
@@ -93,14 +94,14 @@ namespace AGO.Tasks.Test
 		public void AddDuplicateAgreementThrow()
 		{
 			var agr = new TaskAgreementModel
-			          	{
-			          		Creator = CurrentUser,
-			          		Task = task,
-			          		Agreemer = pIvanov
-			          	};
-			Session.Save(agr);
+			{
+			    Creator = CurrentUser,
+			    Task = task,
+			    Agreemer = pIvanov
+			};
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			controller.AddAgreemer(task.Id, pIvanov.Id);
@@ -110,7 +111,7 @@ namespace AGO.Tasks.Test
 		public void AddAgreementToClosedThrow()
 		{
 			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			controller.AddAgreemer(task.Id, pIvanov.Id);
@@ -127,9 +128,9 @@ namespace AGO.Tasks.Test
 				Task = task,
 				Agreemer = pIvanov
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			var res = controller.RemoveAgreement(task.Id, agr.Id);
@@ -159,10 +160,10 @@ namespace AGO.Tasks.Test
 				Task = task,
 				Agreemer = pIvanov
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
 			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			controller.RemoveAgreement(task.Id, agr.Id);
@@ -179,9 +180,9 @@ namespace AGO.Tasks.Test
 				Task = task,
 				Agreemer = pIvanov
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
@@ -208,9 +209,9 @@ namespace AGO.Tasks.Test
 				Task = task,
 				Agreemer = pIvanov
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
@@ -237,10 +238,10 @@ namespace AGO.Tasks.Test
 				Task = task,
 				Agreemer = pIvanov
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
 			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
@@ -270,9 +271,9 @@ namespace AGO.Tasks.Test
 				AgreedAt = DateTime.Now,
 				Comment = "good job, bro"
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
@@ -302,9 +303,9 @@ namespace AGO.Tasks.Test
 				AgreedAt = DateTime.Now,
 				Comment = "good job, bro"
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
@@ -334,10 +335,10 @@ namespace AGO.Tasks.Test
 				AgreedAt = DateTime.Now,
 				Comment = "good job, bro"
 			};
-			Session.Save(agr);
+			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
 			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			Session.Update(task);
+			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
