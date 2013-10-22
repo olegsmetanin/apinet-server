@@ -14,7 +14,7 @@ namespace AGO.Home.Model.Dictionary.Projects
 		[JsonProperty, NotLonger(32)]
 		public virtual string ProjectCode { get; set; }
 
-		[NotEmpty, NotLonger(64), JsonProperty]
+		[NotEmpty, NotLonger(64), JsonProperty, UniqueProperty("ProjectCode")]
 		public virtual string Name { get; set; }
 
 		[NotLonger(512), JsonProperty]

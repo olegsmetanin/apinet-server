@@ -96,12 +96,19 @@ namespace AGO.Core.Model.Processing
 					if (uniquePropertyAttribute != null)
 					{
 						var criteria = _SessionProvider.CurrentSession.CreateCriteria(model.GetType())
-						    .Add(Restrictions.Eq(propertyInfo.Name, value))
+							.Add(value != null 
+								? Restrictions.Eq(propertyInfo.Name, value)
+								: Restrictions.IsNull(propertyInfo.Name))
 						    .Add(Restrictions.Not(Restrictions.IdEq(model.GetMemberValue("Id"))));
 
-						criteria = uniquePropertyAttribute.GroupProperties.Select(model.GetType().GetProperty).Where(p => p.CanRead)
-								.Aggregate(criteria, (current, groupProperty) => current.Add(
-							Restrictions.Eq(groupProperty.Name, groupProperty.GetValue(model, null))));
+						foreach (var groupProperty in uniquePropertyAttribute.GroupProperties
+							.Select(model.GetType().GetProperty).Where(p => p.CanRead))
+						{
+							var groupValue = groupProperty.GetValue(model, null);
+							criteria = criteria.Add(groupValue != null 
+								? Restrictions.Eq(groupProperty.Name, groupValue) 
+								: Restrictions.IsNull(groupProperty.Name));
+						}
 
 						if (criteria.SetProjection(Projections.RowCount()).UniqueResult<int>() > 0)
 							throw new MustBeUniqueException();
