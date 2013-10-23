@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -99,7 +100,7 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public ValidationResult EditProjectStatus([NotNull] ProjectStatusModel model)
+		public object EditProjectStatus([NotNull] ProjectStatusModel model)
 		{
 			var validation = new ValidationResult();
 
@@ -116,29 +117,62 @@ namespace AGO.Home.Controllers
 					return validation;
 				
 				_CrudDao.Store(persistentModel);
+				return persistentModel;
 			}
 			catch (Exception e)
 			{
 				validation.AddErrors(_LocalizationService.MessageForException(e));
-			}
-
-			return validation;
+				return validation;
+			}			
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public bool DeleteProjectStatus([NotEmpty] Guid id)
+		public bool DeleteProjectStatuses([NotEmpty] ICollection<Guid> ids, Guid? replaceId)
 		{
-			var model = _CrudDao.Get<ProjectStatusModel>(id, true);
+			ids = ids.Where(id => !default(Guid).Equals(id)).ToList();
+			replaceId = replaceId ?? default(Guid);
+
+			if (ids.Any(replaceId.Value.Equals))
+				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
 			
-			if (_SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-					.Where(m => m.Status == model).RowCount() > 0)
-				throw new CannotDeleteReferencedItemException();
+			var session = _SessionProvider.CurrentSession;
+			using (var transaction = _SessionProvider.CurrentSession.BeginTransaction())
+			{
+				var replace = !default(Guid).Equals(replaceId.Value);
+				var updateQuery = replace 
+					? session.CreateQuery("update versioned ProjectModel set StatusId = :newId where StatusId = :oldId") 
+					: null;
+				var historyUpdateQuery = replace
+					? session.CreateQuery("update versioned ProjectStatusHistoryModel set StatusId = :newId where StatusId = :oldId")
+					: null;
 
-			if (_SessionProvider.CurrentSession.QueryOver<ProjectStatusHistoryModel>()
-					.Where(m => m.Status == model).RowCount() > 0)
-				throw new CannotDeleteReferencedItemException();
+				foreach (var id in ids)
+				{
+					if (replace)
+					{
+						updateQuery
+							.SetGuid("newId", replaceId.Value)
+							.SetGuid("oldId", id)
+							.ExecuteUpdate();
+						historyUpdateQuery
+							.SetGuid("newId", replaceId.Value)
+							.SetGuid("oldId", id)
+							.ExecuteUpdate();
+					}
 
-			_CrudDao.Delete(model);
+					var model = _CrudDao.Get<ProjectStatusModel>(id, true);
+
+					if (_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.Status == model)))
+						throw new CannotDeleteReferencedItemException();
+
+					if (_CrudDao.Exists<ProjectStatusHistoryModel>(q => q.Where(m => m.Status == model)))
+						throw new CannotDeleteReferencedItemException();
+
+					_CrudDao.Delete(model);
+				}
+
+				transaction.Commit();
+			}
 
 			return true;
 		}

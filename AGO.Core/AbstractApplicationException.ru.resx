@@ -123,6 +123,9 @@
   <data name="CannotDeleteReferencedItemException" xml:space="preserve">
     <value>Невозможно удалить элемент, так как он уже используется</value>
   </data>
+  <data name="CanNotReplaceWithItemThatWillBeDeletedTo" xml:space="preserve">
+    <value>Невозможно заменить на удаляемую запись, т.к. она также в списке удаляемых</value>
+  </data>
   <data name="DataAccessException" xml:space="preserve">
     <value>Произошла ошибка при доступе к базе данных</value>
   </data>

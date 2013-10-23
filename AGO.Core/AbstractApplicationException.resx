@@ -123,6 +123,9 @@
   <data name="CannotDeleteReferencedItemException" xml:space="preserve">
     <value>Cannot delete referenced item while it's in use</value>
   </data>
+  <data name="CanNotReplaceWithItemThatWillBeDeletedTo" xml:space="preserve">
+    <value>Can not delete replace with item, that will be deleted too</value>
+  </data>
   <data name="DataAccessException" xml:space="preserve">
     <value>Error while accessing database</value>
   </data>

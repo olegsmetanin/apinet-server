@@ -104,4 +104,8 @@ namespace AGO.Core
 	public class ExceptionDetailsHidden : AbstractApplicationException
 	{
 	}
+
+	public class CanNotReplaceWithItemThatWillBeDeletedTo : AbstractApplicationException
+	{
+	}
 }

@@ -43,8 +43,4 @@ namespace AGO.Tasks
 	public class CanNotRevokeAgreementFromClosedTaskException : TasksException
 	{
 	}
-
-	public class CanNotReplaceWithItemThatWillBeDeletedTo: TasksException
-	{
-	}
 }
