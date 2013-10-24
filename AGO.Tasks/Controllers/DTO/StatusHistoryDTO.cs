@@ -7,13 +7,13 @@ namespace AGO.Tasks.Controllers.DTO
 	{
 		public StatusHistoryItemDTO[] History;
 
-		public string Current { get; set; }
+		public LookupEntry? Current { get; set; }
 
 		public LookupEntry[] Next { get; set; }
 		
 		public class StatusHistoryItemDTO
 		{
-			public string Status { get; set; }
+			public LookupEntry Status { get; set; }
 
 			public DateTime Start { get; set; }
 

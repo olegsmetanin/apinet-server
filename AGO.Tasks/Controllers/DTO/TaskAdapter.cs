@@ -39,9 +39,11 @@ namespace AGO.Tasks.Controllers.DTO
 			       	};
 		}
 
-		protected string CustomStatusDescription(CustomTaskStatusModel status)
+		protected LookupEntry? CustomStatusEntry(CustomTaskStatusModel status)
 		{
-			return status != null ? status.Name : string.Empty;
+			return status != null 
+				? new LookupEntry { Id = status.Id.ToString(), Text = status.Name } 
+				: (LookupEntry?) null;
 		}
 
 		public override TDTO Fill(TaskModel model)
@@ -54,7 +56,7 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.Executors = model.Executors.OrderBy(e => e.Executor.User.FullName).Select(ToExecutor).ToArray();
 			dto.DueDate = model.DueDate;
 			dto.Status = Meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, model.Status);
-			dto.CustomStatus = CustomStatusDescription(model.CustomStatus);
+			dto.CustomStatus = CustomStatusEntry(model.CustomStatus).GetValueOrDefault().Text;
 
 			return dto;
 		}
@@ -136,20 +138,24 @@ namespace AGO.Tasks.Controllers.DTO
 			};
 		}
 
-		private string TaskStatusDescription(TaskStatus status)
+		private LookupEntry? TaskStatusEntry(TaskStatus status)
 		{
-			return Meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, status);
+			return new LookupEntry
+			       	{
+			       		Id = status.ToString(), 
+						Text = Meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, status)
+			       	};
 		}
 
 		private StatusHistoryDTO.StatusHistoryItemDTO[] ToHistory<TStatus>(
 			IEnumerable<IStatusHistoryRecordModel<TaskModel, TStatus>> history,
-			Func<TStatus, string> status)
+			Func<TStatus, LookupEntry?> status)
 		{
 			return history
 				.OrderByDescending(h => h.Start)
 				.Select(h => new StatusHistoryDTO.StatusHistoryItemDTO
 				             	{
-				             		Status = status(h.Status),
+				             		Status = status(h.Status).GetValueOrDefault(),
 				             		Start = h.Start,
 				             		Finish = h.Finish,
 				             		Author = ToAuthor(h)
@@ -161,8 +167,8 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			return new StatusHistoryDTO
 			{
-				Current = TaskStatusDescription(task.Status),
-				History = ToHistory(task.StatusHistory, TaskStatusDescription),
+				Current = TaskStatusEntry(task.Status),
+				History = ToHistory(task.StatusHistory, TaskStatusEntry),
 				Next = Enum.GetValues(typeof(TaskStatus)) //TODO это должно браться из workflow
 					.OfType<TaskStatus>()
 					.Where(en => en != task.Status)
@@ -188,8 +194,8 @@ namespace AGO.Tasks.Controllers.DTO
 
 			return new StatusHistoryDTO
 			{
-				Current = CustomStatusDescription(task.CustomStatus),
-				History = ToHistory(task.CustomStatusHistory, CustomStatusDescription),
+				Current = CustomStatusEntry(task.CustomStatus),
+				History = ToHistory(task.CustomStatusHistory, CustomStatusEntry),
 				Next = query.List<CustomTaskStatusModel>().Select(s => new LookupEntry { Id = s.Id.ToString(), Text = s.Name }).ToArray()
 			};
 		}
