@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
+using Sys = System;
 
 namespace AGO.Tasks.Test
 {
@@ -30,6 +32,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskStatusesWithoutTermReturnAll()
 		{
+			Sys.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
 			var result = Controller.LookupTaskStatuses(null, 0).ToArray();
 
 			Assert.AreEqual(5, result.Length);
@@ -43,12 +46,12 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskStatusesFilterByTerm()
 		{
+			Sys.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("ru");
 			var result = Controller.LookupTaskStatuses("та", 0).ToArray();
 
-			Assert.AreEqual(3, result.Length);
-			Assert.AreEqual(TaskStatus.NotStarted.ToString(), result[0].Id); //Не начаТА
-			Assert.AreEqual(TaskStatus.Closed.ToString(), result[1].Id); //ЗакрыТА
-			Assert.AreEqual(TaskStatus.Suspended.ToString(), result[2].Id); //ПриосТАновлена
+			Assert.AreEqual(2, result.Length);
+			Assert.AreEqual(TaskStatus.Closed.ToString(), result[0].Id); //ЗакрыТА
+			Assert.AreEqual(TaskStatus.Suspended.ToString(), result[1].Id); //ПриосТАновлена
 		}
 		 
 	}

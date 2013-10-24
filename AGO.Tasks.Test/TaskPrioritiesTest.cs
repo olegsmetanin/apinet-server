@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
+using Sys = System;
 
 namespace AGO.Tasks.Test
 {
@@ -31,6 +33,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskPrioritiesWithoutTermReturnAll()
 		{
+			Sys.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
 			var result = Controller.LookupTaskPriorities(null, 0).ToArray();
 
 			Assert.AreEqual(3, result.Length);
@@ -42,6 +45,7 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void LookupTaskPrioritiesFilterByTerm()
 		{
+			Sys.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("ru");
 			var result = Controller.LookupTaskPriorities("ки", 0).ToArray();
 
 			Assert.AreEqual(2, result.Length);

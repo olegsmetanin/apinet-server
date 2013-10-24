@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -37,32 +37,39 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		private static LookupEntry[] taskStatuses;
-		private static LookupEntry[] taskPriorities;
+		private static IDictionary<string, LookupEntry[]> taskStatuses;
+		private static IDictionary<string, LookupEntry[]> taskPriorities;
 
-		private IEnumerable<LookupEntry> LookupEnum<TModel, TEnum>(
+		private IEnumerable<LookupEntry> LookupEnum<TEnum>(
 			string term, 
 			int page,
-			Expression<Func<TModel, TEnum>> prop, 
-			ref LookupEntry[] cache)
+			ref IDictionary<string, LookupEntry[]> cache)
 		{
 			if (page > 0) return Enumerable.Empty<LookupEntry>(); //while size of enum less than defaul page size (10)
 
+			var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 			if (cache == null)
 			{
-				var meta = _SessionProvider.ModelMetadata(typeof(TModel));
-
 				//no need to locking - replace with same value from another thread has no negative effect
-				cache = Enum.GetValues(typeof(TEnum))
+				cache = new Dictionary<string, LookupEntry[]>();
+			}
+			if (!cache.ContainsKey(lang))
+			{
+				//no need to locking - replace with same value from another thread has no negative effect
+				cache[lang] = Enum.GetValues(typeof(TEnum))
 					.OfType<TEnum>() //GetValues preserve enum order, no OrderBy used
-					.Select(s => meta.EnumLookupEntry(prop, s))
+					.Select(s => new LookupEntry 
+								{
+									Id = s.ToString(),
+									Text = (_LocalizationService.MessageForType(s.GetType(), s) ?? s.ToString())
+								})
 					.ToArray();
 			}
 
 			if (term.IsNullOrWhiteSpace())
-				return cache;
+				return cache[lang];
 
-			return cache
+			return cache[lang]
 				.Where(l => l.Text.IndexOf(term, StringComparison.InvariantCultureIgnoreCase) >= 0)
 				.ToArray();
 		}
@@ -70,13 +77,13 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupTaskStatuses(string term, [InRange(0, null)] int page)
 		{
-			return LookupEnum<TaskModel, TaskStatus>(term, page, m => m.Status, ref taskStatuses);
+			return LookupEnum<TaskStatus>(term, page, ref taskStatuses);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupTaskPriorities(string term, [InRange(0, null)] int page)
 		{
-			return LookupEnum<TaskModel, TaskPriority>(term, page, m => m.Priority, ref taskPriorities);
+			return LookupEnum<TaskPriority>(term, page, ref taskPriorities);
 		}
 			
 		[JsonEndpoint, RequireAuthorization]

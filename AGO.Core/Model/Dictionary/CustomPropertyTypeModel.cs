@@ -21,12 +21,7 @@ namespace AGO.Core.Model.Dictionary
 		[JsonProperty, NotLonger(64)]
 		public virtual string Format { get; set; }
 
-		[JsonProperty, EnumDisplayNames(new[]
-		{
-			"String", "Строка",
-			"Number", "Число",
-			"Date", "Дата"
-		})]
+		[JsonProperty]
 		public virtual CustomPropertyValueType ValueType { get; set; }
 
 		[JsonProperty]

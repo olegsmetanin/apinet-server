@@ -38,7 +38,7 @@ namespace AGO.Core.Localization
 					s => s.EndsWith(".resources")).Select(s => s.RemoveSuffix(".resources")))
 			{
 				var type = assembly.GetType(resourceName, false);
-				if (type != null && !type.IsValueType)
+				if (type != null)
 				{
 					localizers.Add(new ResourceManagerTypeLocalizer(type));
 					continue;

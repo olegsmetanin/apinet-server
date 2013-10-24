@@ -77,7 +77,6 @@
     <Compile Include="Controllers\DTO\TaskDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
     <Compile Include="Controllers\DTO\UpdateResult.cs" />
-    <Compile Include="Controllers\Extensions.cs" />
     <Compile Include="Controllers\ModelsResponse.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Migrations\TasksBootstrapMigration.cs" />
@@ -109,6 +108,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\ITasksModel.ru.resx">
       <DependentUpon>ITasksModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Task\TaskPriority.resx">
+      <DependentUpon>TaskPriority.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Task\TaskPriority.ru.resx">
+      <DependentUpon>TaskPriority.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Task\TaskStatus.resx">
+      <DependentUpon>TaskStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Task\TaskStatus.ru.resx">
+      <DependentUpon>TaskStatus.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TasksException.resx">
       <DependentUpon>TasksException.cs</DependentUpon>

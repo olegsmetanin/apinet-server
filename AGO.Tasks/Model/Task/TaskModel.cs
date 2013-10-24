@@ -33,14 +33,7 @@ namespace AGO.Tasks.Model.Task
         /// <summary>
         /// Статус задачи
         /// </summary>
-        [JsonProperty, EnumDisplayNames(new[]
-		{
-			"NotStarted", "Не начата",
-			"InWork", "В работе",
-			"Completed", "Выполнена",
-            "Closed", "Закрыта",
-            "Suspended", "Приостановлена"
-		})]
+        [JsonProperty]
         public virtual TaskStatus Status { get; protected set; }
 
         /// <summary>
@@ -57,12 +50,7 @@ namespace AGO.Tasks.Model.Task
 		/// <summary>
 		/// Приоритет
 		/// </summary>
-		[JsonProperty, EnumDisplayNames(new[]
-		{
-			"Low", "Низкий",
-			"Normal", "Нормальный",
-			"High", "Высокий"
-		})]
+		[JsonProperty]
 		public virtual TaskPriority Priority { get; set; }
 
 		/// <summary>

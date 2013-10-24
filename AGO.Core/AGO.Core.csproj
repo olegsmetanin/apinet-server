@@ -57,7 +57,6 @@
     <Compile Include="Attributes\Mapping\TableAttribute.cs" />
     <Compile Include="Attributes\Mapping\TablePerSubclassAttribute.cs" />
     <Compile Include="Attributes\Model\ComponentPrefixAttribute.cs" />
-    <Compile Include="Attributes\Model\EnumDisplayNamesAttribute.cs" />
     <Compile Include="Attributes\Model\IdentifierAttribute.cs" />
     <Compile Include="Attributes\Model\PrefetchedAttribute.cs" />
     <Compile Include="Attributes\Model\ModelVersionAttribute.cs" />
@@ -274,11 +273,24 @@
       <DependentUpon>AbstractExecutionException.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Filters\ModelFilterNodeSchema.json" />
+    <EmbeddedResource Include="Model\Dictionary\CustomPropertyValueType.resx">
+      <DependentUpon>CustomPropertyValueType.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Dictionary\CustomPropertyValueType.ru.resx">
+      <DependentUpon>CustomPropertyValueType.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\ICoreModel.resx">
       <DependentUpon>ICoreModel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\ICoreModel.ru.resx">
       <DependentUpon>ICoreModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Security\SystemRole.resx">
+      <DependentUpon>SystemRole.cs</DependentUpon>
+      <LastGenOutput>SystemRole.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Security\SystemRole.ru.resx">
+      <DependentUpon>SystemRole.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

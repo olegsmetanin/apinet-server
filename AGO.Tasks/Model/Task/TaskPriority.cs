@@ -8,16 +8,16 @@
 		/// <summary>
 		/// Низкий
 		/// </summary>
-		Low = -1,
+		Low = 0,
 
 		/// <summary>
 		/// Нормальный
 		/// </summary>
-		Normal = 0,
+		Normal = 1,
 
 		/// <summary>
 		/// Высокий
 		/// </summary>
-		High = 1
+		High = 2
 	}
 }

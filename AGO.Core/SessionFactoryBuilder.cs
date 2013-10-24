@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 using AGO.Core.Attributes.Mapping;
-using NHibernate;
-using NHibernate.Cfg;
-using NHibernate.Context;
-using NHibernate.Engine;
-using NHibernate.Metadata;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Model;
-using NHibernate.Stat;
-using NHibernate.Type;
+using NHibernate;
+using NHibernate.Cfg;
+using NHibernate.Context;
+using NHibernate.Metadata;
 
 namespace AGO.Core
 {
@@ -323,24 +319,6 @@ namespace AGO.Core
 					PropertyType = propertyType,
 					IsTimestamp = isTimestamp
 				};
-
-				if (propertyType.IsEnum)
-				{
-					var displayNamesAttribute = propertyInfo.GetCustomAttributes(
-						typeof(EnumDisplayNamesAttribute), false).OfType<EnumDisplayNamesAttribute>().FirstOrDefault();
-
-					var displayNamesDict = displayNamesAttribute != null
-						? displayNamesAttribute.DisplayNames
-						: new Dictionary<string, string>();
-
-					primitiveMeta.PossibleValues = new Dictionary<string, string>();
-					foreach (var name in Enum.GetNames(propertyType))
-					{
-						primitiveMeta.PossibleValues[name] = displayNamesDict.ContainsKey(name)
-							? displayNamesDict[name].TrimSafe()
-							: name;
-					}
-				}
 
 				classMeta._PrimitiveProperties.Add(primitiveMeta);
 			}

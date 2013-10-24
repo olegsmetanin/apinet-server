@@ -128,7 +128,14 @@ namespace AGO.Core.Json
 				writer.WriteValue("enum");
 
 				writer.WritePropertyName("PossibleValues");
-				serializer.Serialize(writer, propertyMeta.PossibleValues ?? new Dictionary<string, string>());
+				var valuesMap = new Dictionary<string, string>();
+				foreach (var name in Enum.GetNames(propertyType))
+				{
+					var localizedName = _LocalizationService.MessageForType(propertyType, name);
+					valuesMap[name] = (localizedName ?? name).TrimSafe();
+				}
+
+				serializer.Serialize(writer, valuesMap);
 			}
 			else if (typeof(byte) == propertyType || typeof(sbyte) == propertyType)
 				writer.WriteValue("int");

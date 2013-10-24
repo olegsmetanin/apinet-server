@@ -17,12 +17,7 @@ namespace AGO.DocManagement.Model.Documents
 		[DisplayName("Номер п/п"), JsonProperty, NotEmpty, NotLonger(16)]
 		public virtual string SeqNumber { get; set; }
 
-		[DisplayName("Тип документа"), JsonProperty, EnumDisplayNames(new[]
-		{
-			"Incoming", "Входящие",
-			"Outgoing", "Исходящие",
-			"Internal", "Внутренние"
-		})]
+		[DisplayName("Тип документа"), JsonProperty]
 		public virtual DocumentType DocumentType { get; set; }
 
 		[DisplayName("Краткое содержание"), NotEmpty, NotLonger(256), JsonProperty]

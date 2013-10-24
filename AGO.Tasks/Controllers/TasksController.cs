@@ -57,7 +57,7 @@ namespace AGO.Tasks.Controllers
 		{
 			var projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
 			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
-			var adapter = new TaskListItemAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)));
+			var adapter = new TaskListItemAdapter(_LocalizationService);
 
 			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
 				.Select(adapter.Fill)
@@ -72,7 +72,7 @@ namespace AGO.Tasks.Controllers
 			if (task == null)
 				throw new NoSuchEntityException();
 
-			var adapter = new TaskListItemDetailsAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)));
+			var adapter = new TaskListItemDetailsAdapter(_LocalizationService);
 			return adapter.Fill(task);
 		}
 
@@ -84,7 +84,7 @@ namespace AGO.Tasks.Controllers
 			if (task == null)
 				throw new NoSuchEntityException();
 
-			var adapter = new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), Session);
+			var adapter = new TaskViewAdapter(_LocalizationService, Session);
 			return adapter.Fill(task);
 		}
 
@@ -236,7 +236,7 @@ namespace AGO.Tasks.Controllers
 							vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
 						}
 			        }, 
-					task => new TaskViewAdapter(_SessionProvider.ModelMetadata(typeof(TaskModel)), Session).Fill(task),
+					task => new TaskViewAdapter(_LocalizationService, Session).Fill(task),
 					() => { throw new TaskCreationNotSupportedException(); });
 		}
 

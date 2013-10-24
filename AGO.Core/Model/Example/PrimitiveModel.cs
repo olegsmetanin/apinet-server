@@ -17,11 +17,7 @@ namespace AGO.Core.Model.Example
 		[DisplayName("Свойство типа DateTime"), JsonProperty]
 		public virtual DateTime DateTimeProperty { get; set; }
 
-		[DisplayName("Свойство типа Enum"), JsonProperty, EnumDisplayNames(new[]
-		{
-			"Value1", "Значение 1",
-			"Value2", "Значение 2"
-		})]
+		[DisplayName("Свойство типа Enum"), JsonProperty]
 		public virtual ExampleEnum EnumProperty { get; set; }
 
 		[DisplayName("Свойство типа Bool"), JsonProperty]
@@ -54,11 +50,7 @@ namespace AGO.Core.Model.Example
 		[DisplayName("Nullable свойство типа DateTime"), JsonProperty]
 		public virtual DateTime? NullableDateTimeProperty { get; set; }
 
-		[DisplayName("Nullable свойство типа Enum"), JsonProperty, EnumDisplayNames(new[]
-		{
-			"Value1", "Значение 1",
-			"Value2", "Значение 2"
-		})]
+		[DisplayName("Nullable свойство типа Enum"), JsonProperty]
 		public virtual ExampleEnum? NullableEnumProperty { get; set; }
 
 		[DisplayName("Nullable свойство типа Bool"), JsonProperty]

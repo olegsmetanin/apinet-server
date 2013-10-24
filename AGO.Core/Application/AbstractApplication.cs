@@ -92,6 +92,7 @@ namespace AGO.Core.Application
 			catch (Exception e)
 			{
 				LogManager.GetLogger(GetType()).Fatal(e.Message, e);
+				throw;
 			}
 		}
 

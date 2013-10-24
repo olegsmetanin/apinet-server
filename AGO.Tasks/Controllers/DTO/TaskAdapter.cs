@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Controllers;
-using AGO.Core.Filters.Metadata;
+using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Tasks.Model;
 using AGO.Tasks.Model.Dictionary;
@@ -17,13 +17,27 @@ namespace AGO.Tasks.Controllers.DTO
 	/// </summary>
 	public abstract class TaskAdapter<TDTO> : ModelAdapter<TaskModel, TDTO> where TDTO: BaseTaskDTO, new()
 	{
-		protected IModelMetadata Meta;
+		protected ILocalizationService Localization;
 
-		protected TaskAdapter(IModelMetadata meta)
+		protected TaskAdapter(ILocalizationService localizationService)
 		{
-			if (meta == null)
-				throw new ArgumentNullException("meta");
-			Meta = meta;
+			if (localizationService == null)
+				throw new ArgumentNullException("localizationService");
+			Localization = localizationService;
+		}
+
+		protected string EnumLocalizedValue<T>(T value)
+		{
+			return Localization.MessageForType(typeof (T), value) ?? value.ToString();
+		}
+
+		protected LookupEntry EnumLookupEntry<T>(T value)
+		{
+			return new LookupEntry
+			       	{
+			       		Id = value.ToString(),
+			       		Text = Localization.MessageForType(typeof (T), value) ?? value.ToString()
+			       	};
 		}
 
 		protected static Executor ToExecutor(TaskExecutorModel executor)
@@ -55,7 +69,7 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.Content = model.Content;
 			dto.Executors = model.Executors.OrderBy(e => e.Executor.User.FullName).Select(ToExecutor).ToArray();
 			dto.DueDate = model.DueDate;
-			dto.Status = Meta.EnumDisplayValue<TaskModel, TaskStatus>(mm => mm.Status, model.Status);
+			dto.Status = EnumLocalizedValue(model.Status);
 			dto.CustomStatus = CustomStatusEntry(model.CustomStatus).GetValueOrDefault().Text;
 
 			return dto;
@@ -67,20 +81,20 @@ namespace AGO.Tasks.Controllers.DTO
 	/// </summary>
 	public class TaskListItemAdapter: TaskAdapter<TaskListItemDTO>
 	{
-		public TaskListItemAdapter(IModelMetadata meta) : base(meta)
+		public TaskListItemAdapter(ILocalizationService localizationService) : base(localizationService)
 		{
 		}
 	}
 
 	public class TaskListItemDetailsAdapter
 	{
-		private readonly IModelMetadata meta;
+		private readonly ILocalizationService lc;
 
-		public TaskListItemDetailsAdapter(IModelMetadata meta)
+		public TaskListItemDetailsAdapter(ILocalizationService localizationService)
 		{
-			if (meta == null)
-				throw new ArgumentNullException("meta");
-			this.meta = meta;
+			if (localizationService == null)
+				throw new ArgumentNullException("localizationService");
+			lc = localizationService;
 		}
 
 		private AgreementView ToAgreement(TaskAgreementModel agreement)
@@ -96,7 +110,7 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			return new TaskListItemDetailsDTO
 			       	{
-			       		Priority = meta.EnumDisplayValue<TaskModel, TaskPriority>(m => m.Priority, task.Priority),
+			       		Priority = (lc.MessageForType(typeof(TaskPriority), task.Priority) ?? task.Priority.ToString()),
 			       		Content = task.Content,
 			       		Note = task.Note,
 			       		Agreements = task.Agreements
@@ -118,8 +132,8 @@ namespace AGO.Tasks.Controllers.DTO
 	{
 		private readonly ISession session;
 
-		public TaskViewAdapter(IModelMetadata meta, ISession session)
-			: base(meta)
+		public TaskViewAdapter(ILocalizationService localizationService, ISession session)
+			: base(localizationService)
 		{
 			if (session == null)
 				throw new ArgumentNullException("session");
@@ -143,7 +157,7 @@ namespace AGO.Tasks.Controllers.DTO
 			return new LookupEntry
 			       	{
 			       		Id = status.ToString(), 
-						Text = Meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, status)
+						Text = EnumLocalizedValue(status)
 			       	};
 		}
 
@@ -176,7 +190,7 @@ namespace AGO.Tasks.Controllers.DTO
 					.Select(s => new LookupEntry
 					{
 						Id = s.ToString(),
-						Text = Meta.EnumDisplayValue<TaskModel, TaskStatus>(m => m.Status, s)
+						Text = EnumLocalizedValue(s)
 					})
 					.ToArray()
 			};
@@ -219,11 +233,11 @@ namespace AGO.Tasks.Controllers.DTO
 			var dto = base.Fill(model);
 
 			dto.TaskType = new LookupEntry {Id = model.TaskType.Id.ToString(), Text = model.TaskType.Name};
-			dto.Status = Meta.EnumLookupEntry<TaskModel, TaskStatus>(mm => mm.Status, model.Status);
+			dto.Status = EnumLookupEntry(model.Status);
 			dto.CustomStatus = model.CustomStatus != null
 				? new LookupEntry { Id = model.CustomStatus.Id.ToString(), Text = model.CustomStatus.Name }
 				: (LookupEntry?) null;
-			dto.Priority = Meta.EnumLookupEntry<TaskModel, TaskPriority>(mm => mm.Priority, model.Priority);
+			dto.Priority = EnumLookupEntry(model.Priority);
 			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
 			dto.CustomStatusHistory = CustomStatusHistoryToDTO(model);
