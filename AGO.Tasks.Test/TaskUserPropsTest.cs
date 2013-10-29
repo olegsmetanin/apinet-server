@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using AGO.Core.Model.Dictionary;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
+using AGO.Core;
 
 namespace AGO.Tasks.Test
 {
@@ -33,6 +36,7 @@ namespace AGO.Tasks.Test
 		[SetUp]
 		public void SetUp()
 		{
+			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
 			task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 		}
@@ -94,7 +98,7 @@ namespace AGO.Tasks.Test
 		}
 
 		[Test]
-		public void UpdateParamReturnSuccess()
+		public void UpdateStrParamReturnSuccess()
 		{
 			var p = M.Param(task, "s1", "123");
 			_SessionProvider.FlushCurrentSession();
@@ -115,6 +119,55 @@ namespace AGO.Tasks.Test
 			Assert.AreEqual(1, task.CustomProperties.Count);
 			Assert.AreEqual(ur.Model.Id, task.CustomProperties.First().Id);
 			Assert.AreEqual("456", task.CustomProperties.First().StringValue);
+		}
+
+		[Test]
+		public void UpdateNumParamReturnSuccess()
+		{
+			var p = M.Param(task, "n1", 1m);
+			_SessionProvider.FlushCurrentSession();
+			var model = new CustomParameterDTO
+			{
+				Id = p.Id,
+				Type = new CustomParameterTypeDTO { Id = p.PropertyType.Id },
+				Value = "12.2"
+			};
+
+			var ur = controller.EditParam(task.Id, model);
+			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+
+			Assert.IsTrue(ur.Validation.Success);
+			Assert.IsNotNull(ur.Model);
+			Assert.AreEqual(12.2m, ur.Model.Value);
+			Session.Refresh(task);
+			Assert.AreEqual(1, task.CustomProperties.Count);
+			Assert.AreEqual(ur.Model.Id, task.CustomProperties.First().Id);
+			Assert.AreEqual(12.2m, task.CustomProperties.First().NumberValue);
+		}
+
+		[Test]
+		public void UpdateDateParamReturnSuccess()
+		{
+			var d = new DateTime(2013, 10, 10, 12, 12, 00, DateTimeKind.Utc);
+			var p = M.Param(task, "d1", d);
+			_SessionProvider.FlushCurrentSession();
+			var model = new CustomParameterDTO
+			{
+				Id = p.Id,
+				Type = new CustomParameterTypeDTO { Id = p.PropertyType.Id },
+				Value = "11/09/2013 14:16"
+			};
+
+			var ur = controller.EditParam(task.Id, model);
+			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+
+			Assert.IsTrue(ur.Validation.Success);
+			Assert.IsNotNull(ur.Model);
+			Assert.AreEqual(new DateTime(2013, 11, 09, 14, 16, 00, DateTimeKind.Utc), ur.Model.Value);
+			Session.Refresh(task);
+			Assert.AreEqual(1, task.CustomProperties.Count);
+			Assert.AreEqual(ur.Model.Id, task.CustomProperties.First().Id);
+			Assert.AreEqual(new DateTime(2013, 11, 09, 14, 16, 00), task.CustomProperties.First().DateValue.ToLocalTime());
 		}
 
 		[Test]

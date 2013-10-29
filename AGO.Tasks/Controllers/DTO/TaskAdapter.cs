@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Controllers;
@@ -156,7 +157,7 @@ namespace AGO.Tasks.Controllers.DTO
 			{
 				Id = param.Id,
 				Type = ParamTypeToDTO(param.PropertyType),
-				Value = param.Value.ConvertSafe<string>(),
+				Value = param.Value,//.ConvertSafe<string>(CultureInfo.CurrentUICulture),
 				ModelVersion = param.ModelVersion
 			};
 		}

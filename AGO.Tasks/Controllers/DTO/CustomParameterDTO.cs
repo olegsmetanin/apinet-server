@@ -19,6 +19,6 @@ namespace AGO.Tasks.Controllers.DTO
 	{
 		public CustomParameterTypeDTO Type { get; set; }
 
-		public string Value { get; set; }
+		public object Value { get; set; }
 	}
 }
