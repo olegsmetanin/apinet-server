@@ -17,7 +17,7 @@ namespace AGO.WebApiApp
 			/*HttpContext.Current.Session["CurrentUser"] = 
 				DependencyResolver.Current.GetService<ISessionProvider>().CurrentSession
 				.QueryOver<UserModel>()
-				.Where(m => m.Login == "admin@agosystems.com")
+				.Where(m => m.Login == "admin@apinet-test.com")
 				.Take(1).List().FirstOrDefault();*/
 
 			#endif

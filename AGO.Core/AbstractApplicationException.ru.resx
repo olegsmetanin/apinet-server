@@ -162,4 +162,10 @@
   <data name="RequiredValueException" xml:space="preserve">
     <value>Обязательно для заполнения</value>
   </data>
+  <data name="InvalidPwdException" xml:space="preserve">
+    <value>Неверный пароль</value>
+  </data>
+  <data name="NoSuchUserException" xml:space="preserve">
+    <value>Пользователь не существует</value>
+  </data>
 </root>

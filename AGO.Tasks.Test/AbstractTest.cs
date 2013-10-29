@@ -117,12 +117,12 @@ namespace AGO.Tasks.Test
 
 		protected UserModel Login(string email, string pwd)
 		{
-			return IocContainer.GetInstance<AuthController>().Login(email, pwd);
+			return IocContainer.GetInstance<AuthController>().Login(email, pwd) as UserModel;
 		}
 
 		protected UserModel LoginAdmin()
 		{
-			return Login("admin@agosystems.com", "1");
+			return Login("admin@apinet-test.com", "1");
 		}
 
 		protected void Logout()

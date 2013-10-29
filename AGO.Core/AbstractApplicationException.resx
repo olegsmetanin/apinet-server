@@ -162,4 +162,10 @@
   <data name="RequiredValueException" xml:space="preserve">
     <value>Required value</value>
   </data>
+  <data name="InvalidPwdException" xml:space="preserve">
+    <value>Invalid password</value>
+  </data>
+  <data name="NoSuchUserException" xml:space="preserve">
+    <value>No such user registered</value>
+  </data>
 </root>

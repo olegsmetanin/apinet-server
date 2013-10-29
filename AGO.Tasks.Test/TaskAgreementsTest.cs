@@ -29,9 +29,9 @@ namespace AGO.Tasks.Test
 
 			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
 			Assert.IsNotNull(project);
-			var ivanov = Session.QueryOver<UserModel>().Where(m => m.Login == "user1@agosystems.com").SingleOrDefault();
+			var ivanov = Session.QueryOver<UserModel>().Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault();
 			Assert.IsNotNull(ivanov);
-			var petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@agosystems.com").SingleOrDefault();
+			var petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault();
 			Assert.IsNotNull(petrov);
 
 			pIvanov = new ProjectParticipantModel
