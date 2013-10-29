@@ -50,7 +50,7 @@ namespace AGO.Tasks.Test
 				TestProject,
 				Enumerable.Empty<IModelFilterNode>().ToArray(),
 				new[] {new SortInfo {Property = "InternalSeqNumber"}},
-				0).ToArray();
+				0, TaskPredefinedFilter.All).ToArray();
 
 			Assert.AreEqual(2, result.Length);
 			Assert.AreEqual(t1.Id, result[0].Id);
