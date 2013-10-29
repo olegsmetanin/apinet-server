@@ -108,4 +108,12 @@ namespace AGO.Core
 	public class CanNotReplaceWithItemThatWillBeDeletedTo : AbstractApplicationException
 	{
 	}
+
+	public class NoSuchUserException : AbstractApplicationException
+	{
+	}
+
+	public class InvalidPwdException : AbstractApplicationException
+	{
+	}
 }

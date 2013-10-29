@@ -6,6 +6,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Json;
+using AGO.Core.Localization;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 
@@ -27,13 +28,16 @@ namespace AGO.Core.Controllers
 
 		protected readonly IStateStorage _StateStorage;
 
+		protected readonly ILocalizationService _LocalizationService;
+
 		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
-			IStateStorage stateStorage)
+			IStateStorage stateStorage,
+			ILocalizationService localizationService)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -58,6 +62,10 @@ namespace AGO.Core.Controllers
 			if (stateStorage == null)
 				throw new ArgumentNullException("stateStorage");
 			_StateStorage = stateStorage;
+
+			if (localizationService == null)
+				throw new ArgumentNullException("localizationService");
+			_LocalizationService = localizationService;
 		}
 
 		#endregion
@@ -65,18 +73,26 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint]
-		public UserModel Login([NotEmpty] string email, [NotEmpty] string password)
+		public object Login([NotEmpty] string email, [NotEmpty] string password)
 		{
+			var validation = new ValidationResult();
+
 			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.Login == email.TrimSafe()).Take(1).List().FirstOrDefault();
 			if (user == null)
-				throw new NoSuchUserException();
+			{
+				validation.AddFieldErrors("email", _LocalizationService.MessageForException(new NoSuchUserException()));
+				return validation;
+			}
 
 			var cryptoProvider = new MD5CryptoServiceProvider();
 			var pwdHash = Encoding.Default.GetString(
 				cryptoProvider.ComputeHash(Encoding.Default.GetBytes(password.TrimSafe())));
 			if (!string.Equals(user.PwdHash, pwdHash))
-				throw new InvalidPwdException();
+			{
+				validation.AddFieldErrors("password", _LocalizationService.MessageForException(new InvalidPwdException()));
+				return validation;
+			}
 
 			_StateStorage["CurrentUser"] = user;
 

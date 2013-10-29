@@ -105,7 +105,7 @@ namespace AGO.Core.Application
 
 		protected virtual void DoExecutePopulateDatabaseScript()
 		{
-			foreach (var service in IocContainer.GetAllInstances<ITestDataPopulationService>())
+			foreach (var service in IocContainer.GetAllInstances<IModuleTestDataService>())
 			{
 				service.Populate();
 				_SessionProvider.FlushCurrentSession();
@@ -116,12 +116,12 @@ namespace AGO.Core.Application
 		{
 			base.DoRegisterCoreServices();
 
-			IocContainer.RegisterAll<ITestDataPopulationService>(TestDataPopulationServices);
+			IocContainer.RegisterAll<IModuleTestDataService>(ModuleTestDataServices);
 		}
 
-		protected virtual IEnumerable<Type> TestDataPopulationServices
+		protected virtual IEnumerable<Type> ModuleTestDataServices
 		{
-			get { return new[] { typeof(TestDataPopulationService) }; }
+			get { return new[] { typeof(ModuleTestDataService) }; }
 		}
 
 		#endregion

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using AGO.Core;
-using AGO.WebApiApp.App_Start;
+using AGO.WebApiApp.Application;
 
 namespace AGO.WebApiApp.Controllers
 {
@@ -18,6 +16,8 @@ namespace AGO.WebApiApp.Controllers
 		public const string DevRoot = "~/ng-app/";
 
 		public const string ProdRoot = "~/ng-app/dist/";
+
+		public const int DaysToLive = 30;
 
 		#endregion
 
@@ -270,14 +270,13 @@ namespace AGO.WebApiApp.Controllers
 		protected void ServeFile(FileInfo fileInfo)
 		{
 			var stream = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-			//MimeAssistant.GetMimeType(resultFileInfo.Name)
 
 			try
 			{
-				if (UseCachedVersionIfNotModified(fileInfo.LastWriteTime, HttpContext))
+				if (UseCachedVersionIfNotModified(fileInfo.LastWriteTime, HttpContext, TimeSpan.FromDays(DaysToLive)))
 					return;
 
-				var fileName = fileInfo.Name;
+				/*var fileName = fileInfo.Name;
 				if (!fileName.IsNullOrEmpty())
 				{
 					var builder = new StringBuilder();
@@ -286,7 +285,7 @@ namespace AGO.WebApiApp.Controllers
 						builder.Append(c);
 					fileName = builder.ToString();
 
-					const string disposition = "attachment";/* : "inline";*/
+					const string disposition = "inline";
 
 					string dispositionHeader;
 					if ("IE".Equals(HttpContext.Request.Browser.Browser) && 
@@ -297,9 +296,9 @@ namespace AGO.WebApiApp.Controllers
 					else
 						dispositionHeader = String.Format("{0}; filename*=UTF-8''{1}", disposition, Uri.EscapeDataString(fileName));
 					HttpContext.Response.AddHeader("Content-Disposition", dispositionHeader);
-				}
+				}*/
 
-				HttpContext.Response.ContentType = MimeAssistant.GetMimeType(fileName);
+				HttpContext.Response.ContentType = MimeAssistant.GetMimeType(fileInfo.Name);
 
 				HttpContext.Response.AppendHeader("Accept-Ranges", "bytes");
 
@@ -346,7 +345,7 @@ namespace AGO.WebApiApp.Controllers
 			httpContext.Response.Cache.SetLastModified(modifyTimeUtc);
 
 			if (timeToLive != default(TimeSpan))
-				httpContext.Response.Cache.SetExpires(modifyTime.Add(timeToLive));
+				httpContext.Response.Cache.SetExpires(DateTime.UtcNow.Add(timeToLive));
 
 			var header = httpContext.Request.Headers.Get("If-Modified-Since");
 			if (header.IsNullOrEmpty())

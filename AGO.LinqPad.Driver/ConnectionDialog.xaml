@@ -1,0 +1,23 @@
+﻿<Window x:Class="AGO.LinqPad.Driver.ConnectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:AGO.LinqPad.Driver="clr-namespace:AGO.LinqPad.Driver"
+        Title="Настройка"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d" MinWidth="400" MinHeight="100" Width="400" Height="234"
+        d:DesignHeight="150" d:DesignWidth="400"
+        d:DataContext="{d:DesignInstance AGO.LinqPad.Driver:DriverDataWrapper}">
+	<StackPanel Orientation="Vertical" Margin="5 0">		
+		<Label>Путь к папке со сборками:</Label>
+		<AGO.LinqPad.Driver:FolderEntry Text="{Binding UserAssembliesFolder}" Description="Путь к папке со сборками"/>
+		<Label>Отображаемое имя:</Label>
+		<TextBox Text="{Binding DisplayName}" />
+		<Label>Класс наследуемого приложения</Label>
+		<TextBox Text="{Binding ApplicationClass}" />
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Bottom" Margin="0 3">
+            <Button DockPanel.Dock="Right" Content="OK" IsDefault="True" Click="HandleOk" MinWidth="50" Margin="5" />
+            <Button DockPanel.Dock="Right" Content="Cancel" IsCancel="True" MinWidth="50" Margin="5"/>
+        </StackPanel>
+	</StackPanel>
+</Window>

@@ -1,5 +1,5 @@
 ﻿using System.Web.Mvc;
-using AGO.WebApiApp.App_Start;
+using AGO.WebApiApp.Application;
 
 namespace AGO.WebApiApp.Controllers
 {
