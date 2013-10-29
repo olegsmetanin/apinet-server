@@ -32,6 +32,8 @@ namespace AGO.WebApiApp.App_Start
 
 		public static DevMode DevMode { get; private set; }
 
+		public static bool DisableCaching { get; private set; }
+
 		public override IKeyValueProvider KeyValueProvider
 		{
 			get
@@ -100,6 +102,7 @@ namespace AGO.WebApiApp.App_Start
 		protected virtual void DoRegisterWebServices()
 		{
 			DevMode = KeyValueProvider.Value("DevMode").ParseEnumSafe(DevMode.Dev);
+			DisableCaching = KeyValueProvider.Value("DisableCaching").ConvertSafe<bool>();
 
 			IocContainer.RegisterSingle<IEnvironmentService, HostingEnvironmentService>();
 			IocContainer.RegisterInitializer<HostingEnvironmentService>(service =>

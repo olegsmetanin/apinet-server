@@ -47,7 +47,7 @@ namespace AGO.Home.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public ValidationResult CreateProject([NotNull] ProjectModel model)
+		public object CreateProject([NotNull] ProjectModel model)
 		{
 			var validation = new ValidationResult();
 
@@ -83,23 +83,15 @@ namespace AGO.Home.Controllers
 					Status = initialStatus
 				};
 				_CrudDao.Store(statusHistoryRow);
+
+				return newProject;
 			}
 			catch (Exception e)
 			{
 				validation.AddErrors(_LocalizationService.MessageForException(e));
+				return validation;
 			}
-			
-			return validation;
 		}
-
-		/*[JsonEndpoint, RequireAuthorization(true)]
-		public void DeleteProject(JsonReader input)
-		{
-			var request = _JsonRequestService.ParseModelRequest<Guid>(input);
-
-			var project = _CrudDao.Get<ProjectModel>(request.Id, true);
-			_CrudDao.Delete(project);
-		}*/
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectModel> GetProjects(
@@ -125,20 +117,6 @@ namespace AGO.Home.Controllers
 				Page = page,
 				Sorters = sorters
 			});
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectNames(
-			[InRange(0, null)] int page,
-			string term)
-		{
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-				.Select(Projections.Distinct(Projections.Property("Name")))
-				.OrderBy(m => m.Name).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term.TrimSafe(), MatchMode.Anywhere);
-
-			return query.PagedQuery(_CrudDao, page).LookupList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
