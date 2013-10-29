@@ -19,6 +19,7 @@ namespace AGO.Tasks.Controllers.DTO
 	{
 		public CustomParameterTypeDTO Type { get; set; }
 
+		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public object Value { get; set; }
 	}
 }
