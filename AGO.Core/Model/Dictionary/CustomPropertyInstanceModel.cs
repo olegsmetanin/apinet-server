@@ -35,7 +35,7 @@ namespace AGO.Core.Model.Dictionary
 		{
 			var value = StringValue;
 			if (NumberValue != null)
-				value = NumberValue.Value.ToString(CultureInfo.CurrentCulture);
+				value = NumberValue.Value.ToString(CultureInfo.CurrentUICulture);
 			if (DateValue != null)
 				value = DateValue.Value.ToLocalTime().ToShortDateString();
 
@@ -68,13 +68,13 @@ namespace AGO.Core.Model.Dictionary
 				switch (PropertyType.ValueType)
 				{
 					case CustomPropertyValueType.String:
-						StringValue = value.ConvertSafe<string>();
+						StringValue = value.ConvertSafe<string>(CultureInfo.CurrentUICulture);
 						break;
 					case CustomPropertyValueType.Number:
-						NumberValue = value.ConvertSafe<decimal?>();
+						NumberValue = value.ConvertSafe<decimal?>(CultureInfo.CurrentUICulture);
 						break;
 					case CustomPropertyValueType.Date:
-						DateValue = value.ConvertSafe<DateTime?>();
+						DateValue = value.ConvertSafe<DateTime?>(CultureInfo.CurrentUICulture);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();

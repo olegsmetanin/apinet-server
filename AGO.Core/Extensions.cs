@@ -170,7 +170,7 @@ namespace AGO.Core
 			return value == null || default(Guid).Equals(value.Value);
 		}
 
-		public static string ToStringSafe(this object obj)
+		public static string ToStringSafe(this object obj, IFormatProvider formatProvider = null)
 		{
 			var result = obj as string;
 			if (result != null)
@@ -178,7 +178,7 @@ namespace AGO.Core
 
 			result = String.Empty;
 			if (obj != null)
-				result = obj.ToString();
+				result = obj is IConvertible ? ((IConvertible)obj).ToString(formatProvider) : obj.ToString();
 			return result;
 		}
 
@@ -209,7 +209,7 @@ namespace AGO.Core
 					return strObj;
 
 				var identifiedModel = obj as IIdentifiedModel;
-				return identifiedModel != null ? identifiedModel.UniqueId : obj.ToStringSafe();
+				return identifiedModel != null ? identifiedModel.UniqueId : obj.ToStringSafe(formatProvider);
 			}
 
 			if (resultType == typeof(bool) && strObj != null)

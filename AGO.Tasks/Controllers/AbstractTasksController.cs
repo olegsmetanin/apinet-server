@@ -67,10 +67,16 @@ namespace AGO.Tasks.Controllers
 			Action<TModel, ValidationResult> update,
 			Func<TModel, TDTO> convert, 
 			Func<TModel> factory = null) where TDTO: class
-			where TModel: SecureProjectBoundModel<Guid>, new()
+			where TModel: SecureModel<Guid>, new()
 		{
 			var result = new UpdateResult<TDTO> {Validation = new ValidationResult()};
-			Func<TModel> defaultFactory = () => new TModel {ProjectCode = project, Creator = _AuthController.CurrentUser()};
+			Func<TModel> defaultFactory = () =>
+			                              	{
+			                              		var m = new TModel {Creator = _AuthController.CurrentUser()};
+												if (m is IProjectBoundModel)
+													((IProjectBoundModel) m).ProjectCode = project;
+			                              		return m;
+			                              	};
 
 			try
 			{
