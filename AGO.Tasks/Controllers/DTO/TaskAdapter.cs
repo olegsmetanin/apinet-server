@@ -140,13 +140,22 @@ namespace AGO.Tasks.Controllers.DTO
 			this.session = session;
 		}
 
-		private static CustomParameterDTO ParamToDTO(CustomPropertyInstanceModel param)
+		public static CustomParameterTypeDTO ParamTypeToDTO(CustomPropertyTypeModel paramType)
+		{
+			return new CustomParameterTypeDTO
+			       	{
+			       		Id = paramType.Id,
+			       		Text = paramType.FullName,
+			       		ValueType = paramType.ValueType
+			       	};
+		}
+
+		public static CustomParameterDTO ParamToDTO(CustomPropertyInstanceModel param)
 		{
 			return new CustomParameterDTO
 			{
 				Id = param.Id,
-				TypeName = param.PropertyType.FullName,
-				ValueType = param.PropertyType.ValueType,
+				Type = ParamTypeToDTO(param.PropertyType),
 				Value = param.Value.ConvertSafe<string>(),
 				ModelVersion = param.ModelVersion
 			};

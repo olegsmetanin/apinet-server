@@ -9,6 +9,7 @@ using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
 using AGO.Home;
@@ -372,6 +373,52 @@ namespace AGO.Tasks.Controllers
 		public IEnumerable<IModelMetadata> TaskMetadata()
 		{
 			return MetadataForModelAndRelations<TaskModel>();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+    	public IEnumerable<CustomParameterTypeDTO> LookupParamTypes(
+			[NotEmpty] string project, 
+			string term, 
+			[InRange(0, null)] int page)
+		{
+			var query = Session.QueryOver<CustomPropertyTypeModel>()
+				.Where(m => m.ProjectCode == project);
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
+			query = query.OrderBy(m => m.FullName).Asc;
+
+			return query.PagedQuery(_CrudDao, page)
+				.List<CustomPropertyTypeModel>()
+				.Select(TaskViewAdapter.ParamTypeToDTO);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public UpdateResult<CustomParameterDTO> EditParam([NotEmpty] Guid taskId, [NotNull] CustomParameterDTO model)
+		{
+			var task = _CrudDao.Get<TaskModel>(taskId);
+			return Edit(model.Id, task.ProjectCode,
+			    (param, vr) =>
+			    {
+			    	param.Value = model.Value;
+
+			    }, TaskViewAdapter.ParamToDTO, 
+				() => new TaskCustomPropertyModel
+				      	{
+				      		Creator = _AuthController.CurrentUser(),
+							Task = task,
+							PropertyType = _CrudDao.Get<CustomPropertyTypeModel>(model.Type.Id, true)
+				      	});
+		}
+			
+			
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteParam([NotEmpty] Guid paramId)
+		{
+			//TODO security by task
+			var param = _CrudDao.Get<TaskCustomPropertyModel>(paramId, true);
+			param.Task.CustomProperties.Remove(param);
+			_CrudDao.Delete(param);
+			return true;
 		}
     }
 }
