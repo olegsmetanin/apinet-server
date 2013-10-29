@@ -296,22 +296,16 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<ProjectTypeModel> GetProjectTypes(
+		public IEnumerable<LookupEntry> LookupProjectTypes(
 			[InRange(0, null)] int page,
-			[NotNull] ICollection<IModelFilterNode> filter,
-			[NotNull] ICollection<SortInfo> sorters)
+			string term)
 		{
-			return _FilteringDao.List<ProjectTypeModel>(filter, new FilteringOptions
-			{
-				Page = page,
-				Sorters = sorters
-			});
-		}
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTypeModel>()
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-		[JsonEndpoint, RequireAuthorization]
-		public ProjectTypeModel GetProjectType([NotEmpty] Guid id, bool dontFetchReferences)
-		{
-			return GetModel<ProjectTypeModel, Guid>(id, dontFetchReferences);
+			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name);
 		}
 
 		#endregion
