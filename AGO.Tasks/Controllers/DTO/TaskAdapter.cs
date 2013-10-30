@@ -240,6 +240,7 @@ namespace AGO.Tasks.Controllers.DTO
 				? new LookupEntry { Id = model.CustomStatus.Id.ToString(), Text = model.CustomStatus.Name }
 				: (LookupEntry?) null;
 			dto.Priority = EnumLookupEntry(model.Priority);
+			dto.Note = model.Note;
 			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
 			dto.CustomStatusHistory = CustomStatusHistoryToDTO(model);

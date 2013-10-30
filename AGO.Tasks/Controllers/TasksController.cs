@@ -225,6 +225,9 @@ namespace AGO.Tasks.Controllers
 								case "Content":
 									task.Content = (string)data.Value;
 									break;
+								case "Note":
+									task.Note = (string)data.Value;
+									break;
 								case "Priority":
 									task.Priority = (TaskPriority)Enum.Parse(typeof(TaskPriority), (string)data.Value);
 									break;
