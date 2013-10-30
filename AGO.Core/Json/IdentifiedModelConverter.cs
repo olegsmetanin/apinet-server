@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using AGO.Core.Model;
 using NHibernate.Proxy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using AGO.Core.Model;
 
 namespace AGO.Core.Json
 {
@@ -80,8 +80,9 @@ namespace AGO.Core.Json
 				: attribute.PropertyName;
 			var value = propertyInfo.GetValue(model, null);
 
-			if (typeof(IIdentifiedModel).IsAssignableFrom(propertyInfo.PropertyType) &&
-				value.IsProxy() && ((INHibernateProxy) value).HibernateLazyInitializer.IsUninitialized)
+			if (typeof(IIdentifiedModel).IsAssignableFrom(propertyInfo.PropertyType) && ((value.IsProxy() && 
+					((INHibernateProxy)value).HibernateLazyInitializer.IsUninitialized) ||
+				model.Equals(value)))
 			{
 				var modelIdProperty = model.GetType().GetProperty(
 					propertyInfo.Name + "Id", BindingFlags.Public | BindingFlags.Instance);
@@ -103,7 +104,8 @@ namespace AGO.Core.Json
 		protected void ReadProperty(IIdentifiedModel model, Type modelType, JProperty property, JsonSerializer serializer)
 		{
 			PropertyInfo modelProperty = null;
-			foreach (var propertyInfo in model.RealType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite))
+			foreach (var propertyInfo in model.RealType.GetProperties(
+				BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite))
 			{
 				var attributes = propertyInfo.GetCustomAttributes(typeof(JsonPropertyAttribute), true);
 				if (attributes.Length == 0)

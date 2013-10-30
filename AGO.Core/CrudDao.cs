@@ -1,17 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.SqlCommand;
 using AGO.Core.Filters;
 using AGO.Core.Model;
-using NHibernate.SqlCommand;
 
 namespace AGO.Core
 {
 	public class CrudDao : AbstractDao, ICrudDao, IFilteringDao
 	{
+		#region Configuration properties, fields and methods
+
+		protected int _MaxPageSize = 100;
+
+		protected int _DefaultPageSize = 20;
+
+		protected override void DoSetConfigProperty(string key, string value)
+		{
+			if ("MaxPageSize".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				_MaxPageSize = value.ConvertSafe<int>();
+			if ("DefaultPageSize".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				_DefaultPageSize = value.ConvertSafe<int>();
+		}
+
+		protected override string DoGetConfigProperty(string key)
+		{
+			if ("MaxPageSize".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				return _MaxPageSize.ToString(CultureInfo.InvariantCulture);
+			if ("DefaultPageSize".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				return _DefaultPageSize.ToString(CultureInfo.InvariantCulture);
+			return null;
+		}
+
+		#endregion
+
 		#region Properties, fields, constructors
 
 		protected readonly IFilteringService _FilteringService;
@@ -30,9 +56,15 @@ namespace AGO.Core
 
 		#region Interfaces implementation
 
+		public int MaxPageSize { get { return _MaxPageSize; } }
+
+		public int DefaultPageSize { get { return _DefaultPageSize; } }
+
+		public ISessionProvider SessionProvider { get { return _SessionProvider; } }
+
 		public IFilteringService FilteringService { get { return _FilteringService; } }
 
-		public virtual TModel Get<TModel>(
+		public TModel Get<TModel>(
 			object id,
 			bool throwIfNotExist = false,
 			Type modelType = null)
@@ -47,33 +79,7 @@ namespace AGO.Core
 			return result;
 		}
 
-		public bool Exists<TModel>(IQueryOver<TModel> query) where TModel : class
-		{
-			//Solution without havy count(*) operation, only
-			//select top (1) 1 from xxx where...
-			//May be more elegant way to write this in nhibernate
-			return query.UnderlyingCriteria
-				.SetProjection(Projections.Constant(1, NHibernateUtil.Int32))
-				.SetMaxResults(1)
-				.List<int>()
-				.Count > 0;
-		}
-
-		public bool Exists<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class
-		{
-			var q = _SessionProvider.CurrentSession.QueryOver<TModel>();
-			q = query(q);
-			return Exists(q);
-		}
-
-		public TModel Find<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class
-		{
-			var q = _SessionProvider.CurrentSession.QueryOver<TModel>();
-			q = query(q);
-			return q.SingleOrDefault();
-		}
-
-		public virtual TModel Refresh<TModel>(TModel model)
+		public TModel Refresh<TModel>(TModel model)
 			where TModel : class, IIdentifiedModel
 		{
 			if (model == null)
@@ -84,7 +90,7 @@ namespace AGO.Core
 			return model;
 		}
 
-		public virtual TModel Merge<TModel>(TModel model)
+		public TModel Merge<TModel>(TModel model)
 			where TModel : class, IIdentifiedModel
 		{
 			if (model == null)
@@ -181,17 +187,6 @@ namespace AGO.Core
 			return Future<TModel>(filters, options).ToList();
 		}
 
-		public IList<TModel> List<TModel>(IEnumerable<IModelFilterNode> filters, 
-			int page = 0, ICollection<SortInfo> sorters = null) where TModel : class, IIdentifiedModel
-		{
-			var options = new FilteringOptions
-			{
-			    Page = page,
-			    Sorters = sorters ?? Enumerable.Empty<SortInfo>().ToArray()
-			};
-			return List<TModel>(filters, options);
-		}
-
 		public IEnumerable<TModel> Future<TModel>(
 			IEnumerable<IModelFilterNode> filters,
 			FilteringOptions options = null) where TModel : class, IIdentifiedModel
@@ -267,6 +262,16 @@ namespace AGO.Core
 		#endregion
 
 		#region Template methods
+
+		protected override void DoFinalizeConfig()
+		{
+			base.DoFinalizeConfig();
+
+			if (_MaxPageSize <= 0)
+				_MaxPageSize = MaxPageSize;
+			if (_DefaultPageSize <= 0)
+				_DefaultPageSize = DefaultPageSize;
+		}
 
 		protected override void DoInitialize()
 		{

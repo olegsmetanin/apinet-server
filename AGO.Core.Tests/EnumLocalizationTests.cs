@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace AGO.Core.Tests
 {
 	[TestFixture]
-	public class EnumLocalizationTests: AbstractTestFixture
+	public class EnumLocalizationTests : AbstractPersistenceApplication
 	{
 		[TestFixtureSetUp]
 		public void SetUp()

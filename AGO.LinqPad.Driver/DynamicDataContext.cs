@@ -105,7 +105,7 @@ namespace AGO.LinqPad.Driver
 				foreach (var element in addElements)
 				{
 					var keyElement = element.Attribute("key");
-					var valueElement = element.Attribute("value");				
+					var valueElement = element.Attribute("value");
 
 					var key = keyElement != null ? keyElement.Value.Trim() : string.Empty;
 					var value = valueElement != null ? valueElement.Value : string.Empty;
@@ -125,8 +125,8 @@ namespace AGO.LinqPad.Driver
 
 				var setter = _Application.GetType().GetProperty("KeyValueProvider");
 				if (setter != null && setter.CanWrite)
-						setter.SetValue(_Application, Activator.CreateInstance(GetExportedType(
-					"AGO.Core.Config.DictionaryKeyValueProvider", true, true), new object[] { appSettings }), null);
+					setter.SetValue(_Application, Activator.CreateInstance(
+				GetExportedType("DictionaryKeyValueProvider", true), new object[] { appSettings }), null);
 			}
 			catch (TargetInvocationException e)
 			{

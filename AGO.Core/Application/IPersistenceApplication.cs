@@ -1,4 +1,6 @@
-﻿using AGO.Core.Filters;
+﻿using System;
+using System.Collections.Generic;
+using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
 
@@ -17,5 +19,7 @@ namespace AGO.Core.Application
 		IMigrationService MigrationService { get; }
 
 		IModelProcessingService ModelProcessingService { get; }
+
+		IList<Type> TestDataServices { get; }
 	}
 }

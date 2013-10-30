@@ -3,36 +3,21 @@ using System.Linq;
 using AGO.Core;
 using AGO.Core.Model.Security;
 using AGO.Home.Model.Dictionary.Projects;
-using NHibernate;
 
 namespace AGO.Home
 {
-	public class ModuleTestDataService : AbstractService, IModuleTestDataService
+	public class TestDataService : AbstractTestDataService, ITestDataService
 	{
 		#region Properties, fields, constructors
 
-		protected ISessionProvider _SessionProvider;
-
-		protected ICrudDao _CrudDao;
-
-		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
-
-		public ModuleTestDataService(
-			ISessionProvider sessionProvider,
-			ICrudDao crudDao)
+		public TestDataService(ISessionProvider sessionProvider, ICrudDao crudDao)
+			: base(sessionProvider, crudDao)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
-
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
 		}
 
 		#endregion
 
-		#region Public methods
+		#region Interfaces implementation
 
 		public void Populate()
 		{

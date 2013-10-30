@@ -8,7 +8,7 @@ using NHibernate;
 
 namespace AGO.Tasks.Test
 {
-	public class AbstractTest : AbstractTestFixture
+	public class AbstractTest : AbstractControllersApplication
 	{
 		protected string TestProject { get; private set; }
 

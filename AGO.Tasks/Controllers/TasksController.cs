@@ -387,7 +387,7 @@ namespace AGO.Tasks.Controllers
 				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
 			query = query.OrderBy(m => m.FullName).Asc;
 
-			return query.PagedQuery(_CrudDao, page)
+			return _CrudDao.PagedQuery(query, page)
 				.List<CustomPropertyTypeModel>()
 				.Select(TaskViewAdapter.ParamTypeToDTO);
 		}

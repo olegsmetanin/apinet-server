@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using SimpleInjector;
 using AGO.Core.Config;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Modules;
-using SimpleInjector;
 
 namespace AGO.Core.Application
 {

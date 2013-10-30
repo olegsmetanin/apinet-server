@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace AGO.Core.Tests
 {
 	[TestFixture]
-	public class HelperTests : AbstractTestFixture
+	public class HelperTests : AbstractPersistenceApplication
 	{
 		[TestFixtureSetUp]
 		public void SetUp()

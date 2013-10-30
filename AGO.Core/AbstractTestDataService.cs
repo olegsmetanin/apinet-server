@@ -3,30 +3,27 @@ using NHibernate;
 
 namespace AGO.Core
 {
-	public abstract class AbstractDao : AbstractService
+	public abstract class AbstractTestDataService : AbstractService
 	{
 		#region Properties, fields, constructors
 
 		protected ISessionProvider _SessionProvider;
 
+		protected ICrudDao _CrudDao;
+
 		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
 
-		protected AbstractDao(ISessionProvider sessionProvider)
+		protected AbstractTestDataService(
+			ISessionProvider sessionProvider,
+			ICrudDao crudDao)
 		{
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
-		}
 
-		#endregion
-
-		#region Template methods
-
-		protected override void DoInitialize()
-		{
-			base.DoInitialize();
-
-			_SessionProvider.TryInitialize();
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			_CrudDao = crudDao;
 		}
 
 		#endregion

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using AGO.Core.Model;
 using Newtonsoft.Json;
+using AGO.Core.Model;
 
 namespace AGO.Core.Filters
 {

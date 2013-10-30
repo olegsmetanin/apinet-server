@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using AGO.Core.Application;
 using AGO.Core.Localization;
 using AGO.Core.Model;
-using Newtonsoft.Json;
 using AGO.Core.Filters.Metadata;
 
 namespace AGO.Core.Json
@@ -79,7 +79,7 @@ namespace AGO.Core.Json
 					while (currentType!=null && typeof(ICoreModel).IsAssignableFrom(currentType))
 					{
 						localized = _LocalizationService.MessageForType(typeof(ICoreModel), 
-							currentType.Name.RemoveSuffix("`1") + "." + propertyMeta.Name);
+							string.Format("{0}.{1}", currentType.Name.RemoveSuffix("`1"), propertyMeta.Name));
 						if (!localized.IsNullOrWhiteSpace())
 							break;
 						currentType = currentType.BaseType;

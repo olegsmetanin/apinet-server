@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using AGO.Core.Application;
+﻿using AGO.Core.Application;
 
 namespace AGO.WebApiApp.Application
 {
-	public class TestDataApplication : AbstractTestFixture, ITestDataApplication
+	public class TestDataApplication : AbstractPersistenceApplication, ITestDataApplication
 	{
 		public void CreateDatabase()
 		{
@@ -24,18 +21,6 @@ namespace AGO.WebApiApp.Application
 
 			Initialize();
 			DoPopulateDatabase();
-		}
-
-		protected override IEnumerable<Type> ModuleTestDataServices
-		{
-			get
-			{
-				return base.ModuleTestDataServices.Concat(new[]
-				{
-					typeof(Home.ModuleTestDataService),
-					typeof(Tasks.ModuleTestDataService)
-				});
-			}
 		}
 	}
 }

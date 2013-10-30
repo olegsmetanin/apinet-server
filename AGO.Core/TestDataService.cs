@@ -1,48 +1,24 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using AGO.Core.Model.Security;
-using NHibernate;
 
 namespace AGO.Core
 {
-	public class ModuleTestDataService : AbstractService, IModuleTestDataService
+	public class TestDataService : AbstractTestDataService, ITestDataService
 	{
 		#region Properties, fields, constructors
 
-		protected ISessionProvider _SessionProvider;
+		public TestDataService(ISessionProvider sessionProvider, ICrudDao crudDao)
+			:base(sessionProvider, crudDao)
 
-		protected ICrudDao _CrudDao;
-
-		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
-
-		public ModuleTestDataService(
-			ISessionProvider sessionProvider,
-			ICrudDao crudDao)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
-
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
 		}
 
 		#endregion
 
-		#region Public methods
+		#region Interfaces implementation
 
 		public void Populate()
-		{
-			DoPopulateUsers();
-		}
-
-		#endregion
-
-		#region Helper methods
-
-		protected void DoPopulateUsers()
 		{
 			var cryptoProvider = new MD5CryptoServiceProvider();
 			var pwdHash = Encoding.Default.GetString(

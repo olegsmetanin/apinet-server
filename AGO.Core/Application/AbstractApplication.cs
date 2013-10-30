@@ -59,14 +59,11 @@ namespace AGO.Core.Application
 			}
 		}
 
-		private IEnvironmentService _EnvironmentService;
-		public IEnvironmentService EnvironmentService { get { return _EnvironmentService; } }
+		public IEnvironmentService EnvironmentService { get; private set; }
 
-		private IJsonService _JsonService;
-		public IJsonService JsonService { get { return _JsonService; } }
+		public IJsonService JsonService { get; private set; }
 
-		private ILocalizationService _LocalizationService;
-		public ILocalizationService LocalizationService { get { return _LocalizationService; } }
+		public ILocalizationService LocalizationService { get; private set; }
 
 		protected AbstractApplication()
 		{
@@ -149,11 +146,11 @@ namespace AGO.Core.Application
 
 		protected virtual void DoInitializeCoreServices()
 		{
-			_EnvironmentService = IocContainer.GetInstance<IEnvironmentService>();
+			EnvironmentService = IocContainer.GetInstance<IEnvironmentService>();
 			DoSetDataDirectory();
 
-			_LocalizationService = IocContainer.GetInstance<ILocalizationService>();
-			_JsonService = IocContainer.GetInstance<IJsonService>();
+			LocalizationService = IocContainer.GetInstance<ILocalizationService>();
+			JsonService = IocContainer.GetInstance<IJsonService>();
 		}
 
 		protected virtual void DoInitializeSingletons()
@@ -166,7 +163,7 @@ namespace AGO.Core.Application
 		protected virtual void DoSetDataDirectory()
 		{
 			AppDomain.CurrentDomain.SetData("DataDirectory",
-				Path.Combine(_EnvironmentService.ApplicationAssembliesPath, "../App_Data"));
+				Path.Combine(EnvironmentService.ApplicationAssembliesPath, "../App_Data"));
 		}
 
 		#endregion

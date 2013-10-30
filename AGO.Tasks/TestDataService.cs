@@ -8,31 +8,15 @@ using AGO.Home.Model.Dictionary.Projects;
 using AGO.Home.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using NHibernate;
-
 namespace AGO.Tasks
 {
-	public class ModuleTestDataService : AbstractService, IModuleTestDataService
+	public class TestDataService : AbstractTestDataService, ITestDataService
 	{
 		#region Properties, fields, constructors
 
-		protected ISessionProvider _SessionProvider;
-
-		protected ICrudDao _CrudDao;
-
-		protected ISession CurrentSession { get { return _SessionProvider.CurrentSession; } }
-
-		public ModuleTestDataService(
-			ISessionProvider sessionProvider,
-			ICrudDao crudDao)
+		public TestDataService(ISessionProvider sessionProvider, ICrudDao crudDao)
+			: base(sessionProvider, crudDao)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
-
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
 		}
 
 		#endregion

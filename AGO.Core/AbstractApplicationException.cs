@@ -85,6 +85,10 @@ namespace AGO.Core
 		}
 	}
 
+	public class MustMatchRegexException : AbstractApplicationException
+	{
+	}
+
 	public class DataAccessException : AbstractApplicationException
 	{
 		public DataAccessException(Exception innerException)

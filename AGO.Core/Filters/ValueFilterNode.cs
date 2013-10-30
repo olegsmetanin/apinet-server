@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using AGO.Core.Json;
 using Newtonsoft.Json;
+using AGO.Core.Json;
 
 namespace AGO.Core.Filters
 {

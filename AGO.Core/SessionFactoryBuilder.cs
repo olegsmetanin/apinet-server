@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using AGO.Core.Attributes.Mapping;
-using AGO.Core.Attributes.Model;
-using AGO.Core.Filters.Metadata;
-using AGO.Core.Model;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Context;
 using NHibernate.Metadata;
+using AGO.Core.Attributes.Mapping;
+using AGO.Core.Attributes.Model;
+using AGO.Core.Filters.Metadata;
+using AGO.Core.Model;
 
 namespace AGO.Core
 {

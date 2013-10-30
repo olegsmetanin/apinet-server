@@ -98,7 +98,7 @@
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TasksException.cs" />
-    <Compile Include="ModuleTestDataService.cs" />
+    <Compile Include="TestDataService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

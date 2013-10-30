@@ -60,12 +60,12 @@ namespace AGO.Core.Filters
 				throw new ArgumentNullException("jsonService");
 			_JsonService = jsonService;
 
-			var modelNodeSchemaStream = typeof(AbstractFilterNode).Assembly.GetManifestResourceStream(
-				"AGO.Core.Filters.ModelFilterNodeSchema.json");
+			var modelNodeSchemaStream = GetType().Assembly.GetManifestResourceStream(
+				string.Format("{0}.{1}", GetType().Namespace, "ModelFilterNodeSchema.json"));
 			if (modelNodeSchemaStream == null)
 				throw new InvalidOperationException();
-			var valueNodeSchemaStream = typeof(AbstractFilterNode).Assembly.GetManifestResourceStream(
-				"AGO.Core.Filters.ValueFilterNodeSchema.json");
+			var valueNodeSchemaStream = GetType().Assembly.GetManifestResourceStream(
+				string.Format("{0}.{1}", GetType().Namespace, "ValueFilterNodeSchema.json"));
 			if (valueNodeSchemaStream == null)
 				throw new InvalidOperationException();
 

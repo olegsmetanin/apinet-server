@@ -57,7 +57,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name);
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -71,7 +71,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Description).IsLike(term, MatchMode.Anywhere);
 
-			return query.PagedQuery(_CrudDao, page).LookupList(m => m.Description);
+			return _CrudDao.PagedQuery(query, page).LookupList(m => m.Description);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -211,7 +211,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name);
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -305,7 +305,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(m => m.Name);
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 
 		#endregion

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
+using NHibernate.Criterion;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Localization;
-using NHibernate.Criterion;
 
 namespace AGO.Core.Model.Processing
 {
@@ -74,8 +74,7 @@ namespace AGO.Core.Model.Processing
 
 			foreach (var propertyInfo in properties)
 			{
-				try
-				{
+				
 					var capabilityProperty = capability != null 
 						? capability.GetType().GetProperty(propertyInfo.Name)
 						: null;
@@ -91,6 +90,14 @@ namespace AGO.Core.Model.Processing
 						DoValidateModelSaving(component, validation, capabilityObj, propertyInfo.Name);
 						continue;
 					}
+
+				var invalidAttributes = propertyInfo.FindInvalidPropertyConstraintAttributes(value);
+				if (capabilityValue ?? false)
+				{
+					invalidAttributes.UnionWith(Extensions.FindInvalidItemConstraintAttributes(
+						propertyInfo.PropertyType, value, null, new NotEmptyAttribute(),
+						Enumerable.Empty<InRangeAttribute>(), Enumerable.Empty<RegexValidatedAttribute>()));
+				}
 
 					var uniquePropertyAttribute = propertyInfo.FirstAttribute<UniquePropertyAttribute>(true);
 					if (uniquePropertyAttribute != null)
@@ -111,24 +118,25 @@ namespace AGO.Core.Model.Processing
 						}
 
 						if (criteria.SetProjection(Projections.RowCount()).UniqueResult<int>() > 0)
-							throw new MustBeUniqueException();
+						invalidAttributes.UnionWith(new[] { uniquePropertyAttribute });
 					}
 						
-					var invalidAttribute = propertyInfo.FindInvalidPropertyConstraintAttribute(value);
-					invalidAttribute = invalidAttribute ?? (capabilityValue != null && capabilityValue.Value
-						? Extensions.FindInvalidItemConstraintAttribute(
-							propertyInfo.PropertyType, value, null, new NotEmptyAttribute(), Enumerable.Empty<InRangeAttribute>())
-						: null);
-
-					if (invalidAttribute == null)
-						continue;
-
+				foreach (var invalidAttribute in invalidAttributes)
+				{
+					try
+					{
 					if (invalidAttribute is NotNullAttribute || invalidAttribute is NotEmptyAttribute)
 					{
 						if (capabilityValue ?? true)
 						throw new RequiredValueException();
 						continue;
 					}
+
+						if (invalidAttribute is UniquePropertyAttribute)
+							throw new MustBeUniqueException();
+
+						if (invalidAttribute is RegexValidatedAttribute)
+							throw new MustMatchRegexException();
 
 					var inRange = invalidAttribute as InRangeAttribute;
 					if (inRange != null && inRange.Inclusive)
@@ -150,7 +158,6 @@ namespace AGO.Core.Model.Processing
 							throw new MustBeLowerThanException(inRange.End);
 					}
 					throw new InvalidOperationException();
-
 				}
 				catch (Exception e)
 				{
@@ -158,6 +165,7 @@ namespace AGO.Core.Model.Processing
 					validation.AddFieldErrors(string.Format("{0}{1}", namePrefix, propertyInfo.Name), msg);
 				}
 			}
+		}
 		}
 
 		#endregion

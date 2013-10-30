@@ -195,7 +195,7 @@ namespace AGO.Tasks.Test
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
 			Assert.IsTrue(agr.Done);
 			Assert.IsNotNull(agr.AgreedAt);
-			Assert.AreEqual(DateTime.Today, agr.AgreedAt.Value.Date);
+			Assert.AreEqual(DateTime.Today, agr.AgreedAt.Value.ToLocalTime().Date);
 			Assert.AreEqual("good job, bro", agr.Comment);
 		}
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using AGO.Core.Attributes.Constraints;
 
@@ -21,23 +22,26 @@ namespace AGO.Core.Execution
 		{
 			try
 			{
-			var result = parameterValue;
-			var paramType = parameterInfo.ParameterType;
+				var result = parameterValue;
+				var paramType = parameterInfo.ParameterType;
 
-			if (result != null)
-			{
-				if (!paramType.IsInstanceOfType(result))
-					result = result.ConvertSafe(paramType);
-			}
-			else if (paramType.IsValueType)
-				result = Activator.CreateInstance(paramType);
+				if (result != null)
+				{
+					if (!paramType.IsInstanceOfType(result))
+						result = result.ConvertSafe(paramType);
+				}
+				else if (paramType.IsValueType)
+					result = Activator.CreateInstance(paramType);
 
-			var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttribute(result);
+				var invalidAttribute = parameterInfo.FindInvalidParameterConstraintAttributes(result).FirstOrDefault();
 				if (invalidAttribute == null)
 					return result;
 
 				if (invalidAttribute is NotNullAttribute || invalidAttribute is NotEmptyAttribute)
 					throw new RequiredValueException();
+
+				if (invalidAttribute is RegexValidatedAttribute)
+					throw new MustMatchRegexException();
 
 				var inRange = invalidAttribute as InRangeAttribute;
 				if (inRange != null && inRange.Inclusive)
@@ -57,10 +61,10 @@ namespace AGO.Core.Execution
 						throw new MustBeGreaterThanException(inRange.Start);
 					if (inRange.End != null)
 						throw new MustBeLowerThanException(inRange.End);
-			}
+				}
 
-			return result;
-		}
+				return result;
+			}
 			catch (Exception e)
 			{
 				throw new ControllerActionParameterException(parameterInfo.Name, e);

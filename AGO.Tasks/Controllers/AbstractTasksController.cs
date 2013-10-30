@@ -60,7 +60,7 @@ namespace AGO.Tasks.Controllers
 				}
 			}
 
-			return query.PagedQuery(_CrudDao, page).LookupModelsList(textProperty).ToArray();
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(textProperty).ToArray();
 		}
 
 		protected UpdateResult<TDTO> Edit<TModel, TDTO>(Guid id, string project, 

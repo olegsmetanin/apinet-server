@@ -13,20 +13,18 @@ namespace AGO.LinqPad.Driver
 	{
 		internal static object _Lock = new object();
 
-		public const string DriverName = "AGO.LinqPad.Driver";
-
 		public const string AuthorName = "GeX";
 
 		public override string GetConnectionDescription(IConnectionInfo cxInfo)
 		{
 			var driverData = new DriverDataWrapper(cxInfo.DriverData);
-			return string.IsNullOrWhiteSpace(driverData.DisplayName) 
-				? DriverName : DriverName + ": " + driverData.DisplayName;
+			return string.IsNullOrWhiteSpace(driverData.DisplayName)
+				? Name : Name + ": " + driverData.DisplayName;
 		}
 
 		public override string Name
 		{
-			get { return DriverName; }
+			get { return GetType().Assembly.GetName().Name; }
 		}
 
 		public override bool ShowConnectionDialog(IConnectionInfo cxInfo, bool isNewConnection)
@@ -96,22 +94,22 @@ namespace AGO.LinqPad.Driver
 			ref string nameSpace, ref string typeName)
 		{
 			var code = string.Format(@"
-				using AGO.LinqPad.Driver;
+				using {0};
 
-				namespace {0}
+				namespace {1}
 				{{
-					public class {1} : DynamicDataContext
+					public class {2} : DynamicDataContext
 					{{
-						public virtual {2} Application
+						public virtual {3} Application
 						{{
 							get
 							{{
-								return _Application as {2};
+								return _Application as {3};
 							}}
 						}}
 					}}
 				}}
-			", nameSpace, typeName, ctx.DriverData.ApplicationClass);
+			", GetType().Namespace, nameSpace, typeName, ctx.DriverData.ApplicationClass);
 
 			CompilerResults results;
 			using (var codeProvider = new CSharpCodeProvider(new Dictionary<string, string> { { "CompilerVersion", "v3.5" } }))

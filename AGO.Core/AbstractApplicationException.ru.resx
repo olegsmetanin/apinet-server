@@ -153,6 +153,9 @@
   <data name="MustBeUniqueException" xml:space="preserve">
     <value>Значение уже используется</value>
   </data>
+  <data name="MustMatchRegexException" xml:space="preserve">
+    <value>Не соответствует шаблону</value>
+  </data>
   <data name="NoSuchEntityException" xml:space="preserve">
     <value>Запрашиваемый объект не найден</value>
   </data>

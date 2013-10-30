@@ -147,7 +147,7 @@ namespace AGO.Home.Controllers
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(() => um.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
-			return query.PagedQuery(_CrudDao, page)
+			return _CrudDao.PagedQuery(query, page)
 				.LookupList<ProjectParticipantModel, UserModel>(m => m.Id, "um", u => u.FullName).ToArray();
 		}
 			

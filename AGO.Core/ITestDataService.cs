@@ -1,6 +1,6 @@
 ﻿namespace AGO.Core
 {
-	public interface IModuleTestDataService
+	public interface ITestDataService
 	{
 		void Populate();
 	}

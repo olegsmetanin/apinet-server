@@ -36,12 +36,12 @@
     <Compile Include="Application\AbstractApplication.cs" />
     <Compile Include="Application\AbstractControllersApplication.cs" />
     <Compile Include="Application\AbstractPersistenceApplication.cs" />
-    <Compile Include="Application\AbstractTestFixture.cs" />
     <Compile Include="Application\IWebApplication.cs" />
     <Compile Include="Application\IApplication.cs" />
     <Compile Include="Application\IControllersApplication.cs" />
     <Compile Include="Application\IPersistenceApplication.cs" />
     <Compile Include="Application\ITestDataApplication.cs" />
+    <Compile Include="Attributes\Constraints\RegexValidatedAttribute.cs" />
     <Compile Include="Attributes\Constraints\UniquePropertyAttribute.cs" />
     <Compile Include="Attributes\Constraints\InRangeAttribute.cs" />
     <Compile Include="Attributes\Constraints\NotEmptyAttribute.cs" />
@@ -74,6 +74,7 @@
     <Compile Include="Config\IKeyValueConfigurable.cs" />
     <Compile Include="Config\IKeyValueProvider.cs" />
     <Compile Include="Config\KeyValueConfigProvider.cs" />
+    <Compile Include="Config\KeyValueConfigurableDictionary.cs" />
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Controllers\LookupEntry.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="AbstractDao.cs" />
+    <Compile Include="AbstractTestDataService.cs" />
     <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
@@ -94,7 +96,7 @@
     <Compile Include="Execution\IActionParameterTransformer.cs" />
     <Compile Include="Execution\JsonTokenParameterTransformer.cs" />
     <Compile Include="IEnvironmentService.cs" />
-    <Compile Include="IModuleTestDataService.cs" />
+    <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
     <Compile Include="Model\ICoreModel.cs" />
@@ -105,9 +107,10 @@
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
+    <Compile Include="QueryOverExtensions.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
-    <Compile Include="ModuleTestDataService.cs" />
+    <Compile Include="TestDataService.cs" />
     <Compile Include="ExpressionExceptions.cs" />
     <Compile Include="ExpressionExtensions.cs" />
     <Compile Include="Filters\FilteringOptions.cs" />

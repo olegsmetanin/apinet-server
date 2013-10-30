@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using AGO.Core.Model;
 using NHibernate;
+using AGO.Core.Model;
 
 namespace AGO.Core
 {
 	public interface ICrudDao
 	{
+		int MaxPageSize { get; }
+
+		int DefaultPageSize { get; }
+
+		ISessionProvider SessionProvider { get; }
+
 		TModel Get<TModel>(
 			object id,
 			bool throwIfNotExist = false,
 			Type modelType = null)
 			where TModel : class, IIdentifiedModel;
-
-		bool Exists<TModel>(IQueryOver<TModel> query) where TModel : class;
-
-		bool Exists<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class;
-
-		TModel Find<TModel>(Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) where TModel : class;
 
 		void Store(IIdentifiedModel model);
 
@@ -49,39 +48,72 @@ namespace AGO.Core
 	public static class CrudDaoExtensions
 	{
 		public static IQueryOver<TModel> PagedQuery<TModel>(
-			this IQueryOver<TModel> query,
-			ICrudDao crudDao,
+			this ICrudDao crudDao,
+			IQueryOver<TModel> query,
 			int page,
 			int pageSize = 0)
 			where TModel : class, IIdentifiedModel
 		{
-			return query != null && crudDao != null
-				? crudDao.PagedQuery(query, page, pageSize)
-				: query;
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			if (query == null)
+				throw new ArgumentNullException("query");
+
+			return crudDao.PagedQuery(query, page, pageSize);
 		}
 
 		public static IEnumerable<TModel> PagedFuture<TModel>(
-			this IQueryOver<TModel> query, 
-			ICrudDao crudDao, 
+			this ICrudDao crudDao,
+			IQueryOver<TModel> query, 
 			int page, 
 			int pageSize = 0)
 			where TModel : class, IIdentifiedModel
 		{
-			return query != null && crudDao != null 
-				? crudDao.PagedFuture(query, page, pageSize)
-				: Enumerable.Empty<TModel>();
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			if (query == null)
+				throw new ArgumentNullException("query");
+
+			return crudDao.PagedFuture(query, page, pageSize);
 		}
 
 		public static IList<TModel> PagedList<TModel>(
+			this ICrudDao crudDao, 
 			IQueryOver<TModel> query, 
-			ICrudDao crudDao, 
 			int page, 
 			int pageSize = 0)
 			where TModel : class, IIdentifiedModel
 		{
-			return query != null && crudDao != null
-				? crudDao.PagedList(query, page, pageSize)
-				: new List<TModel>();
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+			if (query == null)
+				throw new ArgumentNullException("query");
+
+			return crudDao.PagedList(query, page, pageSize);
+		}
+
+		public static bool Exists<TModel>(
+			this ICrudDao crudDao,
+			Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) 
+			where TModel : class
+		{
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+
+			query = query ?? (q => q);
+			return query(crudDao.SessionProvider.CurrentSession.QueryOver<TModel>()).Exists();
+		}
+
+		public static TModel Find<TModel>(
+			this ICrudDao crudDao,
+			Func<IQueryOver<TModel, TModel>, IQueryOver<TModel, TModel>> query) 
+			where TModel : class
+		{
+			if (crudDao == null)
+				throw new ArgumentNullException("crudDao");
+
+			query = query ?? (q => q);
+			return query(crudDao.SessionProvider.CurrentSession.QueryOver<TModel>()).SingleOrDefault();
 		}
 	}
 }

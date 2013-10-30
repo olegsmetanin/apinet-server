@@ -79,12 +79,12 @@ namespace AGO.Core
 		public static string ToStringSafe(
 			this DateTime? date,
 			IFormatProvider formatProvider = null,
-			string format = "")
+			string format = null)
 		{
 			var result = String.Empty;
 			if (date != null)
 			{
-				result = format.IsNullOrEmpty()
+				result = format.IsNullOrWhiteSpace()
 					? date.Value.ToString(formatProvider)
 					: date.Value.ToString(format, formatProvider);
 			}
@@ -170,16 +170,19 @@ namespace AGO.Core
 			return value == null || default(Guid).Equals(value.Value);
 		}
 
-		public static string ToStringSafe(this object obj, IFormatProvider formatProvider = null)
+		public static string ToStringSafe(
+			this object obj, 
+			IFormatProvider formatProvider = null)
 		{
 			var result = obj as string;
 			if (result != null)
 				return result;
 
-			result = String.Empty;
-			if (obj != null)
-				result = obj is IConvertible ? ((IConvertible)obj).ToString(formatProvider) : obj.ToString();
-			return result;
+			var convertible = obj as IConvertible;
+			if (convertible != null)
+				return convertible.ToString(formatProvider);
+
+			return (obj != null ? obj.ToString() : null) ?? String.Empty;
 		}
 
 		public static object ConvertSafe(
@@ -375,20 +378,11 @@ namespace AGO.Core
 			return null;
 		}
 
-		private static object ConvertValue(object value, Type toType, bool safe)
-		{
-			return value == null
-			       	? null
-			       	: safe
-			       	  	? value.ConvertSafe(toType)
-			       	  	: Convert.ChangeType(value, toType);
-		}
-
 		public static void SetMemberValue(
 			this object obj,
 			string memberName,
 			object value,
-			bool convertSafe = true)
+			IFormatProvider formatProvider = null)
 		{
 			if (obj == null || !obj.GetType().IsClass)
 				return;
@@ -396,13 +390,13 @@ namespace AGO.Core
 			var prop = obj.GetType().GetProperty(memberName);
 			if (prop != null)
 			{
-				prop.SetValue(obj, ConvertValue(value, prop.PropertyType, convertSafe) , null);
+				prop.SetValue(obj, value.ConvertSafe(prop.PropertyType, formatProvider), null);
 				return;
 			}
 			var field = obj.GetType().GetField(memberName);
 			if (field == null)
 				return;
-			field.SetValue(obj, ConvertValue(value, field.FieldType, convertSafe));
+			field.SetValue(obj, value.ConvertSafe(field.FieldType, formatProvider));
 		}
 
 		public static object GetMemberValue(
@@ -430,11 +424,11 @@ namespace AGO.Core
 				return defaultValue;
 
 			if (value is T)
-				return (T)value;
+				return (T) value;
 
 			var converted = value.ConvertSafe(typeof(T));
-			if (converted != null)
-				return (T)converted;
+			if (converted != null && !converted.Equals(default(T)))
+				return (T) converted;
 
 			return defaultValue;
 		}
@@ -595,49 +589,62 @@ namespace AGO.Core
 			while (bytesRead > 0 && bytesRead == toRead);
 		}
 
-		public static Attribute FindInvalidPropertyConstraintAttribute(this PropertyInfo propertyInfo, object propertyValue)
+		public static ISet<Attribute> FindInvalidPropertyConstraintAttributes(this PropertyInfo propertyInfo, object propertyValue)
 		{
 			if (propertyInfo == null)
 				throw new ArgumentNullException("propertyInfo");
 
-			return FindInvalidItemConstraintAttribute(
+			return FindInvalidItemConstraintAttributes(
 				propertyInfo.PropertyType,
 				propertyValue,
 				propertyInfo.GetCustomAttributes(typeof(NotNullAttribute), true).FirstOrDefault() as NotNullAttribute,
 				propertyInfo.GetCustomAttributes(typeof(NotEmptyAttribute), true).FirstOrDefault() as NotEmptyAttribute,
-				propertyInfo.GetCustomAttributes(typeof(InRangeAttribute), true).OfType<InRangeAttribute>());
+				propertyInfo.GetCustomAttributes(typeof(InRangeAttribute), true).OfType<InRangeAttribute>(),
+				propertyInfo.GetCustomAttributes(typeof(RegexValidatedAttribute), true).OfType<RegexValidatedAttribute>());
 		}
 
-		public static Attribute FindInvalidParameterConstraintAttribute(this ParameterInfo parameterInfo, object parameterValue)
+		public static ISet<Attribute> FindInvalidParameterConstraintAttributes(this ParameterInfo parameterInfo, object parameterValue)
 		{
 			if (parameterInfo == null)
 				throw new ArgumentNullException("parameterInfo");
 
-			return FindInvalidItemConstraintAttribute(
+			return FindInvalidItemConstraintAttributes(
 				parameterInfo.ParameterType,
 				parameterValue,
 				parameterInfo.GetCustomAttributes(typeof(NotNullAttribute), true).FirstOrDefault() as NotNullAttribute,
 				parameterInfo.GetCustomAttributes(typeof(NotEmptyAttribute), true).FirstOrDefault() as NotEmptyAttribute,
-				parameterInfo.GetCustomAttributes(typeof(InRangeAttribute), true).OfType<InRangeAttribute>());
+				parameterInfo.GetCustomAttributes(typeof(InRangeAttribute), true).OfType<InRangeAttribute>(),
+				parameterInfo.GetCustomAttributes(typeof(RegexValidatedAttribute), true).OfType<RegexValidatedAttribute>());
 		}
 
-		public static Attribute FindInvalidItemConstraintAttribute(
+		public static ISet<Attribute> FindInvalidItemConstraintAttributes(
 			Type itemType,
 			object itemValue,
 			NotNullAttribute notNull,
 			NotEmptyAttribute notEmpty,
-			IEnumerable<InRangeAttribute> inRange)
+			IEnumerable<InRangeAttribute> inRange,
+			IEnumerable<RegexValidatedAttribute> regexValidated)
 		{
 			if (itemType == null)
 				throw new ArgumentNullException("itemType");
 
-			if ((notNull != null || notEmpty != null) && itemValue == null)
-				return ((Attribute) notNull) ?? notEmpty;
+			var result = new HashSet<Attribute>();
 
-			if (notEmpty != null && IsEmptyParam(itemValue, itemType, notEmpty.IgnoreWhitespace))
-				return notEmpty;
+			if (notNull != null || notEmpty != null)
+			{
+				if (itemValue == null)
+					result.Add((Attribute) notNull ?? notEmpty);
+				else if(notEmpty != null && IsEmptyParam(itemValue, itemType, notEmpty.IgnoreWhitespace))
+					result.Add(notEmpty);
+			}
 
-			return inRange.FirstOrDefault(ra => !IsParamInRange(itemValue, itemType, ra.Start, ra.End, ra.Inclusive));
+			result.UnionWith(inRange.Where(attr => !IsParamInRange(
+				itemValue, itemType, attr.Start, attr.End, attr.Inclusive)));
+
+			result.UnionWith(regexValidated.Where(attr => !attr.Regex.Match(
+				(itemValue as string) ?? itemValue.ToStringSafe().Trim()).Success));
+
+			return result;
 		}
 
 		public static bool IsEmptyParam(object param, Type paramType, bool ignoreWhitespace)
