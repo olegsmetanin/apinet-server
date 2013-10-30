@@ -54,10 +54,60 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] string project,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters,
-			[InRange(0, null)] int page)
+			[InRange(0, null)] int page,
+			TaskPredefinedFilter predefined)
 		{
-			var projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
-			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+			IModelFilterNode projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
+			IModelFilterNode predefinedPredicate = null;
+			if (predefined != TaskPredefinedFilter.All)
+			{
+				var today = DateTime.Today;
+				var f = _FilteringService.Filter<TaskModel>();
+				
+				switch (predefined)
+				{
+					case TaskPredefinedFilter.Overdue:
+						{
+							var tomorrow = today.AddDays(1);
+							predefinedPredicate = f.Where(m => m.Status != TaskStatus.Closed && m.DueDate < tomorrow);
+						}
+						break;
+					case TaskPredefinedFilter.DayLeft:
+						{
+							var dayAfterTomorrow = today.AddDays(2);
+							predefinedPredicate = f.Where(m => m.Status != TaskStatus.Closed && m.DueDate < dayAfterTomorrow);
+						}
+						break;
+					case TaskPredefinedFilter.WeekLeft:
+						{
+							var weekLater = today.AddDays(8);
+							predefinedPredicate = f.Where(m => m.Status != TaskStatus.Closed && m.DueDate < weekLater);
+						}
+						break;
+					case TaskPredefinedFilter.NoLimit:
+						predefinedPredicate = f.WhereProperty(m => m.DueDate).Not().Exists();
+						break;
+					case TaskPredefinedFilter.ClosedToday:
+						{
+							var tomorrow = today.AddDays(1);
+							predefinedPredicate = f.And()
+								.Where(m => m.Status == TaskStatus.Closed)
+								.WhereCollection(m => m.StatusHistory)
+								.Where(m => m.Status == TaskStatus.Closed && m.Start >= today && m.Start < tomorrow).End();
+						}
+						break;
+					case TaskPredefinedFilter.ClosedYesterday:
+						var yesterday = today.AddDays(-1);
+						predefinedPredicate = f.And()
+							.Where(m => m.Status == TaskStatus.Closed)
+							.WhereCollection(m => m.StatusHistory)
+							.Where(m => m.Status == TaskStatus.Closed && m.Start >= yesterday && m.Start < today).End();
+						break;
+					default:
+						throw new ArgumentOutOfRangeException("predefined");
+				}
+			}
+			var predicate = filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray();
 			var adapter = new TaskListItemAdapter(_LocalizationService);
 
 			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
@@ -174,6 +224,9 @@ namespace AGO.Tasks.Controllers
 							{
 								case "Content":
 									task.Content = (string)data.Value;
+									break;
+								case "Note":
+									task.Note = (string)data.Value;
 									break;
 								case "Priority":
 									task.Priority = (TaskPriority)Enum.Parse(typeof(TaskPriority), (string)data.Value);

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using AGO.Core;
 using AGO.Core.Controllers;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
@@ -114,14 +112,8 @@ namespace AGO.Tasks.Controllers.DTO
 			       		Priority = (lc.MessageForType(typeof(TaskPriority), task.Priority) ?? task.Priority.ToString()),
 			       		Content = task.Content,
 			       		Note = task.Note,
-			       		Agreements = task.Agreements
-							.Select(ToAgreement)
-							.Concat(new [] 
-								{
-									new AgreementView { Agreemer = "Пупкин В.В.", Done = true},
-									new AgreementView { Agreemer = "Вовкин П.П."}
-								}).ToArray(),
-			       		Files = new[] {"Договор.docx", "Смета.xlsx", "Летчик.jpg"}
+			       		Agreements = task.Agreements.Select(ToAgreement).ToArray(),
+			       		Files = new[] {"Invoice.docx", "Orders.xlsx"}
 			       	};
 		}
 	}
@@ -157,7 +149,7 @@ namespace AGO.Tasks.Controllers.DTO
 			{
 				Id = param.Id,
 				Type = ParamTypeToDTO(param.PropertyType),
-				Value = param.Value,//.ConvertSafe<string>(CultureInfo.CurrentUICulture),
+				Value = param.Value,
 				ModelVersion = param.ModelVersion
 			};
 		}
@@ -248,6 +240,7 @@ namespace AGO.Tasks.Controllers.DTO
 				? new LookupEntry { Id = model.CustomStatus.Id.ToString(), Text = model.CustomStatus.Name }
 				: (LookupEntry?) null;
 			dto.Priority = EnumLookupEntry(model.Priority);
+			dto.Note = model.Note;
 			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
 			dto.CustomStatusHistory = CustomStatusHistoryToDTO(model);
