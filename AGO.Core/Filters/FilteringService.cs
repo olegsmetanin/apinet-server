@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using NHibernate.Criterion;
 using NHibernate.SqlCommand;
+using NHibernate.Transform;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using AGO.Core.Attributes.Model;
@@ -175,7 +176,8 @@ namespace AGO.Core.Filters
 			{
 				ValidateModelFilterNode(node, modelType);
 
-				var criteria = DetachedCriteria.For(modelType);
+				var criteria = DetachedCriteria.For(modelType)
+				    .SetResultTransformer(new DistinctRootEntityResultTransformer());
 				
 				var junction = CompileModelFilterNode(node, criteria, modelType, null, new HashSet<string>(), false);
 				if (junction != null)

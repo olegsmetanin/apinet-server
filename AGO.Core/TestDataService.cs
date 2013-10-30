@@ -29,9 +29,10 @@ namespace AGO.Core
 				Login = "admin@apinet-test.com",
 				PwdHash = pwdHash,
 				Active = true,
-				LastName = "Admin",
-				Name = "Admin",
-				MiddleName = "Admin",
+				LastName = "Connor",
+				Name = "John",
+				MiddleName = "",
+				JobName = "Administrator",
 				SystemRole = SystemRole.Administrator
 			};
 			admin.Creator = admin;
@@ -43,9 +44,9 @@ namespace AGO.Core
 				Login = "user1@apinet-test.com",
 				PwdHash = pwdHash,
 				Active = true,
-				LastName = "User1",
-				Name = "User1",
-				MiddleName = "User1",
+				LastName = "Bryan",
+				Name = "Thomas",
+				MiddleName = "",
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user1);
@@ -56,9 +57,9 @@ namespace AGO.Core
 				Login = "user2@apinet-test.com",
 				PwdHash = pwdHash,
 				Active = true,
-				LastName = "User2",
-				Name = "User2",
-				MiddleName = "User2",
+				LastName = "Scoggins",
+				Name = "Samuel",
+				MiddleName = "",
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user2);
@@ -69,9 +70,9 @@ namespace AGO.Core
 				Login = "user3@apinet-test.com",
 				PwdHash = pwdHash,
 				Active = true,
-				LastName = "User3",
-				Name = "User3",
-				MiddleName = "User3",
+				LastName = "Moore",
+				Name = "Caroline",
+				MiddleName = "",
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user3);

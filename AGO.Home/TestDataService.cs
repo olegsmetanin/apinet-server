@@ -26,29 +26,41 @@ namespace AGO.Home
 			if (admin == null)
 				throw new Exception("Test data inconsistency");
 
-			var newProjectStatus = new ProjectStatusModel
+			_CrudDao.Store(new ProjectStatusModel
 			{
 				Creator = admin,
 				Name = "New",
 				IsInitial = true
-			};
-			_CrudDao.Store(newProjectStatus);
+			});
 
-			var closedProjectStatus = new ProjectStatusModel
+			_CrudDao.Store(new ProjectStatusModel
 			{
 				Creator = admin,
 				Name = "Closed",
 				IsFinal = true
-			};
-			_CrudDao.Store(closedProjectStatus);
+			});
 
-			var commonTag = new ProjectTagModel
+			_CrudDao.Store(new ProjectTagModel
 			{
 				Creator = admin,
-				Name = "Common tag",
-				FullName = "Common tag",
-			};
-			_CrudDao.Store(commonTag);
+				Name = "Urgent",
+				FullName = "Urgent",
+			});
+
+			_CrudDao.Store(new ProjectTagModel
+			{
+				Creator = admin,
+				Name = "Important",
+				FullName = "Important",
+			});
+
+			_CrudDao.Store(new ProjectTagModel
+			{
+				Creator = admin,
+				Owner = admin,
+				Name = "Pay attention",
+				FullName = "Pay attention",
+			});
 		}
 
 		#endregion

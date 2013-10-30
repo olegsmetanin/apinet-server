@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Model.Dictionary;
@@ -38,8 +37,10 @@ namespace AGO.Tasks
 					.Where(m => m.Login == "user3@apinet-test.com").Take(1).List().FirstOrDefault(),
 				InitialProjectStatus = CurrentSession.QueryOver<ProjectStatusModel>()
 					.Where(m => m.IsInitial).Take(1).List().FirstOrDefault(),
-				CommonTag = CurrentSession.QueryOver<ProjectTagModel>()
-					.Where(m => m.Name == "Common tag").Take(1).List().FirstOrDefault(),
+				UrgentTag = CurrentSession.QueryOver<ProjectTagModel>()
+					.Where(m => m.Name == "Urgent").SingleOrDefault(),
+				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
+					.Where(m => m.Owner == admin).List(),
 				ProjectType = new ProjectTypeModel
 				{
 					Creator = admin,
@@ -48,38 +49,34 @@ namespace AGO.Tasks
 				}
 			};
 
-			if (context.Admin == null || context.User1 == null || context.User2 == null || context.User3 == null ||
-					context.InitialProjectStatus == null || context.CommonTag == null)
+			if (context.Admin == null || context.User1 == null || context.User2 == null ||
+					context.User3 == null || context.InitialProjectStatus == null || context.UrgentTag == null)
 				throw new Exception("Test data inconsistency");
 
 			_CrudDao.Store(context.ProjectType);
 
-			foreach (var project in DoPopulateProjects(context))
-			{
-				DoPopulateDepartments(context, project);
+			var projects = DoPopulateProjects(context);
 
-				DoPopulateCustomStatuses(context, project);
-
-				DoPopulateTasks(context, project,
-					DoPopulateTaskTypes(context, project),
-					DoPopulatePropertyTypes(context, project));
-			}			
+			DoPopulateCustomStatuses(context, projects.Project1);
+			DoPopulateTasks(context, projects.Project1,
+				DoPopulateTaskTypes(context, projects.Project1),
+				DoPopulatePropertyTypes(context, projects.Project1));	
 		}
 
 		#endregion
 
 		#region Helper methods
 
-		protected IEnumerable<ProjectModel> DoPopulateProjects(dynamic context)
+		protected dynamic DoPopulateProjects(dynamic context)
 		{
-			Func<int, ProjectModel> createProject = index =>
+			Func<int, string, string, ProjectModel> createProject = (index, name, description) =>
 			{
 				var project = new ProjectModel
 				{
 					Creator = context.Admin,
 					ProjectCode = "tasks_" + index,
-					Name = "Task management project " + index,
-					Description = "Description of task management project " + index,
+					Name = name ?? ("Task management project " + index),
+					Description = description ?? ("Description of task management project " + index),
 					Type = context.ProjectType,
 					Status = context.InitialProjectStatus,
 				};
@@ -121,53 +118,26 @@ namespace AGO.Tasks
 				{
 					Creator = context.Admin,
 					Project = project,
-					Tag = context.CommonTag
+					Tag = context.UrgentTag
 				});
+
+				foreach (var tag in context.AdminTags)
+				{
+					_CrudDao.Store(new ProjectToTagModel
+					{
+						Creator = context.Admin,
+						Project = project,
+						Tag = tag
+					});
+				}
 
 				return project;
 			};
 
-			var result = new List<ProjectModel>();
-			for (var i = 1; i < 11; i++)
-				result.Add(createProject(i));
-
-			return result;
-		}
-
-		protected dynamic DoPopulateDepartments(dynamic context, ProjectModel project)
-		{
-			var primaryDepartment = new DepartmentModel
+			return new
 			{
-				ProjectCode = project.ProjectCode,
-				Creator = context.Admin,
-				Name = "Primary department",
-				FullName = "Primary department"
+				Project1 = createProject(1, "Common tasks", "Common everyday tasks for specialists")
 			};
-			_CrudDao.Store(primaryDepartment);
-
-			context.Admin.Departments.Add(primaryDepartment);
-			_CrudDao.Store(context.Admin);
-
-			Action<string, UserModel> createDepartment = (name, user) =>
-			{
-				var department = new DepartmentModel
-				{
-					ProjectCode = project.ProjectCode,
-					Creator = context.Admin,
-					Name = name,
-					FullName = string.Format("{0} / {1}", primaryDepartment.Name, name),
-					Parent = primaryDepartment
-				};
-				_CrudDao.Store(department);
-				user.Departments.Add(department);
-				_CrudDao.Store(user);
-			};
-
-			createDepartment("Child department 1", context.User1);
-			createDepartment("Child department 2", context.User2);
-			createDepartment("Child department 3", context.User3);
-
-			return context;
 		}
 
 		protected void DoPopulateCustomStatuses(dynamic context, ProjectModel project)
@@ -236,9 +206,10 @@ namespace AGO.Tasks
 
 			return new
 			{
-				String1 = factory("String 1", CustomPropertyValueType.String),
-				Number1 = factory("Number 1", CustomPropertyValueType.Number),
-				Date1 = factory("Date 1", CustomPropertyValueType.Date)
+				PossibleIssues = factory("Possible issues", CustomPropertyValueType.String),
+				ApproximateArea = factory("Approximate area", CustomPropertyValueType.Number),
+				BuildingDate = factory("Building date", CustomPropertyValueType.Date),
+				LastOverhaulDate = factory("Last overhaul date", CustomPropertyValueType.Date)
 			};
 		}
 
@@ -265,11 +236,11 @@ namespace AGO.Tasks
 				return task;
 			};
 
-			var t1 = createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
-			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High,
-				"Calculations 2", DateTime.Now.AddDays(2));
-			createTask(taskTypes.Measurement, TaskStatus.Completed, TaskPriority.Low,
+			var t1 = createTask(taskTypes.Measurement, TaskStatus.Completed, TaskPriority.Low,
 				"Do measurements of object on address: MO, Korolev, Kosmonavtov st., 12, 2", DateTime.Now.AddDays(3));
+			
+			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
+			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High, "Calculate year-ending salary bonuses", DateTime.Now.AddDays(2));
 			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.High, null, DateTime.Now.AddDays(-1));
 
 			Action<TaskModel, CustomPropertyTypeModel, object> createTaskProperty = (task, propertyType, value) =>
@@ -284,9 +255,10 @@ namespace AGO.Tasks
 				_CrudDao.Store(taskProperty);
 			};
 
-			createTaskProperty(t1, propertyTypes.String1, "some string data");
-			createTaskProperty(t1, propertyTypes.Number1, 12.3);
-			createTaskProperty(t1, propertyTypes.Date1, new DateTime(2013, 01, 01));
+			createTaskProperty(t1, propertyTypes.PossibleIssues, "Entrance only through basement");
+			createTaskProperty(t1, propertyTypes.ApproximateArea, 86.5);
+			createTaskProperty(t1, propertyTypes.BuildingDate, new DateTime(1967, 04, 16));
+			createTaskProperty(t1, propertyTypes.LastOverhaulDate, new DateTime(1990, 07, 01));
 		}
 
 		#endregion
