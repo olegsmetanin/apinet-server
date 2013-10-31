@@ -10,8 +10,11 @@ namespace AGO.Core.Application
 	{
 		#region Properties, fields, constructors
 
-		protected IStateStorage _StateStorage;
-		public IStateStorage StateStorage { get { return _StateStorage; } }
+		protected IStateStorage<object> _StateStorage;
+		public IStateStorage<object> StateStorage { get { return _StateStorage; } }
+
+		protected IStateStorage<string> _ClientStateStorage;
+		public IStateStorage<string> ClientStateStorage { get { return _ClientStateStorage; } }
 
 		#endregion
 
@@ -27,7 +30,8 @@ namespace AGO.Core.Application
 
 		protected virtual void DoRegisterStateManagement()
 		{
-			IocContainer.RegisterSingle<IStateStorage, DictionaryStateStorage>();
+			IocContainer.RegisterSingle<IStateStorage<object>, DictionaryStateStorage<object>>();
+			IocContainer.RegisterSingle<IStateStorage<string>, DictionaryStateStorage<string>>();			
 		}
 
 		protected virtual void DoRegisterActionExecution()
@@ -71,7 +75,7 @@ namespace AGO.Core.Application
 
 		protected virtual void DoInitializeStateManagement()
 		{
-			_StateStorage = IocContainer.GetInstance<IStateStorage>();
+			_StateStorage = IocContainer.GetInstance<IStateStorage<object>>();
 		}
 
 		#endregion

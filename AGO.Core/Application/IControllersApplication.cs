@@ -4,6 +4,8 @@ namespace AGO.Core.Application
 {
 	public interface IControllersApplication : IApplication
 	{
-		IStateStorage StateStorage { get; }
+		IStateStorage<object> StateStorage { get; }
+
+		IStateStorage<string> ClientStateStorage { get; } 
 	}
 }

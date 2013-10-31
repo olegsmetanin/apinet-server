@@ -96,7 +96,8 @@ namespace AGO.WebApiApp.Application
 		{
 			base.DoRegisterActionExecution();
 
-			IocContainer.RegisterSingle<IStateStorage, WebSessionStateStorage>();
+			IocContainer.RegisterSingle<IStateStorage<object>, HttpSessionStateStorage>();
+			IocContainer.RegisterSingle<IStateStorage<string>, HttpCookiesStateStorage>();
 		}
 
 		protected virtual void DoRegisterWebServices()
@@ -134,6 +135,7 @@ namespace AGO.WebApiApp.Application
 			{
 				return base.AllActionParameterResolvers.Concat(new[]
 				{
+					typeof(HttpRuntimeParameterResolver),
 					typeof(JsonBodyParameterResolver)
 				});
 			}

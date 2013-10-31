@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
@@ -17,7 +19,15 @@ namespace AGO.System.Controllers
 {
 	public class UsersController : AbstractController
 	{
+		#region Constants
+
+		internal const string CurrentCultureKey = "currentLocale";
+
+		#endregion
+
 		#region Properties, fields, constructors
+
+		protected readonly IStateStorage<string> _ClientStateStorage;
 
 		public UsersController(
 			IJsonService jsonService,
@@ -27,9 +37,13 @@ namespace AGO.System.Controllers
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
-			AuthController authController)
+			AuthController authController,
+			IStateStorage<string> clientStateStorage)
 			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
+			if (clientStateStorage == null)
+				throw new ArgumentNullException("clientStateStorage");
+			_ClientStateStorage = clientStateStorage;
 		}
 
 		#endregion
@@ -111,6 +125,23 @@ namespace AGO.System.Controllers
 				.OrderBy(m => m.Name).Asc
 				.Select(m => m.Name)
 				.List<string>();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public object SetLocale(CultureInfo locale, IEnumerable<string> userLanguages)
+		{
+			locale = locale ?? _ClientStateStorage[CurrentCultureKey].ConvertSafe<CultureInfo>();
+			locale = locale ?? (userLanguages ?? Enumerable.Empty<string>())
+				.Select(s => s.Split(';')[0]).FirstOrDefault().ConvertSafe<CultureInfo>();
+
+			if (locale != null && !locale.Equals(CultureInfo.CurrentUICulture) &&
+					_LocalizationService.Cultures.Any(c => c.Equals(locale)))
+				Thread.CurrentThread.CurrentUICulture = locale;
+
+			var result = CultureInfo.CurrentUICulture.Name;
+			_ClientStateStorage[CurrentCultureKey] = result;
+
+			return new { currentLocale = result};
 		}
 
 		#endregion

@@ -10,6 +10,7 @@ using AGO.Core.Model.Dictionary;
 using AGO.Core.Filters;
 using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
+using NHibernate.Criterion;
 
 namespace AGO.Core.Controllers
 {
@@ -35,19 +36,19 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<CustomPropertyTypeModel> GetCustomPropertyTypes(
+		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
 			[NotEmpty] string project,
 			[InRange(0, null)] int page,
-			[NotNull] ICollection<IModelFilterNode> filter,
-			[NotNull] ICollection<SortInfo> sorters)
+			string term)
 		{
-			return _FilteringDao.List<CustomPropertyTypeModel>(filter.Concat(new[] {
-				_FilteringService.Filter<CustomPropertyTypeModel>().Where(m => m.ProjectCode == project) }), 
-			new FilteringOptions
-			{
-				Page = page,
-				Sorters = sorters
-			});
+			var query = _SessionProvider.CurrentSession.QueryOver<CustomPropertyTypeModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.Name).Asc;
+
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

@@ -26,7 +26,7 @@ namespace AGO.Core.Controllers
 
 		protected readonly ISessionProvider _SessionProvider;
 
-		protected readonly IStateStorage _StateStorage;
+		protected readonly IStateStorage<object> _StateStorage;
 
 		protected readonly ILocalizationService _LocalizationService;
 
@@ -36,7 +36,7 @@ namespace AGO.Core.Controllers
 			ICrudDao crudDao,
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
-			IStateStorage stateStorage,
+			IStateStorage<object> stateStorage,
 			ILocalizationService localizationService)
 		{
 			if (jsonService == null)

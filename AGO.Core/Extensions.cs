@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -262,6 +263,18 @@ namespace AGO.Core
 					return null;
 				}
 			}
+
+			if (typeof(CultureInfo).IsAssignableFrom(resultType) && strObj != null)
+			{
+				try
+				{
+					return CultureInfo.GetCultureInfo(strObj);
+				}
+				catch
+				{
+					return null;
+				}
+			}				
 
 			try
 			{

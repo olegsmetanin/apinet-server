@@ -65,12 +65,6 @@ namespace AGO.WebApiApp.Execution
 			ParameterInfo parameterInfo, 
 			out object parameterValue)
 		{
-			if (typeof (HttpFileCollection).IsAssignableFrom(parameterInfo.ParameterType))
-			{
-				parameterValue = HttpContext.Current.Request.Files;
-				return true;
-			}
-
 			var jsonBody = ScopeStorage.CurrentScope.ContainsKey(JsonRequestBodyKey)
 				? ScopeStorage.CurrentScope[JsonRequestBodyKey] as JObject
 				: null;

@@ -86,11 +86,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\Initializer.cs" />
+    <Compile Include="Controllers\HttpCookiesStateStorage.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ApiController.cs" />
-    <Compile Include="Controllers\WebSessionStateStorage.cs" />
+    <Compile Include="Controllers\HttpSessionStateStorage.cs" />
     <Compile Include="Application\TestDataApplication.cs" />
     <Compile Include="Application\WebApplication.cs" />
+    <Compile Include="Execution\HttpRuntimeParameterResolver.cs" />
     <Compile Include="Execution\JsonBodyParameterResolver.cs" />
     <Compile Include="Controllers\SysConfigData.cs" />
     <Compile Include="Controllers\StaticFilesController.cs" />

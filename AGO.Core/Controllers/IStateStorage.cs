@@ -1,8 +1,12 @@
-﻿namespace AGO.Core.Controllers
+﻿using System.Collections.Generic;
+
+namespace AGO.Core.Controllers
 {
-	public interface IStateStorage
+	public interface IStateStorage<TType>
 	{
-		object this[string key] { get; set; }
+		IEnumerable<string> Keys { get; }
+
+		TType this[string key] { get; set; }
 
 		void Remove(string key);
 

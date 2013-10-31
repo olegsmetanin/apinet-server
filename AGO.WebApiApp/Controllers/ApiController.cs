@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.WebPages.Scope;
@@ -20,20 +18,8 @@ namespace AGO.WebApiApp.Controllers
 {
 	public class ApiController : Controller
 	{
-		#region Constants
-
-		internal const string CurrentCultureCookie = "currentLocale";
-		 
-		#endregion
-
 		public ActionResult Dispatch()
-		{
-			var cultureCookie = HttpContext.Request.Cookies.Get(CurrentCultureCookie);
-			var cultureName = cultureCookie != null ? cultureCookie.Value.TrimSafe() : null;
-			var cultureInfo = !string.IsNullOrEmpty(cultureName) ? CultureInfo.GetCultureInfo(cultureName) : null;
-			if (cultureInfo != null && !cultureInfo.Equals(CultureInfo.CurrentUICulture))
-				Thread.CurrentThread.CurrentUICulture = cultureInfo;
-
+		{		
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
 			{
 				var logged = false;
