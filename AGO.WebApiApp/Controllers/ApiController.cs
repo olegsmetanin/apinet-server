@@ -12,6 +12,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Execution;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using AGO.System.Controllers;
 using Common.Logging;
 
 namespace AGO.WebApiApp.Controllers
@@ -19,7 +20,10 @@ namespace AGO.WebApiApp.Controllers
 	public class ApiController : Controller
 	{
 		public ActionResult Dispatch()
-		{		
+		{
+			var usersController = DependencyResolver.Current.GetService<UsersController>();
+			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
+
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
 			{
 				var logged = false;
