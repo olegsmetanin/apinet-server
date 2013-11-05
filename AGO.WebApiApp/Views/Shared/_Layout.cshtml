@@ -1,308 +1,114 @@
 ﻿<!DOCTYPE html>
-<html>
 
+<html xmlns="http://www.w3.org/1999/xhtml" >
 <head>
-    <title>qwe</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta content='width=device-width, initial-scale=1.0' name='viewport' />
 
-    <style type="text/css">
+	<title>apinet-client v0.1</title>
 
-    @@media (max-width: 980px) {
-        /* Enable use of floated navbar text */
-        .navbar-text.pull-right {
-            float: none;
-            padding-left: 5px;
-            padding-right: 5px;
-        }
-    }
-    .centered {
-        position: fixed;
-        top: 50%;
-        left: 25%;
-        width:50%;
-    }
-    /*http://www.inwebson.com/css3/new-pure-css3-progress-bars/*/
-    .bar {
-        margin: 5px 0 3px;
-        border: 6px solid #333;
-        background: #333;
-        overflow: hidden;
-        border-radius: 50px;
-        -moz-border-radius: 50px;
-        -webkit-border-radius: 50px;
-        box-shadow: 1px 1px 1px #777;
-        -moz-box-shadow: 1px 1px 1px #777;
-        -webkit-box-shadow: 1px 1px 1px #777;
-    }
-    .bar > span {
-        display: block;
-        height: 20px;
-        border-radius: 5px;
-        -moz-border-radius: 5px;
-        -webkit-border-radius: 5px;
-    }
-    .stripe > span {
-        background-size:30px 30px;
-        -moz-background-size:30px 30px;
-        -webkit-background-size:30px 30px;
-        -o-background-size:30px 30px;
-        background-image: -moz-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-        background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255, 255, 255, 0.2)), color-stop(25%, rgba(255, 255, 255, 0.2)), color-stop(25%, rgba(255, 255, 255, 0)), color-stop(50%, rgba(255, 255, 255, 0)), color-stop(50%, rgba(255, 255, 255, 0.2)), color-stop(75%, rgba(255, 255, 255, 0.2)), color-stop(75%, rgba(255, 255, 255, 0)), color-stop(100%, rgba(255, 255, 255, 0)));
-        background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.3) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-        background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-        background-image: -ms-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-        background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
-    }
-    .color3 > span {
-        background-color: #4169E1;
-    }
-    </style>
+	<script type="text/javascript" src="/components/requirejs/require.js"></script>
 
+	<style type="text/css">
+		@@media (max-width: 980px) {
+			/* Enable use of floated navbar text */
+			.navbar-text.pull-right {
+				float: none;
+				padding-left: 5px;
+				padding-right: 5px;
+			}
+		}
+		.centered {
+			position: fixed;
+			top: 50%;
+			left: 25%;
+			width:50%;
+		}
+		.bar {
+			margin: 5px 0 3px;
+			border: 6px solid #333;
+			background: #333;
+			overflow: hidden;
+			border-radius: 50px;
+			-moz-border-radius: 50px;
+			-webkit-border-radius: 50px;
+			box-shadow: 1px 1px 1px #777;
+			-moz-box-shadow: 1px 1px 1px #777;
+			-webkit-box-shadow: 1px 1px 1px #777;
+		}
+		.bar > span {
+			display: block;
+			height: 20px;
+			border-radius: 5px;
+			-moz-border-radius: 5px;
+			-webkit-border-radius: 5px;
+		}
+		.stripe > span {
+			background-size:30px 30px;
+			-moz-background-size:30px 30px;
+			-webkit-background-size:30px 30px;
+			-o-background-size:30px 30px;
+			background-image: -moz-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+			background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255, 255, 255, 0.2)), color-stop(25%, rgba(255, 255, 255, 0.2)), color-stop(25%, rgba(255, 255, 255, 0)), color-stop(50%, rgba(255, 255, 255, 0)), color-stop(50%, rgba(255, 255, 255, 0.2)), color-stop(75%, rgba(255, 255, 255, 0.2)), color-stop(75%, rgba(255, 255, 255, 0)), color-stop(100%, rgba(255, 255, 255, 0)));
+			background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.3) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+			background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+			background-image: -ms-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+			background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 25%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%);
+		}
+		.color3 > span {
+			background-color: #4169E1;
+		}
+
+		#percent {
+			-webkit-transition: width 3000ms ease;
+			-moz-transition: width 3000ms ease;
+			-o-transition: width 3000ms ease;
+			transition: width 3000ms ease;
+		}
+	</style>
 </head>
 
-<body class='contrast-red fixed-header fixed-navigation'>
-
-    <div class="bar gradient stripe color3 centered">
-        <span id="percent" style="width:0"></span>
-    </div>
-
+<body class="contrast-red fixed-header fixed-navigation">
+	<div ui-view></div>
+	<div class="bar gradient stripe color3 centered">
+		<span id="percent" style="width: 0;"></span>
+	</div>
+	
+	@RenderBody()
 
 	<script type="text/javascript">
-		/*yepnope1.5.x|WTFPL*/
-		(function (a, b, c) {
-			function d(a) {
-				return "[object Function]" == o.call(a)
-			}
+		(function (require) {
+			var getCookie = function (cookie) {
+				var matches = cookie && cookie.length && document.cookie.match(new RegExp(
+						"(?:^|; )" + cookie.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+				));
 
-			function e(a) {
-				return "string" == typeof a
-			}
+				return matches ? decodeURIComponent(matches[1]) : undefined;
+			};
 
-			function f() { }
-
-			function g(a) {
-				return !a || "loaded" == a || "complete" == a || "uninitialized" == a
-			}
-
-			function h() {
-				var a = p.shift();
-				q = 1, a ? a.t ? m(function () {
-					("c" == a.t ? B.injectCss : B.injectJs)(a.s, 0, a.a, a.x, a.e, 1)
-				}, 0) : (a(), h()) : q = 0
-			}
-
-			function i(a, c, d, e, f, i, j) {
-				function k(b) {
-					if (!o && g(l.readyState) && (u.r = o = 1, !q && h(), l.onload = l.onreadystatechange = null, b)) {
-						"img" != a && m(function () {
-							t.removeChild(l)
-						}, 50);
-						for (var d in y[c]) y[c].hasOwnProperty(d) && y[c][d].onload()
+			require.config({
+				baseUrl: '../',
+				config: {
+					i18n: {
+						locale: getCookie('currentLocale') || window.navigator.userLanguage ||
+								window.navigator.language || 'en'
 					}
 				}
-				var j = j || B.errorTimeout,
-                l = b.createElement(a),
-                o = 0,
-                r = 0,
-                u = {
-                	t: d,
-                	s: c,
-                	e: f,
-                	a: i,
-                	x: j
-                };
-				1 === y[c] && (r = 1, y[c] = []), "object" == a ? l.data = c : (l.src = c, l.type = a), l.width = l.height = "0", l.onerror = l.onload = l.onreadystatechange = function () {
-					k.call(this, r)
-				}, p.splice(e, 0, u), "img" != a && (r || 2 === y[c] ? (t.insertBefore(l, s ? null : n), m(k, j)) : y[c].push(l))
-			}
+			});
 
-			function j(a, b, c, d, f) {
-				return q = 0, b = b || "j", e(a) ? i("c" == b ? v : u, a, b, this.i++, c, d, f) : (p.splice(this.i++, 0, a), 1 == p.length && h()), this
-			}
 
-			function k() {
-				var a = B;
-				return a.loader = {
-					load: j,
-					i: 0
-				}, a
-			}
-			var l = b.documentElement,
-            m = a.setTimeout,
-            n = b.getElementsByTagName("script")[0],
-            o = {}.toString,
-            p = [],
-            q = 0,
-            r = "MozAppearance" in l.style,
-            s = r && !!b.createRange().compareNode,
-            t = s ? l : n.parentNode,
-            l = a.opera && "[object Opera]" == o.call(a.opera),
-            l = !!b.attachEvent && !l,
-            u = r ? "object" : l ? "script" : "img",
-            v = l ? "script" : u,
-            w = Array.isArray || function (a) {
-            	return "[object Array]" == o.call(a)
-            }, x = [],
-            y = {}, z = {
-            	timeout: function (a, b) {
-            		return b.length && (a.timeout = b[0]), a
-            	}
-            }, A, B;
-			B = function (a) {
-				function b(a) {
-					var a = a.split("!"),
-                    b = x.length,
-                    c = a.pop(),
-                    d = a.length,
-                    c = {
-                    	url: c,
-                    	origUrl: c,
-                    	prefixes: a
-                    }, e, f, g;
-					for (f = 0; f < d; f++) g = a[f].split("="), (e = z[g.shift()]) && (c = e(c, g));
-					for (f = 0; f < b; f++) c = x[f](c);
-					return c
-				}
 
-				function g(a, e, f, g, h) {
-					var i = b(a),
-                    j = i.autoCallback;
-					i.url.split(".").pop().split("?").shift(), i.bypass || (e && (e = d(e) ? e : e[a] || e[g] || e[a.split("/").pop().split("?")[0]]), i.instead ? i.instead(a, e, f, g, h) : (y[i.url] ? i.noexec = !0 : y[i.url] = 1, f.load(i.url, i.forceCSS || !i.forceJS && "css" == i.url.split(".").pop().split("?").shift() ? "c" : c, i.noexec, i.attrs, i.timeout), (d(e) || d(j)) && f.load(function () {
-						k(), e && e(i.origUrl, h, g), j && j(i.origUrl, h, g), y[i.url] = 2
-					})))
-				}
+			percent.setAttribute('style', 'width: 100%');
+			require(['angular', 'ago/home/module'], function (angular, $module) {
+				var percent = document.getElementById('percent');
 
-				function h(a, b) {
-					function c(a, c) {
-						if (a) {
-							if (e(a)) c || (j = function () {
-								var a = [].slice.call(arguments);
-								k.apply(this, a), l()
-							}), g(a, j, b, 0, h);
-							else if (Object(a) === a)
-								for (n in m = function () {
-									var b = 0,
-                                    c;
-									for (c in a) a.hasOwnProperty(c) && b++;
-									return b
-								} (), a) a.hasOwnProperty(n) && (!c && ! --m && (d(j) ? j = function () {
-									var a = [].slice.call(arguments);
-									k.apply(this, a), l()
-								} : j[n] = function (a) {
-									return function () {
-										var b = [].slice.call(arguments);
-										a && a.apply(this, b), l()
-									}
-								} (k[n])), g(a[n], j, b, n, h))
-						} else !c && l()
-					}
-					var h = !!a.test,
-                    i = a.load || a.both,
-                    j = a.callback || f,
-                    k = j,
-                    l = a.complete || f,
-                    m, n;
-					c(h ? a.yep : a.nope, !!i), i && c(i)
-				}
-				var i, j, l = this.yepnope.loader;
-				if (e(a)) g(a, 0, l, 0);
-				else if (w(a))
-					for (i = 0; i < a.length; i++) j = a[i], e(j) ? g(j, 0, l, 0) : w(j) ? B(j) : Object(j) === j && h(j, l);
-				else Object(a) === a && h(a, l)
-			}, B.addPrefix = function (a, b) {
-				z[a] = b
-			}, B.addFilter = function (a) {
-				x.push(a)
-			}, B.errorTimeout = 1e4, null == b.readyState && b.addEventListener && (b.readyState = "loading", b.addEventListener("DOMContentLoaded", A = function () {
-				b.removeEventListener("DOMContentLoaded", A, 0), b.readyState = "complete"
-			}, 0)), a.yepnope = k(), a.yepnope.executeStack = h, a.yepnope.injectJs = function (a, c, d, e, i, j) {
-				var k = b.createElement("script"),
-                l, o, e = e || B.errorTimeout;
-				k.src = a;
-				for (o in d) k.setAttribute(o, d[o]);
-				c = j ? h : c || f, k.onreadystatechange = k.onload = function () {
-					!l && g(k.readyState) && (l = 1, c(), k.onload = k.onreadystatechange = null)
-				}, m(function () {
-					l || (l = 1, c(1))
-				}, e), i ? k.onload() : n.parentNode.insertBefore(k, n)
-			}, a.yepnope.injectCss = function (a, c, d, e, g, i) {
-				var e = b.createElement("link"),
-                j, c = i ? h : c || f;
-				e.href = a, e.rel = "stylesheet", e.type = "text/css";
-				for (j in d) e.setAttribute(j, d[j]);
-				g || (n.parentNode.insertBefore(e, n), m(c, 0))
-			}
-		})(this, document);
-	
-		var sysConfig = {
-			supportedLocales: ['ru', 'en']
-		};
-
-		(function () {
-			
-			@RenderBody()
-	
-			function LoadResources(completeCb) {
-            //componentsJS.concat(coreJS, moduleJS
-            var resources = [].concat(
-                sysConfig.modules['components'].css,
-                sysConfig.modules['components'].js,
-                sysConfig.modules['core'].css,
-                sysConfig.modules['core'].js,
-                sysConfig.modules[sysConfig.module].css,
-                sysConfig.modules[sysConfig.module].js
-            );
-
-            var fqResources = [];
-            for (var i = 0; i < resources.length; i++) {
-                fqResources.push(sysConfig.site(resources[i]));
-            }
-
-            var percent = (function() {
-                var val = 0;
-                return {
-                    add: function(addVal) {
-                        val += addVal;
-                        document.getElementById("percent").setAttribute("style", "width: " + Math.floor(val) + "%");
-                    }
-                }
-            })();
-
-            yepnope({
-                load: fqResources,
-                callback: function(url, result, key) {
-                    percent.add(100 / resources.length);
-                },
-                complete: function() {
-                    var percent = document.getElementById("percent"),
-                        wrap = percent.parentNode,
-                        master = wrap.parentNode;
-
-                	master.setAttribute("ui-view", "");
-                	master.removeChild(wrap);
-                    completeCb();
-
-                }
-            });
-        }
-
-        function getCookie(name) {
-            var matches = document.cookie.match(new RegExp(
-                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-            ));
-            return matches ? decodeURIComponent(matches[1]) : undefined;
-        }
-
-        function getLang() {
-            var locale = (getCookie('currentLocale') || window.navigator.userLanguage ||
-				window.navigator.language).substring(0, 2);
-			return sysConfig.supportedLocales.indexOf(locale) !== -1 ? locale : sysConfig.supportedLocales[0];
-        }
-
-    })();
-    </script>
-
+				require(['domReady!'], function (document) {
+					percent.parentNode.parentNode.removeChild(percent.parentNode);
+					angular.bootstrap(document, ['ago.core', $module.name]);
+				});
+			});
+		})(requirejs);
+	</script>
 </body>
 
 </html>

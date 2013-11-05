@@ -76,6 +76,7 @@ namespace AGO.Core.Application
 		protected virtual void DoInitializeStateManagement()
 		{
 			_StateStorage = IocContainer.GetInstance<IStateStorage<object>>();
+			_ClientStateStorage = IocContainer.GetInstance<IStateStorage<string>>();
 		}
 
 		#endregion
