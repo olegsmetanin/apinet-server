@@ -77,33 +77,18 @@
 
 	<script type="text/javascript">
 		(function (require) {
-			var getCookie = function (cookie) {
-				var matches = cookie && cookie.length && document.cookie.match(new RegExp(
-						"(?:^|; )" + cookie.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-				));
-
-				return matches ? decodeURIComponent(matches[1]) : undefined;
-			};
-
-			require.config({
-				baseUrl: '../',
-				config: {
-					i18n: {
-						locale: getCookie('currentLocale') || window.navigator.userLanguage ||
-								window.navigator.language || 'en'
-					}
-				}
-			});
-
-
-
 			percent.setAttribute('style', 'width: 100%');
-			require(['angular', 'ago/home/module'], function (angular, $module) {
+			require([
+				'angular',
+				'ago/core/module',
+				'ago/home/module',
+				'ago/tasks/module'
+			], function (angular, core, home, tasks) {
 				var percent = document.getElementById('percent');
 
 				require(['domReady!'], function (document) {
 					percent.parentNode.parentNode.removeChild(percent.parentNode);
-					angular.bootstrap(document, ['ago.core', $module.name]);
+					angular.bootstrap(document, [core.name, home.name, tasks.name]);
 				});
 			});
 		})(requirejs);
