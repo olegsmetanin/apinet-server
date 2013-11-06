@@ -58,6 +58,20 @@ namespace AGO.Tasks.Test
 		}
 
 		[Test]
+		public void GetTasksCountReturnCount()
+		{
+			M.Task(1);
+			M.Task(2);
+			_SessionProvider.CloseCurrentSession();
+
+			var result = controller.GetTasksCount(
+				TestProject,
+				Enumerable.Empty<IModelFilterNode>().ToArray(), TaskPredefinedFilter.All);
+
+			Assert.AreEqual(2, result);
+		}
+
+		[Test]
 		public void LookupTasksWithoutTermReturnAllRecords()
 		{
 			var t1 = M.Task(1);

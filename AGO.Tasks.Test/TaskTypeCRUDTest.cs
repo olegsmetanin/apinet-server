@@ -75,6 +75,20 @@ namespace AGO.Tasks.Test
 			Assert.AreEqual("tt1", result[0].Name);
 			Assert.AreEqual("tt2", result[1].Name);
 		}
+
+		[Test]
+		public void ReadTaskTypesCount()
+		{
+			M.TaskType("tt1");
+			M.TaskType("tt2");
+			_SessionProvider.FlushCurrentSession();
+
+			var result = Controller.GetTaskTypesCount(
+				TestProject,
+				Enumerable.Empty<IModelFilterNode>().ToArray());
+
+			Assert.AreEqual(2, result);
+		}
 		
 		[Test]
 		public void CreateTaskType()
