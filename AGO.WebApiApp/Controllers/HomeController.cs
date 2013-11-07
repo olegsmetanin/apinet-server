@@ -11,7 +11,7 @@ namespace AGO.WebApiApp.Controllers
 			var usersController = DependencyResolver.Current.GetService<UsersController>();
 			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
 
-			var model = new SysConfigData("src", "home");
+			var model = new SysConfigData("src", "ago/home/module");
 
 			return WebApplication.DevMode == DevMode.Dev
 				? View("IndexDev", model)
@@ -23,7 +23,7 @@ namespace AGO.WebApiApp.Controllers
 			var usersController = DependencyResolver.Current.GetService<UsersController>();
 			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
 
-			var model = new SysConfigData("../../src", "../../", project, "tasks"); //TODO get module from project
+			var model = new SysConfigData("../../src", "../../", project, "ago/tasks/module"); //TODO get module from project
 
 			return WebApplication.DevMode == DevMode.Dev
 				? View("IndexDev", model)
