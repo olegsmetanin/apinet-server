@@ -112,6 +112,15 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public int GetTaskTypesCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
+		{
+			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
+			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+
+			return _FilteringDao.RowCount<TaskTypeModel>(predicate);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public UpdateResult<TaskTypeDTO> EditTaskType([NotEmpty] string project, [NotNull] TaskTypeDTO model)
 		{
 			return Edit<TaskTypeModel, TaskTypeDTO>(model.Id, project, 
@@ -207,6 +216,15 @@ namespace AGO.Tasks.Controllers
 				.Select(adapter.Fill)
 				.ToArray();
     	}
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetCustomStatusesCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
+		{
+			var projectPredicate = _FilteringService.Filter<CustomTaskStatusModel>().Where(m => m.ProjectCode == project);
+			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+
+			return _FilteringDao.RowCount<CustomTaskStatusModel>(predicate);
+		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public UpdateResult<CustomStatusDTO> EditCustomStatus([NotEmpty] string project, [NotNull] CustomStatusDTO model)

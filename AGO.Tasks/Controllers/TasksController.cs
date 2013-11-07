@@ -57,13 +57,33 @@ namespace AGO.Tasks.Controllers
 			[InRange(0, null)] int page,
 			TaskPredefinedFilter predefined)
 		{
+			var predicate = MakeTasksPredicate(project, filter, predefined);
+			var adapter = new TaskListItemAdapter(_LocalizationService);
+
+			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
+				.Select(adapter.Fill)
+				.ToArray();
+		}
+
+    	[JsonEndpoint, RequireAuthorization]
+		public int GetTasksCount(
+			[NotEmpty] string project,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			TaskPredefinedFilter predefined)
+    	{
+    		var predicate = MakeTasksPredicate(project, filter, predefined);
+    		return _FilteringDao.RowCount<TaskModel>(predicate);
+    	}
+
+		private IEnumerable<IModelFilterNode> MakeTasksPredicate(string project, IEnumerable<IModelFilterNode> filter, TaskPredefinedFilter predefined)
+		{
 			IModelFilterNode projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
 			IModelFilterNode predefinedPredicate = null;
 			if (predefined != TaskPredefinedFilter.All)
 			{
 				var today = DateTime.Today;
 				var f = _FilteringService.Filter<TaskModel>();
-				
+
 				switch (predefined)
 				{
 					case TaskPredefinedFilter.Overdue:
@@ -108,11 +128,7 @@ namespace AGO.Tasks.Controllers
 				}
 			}
 			var predicate = filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray();
-			var adapter = new TaskListItemAdapter(_LocalizationService);
-
-			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
-				.Select(adapter.Fill)
-				.ToArray();
+			return predicate;
 		}
 
 		[JsonEndpoint, RequireAuthorization]

@@ -107,6 +107,18 @@ namespace AGO.Tasks.Test
 		}
 
 		[Test]
+		public void GetStatusesCountReturnCount()
+		{
+			MakeSeveral("s1", "s2", "s3");
+			_SessionProvider.FlushCurrentSession();
+
+			var cnt = Controller.GetCustomStatusesCount(TestProject,
+				Enumerable.Empty<IModelFilterNode>().ToArray());
+
+			Assert.AreEqual(3, cnt);
+		}
+
+		[Test]
 		public void GetStatusesWithoutProjectReturnEmpty()
 		{
 			MakeSeveral("s1", "s2", "s3");
