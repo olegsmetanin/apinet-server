@@ -88,6 +88,12 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public int GetProjectStatusesCount([NotNull] ICollection<IModelFilterNode> filter)
+		{
+			return _FilteringDao.RowCount<ProjectStatusModel>(filter);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public ProjectStatusModel GetProjectStatus([NotEmpty] Guid id, bool dontFetchReferences)
 		{
 			return GetModel<ProjectStatusModel, Guid>(id, dontFetchReferences);
@@ -191,6 +197,14 @@ namespace AGO.Home.Controllers
 				Page = page,
 				Sorters = sorters
 			});
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetProjectTagsCount([NotNull] ICollection<IModelFilterNode> filter, TagsRequestMode mode)
+		{
+			filter.Add(ProjectTagModeFilter(mode));
+
+			return _FilteringDao.RowCount<ProjectTagModel>(filter);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

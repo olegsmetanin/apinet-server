@@ -120,6 +120,24 @@ namespace AGO.Home.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public int GetProjectsCount([NotNull] ICollection<IModelFilterNode> filter, ProjectsRequestMode mode)
+		{
+			if (mode == ProjectsRequestMode.Participated)
+			{
+				var modeFilter = new ModelFilterNode { Path = "Participants" };
+				modeFilter.AddItem(new ValueFilterNode
+				{
+					Path = "User",
+					Operator = ValueFilterOperators.Eq,
+					Operand = _AuthController.CurrentUser().Id.ToString()
+				});
+				filter.Add(modeFilter);
+			}
+
+			return _FilteringDao.RowCount<ProjectModel>(filter);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupParticipant(
 			[NotEmpty] string project,
 			string term,
