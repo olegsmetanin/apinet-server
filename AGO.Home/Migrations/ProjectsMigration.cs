@@ -29,9 +29,6 @@ namespace AGO.Home.Migrations
 				.WithValueColumn<ProjectModel>(m => m.ProjectCode)
 				.WithValueColumn<ProjectModel>(m => m.Name)
 				.WithValueColumn<ProjectModel>(m => m.Description)
-				.WithValueColumn<ProjectModel>(m => m.IsArchive)
-				.WithValueColumn<ProjectModel>(m => m.EventsHorizon)
-				.WithValueColumn<ProjectModel>(m => m.FileSystemPath)
 				.WithRefColumn<ProjectModel>(m => m.Type)
 				.WithRefColumn<ProjectModel>(m => m.Status);
 

@@ -554,7 +554,7 @@ namespace AGO.Core.Filters
 				if ("path".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
 					current.Path = property.Value.TokenValue().TrimSafe();
 				else if ("op".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
-					current.Operator = ModelFilterOperatorFromToken(property.Value);
+					current.Operator = ModelFilterOperatorFromToken(property.Value) ?? ModelFilterOperators.And;
 				else if ("not".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
 					current.Negative = property.Value.TokenValue().ConvertSafe<bool>(_Options.FormattingCulture);
 				else if (!"items".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
@@ -567,25 +567,22 @@ namespace AGO.Core.Filters
 				foreach (var obj in array.OfType<JObject>())
 				{
 					var opProperty = obj.OfType<JProperty>().FirstOrDefault(
-					p => "op".Equals(p.Name, StringComparison.InvariantCultureIgnoreCase));
+						p => "op".Equals(p.Name, StringComparison.InvariantCultureIgnoreCase));
 					if (opProperty == null)
 						continue;
 
-					var modelOp = ModelFilterOperatorFromToken(opProperty.Value);
 					var valueOp = ValueFilterOperatorFromToken(opProperty.Value);
-
-					if (modelOp != null)
+					if (valueOp != null)
 					{
-						var newModelNode = new ModelFilterNode();
-						current.AddItem(newModelNode);
-						ProcessModelFilterTokens(obj, newModelNode);
-					}
-					if (valueOp == null)
+						var newValueNode = new ValueFilterNode();
+						current.AddItem(newValueNode);
+						ProcessValueFilterTokens(obj, newValueNode);
 						continue;
+					}
 
-					var newValueNode = new ValueFilterNode();
-					current.AddItem(newValueNode);
-					ProcessValueFilterTokens(obj, newValueNode);
+					var newModelNode = new ModelFilterNode();
+					current.AddItem(newModelNode);
+					ProcessModelFilterTokens(obj, newModelNode);
 				}
 			}
 		}
