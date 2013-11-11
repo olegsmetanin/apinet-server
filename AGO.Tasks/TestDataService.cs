@@ -57,10 +57,10 @@ namespace AGO.Tasks
 
 			var projects = DoPopulateProjects(context);
 
-			DoPopulateCustomStatuses(context, projects.Project1);
-			DoPopulateTasks(context, projects.Project1,
-				DoPopulateTaskTypes(context, projects.Project1),
-				DoPopulatePropertyTypes(context, projects.Project1));	
+			//var statuses = DoPopulateCustomStatuses(context, projects);
+			var types = DoPopulateTaskTypes(context, projects);
+			var paramTypes = DoPopulatePropertyTypes(context, projects);
+			DoPopulateTasks(context, projects, types, paramTypes);
 		}
 
 		#endregion
@@ -69,14 +69,14 @@ namespace AGO.Tasks
 
 		protected dynamic DoPopulateProjects(dynamic context)
 		{
-			Func<int, string, string, ProjectModel> createProject = (index, name, description) =>
+			Func<string, string, string, ProjectModel> createProject = (code, name, description) =>
 			{
 				var project = new ProjectModel
 				{
 					Creator = context.Admin,
-					ProjectCode = "tasks_" + index,
-					Name = name ?? ("Task management project " + index),
-					Description = description ?? ("Description of task management project " + index),
+					ProjectCode = code ?? "tasks",
+					Name = name ?? "Task management project",
+					Description = description ?? "Description of task management project ",
 					Type = context.ProjectType,
 					Status = context.InitialProjectStatus,
 				};
@@ -136,41 +136,78 @@ namespace AGO.Tasks
 
 			return new
 			{
-				Project1 = createProject(1, "Common tasks", "Common everyday tasks for specialists")
+				Software = createProject("soft", "Software development project", "This is a flexible project management web application written using angularjs framework."),
+				CRM = createProject("crm", "CRM tasks", "Customer relation management tasks"),
+				Personal = createProject("personal", "Personal tasks", "Personal tasks project"),
+				Helpdesk = createProject("hd", "Helpdesk", "Helpdesc department tasks")
 			};
 		}
 
-		protected void DoPopulateCustomStatuses(dynamic context, ProjectModel project)
+		protected dynamic DoPopulateCustomStatuses(dynamic context, dynamic projects)
 		{
 			byte order = 0;
-			Action<string> createCustomStatus = name =>
+			Func<string, ProjectModel, CustomTaskStatusModel> createCustomStatus = (name, proj) =>
 			{
 				var customStatus = new CustomTaskStatusModel
 				{
 					Creator = context.Admin,
-					ProjectCode = project.ProjectCode,
+					ProjectCode = proj.ProjectCode,
 					Name = name,
 					ViewOrder = order++
 				};
 				_CrudDao.Store(customStatus);
+				return customStatus;
 			};
 
-			createCustomStatus("Preparing");
-			createCustomStatus("Sent to work");
-			createCustomStatus("In progress");
-			createCustomStatus("Complete");
-			createCustomStatus("Closed");
-			createCustomStatus("Suspended");
+			return new
+					{
+						Software = new
+						{
+							New = createCustomStatus("New", projects.Software),
+							NeedsFeedback = createCustomStatus("Needs feedback", projects.Software),
+							Confirmed = createCustomStatus("Confirmed", projects.Software),
+							InProgress = createCustomStatus("In progress", projects.Software),
+							Resolved = createCustomStatus("Resolved", projects.Software),
+							Closed = createCustomStatus("Closed", projects.Software),
+							Reopened = createCustomStatus("Reopened", projects.Software)
+						},
+						CRM = new
+						{
+							Preparing = createCustomStatus("Preparing", projects.CRM),
+							SentToWork = createCustomStatus("Sent to work", projects.CRM),
+							InProgrecc = createCustomStatus("In progress", projects.CRM),
+							Complete = createCustomStatus("Complete", projects.CRM),
+							Closed = createCustomStatus("Closed", projects.CRM),
+							Suspended = createCustomStatus("Suspended", projects.CRM)
+						},
+						Personal = new
+						{
+							New = createCustomStatus("New", projects.Personal),
+							Open = createCustomStatus("Open", projects.Personal),
+							Complete = createCustomStatus("Complete", projects.Personal)
+						},
+						Helpdesk = new
+						{
+							New = createCustomStatus("New", projects.Helpdesk),
+							Confirmed = createCustomStatus("Confirmed", projects.Helpdesk),
+							InProgress = createCustomStatus("Open", projects.Helpdesk),
+							Resolved = createCustomStatus("Resolved", projects.Helpdesk),
+							Feedback = createCustomStatus("Feedback", projects.Helpdesk),
+							Closed = createCustomStatus("Closed", projects.Helpdesk),
+							Reopened = createCustomStatus("Reopened", projects.Helpdesk),
+							Rejected = createCustomStatus("Rejected", projects.Helpdesk)
+						}
+					};
 		}
 
-		protected dynamic DoPopulateTaskTypes(dynamic context, ProjectModel project)
+		protected dynamic DoPopulateTaskTypes(dynamic context, dynamic projects)
 		{
-			Func<string, TaskTypeModel> factory = name =>
+			Func<string, ProjectModel, TaskTypeModel> factory = (name, proj) =>
 			{
 				var taskType = new TaskTypeModel
 				{
 					Creator = context.Admin,
-					ProjectCode = project.ProjectCode,
+					ProjectCode = proj.ProjectCode,
 					Name = name
 				};
 				_CrudDao.Store(taskType);
@@ -178,23 +215,44 @@ namespace AGO.Tasks
 			};
 
 			return new
-			{
-				Inventory = factory("Inventory"),
-				Measurement = factory("Measurement"),
-				Calculations = factory("Calculations"),
-				PreparePaymentDocs = factory("Prepare payment documents"),
-				CleanArchives = factory("Clean archives"),
-				PrepareWorkPlace = factory("Prepare work place")
-			};
+			       	{
+			       		Software = new
+			       		{
+							Bug = factory("Bug", projects.Software),
+							Feature = factory("Feature", projects.Software),
+							Issue = factory("Issue", projects.Software),
+							Support = factory("Support", projects.Software)
+			       		},
+						CRM = new
+						{
+							Upselling = factory("Upselling", projects.CRM),
+							Audit = factory("Audit", projects.CRM),
+							Personal = factory("Personal", projects.CRM)
+						},
+						Personal = new
+						{
+						    Home = factory("Home", projects.Personal),
+							Bills = factory("Bills", projects.Personal),
+							Web = factory("Web", projects.Personal),
+							Work = factory("Work", projects.Personal)
+						},
+						Helpdesk = new
+						{
+						    Consult = factory("Consult", projects.Helpdesk),
+							Management = factory("Management", projects.Helpdesk),
+							Test = factory("Test", projects.Helpdesk),
+							Support = factory("Support", projects.Helpdesk)
+						}
+			       	};
 		}
 
-		protected dynamic DoPopulatePropertyTypes(dynamic context, ProjectModel project)
+		protected dynamic DoPopulatePropertyTypes(dynamic context, dynamic projects)
 		{
-			Func<string, CustomPropertyValueType, CustomPropertyTypeModel> factory = (name, type) =>
+			Func<string, CustomPropertyValueType, ProjectModel, CustomPropertyTypeModel> factory = (name, type, proj) =>
 			{
 				var propertyType = new CustomPropertyTypeModel
 				{
-					ProjectCode = project.ProjectCode,
+					ProjectCode = proj.ProjectCode,
 					Creator = context.Admin,
 					Name = name,
 					FullName = name,
@@ -206,43 +264,55 @@ namespace AGO.Tasks
 
 			return new
 			{
-				PossibleIssues = factory("Possible issues", CustomPropertyValueType.String),
-				ApproximateArea = factory("Approximate area", CustomPropertyValueType.Number),
-				BuildingDate = factory("Building date", CustomPropertyValueType.Date),
-				LastOverhaulDate = factory("Last overhaul date", CustomPropertyValueType.Date)
+				Software = new 
+				{
+					PO = factory("Issue owner", CustomPropertyValueType.String, projects.Software),
+					MgrEstimate = factory("Manager estimate (hours)", CustomPropertyValueType.Number, projects.Software),
+					DevEstimate = factory("Developer estimate (hours)", CustomPropertyValueType.Number, projects.Software),
+					LPS = factory("Last possible start", CustomPropertyValueType.Date, projects.Software)
+				},
+				CRM = new
+				{
+					RelationsLevel = factory("Relations level", CustomPropertyValueType.String, projects.CRM),
+					LastContact = factory("Last contact date", CustomPropertyValueType.Date, projects.CRM),
+					BirthDay = factory("Birthday", CustomPropertyValueType.Date, projects.CRM),
+					Prospects = factory("Prospects", CustomPropertyValueType.Number, projects.CRM),
+				},
+				Personal = new
+				{
+					Note = factory("Note", CustomPropertyValueType.String, projects.Personal),
+					Deadline = factory("Deadline", CustomPropertyValueType.Date, projects.Personal),
+				},
+				Helpdesk = new
+				{
+					ClientSatisfaction = factory("Client satisfaction", CustomPropertyValueType.String, projects.Helpdesk),
+					ClientAdequacy = factory("Client adequacy", CustomPropertyValueType.String, projects.Helpdesk),
+					SpentHours = factory("Spent hours", CustomPropertyValueType.Number, projects.Helpdesk)
+				}
 			};
 		}
 
-		protected void DoPopulateTasks(dynamic context, ProjectModel project, dynamic taskTypes, dynamic propertyTypes)
+		protected void DoPopulateTasks(dynamic context, dynamic projects, dynamic taskTypes, dynamic propertyTypes)
 		{
-			var seqnum = 1;
-			Func<TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, TaskModel> createTask =
-				(type, status, priority, content, dueDate) =>
+			var seqnum = 0;
+			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, TaskModel> createTask =
+				(num, type, status, priority, content, dueDate, proj) =>
 			{
 				var task = new TaskModel
 				{
 					Creator = context.Admin,
-					ProjectCode = project.ProjectCode,
-					InternalSeqNumber = seqnum,
-					SeqNumber = "t0-" + seqnum,
+					ProjectCode = proj.ProjectCode,
+					InternalSeqNumber = num,
+					SeqNumber = "t0-" + num,
 					Priority = priority,
 					Content = content,
 					DueDate = dueDate,
 					TaskType = type
 				};
 				task.ChangeStatus(status, context.Admin);
-				seqnum++;
 				_CrudDao.Store(task);
 				return task;
 			};
-
-			var t1 = createTask(taskTypes.Measurement, TaskStatus.Completed, TaskPriority.Low,
-				"Do measurements of object on address: MO, Korolev, Kosmonavtov st., 12, 2", DateTime.Now.AddDays(3));
-			
-			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
-			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High, "Calculate year-ending salary bonuses", DateTime.Now.AddDays(2));
-			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.High, null, DateTime.Now.AddDays(-1));
-
 			Action<TaskModel, CustomPropertyTypeModel, object> createTaskProperty = (task, propertyType, value) =>
 			{
 				var taskProperty = new TaskCustomPropertyModel
@@ -255,10 +325,30 @@ namespace AGO.Tasks
 				_CrudDao.Store(taskProperty);
 			};
 
-			createTaskProperty(t1, propertyTypes.PossibleIssues, "Entrance only through basement");
-			createTaskProperty(t1, propertyTypes.ApproximateArea, 86.5);
-			createTaskProperty(t1, propertyTypes.BuildingDate, new DateTime(1967, 04, 16));
-			createTaskProperty(t1, propertyTypes.LastOverhaulDate, new DateTime(1990, 07, 01));
+			//Software
+			var sp = projects.Software;
+			var stt = taskTypes.Software;
+			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Completed, TaskPriority.Low,
+				"Workflow configuration", DateTime.Now.AddDays(3), sp);
+			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
+				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp);
+			var st3 = createTask(seqnum++, stt.Feature, TaskStatus.InWork, TaskPriority.Normal,
+				"Encrypt emails with SMIME", DateTime.Now.AddDays(-2), sp);
+			var st4 = createTask(seqnum++, stt.Feature, TaskStatus.Closed, TaskPriority.Normal,
+				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp);
+			var st5 = createTask(seqnum++, stt.Support, TaskStatus.Suspended, TaskPriority.Normal,
+				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp);
+
+//			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
+//			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High, "Calculate year-ending salary bonuses", DateTime.Now.AddDays(2));
+//			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.High, null, DateTime.Now.AddDays(-1));
+
+
+
+//			createTaskProperty(t1, propertyTypes.PossibleIssues, "Entrance only through basement");
+//			createTaskProperty(t1, propertyTypes.ApproximateArea, 86.5);
+//			createTaskProperty(t1, propertyTypes.BuildingDate, new DateTime(1967, 04, 16));
+//			createTaskProperty(t1, propertyTypes.LastOverhaulDate, new DateTime(1990, 07, 01));
 		}
 
 		#endregion
