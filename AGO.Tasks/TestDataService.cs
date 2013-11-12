@@ -287,7 +287,6 @@ namespace AGO.Tasks
 
 		protected void DoPopulateTasks(dynamic context, dynamic projects, dynamic taskTypes, dynamic propertyTypes)
 		{
-			var seqnum = 0;
 			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, dynamic[], TaskModel> createTask =
 				(num, type, status, priority, content, dueDate, proj, users) =>
 			{
@@ -330,10 +329,11 @@ namespace AGO.Tasks
 			};
 
 			//Software
+			var seqnum = 0;
 			var sp = projects.Software;
 			var stt = taskTypes.Software;
 			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Completed, TaskPriority.Low,
-				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1 });
+				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1, context.User2 });
 			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
 				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
 			var st3 = createTask(seqnum++, stt.Feature, TaskStatus.InWork, TaskPriority.Normal,
@@ -341,9 +341,63 @@ namespace AGO.Tasks
 			var st4 = createTask(seqnum++, stt.Feature, TaskStatus.Closed, TaskPriority.Normal,
 				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp, new[] { context.User1 });
 			var st5 = createTask(seqnum++, stt.Support, TaskStatus.Suspended, TaskPriority.Normal,
-				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp, new[] { context.User1 });
+				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp, new[] { context.User3 });
 			var st6 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
-				"Can't move parent ticket between projects", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
+				"Can't move parent ticket between projects", DateTime.Now.AddDays(1), sp, 
+				new[] { context.User1, context.User2, context.User3 });
+
+			//CRM
+			seqnum = 0;
+			var crm = projects.CRM;
+			var crmtt = taskTypes.CRM;
+			var ct1 = createTask(seqnum++, crmtt.Upselling, TaskStatus.InWork, TaskPriority.Normal,
+			                     "Launch test compaign", DateTime.Now.AddDays(7), crm, new[] {context.User2});
+			var ct2 = createTask(seqnum++, crmtt.Audit, TaskStatus.Completed, TaskPriority.High,
+								 "Prepare for audit", DateTime.Now.AddDays(-2), crm, new[] { context.User1 });
+			var ct3 = createTask(seqnum++, crmtt.Personal, TaskStatus.Closed, TaskPriority.Normal,
+								 "Call Mr. Cobson for new bills", DateTime.Now.AddDays(-15), crm, new[] { context.User3 });
+			var ct4 = createTask(seqnum++, crmtt.Upselling, TaskStatus.NotStarted, TaskPriority.Low,
+								 "Meeting with CEOs", null, crm, new[] { context.User1, context.User3 });
+			var ct5 = createTask(seqnum++, crmtt.Upselling, TaskStatus.NotStarted, TaskPriority.Normal,
+								 "Email partners (confirm $30,000 deal)", DateTime.Now.AddDays(2), crm, new[] { context.User2 });
+
+			//Personal
+			seqnum = 0;
+			var pp = projects.Personal;
+			var ptt = taskTypes.Personal;
+			var pt1 = createTask(seqnum++, ptt.Home, TaskStatus.NotStarted, TaskPriority.Normal,
+			                     "after test, get book to read", null, pp, new[] {context.User2});
+			var pt2 = createTask(seqnum++, ptt.Bills, TaskStatus.NotStarted, TaskPriority.Normal,
+								 "pay car insurance", DateTime.Now.AddDays(26), pp, new[] { context.User2 });
+			var pt3 = createTask(seqnum++, ptt.Web, TaskStatus.InWork, TaskPriority.Normal,
+								 "stock pictures", null, pp, new[] { context.User2 });
+			var pt4 = createTask(seqnum++, ptt.Work, TaskStatus.Closed, TaskPriority.High,
+								 "call to office for tomorrow meeting issues", DateTime.Now, pp, new[] { context.User2 });
+			var pt5 = createTask(seqnum++, ptt.Home, TaskStatus.Completed, TaskPriority.Normal,
+								 "plan for hispanohablantes", DateTime.Now.AddDays(-5), pp, new[] { context.User2 });
+			var pt6 = createTask(seqnum++, ptt.Web, TaskStatus.NotStarted, TaskPriority.Normal,
+								 "emotion posters", null, pp, new[] { context.User2 });
+
+			//Helpdesk
+			seqnum = 0;
+			var hp = projects.Helpdesk;
+			var htt = taskTypes.Helpdesk;
+			var ht1 = createTask(seqnum++, htt.Consult, TaskStatus.InWork, TaskPriority.Normal,
+			                     "Can't connect to office vpn", DateTime.Now, hp, new[] {context.User2});
+			var ht2 = createTask(seqnum++, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
+								 "Remove paper jam from fax on office 314", DateTime.Now, hp, new[] { context.User1 });
+			var ht3 = createTask(seqnum++, htt.Management, TaskStatus.NotStarted, TaskPriority.High,
+								 "Calculate total work hours at the end of week", DateTime.Now.AddDays(2), hp, new[] { context.Admin });
+			var ht4 = createTask(seqnum++, htt.Test, TaskStatus.NotStarted, TaskPriority.Low,
+								 "Execute memory test on new laptops 23433 and 23434", null, hp, new[] { context.User1 });
+			var ht5 = createTask(seqnum++, htt.Consult, TaskStatus.NotStarted, TaskPriority.Normal,
+								 "Needs help for SAP in accounting department", DateTime.Now.AddDays(1), hp, new[] { context.User3 });
+			var ht6 = createTask(seqnum++, htt.Support, TaskStatus.NotStarted, TaskPriority.High,
+								 "No wifi in meeting room", DateTime.Now, hp, new[] { context.User2 });
+			var ht7 = createTask(seqnum++, htt.Management, TaskStatus.Completed, TaskPriority.Normal,
+								 "Plan vacations for next year", DateTime.Now.AddDays(-2), hp, new[] { context.Admin });
+			var ht8 = createTask(seqnum, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
+								 "Move accounting database backup to NV office", DateTime.Now.AddDays(-6), hp, new[] { context.User3 });
 
 //			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
 //			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High, "Calculate year-ending salary bonuses", DateTime.Now.AddDays(2));
