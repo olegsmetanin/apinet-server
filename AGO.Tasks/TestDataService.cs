@@ -90,29 +90,21 @@ namespace AGO.Tasks
 					Status = context.InitialProjectStatus
 				});
 
-				_CrudDao.Store(new ProjectParticipantModel
-				{
-					User = context.Admin,
-					Project = project
-				});
+				var pcAdmin = new ProjectParticipantModel { User = context.Admin, Project = project };
+				_CrudDao.Store(pcAdmin);
+				project.Participants.Add(pcAdmin);
 
-				_CrudDao.Store(new ProjectParticipantModel
-				{
-					User = context.User1,
-					Project = project
-				});
+				var pcUser1 = new ProjectParticipantModel { User = context.User1, Project = project };
+				_CrudDao.Store(pcUser1);
+				project.Participants.Add(pcUser1);
 
-				_CrudDao.Store(new ProjectParticipantModel
-				{
-					User = context.User2,
-					Project = project
-				});
+				var pcUser2 = new ProjectParticipantModel { User = context.User2, Project = project };
+				_CrudDao.Store(pcUser2);
+				project.Participants.Add(pcUser2);
 
-				_CrudDao.Store(new ProjectParticipantModel
-				{
-					User = context.User3,
-					Project = project
-				});
+				var pcUser3 = new ProjectParticipantModel { User = context.User3, Project = project };
+				_CrudDao.Store(pcUser3);
+				project.Participants.Add(pcUser3);
 
 				_CrudDao.Store(new ProjectToTagModel
 				{
@@ -131,6 +123,7 @@ namespace AGO.Tasks
 					});
 				}
 
+				_CrudDao.Store(project);
 				return project;
 			};
 
@@ -295,8 +288,8 @@ namespace AGO.Tasks
 		protected void DoPopulateTasks(dynamic context, dynamic projects, dynamic taskTypes, dynamic propertyTypes)
 		{
 			var seqnum = 0;
-			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, TaskModel> createTask =
-				(num, type, status, priority, content, dueDate, proj) =>
+			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, dynamic[], TaskModel> createTask =
+				(num, type, status, priority, content, dueDate, proj, users) =>
 			{
 				var task = new TaskModel
 				{
@@ -310,6 +303,17 @@ namespace AGO.Tasks
 					TaskType = type
 				};
 				task.ChangeStatus(status, context.Admin);
+				foreach (var user in users)
+				{
+					var executor = new TaskExecutorModel
+					               	{
+					               		Creator = context.Admin,
+					               		Task = task,
+					               		Executor = proj.Participants.First(p => p.User == user)
+					               	};
+					task.Executors.Add(executor);
+
+				}
 				_CrudDao.Store(task);
 				return task;
 			};
@@ -329,15 +333,17 @@ namespace AGO.Tasks
 			var sp = projects.Software;
 			var stt = taskTypes.Software;
 			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Completed, TaskPriority.Low,
-				"Workflow configuration", DateTime.Now.AddDays(3), sp);
+				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1 });
 			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
-				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp);
+				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
 			var st3 = createTask(seqnum++, stt.Feature, TaskStatus.InWork, TaskPriority.Normal,
-				"Encrypt emails with SMIME", DateTime.Now.AddDays(-2), sp);
+				"Encrypt emails with SMIME", DateTime.Now.AddDays(-2), sp, new[] { context.User1 });
 			var st4 = createTask(seqnum++, stt.Feature, TaskStatus.Closed, TaskPriority.Normal,
-				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp);
+				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp, new[] { context.User1 });
 			var st5 = createTask(seqnum++, stt.Support, TaskStatus.Suspended, TaskPriority.Normal,
-				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp);
+				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp, new[] { context.User1 });
+			var st6 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
+				"Can't move parent ticket between projects", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
 
 //			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
 //			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High, "Calculate year-ending salary bonuses", DateTime.Now.AddDays(2));
