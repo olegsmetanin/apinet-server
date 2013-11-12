@@ -332,6 +332,7 @@ namespace AGO.Tasks
 			var seqnum = 0;
 			var sp = projects.Software;
 			var stt = taskTypes.Software;
+			var spt = propertyTypes.Software;
 			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Completed, TaskPriority.Low,
 				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1, context.User2 });
 			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
@@ -345,11 +346,19 @@ namespace AGO.Tasks
 			var st6 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
 				"Can't move parent ticket between projects", DateTime.Now.AddDays(1), sp, 
 				new[] { context.User1, context.User2, context.User3 });
+			createTaskProperty(st1, spt.PO, "Jonh O'Connor");
+			createTaskProperty(st1, spt.MgrEstimate, 3);
+			createTaskProperty(st1, spt.DevEstimate, 5);
+			createTaskProperty(st1, spt.LPS, DateTime.Now.AddDays(-1));
+			createTaskProperty(st6, spt.PO, "Abigeil Manson");
+			createTaskProperty(st6, spt.MgrEstimate, 2);
+			createTaskProperty(st6, spt.DevEstimate, 2);
 
 			//CRM
 			seqnum = 0;
 			var crm = projects.CRM;
 			var crmtt = taskTypes.CRM;
+			var crmpt = propertyTypes.CRM;
 			var ct1 = createTask(seqnum++, crmtt.Upselling, TaskStatus.InWork, TaskPriority.Normal,
 			                     "Launch test compaign", DateTime.Now.AddDays(7), crm, new[] {context.User2});
 			var ct2 = createTask(seqnum++, crmtt.Audit, TaskStatus.Completed, TaskPriority.High,
@@ -360,11 +369,19 @@ namespace AGO.Tasks
 								 "Meeting with CEOs", null, crm, new[] { context.User1, context.User3 });
 			var ct5 = createTask(seqnum++, crmtt.Upselling, TaskStatus.NotStarted, TaskPriority.Normal,
 								 "Email partners (confirm $30,000 deal)", DateTime.Now.AddDays(2), crm, new[] { context.User2 });
+			createTaskProperty(ct1, crmpt.RelationsLevel, "Good");
+			createTaskProperty(ct1, crmpt.Prospects, 2);
+			createTaskProperty(ct4, crmpt.RelationsLevel, "Excellent");
+			createTaskProperty(ct4, crmpt.Prospects, 5);
+			createTaskProperty(ct4, crmpt.BirthDay, new DateTime(1970, 02, 02));
+			createTaskProperty(ct5, crmpt.RelationsLevel, "Poor");
+			createTaskProperty(ct5, crmpt.LastContact, DateTime.Now.AddDays(-40));
 
 			//Personal
 			seqnum = 0;
 			var pp = projects.Personal;
 			var ptt = taskTypes.Personal;
+			var ppt = propertyTypes.Personal;
 			var pt1 = createTask(seqnum++, ptt.Home, TaskStatus.NotStarted, TaskPriority.Normal,
 			                     "after test, get book to read", null, pp, new[] {context.User2});
 			var pt2 = createTask(seqnum++, ptt.Bills, TaskStatus.NotStarted, TaskPriority.Normal,
@@ -377,11 +394,14 @@ namespace AGO.Tasks
 								 "plan for hispanohablantes", DateTime.Now.AddDays(-5), pp, new[] { context.User2 });
 			var pt6 = createTask(seqnum++, ptt.Web, TaskStatus.NotStarted, TaskPriority.Normal,
 								 "emotion posters", null, pp, new[] { context.User2 });
+			createTaskProperty(pt1, ppt.Note, "use my new kindle HD");
+			createTaskProperty(pt4, ppt.Deadline, DateTime.Now.AddDays(1));
 
 			//Helpdesk
 			seqnum = 0;
 			var hp = projects.Helpdesk;
 			var htt = taskTypes.Helpdesk;
+			var hpt = propertyTypes.Helpdesk;
 			var ht1 = createTask(seqnum++, htt.Consult, TaskStatus.InWork, TaskPriority.Normal,
 			                     "Can't connect to office vpn", DateTime.Now, hp, new[] {context.User2});
 			var ht2 = createTask(seqnum++, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
@@ -398,17 +418,12 @@ namespace AGO.Tasks
 								 "Plan vacations for next year", DateTime.Now.AddDays(-2), hp, new[] { context.Admin });
 			var ht8 = createTask(seqnum, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
 								 "Move accounting database backup to NV office", DateTime.Now.AddDays(-6), hp, new[] { context.User3 });
-
-//			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.Normal, null, null);
-//			createTask(taskTypes.Calculations, TaskStatus.InWork, TaskPriority.High, "Calculate year-ending salary bonuses", DateTime.Now.AddDays(2));
-//			createTask(taskTypes.Inventory, TaskStatus.NotStarted, TaskPriority.High, null, DateTime.Now.AddDays(-1));
-
-
-
-//			createTaskProperty(t1, propertyTypes.PossibleIssues, "Entrance only through basement");
-//			createTaskProperty(t1, propertyTypes.ApproximateArea, 86.5);
-//			createTaskProperty(t1, propertyTypes.BuildingDate, new DateTime(1967, 04, 16));
-//			createTaskProperty(t1, propertyTypes.LastOverhaulDate, new DateTime(1990, 07, 01));
+			createTaskProperty(ht1, hpt.SpentHours, 1.2m);
+			createTaskProperty(ht1, hpt.ClientSatisfaction, "normal");
+			createTaskProperty(ht3, hpt.SpentHours, 3);
+			createTaskProperty(ht5, hpt.SpentHours, 1.2m);
+			createTaskProperty(ht5, hpt.ClientSatisfaction, "low");
+			createTaskProperty(ht5, hpt.ClientAdequacy, "poor");
 		}
 
 		#endregion
