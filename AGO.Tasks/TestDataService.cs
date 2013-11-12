@@ -132,7 +132,7 @@ namespace AGO.Tasks
 				Software = createProject("soft", "Software development project", "This is a flexible project management web application written using angularjs framework."),
 				CRM = createProject("crm", "CRM tasks", "Customer relation management tasks"),
 				Personal = createProject("personal", "Personal tasks", "Personal tasks project"),
-				Helpdesk = createProject("hd", "Helpdesk", "Helpdesc department tasks")
+				Helpdesk = createProject("hd", "Helpdesk", "Helpdesk department tasks")
 			};
 		}
 

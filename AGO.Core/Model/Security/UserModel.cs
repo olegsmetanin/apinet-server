@@ -89,11 +89,24 @@ namespace AGO.Core.Model.Security
 
 		private void CalculateNames()
 		{
-			FullName =  string.Join(" ", LastName, Name, MiddleName);
+			//TODO: extract from here and localize algorithm
+			if (MiddleName.IsNullOrWhiteSpace())
+			{
+				//en style
+				var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + "." : null;
+				FIO = ni != null ? LastName + ni : LastName;
 
-			var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + "." : null;
-			var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
-			FIO = ni != null && mi != null ? LastName + ni + mi : LastName;
+				FullName = string.Join(" ", Name, LastName); 
+			}
+			else
+			{
+				//ru style
+				var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + "." : null;
+				var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
+				FIO = ni != null && mi != null ? LastName + ni + mi : LastName;
+
+				FullName = string.Join(" ", LastName, Name, MiddleName);
+			}
 		}
 	}
 }
