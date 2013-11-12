@@ -25,15 +25,6 @@ namespace AGO.Home.Model.Projects
 		[NotLonger(512), JsonProperty]
 		public virtual new string Description { get; set; }
 
-		[JsonProperty]
-		public virtual bool IsArchive { get; set; }
-
-		[JsonProperty]
-		public virtual DateTime? EventsHorizon { get; set; }
-
-		[NotLonger(512), JsonProperty]
-		public virtual string FileSystemPath { get; set; }
-
 		[JsonProperty, NotNull, Prefetched]
 		public virtual ProjectTypeModel Type { get; set; }
 		[ReadOnlyProperty, MetadataExclude]

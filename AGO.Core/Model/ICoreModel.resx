@@ -118,16 +118,16 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="CoreModel.CreationTime" xml:space="preserve">
-    <value>Creation time</value>
+    <value>Created</value>
   </data>
   <data name="SecureModel.Creator" xml:space="preserve">
     <value>Creator</value>
   </data>
   <data name="SecureModel.LastChanger" xml:space="preserve">
-    <value>Last changed by</value>
+    <value>Changer</value>
   </data>
   <data name="SecureModel.LastChangeTime" xml:space="preserve">
-    <value>Last change time</value>
+    <value>Changed</value>
   </data>
   <data name="CoreModel.Children" xml:space="preserve">
     <value>Children</value>

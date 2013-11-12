@@ -117,15 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ProjectModel.EventsHorizon" xml:space="preserve">
-    <value>Горизонт событий проекта</value>
-  </data>
-  <data name="ProjectModel.FileSystemPath" xml:space="preserve">
-    <value>Путь к проекту</value>
-  </data>
-  <data name="ProjectModel.IsArchive" xml:space="preserve">
-    <value>Архив</value>
-  </data>
   <data name="ProjectModel.Participants" xml:space="preserve">
     <value>Участники проекта</value>
   </data>

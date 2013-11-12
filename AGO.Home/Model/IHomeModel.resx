@@ -117,15 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ProjectModel.EventsHorizon" xml:space="preserve">
-    <value>Events horizon date</value>
-  </data>
-  <data name="ProjectModel.FileSystemPath" xml:space="preserve">
-    <value>File system path</value>
-  </data>
-  <data name="ProjectModel.IsArchive" xml:space="preserve">
-    <value>Is archived</value>
-  </data>
   <data name="ProjectModel.Participants" xml:space="preserve">
     <value>Participants</value>
   </data>
