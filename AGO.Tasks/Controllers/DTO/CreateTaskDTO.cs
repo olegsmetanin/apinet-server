@@ -16,8 +16,6 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public string Content { get; set; }
 
-		public Guid? CustomStatus { get; set; }
-
 		public TaskPriority Priority { get; set; }
 	}
 }

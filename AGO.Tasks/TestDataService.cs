@@ -136,63 +136,6 @@ namespace AGO.Tasks
 			};
 		}
 
-		protected dynamic DoPopulateCustomStatuses(dynamic context, dynamic projects)
-		{
-			byte order = 0;
-			Func<string, ProjectModel, CustomTaskStatusModel> createCustomStatus = (name, proj) =>
-			{
-				var customStatus = new CustomTaskStatusModel
-				{
-					Creator = context.Admin,
-					ProjectCode = proj.ProjectCode,
-					Name = name,
-					ViewOrder = order++
-				};
-				_CrudDao.Store(customStatus);
-				return customStatus;
-			};
-
-			return new
-					{
-						Software = new
-						{
-							New = createCustomStatus("New", projects.Software),
-							NeedsFeedback = createCustomStatus("Needs feedback", projects.Software),
-							Confirmed = createCustomStatus("Confirmed", projects.Software),
-							InProgress = createCustomStatus("In progress", projects.Software),
-							Resolved = createCustomStatus("Resolved", projects.Software),
-							Closed = createCustomStatus("Closed", projects.Software),
-							Reopened = createCustomStatus("Reopened", projects.Software)
-						},
-						CRM = new
-						{
-							Preparing = createCustomStatus("Preparing", projects.CRM),
-							SentToWork = createCustomStatus("Sent to work", projects.CRM),
-							InProgrecc = createCustomStatus("In progress", projects.CRM),
-							Complete = createCustomStatus("Complete", projects.CRM),
-							Closed = createCustomStatus("Closed", projects.CRM),
-							Suspended = createCustomStatus("Suspended", projects.CRM)
-						},
-						Personal = new
-						{
-							New = createCustomStatus("New", projects.Personal),
-							Open = createCustomStatus("Open", projects.Personal),
-							Complete = createCustomStatus("Complete", projects.Personal)
-						},
-						Helpdesk = new
-						{
-							New = createCustomStatus("New", projects.Helpdesk),
-							Confirmed = createCustomStatus("Confirmed", projects.Helpdesk),
-							InProgress = createCustomStatus("Open", projects.Helpdesk),
-							Resolved = createCustomStatus("Resolved", projects.Helpdesk),
-							Feedback = createCustomStatus("Feedback", projects.Helpdesk),
-							Closed = createCustomStatus("Closed", projects.Helpdesk),
-							Reopened = createCustomStatus("Reopened", projects.Helpdesk),
-							Rejected = createCustomStatus("Rejected", projects.Helpdesk)
-						}
-					};
-		}
-
 		protected dynamic DoPopulateTaskTypes(dynamic context, dynamic projects)
 		{
 			Func<string, ProjectModel, TaskTypeModel> factory = (name, proj) =>
@@ -328,6 +271,8 @@ namespace AGO.Tasks
 				_CrudDao.Store(taskProperty);
 			};
 
+// ReSharper disable UnusedVariable
+
 			//Software
 			var seqnum = 0;
 			var sp = projects.Software;
@@ -335,6 +280,7 @@ namespace AGO.Tasks
 			var spt = propertyTypes.Software;
 			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Completed, TaskPriority.Low,
 				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1, context.User2 });
+
 			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
 				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
 			var st3 = createTask(seqnum++, stt.Feature, TaskStatus.InWork, TaskPriority.Normal,
@@ -343,7 +289,7 @@ namespace AGO.Tasks
 				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp, new[] { context.User1 });
 			var st5 = createTask(seqnum++, stt.Support, TaskStatus.Suspended, TaskPriority.Normal,
 				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp, new[] { context.User3 });
-			var st6 = createTask(seqnum++, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
+			var st6 = createTask(seqnum, stt.Bug, TaskStatus.NotStarted, TaskPriority.High,
 				"Can't move parent ticket between projects", DateTime.Now.AddDays(1), sp, 
 				new[] { context.User1, context.User2, context.User3 });
 			createTaskProperty(st1, spt.PO, "Jonh O'Connor");
@@ -367,7 +313,7 @@ namespace AGO.Tasks
 								 "Call Mr. Cobson for new bills", DateTime.Now.AddDays(-15), crm, new[] { context.User3 });
 			var ct4 = createTask(seqnum++, crmtt.Upselling, TaskStatus.NotStarted, TaskPriority.Low,
 								 "Meeting with CEOs", null, crm, new[] { context.User1, context.User3 });
-			var ct5 = createTask(seqnum++, crmtt.Upselling, TaskStatus.NotStarted, TaskPriority.Normal,
+			var ct5 = createTask(seqnum, crmtt.Upselling, TaskStatus.NotStarted, TaskPriority.Normal,
 								 "Email partners (confirm $30,000 deal)", DateTime.Now.AddDays(2), crm, new[] { context.User2 });
 			createTaskProperty(ct1, crmpt.RelationsLevel, "Good");
 			createTaskProperty(ct1, crmpt.Prospects, 2);
@@ -392,7 +338,7 @@ namespace AGO.Tasks
 								 "call to office for tomorrow meeting issues", DateTime.Now, pp, new[] { context.User2 });
 			var pt5 = createTask(seqnum++, ptt.Home, TaskStatus.Completed, TaskPriority.Normal,
 								 "plan for hispanohablantes", DateTime.Now.AddDays(-5), pp, new[] { context.User2 });
-			var pt6 = createTask(seqnum++, ptt.Web, TaskStatus.NotStarted, TaskPriority.Normal,
+			var pt6 = createTask(seqnum, ptt.Web, TaskStatus.NotStarted, TaskPriority.Normal,
 								 "emotion posters", null, pp, new[] { context.User2 });
 			createTaskProperty(pt1, ppt.Note, "use my new kindle HD");
 			createTaskProperty(pt4, ppt.Deadline, DateTime.Now.AddDays(1));
@@ -424,6 +370,8 @@ namespace AGO.Tasks
 			createTaskProperty(ht5, hpt.SpentHours, 1.2m);
 			createTaskProperty(ht5, hpt.ClientSatisfaction, "low");
 			createTaskProperty(ht5, hpt.ClientAdequacy, "poor");
+
+// ReSharper restore UnusedVariable
 		}
 
 		#endregion

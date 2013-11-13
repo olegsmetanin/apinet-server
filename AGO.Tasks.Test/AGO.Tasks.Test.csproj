@@ -55,7 +55,6 @@
   <ItemGroup>
     <Compile Include="AbstractDictionaryTest.cs" />
     <Compile Include="AbstractTest.cs" />
-    <Compile Include="CustomTaskStatusCRUDTest.cs" />
     <Compile Include="DbCreator.cs" />
     <Compile Include="ModelHelper.cs" />
     <Compile Include="TaskAgreementsTest.cs" />

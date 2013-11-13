@@ -218,7 +218,6 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithValidParamsReturnSuccess()
 		{
 			var tt = M.TaskType();
-			var status = M.CustomStatus();
 			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
 			var participant = project.Participants.First();
 			_SessionProvider.FlushCurrentSession();
@@ -229,7 +228,6 @@ namespace AGO.Tasks.Test
 			            		Executors = new[] {participant.Id},
 			            		DueDate = new DateTime(2013, 01, 01),
 			            		Content = "test task",
-			            		CustomStatus = status.Id,
 			            		Priority = TaskPriority.Low
 			            	};
 			var vr = controller.CreateTask(TestProject, model).Validation;
@@ -245,8 +243,6 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(task.Executors.Any(e => e.Executor.Id == participant.Id));
 			Assert.AreEqual(new DateTime(2013, 01, 01).ToUniversalTime(), task.DueDate);
 			Assert.AreEqual("test task", task.Content);
-			Assert.AreEqual(status.Id, task.CustomStatus.Id);
-			Assert.IsTrue(task.CustomStatusHistory.Any(h => h.Task.Id == task.Id && h.Status.Id == status.Id));
 			Assert.AreEqual(TaskPriority.Low, task.Priority);
 		}
 

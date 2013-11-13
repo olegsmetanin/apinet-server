@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace AGO.Tasks.Test
 {
-	[TestFixture]
+	[TestFixture, Ignore]
 	public class DbCreator: AbstractPersistenceApplication
 	{
 		[Test]

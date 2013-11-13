@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -7,7 +8,6 @@ using AGO.Core.Model.Security;
 using AGO.Home.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace AGO.Tasks.Model.Task
 {
@@ -80,25 +80,6 @@ namespace AGO.Tasks.Model.Task
 		public virtual DateTime? DueDate { get; set; }
 
 		/// <summary>
-		/// Пользовательский статус задачи
-		/// </summary>
-		[JsonProperty]
-		public virtual CustomTaskStatusModel CustomStatus { get; protected set; }
-		[ReadOnlyProperty, MetadataExclude]
-		public virtual Guid? CustomStatusId { get; set; }
-
-		/// <summary>
-		/// История изменения пользовательского статуса задачи
-		/// </summary>
-		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
-		public virtual ISet<CustomTaskStatusHistoryModel> CustomStatusHistory
-		{
-			get { return customStatusHistoryStore; }
-			set { customStatusHistoryStore = value; }
-		}
-		private ISet<CustomTaskStatusHistoryModel> customStatusHistoryStore = new HashSet<CustomTaskStatusHistoryModel>();
-
-		/// <summary>
 		/// Исполнители задачи
 		/// </summary>
 		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan), NotEmpty]
@@ -136,11 +117,6 @@ namespace AGO.Tasks.Model.Task
 		public virtual TaskStatusHistoryModel ChangeStatus(TaskStatus newStatus, UserModel changer)
 		{
 			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
-		}
-
-		public virtual CustomTaskStatusHistoryModel ChangeCustomStatus(CustomTaskStatusModel newStatus, UserModel changer)
-		{
-			return StatusChangeHelper.Change(this, newStatus, CustomStatusHistory, changer, m => m.CustomStatus);
 		}
 
 		public virtual bool IsAgreemer(ProjectParticipantModel participant)

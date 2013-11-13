@@ -5,9 +5,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Tasks.Model;
-using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using NHibernate;
 
 namespace AGO.Tasks.Controllers.DTO
 {
@@ -52,13 +50,6 @@ namespace AGO.Tasks.Controllers.DTO
 			       	};
 		}
 
-		protected LookupEntry? CustomStatusEntry(CustomTaskStatusModel status)
-		{
-			return status != null 
-				? new LookupEntry { Id = status.Id.ToString(), Text = status.Name } 
-				: (LookupEntry?) null;
-		}
-
 		public override TDTO Fill(TaskModel model)
 		{
 			var dto = base.Fill(model);
@@ -69,7 +60,6 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.Executors = model.Executors.OrderBy(e => e.Executor.User.FullName).Select(ToExecutor).ToArray();
 			dto.DueDate = model.DueDate;
 			dto.Status = EnumLocalizedValue(model.Status);
-			dto.CustomStatus = CustomStatusEntry(model.CustomStatus).GetValueOrDefault().Text;
 
 			return dto;
 		}
@@ -123,14 +113,8 @@ namespace AGO.Tasks.Controllers.DTO
 	/// </summary>
 	public class TaskViewAdapter: TaskAdapter<TaskViewDTO>
 	{
-		private readonly ISession session;
-
-		public TaskViewAdapter(ILocalizationService localizationService, ISession session)
-			: base(localizationService)
+		public TaskViewAdapter(ILocalizationService localizationService): base(localizationService)
 		{
-			if (session == null)
-				throw new ArgumentNullException("session");
-			this.session = session;
 		}
 
 		public static CustomParameterTypeDTO ParamTypeToDTO(CustomPropertyTypeModel paramType)
@@ -198,24 +182,6 @@ namespace AGO.Tasks.Controllers.DTO
 			};
 		}
 
-		private StatusHistoryDTO CustomStatusHistoryToDTO(TaskModel task)
-		{
-
-			var query = session.QueryOver<CustomTaskStatusModel>()
-				.Where(m => m.ProjectCode == task.ProjectCode);
-			if (task.CustomStatus != null)
-				query = query.Where(m => m.Id != task.CustomStatus.Id);
-
-			query = query.OrderBy(m => m.ViewOrder).Asc.ThenBy(m => m.Name).Asc;
-
-			return new StatusHistoryDTO
-			{
-				Current = CustomStatusEntry(task.CustomStatus),
-				History = ToHistory(task.CustomStatusHistory, CustomStatusEntry),
-				Next = query.List<CustomTaskStatusModel>().Select(s => new LookupEntry { Id = s.Id.ToString(), Text = s.Name }).ToArray()
-			};
-		}
-
 		public static Agreement ToAgreement(TaskAgreementModel agreement)
 		{
 			return new Agreement
@@ -236,14 +202,10 @@ namespace AGO.Tasks.Controllers.DTO
 
 			dto.TaskType = new LookupEntry {Id = model.TaskType.Id.ToString(), Text = model.TaskType.Name};
 			dto.Status = EnumLookupEntry(model.Status);
-			dto.CustomStatus = model.CustomStatus != null
-				? new LookupEntry { Id = model.CustomStatus.Id.ToString(), Text = model.CustomStatus.Name }
-				: (LookupEntry?) null;
 			dto.Priority = EnumLookupEntry(model.Priority);
 			dto.Note = model.Note;
 			dto.Agreements = model.Agreements.Select(ToAgreement).ToArray();
 			dto.StatusHistory = StatusHistoryToDTO(model);
-			dto.CustomStatusHistory = CustomStatusHistoryToDTO(model);
 			dto.Parameters = model.CustomProperties.OrderBy(p => p.PropertyType.FullName).Select(ParamToDTO).ToArray();
 			dto.Author = ToAuthor(model);
 			dto.CreationTime = model.CreationTime;

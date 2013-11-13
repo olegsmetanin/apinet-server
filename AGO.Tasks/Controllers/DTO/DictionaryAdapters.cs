@@ -8,17 +8,4 @@ namespace AGO.Tasks.Controllers.DTO
 	public class TaskTypeAdapter: DictionaryModelAdapter<TaskTypeModel, TaskTypeDTO>
 	{
 	}
-
-	/// <summary>
-	/// Адаптер моделей справочника пользовательских статусов задач
-	/// </summary>
-	public class CustomStatusAdapter: DictionaryModelAdapter<CustomTaskStatusModel, CustomStatusDTO>
-	{
-		public override CustomStatusDTO Fill(CustomTaskStatusModel model)
-		{
-			var dto = base.Fill(model);
-			dto.ViewOrder = model.ViewOrder;
-			return dto;
-		}
-	}
 }

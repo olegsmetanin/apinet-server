@@ -19,8 +19,6 @@ namespace AGO.Tasks.Controllers.DTO
 		public DateTime? DueDate { get; set; }
 
 		public string Status { get; set; }
-
-		public string CustomStatus { get; set; }		
 	}
 
 	public class TaskListItemDTO: BaseTaskDTO
@@ -46,8 +44,6 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public new LookupEntry Status { get; set; }
 
-		public new LookupEntry? CustomStatus { get; set; }
-
 		public LookupEntry Priority { get; set; }
 
 		public string Note { get; set; }
@@ -55,8 +51,6 @@ namespace AGO.Tasks.Controllers.DTO
 		public IEnumerable<Agreement> Agreements { get; set; }
 
 		public StatusHistoryDTO StatusHistory { get; set; }
-
-		public StatusHistoryDTO CustomStatusHistory { get; set; }
 
 		public IEnumerable<CustomParameterDTO> Parameters { get; set; }
 

@@ -19,11 +19,6 @@ namespace AGO.Tasks.Migrations
         		.WithValueColumn<TaskTypeModel>(m => m.ProjectCode)
         		.WithValueColumn<TaskTypeModel>(m => m.Name);
 
-			Create.SecureModelTable<CustomTaskStatusModel>()
-				.WithValueColumn<CustomTaskStatusModel>(m => m.ProjectCode)
-				.WithValueColumn<CustomTaskStatusModel>(m => m.Name)
-				.WithValueColumn<CustomTaskStatusModel>(m => m.ViewOrder);
-
         	Create.SecureModelTable<TaskModel>()
         		.WithValueColumn<TaskModel>(m => m.ProjectCode)
         		.WithValueColumn<TaskModel>(m => m.SeqNumber)
@@ -33,20 +28,13 @@ namespace AGO.Tasks.Migrations
         		.WithRefColumn<TaskModel>(m => m.TaskType)
         		.WithValueColumn<TaskModel>(m => m.Content)
         		.WithValueColumn<TaskModel>(m => m.Note)
-        		.WithValueColumn<TaskModel>(m => m.DueDate)
-        		.WithRefColumn<TaskModel>(m => m.CustomStatus);
+        		.WithValueColumn<TaskModel>(m => m.DueDate);
 
             Create.SecureModelTable<TaskStatusHistoryModel>()
                 .WithValueColumn<TaskStatusHistoryModel>(m => m.Start)
                 .WithValueColumn<TaskStatusHistoryModel>(m => m.Finish)
                 .WithRefColumn<TaskStatusHistoryModel>(m => m.Task)
                 .WithValueColumn<TaskStatusHistoryModel>(m => m.Status);
-
-        	Create.SecureModelTable<CustomTaskStatusHistoryModel>()
-        		.WithValueColumn<CustomTaskStatusHistoryModel>(m => m.Start)
-        		.WithValueColumn<CustomTaskStatusHistoryModel>(m => m.Finish)
-        		.WithRefColumn<CustomTaskStatusHistoryModel>(m => m.Task)
-        		.WithRefColumn<CustomTaskStatusHistoryModel>(m => m.Status);
 
         	Create.SecureModelTable<TaskExecutorModel>()
         		.WithRefColumn<TaskExecutorModel>(m => m.Task)
@@ -66,12 +54,10 @@ namespace AGO.Tasks.Migrations
 
         public override void Down()
         {
-        	Delete.ModelTable<CustomTaskStatusHistoryModel>();
             Delete.ModelTable<TaskStatusHistoryModel>();
 			Delete.ModelTable<TaskExecutorModel>();
 			Delete.ModelTable<TaskAgreementModel>();
             Delete.ModelTable<TaskModel>();
-			Delete.ModelTable<CustomTaskStatusHistoryModel>();
 			Delete.ModelTable<TaskTypeModel>();
 
         	Delete.Column<TaskCustomPropertyModel>(m => m.Task);

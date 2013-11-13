@@ -84,49 +84,5 @@ namespace AGO.Tasks.Test
 			Assert.AreEqual(1, task.StatusHistory.Count);
 			Assert.IsTrue(task.StatusHistory.Any(h => h.Status == TaskStatus.NotStarted && h.Finish == null));
 		}
-
-		[Test]
-		public void ChangeCustomStatusAddRecordToHistory()
-		{
-			var task = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
-
-			var cs = M.CustomStatus("s1");
-			task.ChangeCustomStatus(cs, CurrentUser);
-
-			Assert.AreEqual(cs, task.CustomStatus);
-			Assert.AreEqual(1, task.CustomStatusHistory.Count);
-			Assert.IsTrue(task.CustomStatusHistory.Any(h => h.Status == cs && h.Finish == null));
-		}
-
-		[Test]
-		public void ChangeCustomStatusMaintainOnlyOneCurrentRecordInHistory()
-		{
-			var task = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
-
-			var s1 = M.CustomStatus("s1");
-			var s2 = M.CustomStatus("s2");
-
-			task.ChangeCustomStatus(s1, CurrentUser);
-			task.ChangeCustomStatus(s2, CurrentUser);
-
-			Assert.AreEqual(1, task.CustomStatusHistory.Count(h => h.Finish == null));
-		}
-
-		[Test]
-		public void ChangeCustomStatusToTheSameDoesNotAddRecordToHistory()
-		{
-			var task = M.Task(1);
-			var cs = M.CustomStatus("s1");
-			task.ChangeCustomStatus(cs, CurrentUser);
-			_SessionProvider.FlushCurrentSession();
-
-			task.ChangeCustomStatus(cs, CurrentUser);
-
-			Assert.AreEqual(cs, task.CustomStatus);
-			Assert.AreEqual(1, task.CustomStatusHistory.Count);
-			Assert.IsTrue(task.CustomStatusHistory.Any(h => h.Status == cs && h.Finish == null));
-		}
 	}
 }

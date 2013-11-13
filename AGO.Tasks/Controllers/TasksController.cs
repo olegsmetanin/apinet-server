@@ -151,7 +151,7 @@ namespace AGO.Tasks.Controllers
 			if (task == null)
 				throw new NoSuchEntityException();
 
-			var adapter = new TaskViewAdapter(_LocalizationService, Session);
+			var adapter = new TaskViewAdapter(_LocalizationService);
 			return adapter.Fill(task);
 		}
 
@@ -186,12 +186,6 @@ namespace AGO.Tasks.Controllers
 			            task.Priority = model.Priority;
 
 			            task.ChangeStatus(TaskStatus.NotStarted, task.Creator);
-
-			            if (model.CustomStatus.HasValue)
-			            {
-			                var cs = _CrudDao.Get<CustomTaskStatusModel>(model.CustomStatus.Value);
-			                task.ChangeCustomStatus(cs, task.Creator);
-			            }
 
 			            foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
 			            {
@@ -251,10 +245,6 @@ namespace AGO.Tasks.Controllers
 									var newStatus = (TaskStatus)Enum.Parse(typeof(TaskStatus), (string)data.Value);
 									task.ChangeStatus(newStatus, _AuthController.CurrentUser());
 									break;
-								case "CustomStatus":
-									var newCustomStatus = _CrudDao.Get<CustomTaskStatusModel>(data.Value.ConvertSafe<Guid>(), true);
-									task.ChangeCustomStatus(newCustomStatus, _AuthController.CurrentUser());
-									break;
 								case "TaskType":
 									task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
 									break;
@@ -306,7 +296,7 @@ namespace AGO.Tasks.Controllers
 							vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
 						}
 			        }, 
-					task => new TaskViewAdapter(_LocalizationService, Session).Fill(task),
+					task => new TaskViewAdapter(_LocalizationService).Fill(task),
 					() => { throw new TaskCreationNotSupportedException(); });
 		}
 

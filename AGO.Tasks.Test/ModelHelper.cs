@@ -72,21 +72,6 @@ namespace AGO.Tasks.Test
 			return m;
 		}
 
-		public CustomTaskStatusModel CustomStatus(string name = "status", byte order = 0)
-		{
-			var m = new CustomTaskStatusModel
-			        	{
-							Creator = currentUser(),
-			        		ProjectCode = project,
-			        		Name = name,
-							ViewOrder = order
-			        	};
-			session().Save(m);
-			session().FlushMode = FlushMode.Auto;
-
-			return m;
-		}
-
 		public TaskCustomPropertyModel Param(TaskModel task, string name, object value)
 		{
 			var pvt = value is DateTime
