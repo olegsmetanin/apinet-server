@@ -36,22 +36,22 @@ namespace AGO.Tasks.Test
 			var result = Controller.LookupTaskStatuses(null, 0).ToArray();
 
 			Assert.AreEqual(5, result.Length);
-			Assert.AreEqual(TaskStatus.NotStarted.ToString(), result[0].Id);
-			Assert.AreEqual(TaskStatus.InWork.ToString(), result[1].Id);
-			Assert.AreEqual(TaskStatus.Completed.ToString(), result[2].Id);
-			Assert.AreEqual(TaskStatus.Closed.ToString(), result[3].Id);
-			Assert.AreEqual(TaskStatus.Suspended.ToString(), result[4].Id);
+			Assert.AreEqual(TaskStatus.New.ToString(), result[0].Id);
+			Assert.AreEqual(TaskStatus.Doing.ToString(), result[1].Id);
+			Assert.AreEqual(TaskStatus.Done.ToString(), result[2].Id);
+			Assert.AreEqual(TaskStatus.Discarded.ToString(), result[3].Id);
+			Assert.AreEqual(TaskStatus.Closed.ToString(), result[4].Id);
 		}
 
 		[Test]
 		public void LookupTaskStatusesFilterByTerm()
 		{
 			Sys.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("ru");
-			var result = Controller.LookupTaskStatuses("та", 0).ToArray();
+			var result = Controller.LookupTaskStatuses("не", 0).ToArray();
 
 			Assert.AreEqual(2, result.Length);
-			Assert.AreEqual(TaskStatus.Closed.ToString(), result[0].Id); //ЗакрыТА
-			Assert.AreEqual(TaskStatus.Suspended.ToString(), result[1].Id); //ПриосТАновлена
+			Assert.AreEqual(TaskStatus.Done.ToString(), result[0].Id); //ВыполНЕна
+			Assert.AreEqual(TaskStatus.Discarded.ToString(), result[1].Id); //ОтмеНЕна
 		}
 		 
 	}

@@ -185,7 +185,7 @@ namespace AGO.Tasks.Controllers
 			            task.Content = model.Content;
 			            task.Priority = model.Priority;
 
-			            task.ChangeStatus(TaskStatus.NotStarted, task.Creator);
+			            task.ChangeStatus(TaskStatus.New, task.Creator);
 
 			            foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
 			            {

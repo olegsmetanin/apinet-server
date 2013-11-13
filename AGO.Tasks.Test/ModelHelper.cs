@@ -22,7 +22,7 @@ namespace AGO.Tasks.Test
 			this.currentUser = currentUser;
 		}
 
-		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.NotStarted)
+		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New)
 		{
 			var task = new TaskModel
 			{
@@ -49,7 +49,7 @@ namespace AGO.Tasks.Test
 			return task;
 		}
 
-		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.NotStarted)
+		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New)
 		{
 			var typeModel = session().QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault() ?? TaskType(type);

@@ -3,31 +3,21 @@
     /// <summary>
     /// Статус задачи
     /// </summary>
+    /// <remarks>
+    /// Workflow:
+    /// New -> Doing -> Done -> Closed
+    ///           |-> Discarded -^
+    /// </remarks>
     public enum TaskStatus
     {
-        /// <summary>
-        /// Не начата
-        /// </summary>
-        NotStarted = 0,
+        New = 0,
 
-        /// <summary>
-        /// В работе
-        /// </summary>
-        InWork = 1,
+        Doing = 1,
 
-        /// <summary>
-        /// Выполнена
-        /// </summary>
-        Completed = 2,
+        Done = 2,
 
-        /// <summary>
-        /// Закрыта
-        /// </summary>
-        Closed = 3,
+        Discarded = 3,
 
-        /// <summary>
-        /// Приостановлена
-        /// </summary>
-        Suspended = 4
+        Closed = 4
     }
 }

@@ -120,16 +120,16 @@
   <data name="Closed" xml:space="preserve">
     <value>Closed</value>
   </data>
-  <data name="Completed" xml:space="preserve">
-    <value>Completed</value>
+  <data name="Discarded" xml:space="preserve">
+    <value>Discarded</value>
   </data>
-  <data name="InWork" xml:space="preserve">
-    <value>In work</value>
+  <data name="Doing" xml:space="preserve">
+    <value>Doing</value>
   </data>
-  <data name="NotStarted" xml:space="preserve">
-    <value>Not started</value>
+  <data name="Done" xml:space="preserve">
+    <value>Done</value>
   </data>
-  <data name="Suspended" xml:space="preserve">
-    <value>Suspended</value>
+  <data name="New" xml:space="preserve">
+    <value>New</value>
   </data>
 </root>

@@ -120,16 +120,16 @@
   <data name="Closed" xml:space="preserve">
     <value>Закрыта</value>
   </data>
-  <data name="Completed" xml:space="preserve">
-    <value>Выполнена</value>
+  <data name="Discarded" xml:space="preserve">
+    <value>Отменена</value>
   </data>
-  <data name="InWork" xml:space="preserve">
+  <data name="Doing" xml:space="preserve">
     <value>В работе</value>
   </data>
-  <data name="NotStarted" xml:space="preserve">
-    <value>Оформление</value>
+  <data name="Done" xml:space="preserve">
+    <value>Выполнена</value>
   </data>
-  <data name="Suspended" xml:space="preserve">
-    <value>Приостановлена</value>
+  <data name="New" xml:space="preserve">
+    <value>Новая</value>
   </data>
 </root>

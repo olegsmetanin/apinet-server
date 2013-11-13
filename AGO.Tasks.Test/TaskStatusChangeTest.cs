@@ -39,10 +39,10 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			Assert.AreEqual(TaskStatus.NotStarted, task.Status);
+			Assert.AreEqual(TaskStatus.New, task.Status);
 			Assert.AreEqual(1, task.StatusHistory.Count);
 			var hr = task.StatusHistory.First();
-			Assert.AreEqual(TaskStatus.NotStarted, hr.Status);
+			Assert.AreEqual(TaskStatus.New, hr.Status);
 			Assert.AreNotEqual(default(DateTime), hr.Start);
 			Assert.IsNull(hr.Finish);
 		}
@@ -53,11 +53,11 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			task.ChangeStatus(TaskStatus.InWork, CurrentUser);
+			task.ChangeStatus(TaskStatus.Doing, CurrentUser);
 
-			Assert.AreEqual(TaskStatus.InWork, task.Status);
+			Assert.AreEqual(TaskStatus.Doing, task.Status);
 			Assert.AreEqual(2, task.StatusHistory.Count);
-			Assert.IsTrue(task.StatusHistory.Any(h => h.Status == TaskStatus.InWork && h.Finish == null));
+			Assert.IsTrue(task.StatusHistory.Any(h => h.Status == TaskStatus.Doing && h.Finish == null));
 		}
 
 		[Test]
@@ -66,8 +66,8 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			task.ChangeStatus(TaskStatus.InWork, CurrentUser);
-			task.ChangeStatus(TaskStatus.Completed, CurrentUser);
+			task.ChangeStatus(TaskStatus.Doing, CurrentUser);
+			task.ChangeStatus(TaskStatus.Done, CurrentUser);
 
 			Assert.AreEqual(1, task.StatusHistory.Count(h => h.Finish == null));
 		}
@@ -78,11 +78,11 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			task.ChangeStatus(TaskStatus.NotStarted, CurrentUser);
+			task.ChangeStatus(TaskStatus.New, CurrentUser);
 
-			Assert.AreEqual(TaskStatus.NotStarted, task.Status);
+			Assert.AreEqual(TaskStatus.New, task.Status);
 			Assert.AreEqual(1, task.StatusHistory.Count);
-			Assert.IsTrue(task.StatusHistory.Any(h => h.Status == TaskStatus.NotStarted && h.Finish == null));
+			Assert.IsTrue(task.StatusHistory.Any(h => h.Status == TaskStatus.New && h.Finish == null));
 		}
 	}
 }
