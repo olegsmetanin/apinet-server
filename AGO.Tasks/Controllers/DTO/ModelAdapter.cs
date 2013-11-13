@@ -21,7 +21,7 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public string ToAuthor(ISecureModel model)
 		{
-			return model.Creator != null ? model.Creator.FIO : null;
+			return model.Creator != null ? model.Creator.FullName : null;
 		}
 	}
 
