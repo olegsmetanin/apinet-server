@@ -48,12 +48,17 @@ namespace AGO.Tasks.Migrations
         		.WithValueColumn<TaskAgreementModel>(m => m.Done)
         		.WithValueColumn<TaskAgreementModel>(m => m.Comment);
 
+        	Create.SecureModelTable<TaskToTagModel>()
+        		.WithRefColumn<TaskToTagModel>(m => m.Task)
+        		.WithRefColumn<TaskToTagModel>(m => m.Tag);
+
 			Alter.ModelTable<TaskCustomPropertyModel>()
 				 .AddRefColumn<TaskCustomPropertyModel>(m => m.Task);
         }
 
         public override void Down()
         {
+			Delete.ModelTable<TaskToTagModel>();
             Delete.ModelTable<TaskStatusHistoryModel>();
 			Delete.ModelTable<TaskExecutorModel>();
 			Delete.ModelTable<TaskAgreementModel>();

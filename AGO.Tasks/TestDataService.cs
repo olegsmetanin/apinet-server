@@ -57,10 +57,10 @@ namespace AGO.Tasks
 
 			var projects = DoPopulateProjects(context);
 
-			//var statuses = DoPopulateCustomStatuses(context, projects);
 			var types = DoPopulateTaskTypes(context, projects);
 			var paramTypes = DoPopulatePropertyTypes(context, projects);
-			DoPopulateTasks(context, projects, types, paramTypes);
+			var tags = DoPopulateTags(context, projects);
+			DoPopulateTasks(context, projects, types, paramTypes, tags);
 		}
 
 		#endregion
@@ -228,7 +228,49 @@ namespace AGO.Tasks
 			};
 		}
 
-		protected void DoPopulateTasks(dynamic context, dynamic projects, dynamic taskTypes, dynamic propertyTypes)
+		protected dynamic DoPopulateTags(dynamic context, dynamic projects)
+		{
+			Func<string, dynamic, UserModel, TaskTagModel> factory = (name, project, owner) =>
+			{
+			    var tag = new TaskTagModel
+			                {
+			                    ProjectCode = project.ProjectCode,
+			                    Creator = context.Admin,
+								Name = name,
+								FullName = name,
+			                    Owner = owner
+			                };
+				_CrudDao.Store(tag);
+			    return tag;
+			};
+
+			return new
+			{
+				Software = new
+				{
+					Refactor = factory("Refactor this", projects.Software, null),
+					NeedsLearning = factory("Needs learning", projects.Software, context.User1)
+				},
+				CRM = new
+				{
+				    ABC = factory("ABC", projects.CRM, null),
+					Forget = factory("Forget", projects.CRM, null)
+				},
+				Personal = new
+				{
+				    Must = factory("must", projects.Personal, context.User2),
+					Optional = factory("optional", projects.Personal, context.User2)
+				},
+				Helpdesk = new
+				{
+				    Level1 = factory("Escalation level 1", projects.Helpdesk, null),
+					Level2 = factory("Escalation level 2", projects.Helpdesk, null),
+					Level3 = factory("Escalation level 3", projects.Helpdesk, null)
+				}
+			};
+		}
+
+		protected void DoPopulateTasks(dynamic context, dynamic projects, dynamic taskTypes, dynamic propertyTypes, dynamic tags)
 		{
 			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, dynamic[], TaskModel> createTask =
 				(num, type, status, priority, content, dueDate, proj, users) =>
@@ -270,6 +312,16 @@ namespace AGO.Tasks
 				};
 				_CrudDao.Store(taskProperty);
 			};
+			Action<TaskModel, TaskTagModel> addTag = (task, tag) =>
+			{
+			    var tagLink = new TaskToTagModel
+			                    {
+			                        Creator = context.Admin,
+			                        Task = task,
+			                        Tag = tag
+			                    };
+			    _CrudDao.Store(tagLink);
+			};
 
 // ReSharper disable UnusedVariable
 
@@ -278,9 +330,9 @@ namespace AGO.Tasks
 			var sp = projects.Software;
 			var stt = taskTypes.Software;
 			var spt = propertyTypes.Software;
+			var stg = tags.Software;
 			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Done, TaskPriority.Low,
 				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1, context.User2 });
-
 			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.New, TaskPriority.High,
 				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
 			var st3 = createTask(seqnum++, stt.Feature, TaskStatus.Doing, TaskPriority.Normal,
@@ -299,12 +351,17 @@ namespace AGO.Tasks
 			createTaskProperty(st6, spt.PO, "Abigeil Manson");
 			createTaskProperty(st6, spt.MgrEstimate, 2);
 			createTaskProperty(st6, spt.DevEstimate, 2);
+			addTag(st1, stg.Refactor);
+			addTag(st1, stg.NeedsLearning);
+			addTag(st3, stg.NeedsLearning);
+			addTag(st5, stg.Refactor);
 
 			//CRM
 			seqnum = 0;
 			var crm = projects.CRM;
 			var crmtt = taskTypes.CRM;
 			var crmpt = propertyTypes.CRM;
+			var ctg = tags.CRM;
 			var ct1 = createTask(seqnum++, crmtt.Upselling, TaskStatus.Doing, TaskPriority.Normal,
 			                     "Launch test compaign", DateTime.Now.AddDays(7), crm, new[] {context.User2});
 			var ct2 = createTask(seqnum++, crmtt.Audit, TaskStatus.Done, TaskPriority.High,
@@ -322,12 +379,16 @@ namespace AGO.Tasks
 			createTaskProperty(ct4, crmpt.BirthDay, new DateTime(1970, 02, 02));
 			createTaskProperty(ct5, crmpt.RelationsLevel, "Poor");
 			createTaskProperty(ct5, crmpt.LastContact, DateTime.Now.AddDays(-40));
+			addTag(ct1, ctg.ABC);
+			addTag(ct2, ctg.Forget);
+			addTag(ct5, ctg.ABC);
 
 			//Personal
 			seqnum = 0;
 			var pp = projects.Personal;
 			var ptt = taskTypes.Personal;
 			var ppt = propertyTypes.Personal;
+			var ptg = tags.Personal;
 			var pt1 = createTask(seqnum++, ptt.Home, TaskStatus.New, TaskPriority.Normal,
 			                     "after test, get book to read", null, pp, new[] {context.User2});
 			var pt2 = createTask(seqnum++, ptt.Bills, TaskStatus.New, TaskPriority.Normal,
@@ -342,12 +403,17 @@ namespace AGO.Tasks
 								 "emotion posters", null, pp, new[] { context.User2 });
 			createTaskProperty(pt1, ppt.Note, "use my new kindle HD");
 			createTaskProperty(pt4, ppt.Deadline, DateTime.Now.AddDays(1));
+			addTag(pt1, ptg.Optional);
+			addTag(pt2, ptg.Must);
+			addTag(pt3, ptg.Optional);
+			addTag(pt4, ptg.Must);
 
 			//Helpdesk
 			seqnum = 0;
 			var hp = projects.Helpdesk;
 			var htt = taskTypes.Helpdesk;
 			var hpt = propertyTypes.Helpdesk;
+			var htg = tags.Helpdesk;
 			var ht1 = createTask(seqnum++, htt.Consult, TaskStatus.Doing, TaskPriority.Normal,
 			                     "Can't connect to office vpn", DateTime.Now, hp, new[] {context.User2});
 			var ht2 = createTask(seqnum++, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
@@ -370,6 +436,14 @@ namespace AGO.Tasks
 			createTaskProperty(ht5, hpt.SpentHours, 1.2m);
 			createTaskProperty(ht5, hpt.ClientSatisfaction, "low");
 			createTaskProperty(ht5, hpt.ClientAdequacy, "poor");
+			addTag(ht1, htg.Level1);
+			addTag(ht2, htg.Level1);
+			addTag(ht3, htg.Level3);
+			addTag(ht4, htg.Level2);
+			addTag(ht5, htg.Level3);
+			addTag(ht6, htg.Level1);
+			addTag(ht7, htg.Level3);
+			addTag(ht8, htg.Level2);
 
 // ReSharper restore UnusedVariable
 		}

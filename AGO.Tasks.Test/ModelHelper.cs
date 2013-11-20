@@ -115,5 +115,22 @@ namespace AGO.Tasks.Test
 
 			return pt;
 		}
+
+		public TaskTagModel Tag(string name = "testTag", TaskTagModel parent = null, UserModel owner = null)
+		{
+			var tag = new TaskTagModel
+			          	{
+			          		ProjectCode = project,
+			          		Creator = currentUser(),
+			          		Name = name,
+							FullName = parent != null ? parent.FullName + " \\ " + name : name,
+			          		Parent = parent,
+			          		Owner = owner
+			          	};
+			session().Save(tag);
+			session().FlushMode = FlushMode.Auto;
+
+			return tag;
+		}
 	}
 }

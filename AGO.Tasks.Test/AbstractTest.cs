@@ -98,6 +98,11 @@ namespace AGO.Tasks.Test
 					delete from Tasks.TaskAgreementModel where
 						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
 					go
+					delete from Tasks.TaskToTagModel where
+						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					go
+					delete from Core.TagModel where ProjectCode = '{0}'
+					go
 					delete from Core.CustomPropertyInstanceModel where
 						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
 					go

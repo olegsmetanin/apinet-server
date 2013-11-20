@@ -58,7 +58,7 @@ namespace AGO.Tasks.Controllers
 			TaskPredefinedFilter predefined)
 		{
 			var predicate = MakeTasksPredicate(project, filter, predefined);
-			var adapter = new TaskListItemAdapter(_LocalizationService);
+			var adapter = new TaskListItemAdapter(_LocalizationService, _AuthController.CurrentUser());
 
 			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
 				.Select(adapter.Fill)

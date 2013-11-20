@@ -39,6 +39,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Build\Debug\AGO.Home.dll</HintPath>
     </Reference>
+    <Reference Include="Common.Logging, Version=2.1.2.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.2.1.2\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
     <Reference Include="FluentMigrator">
       <HintPath>..\packages\Migrator.1.0.0\lib\FluentMigrator.dll</HintPath>
       <Private>False</Private>
@@ -75,6 +78,7 @@
     <Compile Include="Controllers\DTO\StatusHistoryDTO.cs" />
     <Compile Include="Controllers\DTO\TaskAdapter.cs" />
     <Compile Include="Controllers\DTO\TaskDTO.cs" />
+    <Compile Include="Controllers\DTO\TaskTagDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
     <Compile Include="Controllers\DTO\UpdateResult.cs" />
     <Compile Include="Controllers\ModelsResponse.cs" />
@@ -82,6 +86,7 @@
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Migrations\TasksBootstrapMigration.cs" />
     <Compile Include="Migrations\VersionTableMetaData.cs" />
+    <Compile Include="Model\Dictionary\TaskTagModel.cs" />
     <Compile Include="Model\Dictionary\TaskTypeModel.cs" />
     <Compile Include="Model\ITasksModel.cs" />
     <Compile Include="Model\IStatusHistoryRecordModel.cs" />
@@ -93,6 +98,7 @@
     <Compile Include="Model\Task\TaskPriority.cs" />
     <Compile Include="Model\Task\TaskStatus.cs" />
     <Compile Include="Model\Task\TaskStatusHistoryModel.cs" />
+    <Compile Include="Model\Task\TaskToTagModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TasksException.cs" />
