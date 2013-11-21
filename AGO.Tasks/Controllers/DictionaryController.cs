@@ -13,6 +13,8 @@ using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
+using AGO.Home;
+using AGO.Home.Model.Projects;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -309,7 +311,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UpdateResult<TaskTagDTO[]> EditTag([NotEmpty] string project, [NotNull] TaskTagDTO model)
+		public UpdateResult<TaskTagDTO[]> EditTag([NotEmpty] string project, [NotNull] TaskTagDTO model, ICollection<Guid> viewed = null)
 		{
 			var adapter = new TaskTagAdapter();
 			TaskTagModel updatedTag = null;
@@ -355,11 +357,79 @@ namespace AGO.Tasks.Controllers
 				}
 			}
 
+			viewed = viewed ?? Enumerable.Empty<Guid>().ToArray();
 			result.Model = new[] {mainTagRes.Model}
 				.Concat(createdParents.Select(adapter.Fill))
-				.Concat(forUpdateOnClient.Cast<TaskTagModel>().Select(adapter.Fill)).ToArray();
+				.Concat(forUpdateOnClient
+							.Where(tag => viewed.Contains(tag.Id))
+							.Cast<TaskTagModel>()
+							.Select(adapter.Fill))
+				.ToArray();
 
 			return result;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<Guid> DeleteTags([NotEmpty] string project, ICollection<Guid> ids, Guid? replacementTagId = null, ICollection<Guid> viewed = null)
+		{
+			//Check project existing
+			if (!_CrudDao.Exists<ProjectModel>(query => query.Where(m => m.ProjectCode == project)))
+				throw new NoSuchProjectException();
+
+			//collect all tags with childs
+			var forDelete = new List<TagModel>();
+			var childs = ids.Select(id => _CrudDao.Get<TaskTagModel>(id)).Where(tag => tag != null).Cast<TagModel>().ToList();
+			while(childs.Count > 0)
+			{
+				forDelete.AddRange(childs);
+				childs = childs.SelectMany(tag => tag.Children).ToList();
+			}
+			//remove possible duplicates (distinct without eq comparer)
+			forDelete = forDelete.GroupBy(tag => tag.Id).Select(g => g.First()).ToList();
+
+			if (replacementTagId.HasValue && forDelete.Any(tag => tag.Id == replacementTagId.Value))
+				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
+
+			var s = _SessionProvider.CurrentSession;
+			var trn = s.BeginTransaction();
+			try
+			{
+				const string hqlUpdate =
+					"update versioned TaskToTagModel set TagId = :newTagId where TagId = :oldTagId";
+				var updateQuery = s.CreateQuery(hqlUpdate);
+
+				if (replacementTagId.HasValue)
+				{
+					foreach (var tag in forDelete)
+					{					
+						updateQuery
+							.SetGuid("newTagId", replacementTagId.Value)
+							.SetGuid("oldTagId", tag.Id)
+							.ExecuteUpdate();
+					}
+				}
+
+				if (_CrudDao.Exists<TaskToTagModel>(q => q.Where(m => m.Tag.IsIn(forDelete))))
+						throw new CannotDeleteReferencedItemException();
+				//remove leaf first, because of foreign key in db
+				foreach (var tag in forDelete.OrderByDescending(tag => tag.Level))
+				{
+					_CrudDao.Delete(tag);
+				}
+
+				trn.Commit();
+
+				viewed = viewed ?? Enumerable.Empty<Guid>().ToArray();
+				return forDelete
+					.Where(tag => ids.Contains(tag.Id) || viewed.Contains(tag.Id))
+					.Select(tag => tag.Id)
+					.ToList();
+			}
+			catch (Exception)
+			{
+				trn.Rollback();
+				throw;
+			}
 		}
     }
 }

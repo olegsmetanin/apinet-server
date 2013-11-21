@@ -44,6 +44,12 @@ namespace AGO.Core.Model.Dictionary
 			return Name;
 		}
 
+		[NotMapped, MetadataExclude]
+		public virtual int Level
+		{
+			get { return Parent != null ? Parent.Level + 1 : 1; }
+		}
+
 		#endregion
 	}
 }

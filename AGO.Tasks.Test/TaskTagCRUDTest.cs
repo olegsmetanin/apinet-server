@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
+using AGO.Tasks.Model.Task;
 using NUnit.Framework;
 
 namespace AGO.Tasks.Test
@@ -287,6 +289,162 @@ namespace AGO.Tasks.Test
 			
 			Assert.AreEqual(bbb.Id, sub.Parent.Id);
 			Assert.AreEqual(aaa.Id, bbb.Parent.Id);
+		}
+
+		[Test]
+		public void EditTagWithRestrictedReturn()
+		{
+			var parent = M.Tag("parent");
+			var child = M.Tag("child", parent);
+			var sub1 = M.Tag("sub1", child);
+			M.Tag("sub2", child);
+			_SessionProvider.FlushCurrentSession();
+
+			var param = new TaskTagDTO { Id = child.Id, ModelVersion = child.ModelVersion, Name = "new parent\\child2" };
+			var res = Controller.EditTag(TestProject, param, new [] { sub1.Id });
+			_SessionProvider.FlushCurrentSession(!res.Validation.Success);
+
+			Assert.IsTrue(res.Validation.Success);
+			Assert.AreEqual(3, res.Model.Length);
+			Assert.AreEqual("new parent\\child2", res.Model[0].Name);
+			Assert.AreEqual("new parent", res.Model[1].Name);
+			Assert.AreEqual("new parent\\child2\\sub1", res.Model[2].Name);
+		}
+
+		[Test]
+		public void DeleteTag()
+		{
+			var t1 = M.Tag("t1");
+			_SessionProvider.FlushCurrentSession();
+
+			var res = Controller.DeleteTags(TestProject, new[] {t1.Id}).ToArray();
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.IsNotNull(res);
+			Assert.AreEqual(1, res.Length);
+			Assert.AreEqual(t1.Id, res[0]);
+			t1 = Session.Get<TaskTagModel>(t1.Id);
+			Assert.IsNull(t1);
+		}
+
+		[Test]
+		public void DeleteTagWithChilds()
+		{
+			var parent = M.Tag("parent");
+			var child = M.Tag("child", parent);
+			var sub = M.Tag("sub", child);
+			_SessionProvider.FlushCurrentSession();
+
+			var res = Controller.DeleteTags(TestProject, new[] {parent.Id}, null, new [] { child.Id, sub.Id }).ToArray();
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.AreEqual(3, res.Length);
+			Assert.IsTrue(res.Contains(parent.Id));
+			Assert.IsTrue(res.Contains(child.Id));
+			Assert.IsTrue(res.Contains(sub.Id));
+			Assert.IsNull(Session.Get<TaskTagModel>(parent.Id));
+			Assert.IsNull(Session.Get<TaskTagModel>(child.Id));
+			Assert.IsNull(Session.Get<TaskTagModel>(sub.Id));
+		}
+
+		[Test]
+		public void DeleteParentAndChildTagInOneTime()
+		{
+			var parent = M.Tag("parent");
+			var child = M.Tag("child", parent);
+			var sub = M.Tag("sub", child);
+			_SessionProvider.FlushCurrentSession();
+
+			var res = Controller.DeleteTags(TestProject, new[] { child.Id, parent.Id }, null, new [] { sub.Id }).ToArray();
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.AreEqual(3, res.Length);
+			Assert.IsTrue(res.Contains(parent.Id));
+			Assert.IsTrue(res.Contains(child.Id));
+			Assert.IsTrue(res.Contains(sub.Id));
+			Assert.IsNull(Session.Get<TaskTagModel>(parent.Id));
+			Assert.IsNull(Session.Get<TaskTagModel>(child.Id));
+			Assert.IsNull(Session.Get<TaskTagModel>(sub.Id));
+		}
+
+		[Test, ExpectedException(typeof(CanNotReplaceWithItemThatWillBeDeletedTo))]
+		public void CanNotDeleteIfReplacementInChilds()
+		{
+			var parent = M.Tag("parent");
+			var child = M.Tag("child", parent);
+			var sub = M.Tag("sub", child);
+			_SessionProvider.FlushCurrentSession();
+
+			Controller.DeleteTags(TestProject, new[] { parent.Id }, sub.Id);
+		}
+
+		[Test, ExpectedException(typeof(CannotDeleteReferencedItemException))]
+		public void CanNotDeleteIfReferencedTag()
+		{
+			var task = M.Task(1);
+			var tag = M.Tag("t1");
+			var link = new TaskToTagModel
+			           	{
+			           		Creator = CurrentUser,
+			           		Task = task,
+			           		Tag = tag
+			           	};
+			Session.Save(link);
+			_SessionProvider.FlushCurrentSession();
+
+			Controller.DeleteTags(TestProject, new[] { tag.Id });
+		}
+
+		[Test]
+		public void DeleteTagWithReplacement()
+		{
+			var task1 = M.Task(1);
+			var task2 = M.Task(2);
+			var tag1 = M.Tag("t1");
+			var tag2 = M.Tag("t2");
+			var link1 = new TaskToTagModel
+			{
+				Creator = CurrentUser,
+				Task = task1,
+				Tag = tag1
+			};
+			var link2 = new TaskToTagModel
+			{
+				Creator = CurrentUser,
+				Task = task2,
+				Tag = tag1
+			};
+			Session.Save(link1);
+			Session.Save(link2);
+			_SessionProvider.FlushCurrentSession();
+
+			var res = Controller.DeleteTags(TestProject, new[] { tag1.Id }, tag2.Id).ToArray();
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.AreEqual(1, res.Length);
+			Assert.AreEqual(tag1.Id, res[0]);
+			Session.Refresh(task1);
+			Session.Refresh(task2);
+			Assert.AreEqual(tag2.Id, task1.Tags.First().Tag.Id);
+			Assert.AreEqual(tag2.Id, task2.Tags.First().Tag.Id);
+			Assert.IsNull(Session.Get<TaskTagModel>(tag1.Id));
+		}
+
+		[Test]
+		public void DeleteTagWithRestrictedReturn()
+		{
+			var parent = M.Tag("parent");
+			var child = M.Tag("child", parent);
+			var sub1 = M.Tag("sub1", child);
+			M.Tag("sub2", child);
+			_SessionProvider.FlushCurrentSession();
+
+			var res = Controller.DeleteTags(TestProject, new[] { child.Id }, null, new [] { sub1.Id }).ToArray();
+			_SessionProvider.FlushCurrentSession();
+
+			Assert.AreEqual(2, res.Length);
+			Assert.IsTrue(res.Contains(child.Id));
+			Assert.IsTrue(res.Contains(sub1.Id));
 		}
 	}
 }
