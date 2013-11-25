@@ -22,6 +22,7 @@ namespace AGO.Core.Model.Dictionary
 		[JsonProperty, NotLonger(1024)]
 		public virtual string FullName { get; set; }
 
+		[NotNull]
 		public virtual UserModel Owner { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? OwnerId { get; set; }

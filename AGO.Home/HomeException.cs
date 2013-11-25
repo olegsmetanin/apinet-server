@@ -11,10 +11,6 @@ namespace AGO.Home
 		}
 	}
 
-	public class NoInitialProjectStatusException : HomeException
-	{
-	}
-
 	public class NoSuchProjectException: HomeException
 	{
 	}

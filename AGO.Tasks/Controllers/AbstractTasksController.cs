@@ -71,12 +71,13 @@ namespace AGO.Tasks.Controllers
 		{
 			var result = new UpdateResult<TDTO> {Validation = new ValidationResult()};
 			Func<TModel> defaultFactory = () =>
-			                              	{
-			                              		var m = new TModel {Creator = _AuthController.CurrentUser()};
-												if (m is IProjectBoundModel)
-													((IProjectBoundModel) m).ProjectCode = project;
-			                              		return m;
-			                              	};
+			{
+			    var m = new TModel {Creator = _AuthController.CurrentUser()};
+			    var projectBoundModel = m as IProjectBoundModel;
+			    if (projectBoundModel != null)
+			        projectBoundModel.ProjectCode = project;
+			    return m;
+			};
 
 			try
 			{

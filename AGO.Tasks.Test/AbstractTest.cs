@@ -28,38 +28,31 @@ namespace AGO.Tasks.Test
 			var admin = LoginAdmin();
 			
 			var type = new ProjectTypeModel
-			           	{
-			           		Creator = admin,
-							ProjectCode = TestProject,
-			           		Name = "Управление задачами",
-			           		Module = typeof (ModuleDescriptor).Assembly.FullName
-			           	};
+			{
+			    Creator = admin,
+				ProjectCode = TestProject,
+			    Name = "Управление задачами",
+			    Module = typeof (ModuleDescriptor).Assembly.FullName
+			};
 			_CrudDao.Store(type);
-			var status = new ProjectStatusModel
-			             	{
-			             		Creator = admin,
-			             		ProjectCode = TestProject,
-			             		Name = "В работе",
-			             	};
-			_CrudDao.Store(status);
 
 			var p = new ProjectModel
-			        	{
-							Creator = admin,
-			        		ProjectCode = TestProject,
-			        		Name = "Unit test project: " + TestProject,
-							Type = type,
-							Status = status
-			        	};
+			{
+				Creator = admin,
+			    ProjectCode = TestProject,
+			    Name = "Unit test project: " + TestProject,
+				Type = type,
+				Status = ProjectStatus.Doing
+			};
 			_CrudDao.Store(p);
 
 			var projAdmin = new ProjectParticipantModel
-			                  	{
-			                  		Project = p,
-			                  		User = admin,
-			                  		GroupName = "Managers",
-			                  		IsDefaultGroup = true
-			                  	};
+			{
+			    Project = p,
+			    User = admin,
+			    GroupName = "Managers",
+			    IsDefaultGroup = true
+			};
 			_CrudDao.Store(projAdmin);
 
 			_SessionProvider.CloseCurrentSession();

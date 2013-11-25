@@ -35,8 +35,6 @@ namespace AGO.Tasks
 					.Where(m => m.Login == "user2@apinet-test.com").Take(1).List().FirstOrDefault(),
 				User3 = CurrentSession.QueryOver<UserModel>()
 					.Where(m => m.Login == "user3@apinet-test.com").Take(1).List().FirstOrDefault(),
-				InitialProjectStatus = CurrentSession.QueryOver<ProjectStatusModel>()
-					.Where(m => m.IsInitial).Take(1).List().FirstOrDefault(),
 				UrgentTag = CurrentSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Name == "Urgent").SingleOrDefault(),
 				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
@@ -50,7 +48,7 @@ namespace AGO.Tasks
 			};
 
 			if (context.Admin == null || context.User1 == null || context.User2 == null ||
-					context.User3 == null || context.InitialProjectStatus == null || context.UrgentTag == null)
+					context.User3 == null || context.UrgentTag == null)
 				throw new Exception("Test data inconsistency");
 
 			_CrudDao.Store(context.ProjectType);
@@ -78,7 +76,7 @@ namespace AGO.Tasks
 					Name = name ?? "Task management project",
 					Description = description ?? "Description of task management project ",
 					Type = context.ProjectType,
-					Status = context.InitialProjectStatus,
+					Status = ProjectStatus.New,
 				};
 				_CrudDao.Store(project);
 
@@ -87,7 +85,7 @@ namespace AGO.Tasks
 					Creator = context.Admin,
 					StartDate = DateTime.Now,
 					Project = project,
-					Status = context.InitialProjectStatus
+					Status = ProjectStatus.New
 				});
 
 				var pcAdmin = new ProjectParticipantModel { User = context.Admin, Project = project };

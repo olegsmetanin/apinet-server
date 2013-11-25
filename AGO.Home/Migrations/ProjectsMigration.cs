@@ -18,25 +18,18 @@ namespace AGO.Home.Migrations
 				.WithValueColumn<ProjectTypeModel>(m => m.Description)
 				.WithValueColumn<ProjectTypeModel>(m => m.Module);
 
-			Create.SecureModelTable<ProjectStatusModel>()
-				.WithValueColumn<ProjectStatusModel>(m => m.ProjectCode)
-				.WithValueColumn<ProjectStatusModel>(m => m.Name)
-				.WithValueColumn<ProjectStatusModel>(m => m.Description)
-				.WithValueColumn<ProjectStatusModel>(m => m.IsInitial)
-				.WithValueColumn<ProjectStatusModel>(m => m.IsFinal);
-
 			Create.SecureModelTable<ProjectModel>()
 				.WithValueColumn<ProjectModel>(m => m.ProjectCode)
 				.WithValueColumn<ProjectModel>(m => m.Name)
 				.WithValueColumn<ProjectModel>(m => m.Description)
 				.WithRefColumn<ProjectModel>(m => m.Type)
-				.WithRefColumn<ProjectModel>(m => m.Status);
+				.WithValueColumn<ProjectModel>(m => m.Status);
 
 			Create.SecureModelTable<ProjectStatusHistoryModel>()
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.StartDate)
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.EndDate)
 				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Project)
-				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Status);
+				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Status);
 
 			Create.CoreModelTable<ProjectParticipantModel>()
 				.WithValueColumn<ProjectParticipantModel>(m => m.GroupName)

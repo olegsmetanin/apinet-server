@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -47,140 +46,12 @@ namespace AGO.Home.Controllers
 
 		#region Json endpoints
 
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectStatuses(
-			[InRange(0, null)] int page,
-			string term)
-		{
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
-				.OrderBy(m => m.Name).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
-		}
+		private static IDictionary<string, LookupEntry[]> projectStatuses;
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectStatusDescriptions(
-			[InRange(0, null)] int page,
-			string term)
+		public IEnumerable<LookupEntry> LookupProjectStatuses(string term, [InRange(0, null)] int page)
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
-				.Select(Projections.Distinct(Projections.Property("Description")))
-				.OrderBy(m => m.Description).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Description).IsLike(term, MatchMode.Anywhere);
-
-			return _CrudDao.PagedQuery(query, page).LookupList(m => m.Description);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<ProjectStatusModel> GetProjectStatuses(
-			[InRange(0, null)] int page,
-			[NotNull] ICollection<IModelFilterNode> filter,
-			[NotNull] ICollection<SortInfo> sorters)
-		{
-			return _FilteringDao.List<ProjectStatusModel>(filter, new FilteringOptions
-			{
-				Page = page,
-				Sorters = sorters
-			});
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public int GetProjectStatusesCount([NotNull] ICollection<IModelFilterNode> filter)
-		{
-			return _FilteringDao.RowCount<ProjectStatusModel>(filter);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public ProjectStatusModel GetProjectStatus([NotEmpty] Guid id, bool dontFetchReferences)
-		{
-			return GetModel<ProjectStatusModel, Guid>(id, dontFetchReferences);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> ProjectStatusMetadata()
-		{
-			return MetadataForModelAndRelations<ProjectStatusModel>();
-		}
-
-		[JsonEndpoint, RequireAuthorization(true)]
-		public object EditProjectStatus([NotNull] ProjectStatusModel model)
-		{
-			var validation = new ValidationResult();
-
-			try
-			{
-				var persistentModel = default(Guid).Equals(model.Id)
-					? new ProjectStatusModel { Creator = _AuthController.CurrentUser() }
-					: _CrudDao.Get<ProjectStatusModel>(model.Id, true);
-				persistentModel.Name = model.Name.TrimSafe();
-				persistentModel.Description = model.Description.TrimSafe();
-
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
-				if (!validation.Success)
-					return validation;
-				
-				_CrudDao.Store(persistentModel);
-				return persistentModel;
-			}
-			catch (Exception e)
-			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
-				return validation;
-			}			
-		}
-
-		[JsonEndpoint, RequireAuthorization(true)]
-		public bool DeleteProjectStatuses([NotEmpty] ICollection<Guid> ids, Guid? replaceId)
-		{
-			ids = ids.Where(id => !default(Guid).Equals(id)).ToList();
-			replaceId = replaceId ?? default(Guid);
-
-			if (ids.Any(replaceId.Value.Equals))
-				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
-			
-			var session = _SessionProvider.CurrentSession;
-			using (var transaction = _SessionProvider.CurrentSession.BeginTransaction())
-			{
-				var replace = !default(Guid).Equals(replaceId.Value);
-				var updateQuery = replace 
-					? session.CreateQuery("update versioned ProjectModel set StatusId = :newId where StatusId = :oldId") 
-					: null;
-				var historyUpdateQuery = replace
-					? session.CreateQuery("update versioned ProjectStatusHistoryModel set StatusId = :newId where StatusId = :oldId")
-					: null;
-
-				foreach (var id in ids)
-				{
-					if (replace)
-					{
-						updateQuery
-							.SetGuid("newId", replaceId.Value)
-							.SetGuid("oldId", id)
-							.ExecuteUpdate();
-						historyUpdateQuery
-							.SetGuid("newId", replaceId.Value)
-							.SetGuid("oldId", id)
-							.ExecuteUpdate();
-					}
-
-					var model = _CrudDao.Get<ProjectStatusModel>(id, true);
-
-					if (_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.Status == model)))
-						throw new CannotDeleteReferencedItemException();
-
-					if (_CrudDao.Exists<ProjectStatusHistoryModel>(q => q.Where(m => m.Status == model)))
-						throw new CannotDeleteReferencedItemException();
-
-					_CrudDao.Delete(model);
-				}
-
-				transaction.Commit();
-			}
-
-			return true;
+			return LookupEnum<ProjectStatus>(term, page, ref projectStatuses);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

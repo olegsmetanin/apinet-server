@@ -53,11 +53,6 @@ namespace AGO.Home.Controllers
 
 			try
 			{
-				var initialStatus = _SessionProvider.CurrentSession.QueryOver<ProjectStatusModel>()
-					.Where(m => m.IsInitial).Take(1).List().FirstOrDefault();
-				if (initialStatus == null)
-					throw new NoInitialProjectStatusException();
-
 				var newProject = new ProjectModel
 				{
 					Creator = _AuthController.CurrentUser(),
@@ -67,7 +62,7 @@ namespace AGO.Home.Controllers
 					Type = model.TypeId != null && !default(Guid).Equals(model.TypeId)
 						? _CrudDao.Get<ProjectTypeModel>(model.TypeId)
 						: null,
-					Status = initialStatus,
+					Status = ProjectStatus.New,
 				};
 
 				_ModelProcessingService.ValidateModelSaving(newProject, validation);
@@ -80,7 +75,7 @@ namespace AGO.Home.Controllers
 				{
 					StartDate = DateTime.Now,
 					Project = newProject,
-					Status = initialStatus
+					Status = ProjectStatus.New
 				};
 				_CrudDao.Store(statusHistoryRow);
 

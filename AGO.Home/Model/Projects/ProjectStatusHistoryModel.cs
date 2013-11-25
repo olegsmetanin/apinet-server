@@ -1,7 +1,6 @@
 ﻿using System;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Dictionary.Projects;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using Newtonsoft.Json;
@@ -23,10 +22,8 @@ namespace AGO.Home.Model.Projects
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ProjectId { get; set; }
 
-		[JsonProperty, NotNull]
-		public virtual ProjectStatusModel Status { get; set; }
-		[ReadOnlyProperty, MetadataExclude]
-		public virtual Guid? StatusId { get; set; }
+		[JsonProperty]
+		public virtual ProjectStatus Status { get; set; }
 
 		#endregion
 	}

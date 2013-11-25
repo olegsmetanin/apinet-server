@@ -64,8 +64,8 @@
     <Compile Include="Migrations\ProjectsMigration.cs" />
     <Compile Include="Migrations\VersionTableMetadata.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
-    <Compile Include="Model\Dictionary\Projects\ProjectStatusModel.cs" />
     <Compile Include="Model\IHomeModel.cs" />
+    <Compile Include="Model\Projects\ProjectStatus.cs" />
     <Compile Include="Model\Projects\ProjectToTagModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Projects\ProjectParticipantModel.cs" />
@@ -96,6 +96,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\IHomeModel.ru.resx">
       <DependentUpon>IHomeModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Projects\ProjectStatus.resx">
+      <DependentUpon>ProjectStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Projects\ProjectStatus.ru.resx">
+      <DependentUpon>ProjectStatus.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

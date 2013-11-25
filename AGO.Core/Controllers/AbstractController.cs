@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
@@ -156,6 +157,40 @@ namespace AGO.Core.Controllers
 				PageSize = 1,
 				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
 			}).FirstOrDefault();
+		}
+
+		protected IEnumerable<LookupEntry> LookupEnum<TEnum>(
+			string term,
+			int page,
+			ref IDictionary<string, LookupEntry[]> cache)
+		{
+			if (page > 0) return Enumerable.Empty<LookupEntry>(); //while size of enum less than defaul page size (10)
+
+			var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+			if (cache == null)
+			{
+				//no need to locking - replace with same value from another thread has no negative effect
+				cache = new Dictionary<string, LookupEntry[]>();
+			}
+			if (!cache.ContainsKey(lang))
+			{
+				//no need to locking - replace with same value from another thread has no negative effect
+				cache[lang] = Enum.GetValues(typeof(TEnum))
+					.OfType<TEnum>() //GetValues preserve enum order, no OrderBy used
+					.Select(s => new LookupEntry
+					{
+						Id = s.ToString(),
+						Text = (_LocalizationService.MessageForType(s.GetType(), s) ?? s.ToString())
+					})
+					.ToArray();
+			}
+
+			if (term.IsNullOrWhiteSpace())
+				return cache[lang];
+
+			return cache[lang]
+				.Where(l => l.Text.IndexOf(term, StringComparison.InvariantCultureIgnoreCase) >= 0)
+				.ToArray();
 		}
 
 		#endregion

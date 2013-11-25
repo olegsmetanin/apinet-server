@@ -30,10 +30,8 @@ namespace AGO.Home.Model.Projects
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? TypeId { get; set; }
 
-		[JsonProperty, NotNull, Prefetched]
-		public virtual ProjectStatusModel Status { get; set; }
-		[ReadOnlyProperty, MetadataExclude]
-		public virtual Guid? StatusId { get; set; }
+		[JsonProperty]
+		public virtual ProjectStatus Status { get; set; }
 
 		[PersistentCollection(CascadeType = CascadeType.Delete)]
 		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return _StatusHistory; } set { _StatusHistory = value; } }
