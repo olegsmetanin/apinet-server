@@ -112,6 +112,17 @@ namespace AGO.Tasks.Model.Task
     	}
     	private ISet<TaskCustomPropertyModel> customPropsStore = new HashSet<TaskCustomPropertyModel>();
 
+		/// <summary>
+		/// Теги задачи (проектные и персональные)
+		/// </summary>
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+    	public virtual ISet<TaskToTagModel> Tags
+    	{
+    		get { return tagsStore; }
+			set { tagsStore = value; }
+    	}
+		private ISet<TaskToTagModel> tagsStore = new HashSet<TaskToTagModel>();
+
     	#endregion
 
 		public virtual TaskStatusHistoryModel ChangeStatus(TaskStatus newStatus, UserModel changer)

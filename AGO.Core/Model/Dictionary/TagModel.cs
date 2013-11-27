@@ -16,10 +16,10 @@ namespace AGO.Core.Model.Dictionary
 		[JsonProperty, NotLonger(32)]
 		public virtual string ProjectCode { get; set; }
 
-		[JsonProperty, NotLonger(128), NotEmpty, UniqueProperty("ProjectCode", "Owner")]
+		[JsonProperty, NotLonger(128), NotEmpty]
 		public virtual string Name { get; set; }
 
-		[JsonProperty, NotLonger(1024)]
+		[JsonProperty, NotLonger(1024), UniqueProperty("ProjectCode", "Owner")]
 		public virtual string FullName { get; set; }
 
 		[NotNull]
@@ -32,7 +32,7 @@ namespace AGO.Core.Model.Dictionary
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ParentId { get; set; }
 
-		[PersistentCollection]
+		[PersistentCollection(Column = "ParentId")]
 		public virtual ISet<TagModel> Children { get { return _Children; } set { _Children = value; } }
 		private ISet<TagModel> _Children = new HashSet<TagModel>();
 
@@ -43,6 +43,12 @@ namespace AGO.Core.Model.Dictionary
 		public override string ToString()
 		{
 			return Name;
+		}
+
+		[NotMapped, MetadataExclude]
+		public virtual int Level
+		{
+			get { return Parent != null ? Parent.Level + 1 : 1; }
 		}
 
 		#endregion

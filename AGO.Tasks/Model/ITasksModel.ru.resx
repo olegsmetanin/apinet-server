@@ -186,6 +186,9 @@
   <data name="TaskModel.TaskType" xml:space="preserve">
     <value>Тип задачи</value>
   </data>
+  <data name="TaskToTagModel.Tag" xml:space="preserve">
+    <value>Тег</value>
+  </data>
   <data name="ViewOrder" xml:space="preserve">
     <value>Порядок вывода</value>
   </data>

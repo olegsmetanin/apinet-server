@@ -11,6 +11,7 @@ using AGO.Core.Model;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Controllers.DTO;
+using Common.Logging;
 using NHibernate;
 using NHibernate.Criterion;
 
@@ -98,7 +99,9 @@ namespace AGO.Tasks.Controllers
 			}
 			catch (Exception e)
 			{
-				result.Validation.AddErrors(_LocalizationService.MessageForException(e));
+				LogManager.GetLogger(GetType()).Error(e.GetBaseException().Message, e);
+				var msg = _LocalizationService.MessageForException(e) ?? "Unexpected error";
+				result.Validation.AddErrors(msg);
 			}
 
 			return result;

@@ -135,6 +135,9 @@
   <data name="CurrentUserIsNotAgreemerInTaskException" xml:space="preserve">
     <value>Текущий пользователь не является согласующим задачи</value>
   </data>
+  <data name="TagCreationNotSupportedException" xml:space="preserve">
+    <value>Создание тега в этом методе не поддерживается</value>
+  </data>
   <data name="TaskCreationNotSupportedException" xml:space="preserve">
     <value>Создание задачи в этом методе не поддерживается</value>
   </data>

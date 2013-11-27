@@ -4,6 +4,7 @@ using System.Linq;
 using AGO.Core.Controllers;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Security;
 using AGO.Tasks.Model;
 using AGO.Tasks.Model.Task;
 
@@ -50,6 +51,16 @@ namespace AGO.Tasks.Controllers.DTO
 			       	};
 		}
 
+		public static TaskTagLookupEntry ToTag(TaskToTagModel tagLink)
+		{
+			return new TaskTagLookupEntry
+			       	{
+			       		Id = tagLink.Tag.Id.ToString(),
+			       		Text = tagLink.Tag.FullName,
+			       		Personal = tagLink.Tag.Owner != null
+			       	};
+		}
+
 		public override TDTO Fill(TaskModel model)
 		{
 			var dto = base.Fill(model);
@@ -70,8 +81,23 @@ namespace AGO.Tasks.Controllers.DTO
 	/// </summary>
 	public class TaskListItemAdapter: TaskAdapter<TaskListItemDTO>
 	{
-		public TaskListItemAdapter(ILocalizationService localizationService) : base(localizationService)
+		private UserModel currentUser;
+
+		public TaskListItemAdapter(ILocalizationService localizationService, UserModel currentUser) : base(localizationService)
 		{
+			if (currentUser == null)
+				throw new ArgumentNullException("currentUser");
+
+			this.currentUser = currentUser;
+		}
+
+		public override TaskListItemDTO Fill(TaskModel task)
+		{
+			var dto = base.Fill(task);
+			//Только общие или свои персональные теги
+			var allowed = task.Tags.Where(tl => tl.Tag.Owner == null || tl.Tag.Owner.Id == currentUser.Id);
+			dto.Tags = allowed.OrderBy(tl => tl.Tag.Owner).ThenBy(tl => tl.Tag.FullName).Select(ToTag).ToArray();
+			return dto;
 		}
 	}
 
