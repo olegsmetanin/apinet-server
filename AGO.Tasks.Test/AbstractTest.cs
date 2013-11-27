@@ -70,8 +70,6 @@ namespace AGO.Tasks.Test
 					go
 					delete from Home.ProjectModel where ProjectCode = '{0}'
 					go
-					delete from Home.ProjectStatusModel where ProjectCode = '{0}'
-					go
 					delete from Home.ProjectTypeModel where ProjectCode = '{0}'
 					go", TestProject), conn);
 			_SessionProvider.CloseCurrentSession();

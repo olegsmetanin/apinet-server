@@ -51,13 +51,12 @@ namespace AGO.Tasks.Controllers.DTO
 			       	};
 		}
 
-		public static TaskTagLookupEntry ToTag(TaskToTagModel tagLink)
+		public static LookupEntry ToTag(TaskToTagModel tagLink)
 		{
-			return new TaskTagLookupEntry
+			return new LookupEntry
 			       	{
 			       		Id = tagLink.Tag.Id.ToString(),
-			       		Text = tagLink.Tag.FullName,
-			       		Personal = tagLink.Tag.Owner != null
+			       		Text = tagLink.Tag.FullName
 			       	};
 		}
 

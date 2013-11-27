@@ -246,24 +246,24 @@ namespace AGO.Tasks
 			{
 				Software = new
 				{
-					Refactor = factory("Refactor this", projects.Software, null),
-					NeedsLearning = factory("Needs learning", projects.Software, context.User1)
+					Refactor = factory("Refactor this", projects.Software, context.Admin),
+					NeedsLearning = factory("Needs learning", projects.Software, context.Admin)
 				},
 				CRM = new
 				{
-				    ABC = factory("ABC", projects.CRM, null),
-					Forget = factory("Forget", projects.CRM, null)
+					ABC = factory("ABC", projects.CRM, context.Admin),
+					Forget = factory("Forget", projects.CRM, context.Admin)
 				},
 				Personal = new
 				{
-				    Must = factory("must", projects.Personal, context.User2),
-					Optional = factory("optional", projects.Personal, context.User2)
+					Must = factory("must", projects.Personal, context.Admin),
+					Optional = factory("optional", projects.Personal, context.Admin)
 				},
 				Helpdesk = new
 				{
-				    Level1 = factory("Escalation level 1", projects.Helpdesk, null),
-					Level2 = factory("Escalation level 2", projects.Helpdesk, null),
-					Level3 = factory("Escalation level 3", projects.Helpdesk, null)
+					Level1 = factory("Escalation level 1", projects.Helpdesk, context.Admin),
+					Level2 = factory("Escalation level 2", projects.Helpdesk, context.Admin),
+					Level3 = factory("Escalation level 3", projects.Helpdesk, context.Admin)
 				}
 			};
 		}

@@ -125,7 +125,7 @@ namespace AGO.Tasks.Test
 			          		Name = name,
 							FullName = parent != null ? parent.FullName + " \\ " + name : name,
 			          		Parent = parent,
-			          		Owner = owner
+			          		Owner = owner ?? currentUser()
 			          	};
 			session().Save(tag);
 			session().FlushMode = FlushMode.Auto;

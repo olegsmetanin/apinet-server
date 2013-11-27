@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
@@ -162,14 +161,14 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<TaskTagLookupEntry> LookupTags(
+		public IEnumerable<LookupEntry> LookupTags(
 			[NotEmpty] string project, 
 			string term,
 			[InRange(0, null)] int page)
 		{
-			//доступны только проектные теги либо персональные текущего пользователя
+			//доступны только персональные теги текущего пользователя
 			var query = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project && (m.Owner == null || m.Owner.Id == _AuthController.CurrentUser().Id));
+				.Where(m => m.ProjectCode == project && m.Owner.Id == _AuthController.CurrentUser().Id);
 			if (!term.IsNullOrWhiteSpace())
 			{
 				foreach (var termPart in term.Split(new []{',', ' ', '\\'}, StringSplitOptions.RemoveEmptyEntries))
@@ -179,10 +178,7 @@ namespace AGO.Tasks.Controllers
 			}
 			query = query.OrderBy(m => m.FullName).Asc;
 
-			return _CrudDao.PagedQuery(query, page)
-				.List<TaskTagModel>()
-				.Select(m => new TaskTagLookupEntry {Id = m.Id.ToString(), Text = m.FullName, Personal = m.Owner != null})
-				.ToArray();
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -201,14 +197,12 @@ namespace AGO.Tasks.Controllers
 				.ToArray();
 		}
 
-		private TaskTagModel FindOrCreate(string project, string[] path, bool personal, ref List<TaskTagModel> created)
+		private TaskTagModel FindOrCreate(string project, string[] path, ref List<TaskTagModel> created)
 		{
-			var queryTpl = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project);
-			queryTpl = personal
-				? queryTpl.Where(m => m.Owner.Id == _AuthController.CurrentUser().Id)
-				: queryTpl.WhereRestrictionOn(m => m.Owner).IsNull();
-			var parent = queryTpl.Where(m => m.FullName == string.Join("\\", path)).SingleOrDefault();
+			var parent = Session.QueryOver<TaskTagModel>()
+				.Where(m => m.ProjectCode == project && m.Owner.Id == _AuthController.CurrentUser().Id && 
+					m.FullName == string.Join("\\", path))
+				.SingleOrDefault();
 			if (parent != null) return parent; //already exists
 
 			string currentPath = null;
@@ -217,7 +211,8 @@ namespace AGO.Tasks.Controllers
 			{
 				currentPath = i == 0 ? path[i].TrimSafe() : currentPath + "\\" + path[i].TrimSafe();
 				var cpath = currentPath;
-				parent = queryTpl.Where(m => m.FullName == cpath).SingleOrDefault();
+				parent = Session.QueryOver<TaskTagModel>()
+					.Where(m => m.ProjectCode == project && m.Owner.Id == _AuthController.CurrentUser().Id).Where(m => m.FullName == cpath).SingleOrDefault();
 				
 				if (parent == null)
 				{
@@ -225,7 +220,7 @@ namespace AGO.Tasks.Controllers
 					                	{
 					                		ProjectCode = project,
 					                		Creator = _AuthController.CurrentUser(),
-					                		Owner = personal ? _AuthController.CurrentUser() : null,
+					                		Owner = _AuthController.CurrentUser(),
 											Parent = currentParent,
 											Name = path[i].TrimSafe(),
 					                		FullName = currentPath
@@ -238,7 +233,7 @@ namespace AGO.Tasks.Controllers
 			return currentParent;
 		}
 
-		private List<TaskTagModel> UpdateTagNameAndParent(string project, TaskTagDTO model, bool personal, TaskTagModel tag)
+		private List<TaskTagModel> UpdateTagNameAndParent(string project, TaskTagDTO model, TaskTagModel tag)
 		{
 			var createdParents = new List<TaskTagModel>();
 			var parts = model.Name.TrimSafe().Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
@@ -248,7 +243,7 @@ namespace AGO.Tasks.Controllers
 			}
 			else if (parts.Length > 1)
 			{
-				tag.Parent = FindOrCreate(project, parts.Take(parts.Length - 1).ToArray(), personal, ref createdParents);
+				tag.Parent = FindOrCreate(project, parts.Take(parts.Length - 1).ToArray(), ref createdParents);
 				tag.Name = parts[parts.Length - 1];
 				tag.FullName = tag.Parent.FullName + "\\" + tag.Name;
 			}
@@ -256,7 +251,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UpdateResult<TaskTagDTO[]> CreateTag([NotEmpty] string project, [NotNull] TaskTagDTO model, bool personal = true)
+		public UpdateResult<TaskTagDTO[]> CreateTag([NotEmpty] string project, [NotNull] TaskTagDTO model)
 		{
 			var adapter = new TaskTagAdapter();
 			var result = new UpdateResult<TaskTagDTO[]> {Model = new TaskTagDTO[0]};
@@ -264,8 +259,8 @@ namespace AGO.Tasks.Controllers
 			var res = Edit<TaskTagModel, TaskTagDTO>(model.Id, project,
 				(tag, vr) =>
 					{
-						tag.Owner = personal ? _AuthController.CurrentUser() : null;
-						createdParents = UpdateTagNameAndParent(project, model, personal, tag);
+						tag.Owner = _AuthController.CurrentUser();
+						createdParents = UpdateTagNameAndParent(project, model, tag);
 					},
 				adapter.Fill);
 			result.Validation = res.Validation;
@@ -286,7 +281,7 @@ namespace AGO.Tasks.Controllers
 			var mainTagRes = Edit<TaskTagModel, TaskTagDTO>(model.Id, project,
 				(tag, vr) =>
 					{
-						createdParents = UpdateTagNameAndParent(project, model, tag.Owner != null, tag);
+						createdParents = UpdateTagNameAndParent(project, model, tag);
 						updatedTag = tag;
 					},
 				adapter.Fill,

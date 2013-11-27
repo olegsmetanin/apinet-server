@@ -132,7 +132,7 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(vr.Success);
 
 			param.Name = "grp";
-			vr = Controller.CreateTag(TestProject, param, false).Validation;
+			vr = Controller.CreateTag(TestProject, param).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			var grp = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
@@ -144,7 +144,7 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(vr.Success);
 
 			param.Name = "parent\\child\\subchild";
-			vr = Controller.CreateTag(TestProject, param, false).Validation;
+			vr = Controller.CreateTag(TestProject, param).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			var parent = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
@@ -172,7 +172,7 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(vr.Success);
 
 			param.Name = "parent\\child2";
-			vr = Controller.CreateTag(TestProject, param, false).Validation;
+			vr = Controller.CreateTag(TestProject, param).Validation;
 			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			var child2 = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
@@ -200,23 +200,15 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CreateDuplicateTagError()
 		{
-			var t1 = M.Tag("t1");
+			M.Tag("t1");
 			_SessionProvider.FlushCurrentSession();
 
 			var param = new TaskTagDTO { Name = "t1" };
-			var vr = Controller.CreateTag(TestProject, param, false);
+			var vr = Controller.CreateTag(TestProject, param);
+			_SessionProvider.FlushCurrentSession(!vr.Validation.Success);
 
 			Assert.IsFalse(vr.Validation.Success);
 			Assert.IsTrue(vr.Validation.FieldErrors.Any(fe => fe.Key == "FullName"));
-
-// ReSharper disable RedundantArgumentDefaultValue
-			//group and personal tags not duplicated
-			vr = Controller.CreateTag(TestProject, param, true);
-// ReSharper restore RedundantArgumentDefaultValue
-			
-			Assert.IsTrue(vr.Validation.Success);
-			Assert.AreEqual(vr.Model[0].Name, "t1");
-			Assert.AreNotEqual(t1.Id, vr.Model[0].Id);
 		}
 
 		[Test]
@@ -281,10 +273,10 @@ namespace AGO.Tasks.Test
 			sub = Session.Get<TaskTagModel>(sub.Id);
 			Assert.AreEqual("aaa\\bbb\\sub", sub.FullName);
 			var aaa = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Owner == null && m.FullName == "aaa")
+				.Where(m => m.ProjectCode == TestProject && m.Owner == CurrentUser && m.FullName == "aaa")
 				.SingleOrDefault();
 			var bbb = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Owner == null && m.FullName == "aaa\\bbb")
+				.Where(m => m.ProjectCode == TestProject && m.Owner == CurrentUser && m.FullName == "aaa\\bbb")
 				.SingleOrDefault();
 			
 			Assert.AreEqual(bbb.Id, sub.Parent.Id);

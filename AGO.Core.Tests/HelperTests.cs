@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace AGO.Core.Tests
 {
-	[TestFixture]
+	[TestFixture, Ignore]
 	public class HelperTests : AbstractPersistenceApplication
 	{
 		[TestFixtureSetUp]

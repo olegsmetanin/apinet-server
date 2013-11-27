@@ -23,7 +23,7 @@ namespace AGO.Tasks.Controllers.DTO
 
 	public class TaskListItemDTO: BaseTaskDTO
 	{
-		public IEnumerable<TaskTagLookupEntry> Tags { get; set; }
+		public IEnumerable<LookupEntry> Tags { get; set; }
 	}
 
 	public class TaskListItemDetailsDTO
@@ -92,18 +92,6 @@ namespace AGO.Tasks.Controllers.DTO
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public string Comment;
-	}
-
-	public struct TaskTagLookupEntry
-	{
-		[JsonProperty("id")]
-		public string Id { get; set; }
-
-		[JsonProperty("text")]
-		public string Text { get; set; }
-
-		[JsonProperty("personal")]
-		public bool Personal { get; set; }
 	}
 
 	public class TaskPropChangeDTO: ModelDTO
