@@ -1,4 +1,5 @@
 ﻿using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Migration;
 
@@ -63,6 +64,35 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<TagModel>(m => m.FullName)
 				.WithRefColumn<TagModel>(m => m.Parent)
 				.WithRefColumn<TagModel>(m => m.Owner);
+
+			Create.CoreModelTable<ReportingServiceDescriptorModel>()
+				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.Name)
+				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.EndPoint)
+				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.LongRunning);
+			Create.CoreModelTable<ReportTemplateModel>()
+				.WithValueColumn<ReportTemplateModel>(m => m.Name)
+				.WithBinaryColumn<ReportTemplateModel>(m => m.TemplateContent)
+				.WithValueColumn<ReportTemplateModel>(m => m.LastChange);
+			Create.CoreModelTable<ReportSettingModel>()
+				.WithValueColumn<ReportSettingModel>(m => m.Name)
+				.WithValueColumn<ReportSettingModel>(m => m.GeneratorType)
+				.WithValueColumn<ReportSettingModel>(m => m.DataGeneratorType)
+				.WithValueColumn<ReportSettingModel>(m => m.ReportParameterType)
+				.WithRefColumn<ReportSettingModel>(m => m.ReportTemplate);
+			Create.CoreModelTable<ReportTaskModel>()
+				.WithValueColumn<ReportTaskModel>(m => m.Name)
+				.WithRefColumn<ReportTaskModel>(m => m.ReportSetting)
+				.WithRefColumn<ReportTaskModel>(m => m.ReportingService)
+				.WithValueColumn<ReportTaskModel>(m => m.Parameters)
+				.WithValueColumn<ReportTaskModel>(m => m.State)
+				.WithValueColumn<ReportTaskModel>(m => m.DateGenerationProgress)
+				.WithValueColumn<ReportTaskModel>(m => m.ReportGenerationProgress)
+				.WithValueColumn<ReportTaskModel>(m => m.StartedAt)
+				.WithValueColumn<ReportTaskModel>(m => m.CompletedAt)
+				.WithValueColumn<ReportTaskModel>(m => m.ErrorMsg)
+				.WithValueColumn<ReportTaskModel>(m => m.ErrorDetails)
+				.WithBinaryColumn<ReportTaskModel>(m => m.ResultContent)
+				.WithValueColumn<ReportTaskModel>(m => m.ResultContentType);
 		}
 
 		public override void Down()

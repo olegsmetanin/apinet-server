@@ -605,7 +605,7 @@ namespace AGO.Core.Migration
 		
 		#endregion
 
-		#region Docstore
+		#region Core
 
 		public static ICreateTableWithColumnSyntax CoreModelTable<TModel>(this ICreateExpressionRoot root)
 			where TModel : IIdentifiedModel

@@ -10,6 +10,8 @@ using AGO.Core.Config;
 using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Reporting;
+using AGO.Reporting.Common;
 
 namespace AGO.Core.Application
 {
@@ -74,6 +76,8 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^ModelProcessing_(.*)", KeyValueProvider)).ApplyTo(service));
 
 			IocContainer.RegisterAll<IModelValidator>(AllModelValidators);
+
+			IocContainer.Register<IReportingRepository, ReportingRepository>();
 		}
 
 		protected virtual IEnumerable<Type> AllModelValidators

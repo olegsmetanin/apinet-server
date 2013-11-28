@@ -105,6 +105,11 @@
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
+    <Compile Include="Model\Reporting\ReportingRepository.cs" />
+    <Compile Include="Model\Reporting\ReportingServiceDescriptorModel.cs" />
+    <Compile Include="Model\Reporting\ReportSettingModel.cs" />
+    <Compile Include="Model\Reporting\ReportTaskModel.cs" />
+    <Compile Include="Model\Reporting\ReportTemplateModel.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
     <Compile Include="QueryOverExtensions.cs" />
@@ -302,7 +307,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\AGO.Reporting.Common\AGO.Reporting.Common.csproj">
+      <Project>{74F04C01-CF94-4901-BBC1-EF7BAE7590E9}</Project>
+      <Name>AGO.Reporting.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
