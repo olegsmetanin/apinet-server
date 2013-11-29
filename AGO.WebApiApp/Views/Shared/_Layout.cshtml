@@ -78,6 +78,10 @@
 	<script type="text/javascript">
 		(function (require) {
 			percent.setAttribute('style', 'width: 100%');
+
+			require.config({
+				baseUrl: '../'
+			});
 			require(['angular', window.sysConfig.module], function (angular, module) {
 				var percent = document.getElementById('percent');
 
