@@ -76,8 +76,6 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^ModelProcessing_(.*)", KeyValueProvider)).ApplyTo(service));
 
 			IocContainer.RegisterAll<IModelValidator>(AllModelValidators);
-
-			IocContainer.Register<IReportingRepository, ReportingRepository>();
 		}
 
 		protected virtual IEnumerable<Type> AllModelValidators

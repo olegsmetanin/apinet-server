@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AGO.Reporting.Common.Model;
 
 namespace AGO.Reporting.Common
@@ -12,5 +13,7 @@ namespace AGO.Reporting.Common
 		IEnumerable<IReportingServiceDescriptor> GetAllDescriptors();
 
 		IReportingServiceDescriptor GetDescriptor(string name);
+
+		IReportTask GetTask(Guid taskid);
 	}
 }

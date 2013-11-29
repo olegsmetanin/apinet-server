@@ -2,12 +2,19 @@ using AGO.Core.Application;
 using AGO.Core.Controllers;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
+using AGO.Reporting.Common;
 using NHibernate;
 
 namespace AGO.Reporting.Tests
 {
 	public class AbstractReportingTest : AbstractControllersApplication
 	{
+		protected override void DoRegisterPersistence()
+		{
+			base.DoRegisterPersistence();
+			IocContainer.Register<IReportingRepository, ReportingRepository>();
+		}
+
 		protected ISession Session
 		{
 			get { return _SessionProvider.CurrentSession; }

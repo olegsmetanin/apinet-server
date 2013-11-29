@@ -58,6 +58,7 @@
     <Compile Include="ModelHelper.cs" />
     <Compile Include="ReportingRepositoryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReportingServiceTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AGO.Core\AGO.Core.csproj">
@@ -67,6 +68,10 @@
     <ProjectReference Include="..\AGO.Reporting.Common\AGO.Reporting.Common.csproj">
       <Project>{74F04C01-CF94-4901-BBC1-EF7BAE7590E9}</Project>
       <Name>AGO.Reporting.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AGO.Reporting.Service\AGO.Reporting.Service.csproj">
+      <Project>{FA5736B5-7D93-42F7-A092-28BD14C5A0C8}</Project>
+      <Name>AGO.Reporting.Service</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

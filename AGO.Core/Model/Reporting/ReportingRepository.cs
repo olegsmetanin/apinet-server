@@ -30,5 +30,10 @@ namespace AGO.Core.Model.Reporting
 				throw new NoSuchEntityException();
 			return descriptor;
 		}
+
+		public IReportTask GetTask(Guid taskid)
+		{
+			return CurrentSession.Load<ReportTaskModel>(taskid);
+		}
 	}
 }

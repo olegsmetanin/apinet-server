@@ -6,18 +6,16 @@
 	/// </summary>
 	public enum GeneratorType
 	{
-		XlsGemboxGenerator = 0,
+		CvsGenerator = 0,
 
-		CvsGenerator = 1,
+		ShapeGenerator = 1,
 
-		ShapeGenerator = 2,
+		RtfGenerator = 2,
 
-		RtfGenerator = 3,
+		XlsSyncFusionGenerator = 3,
 
-		XlsSyncFusionGenerator = 4,
+		DocSyncFusionGenerator = 4,
 
-		DocSyncFusionGenerator = 5,
-
-		CustomGenerator = 7
+		CustomGenerator = 5
 	}
 }

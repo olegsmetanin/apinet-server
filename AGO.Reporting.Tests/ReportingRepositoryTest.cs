@@ -1,8 +1,7 @@
 ﻿using System.Linq;
 using System.Text;
-using AGO.Core.Model.Reporting;
 using AGO.Reporting.Common;
-using NHibernate;
+using AGO.Reporting.Common.Model;
 using NUnit.Framework;
 
 namespace AGO.Reporting.Tests
@@ -60,25 +59,20 @@ namespace AGO.Reporting.Tests
 			Assert.IsFalse(instanceDescriptor.LongRunning);
 		}
 
-//		[Test]
-//		public void GetTask()
-//		{
-//			var res = new byte[1024*1024 * 5];
-//			var tpl = M.Template("my template", Encoding.UTF8.GetBytes("aaa bbb"));
-//			var setting = M.Setting("my setting", tpl.Id);
-//			var task = M.Task("my task", "Fast reports", setting.Id);
-//			task.Result = res;
-//			Session.SaveOrUpdate(task);
-//			Session.FlushMode = FlushMode.Auto;
-//			_SessionProvider.FlushCurrentSession();
-//
-//			task = Session.Get<ReportTaskModel>(task.Id);
-//
-//			Assert.IsNotNull(tpl);
-//			Assert.AreEqual("NUnit my task", task.Name);
-//			Assert.AreEqual("NUnit Fast reports", task.Service.Name);
-//			Assert.AreEqual(setting.Id, task.Setting.Id);
-//			CollectionAssert.AreEqual(res, task.Result);
-//		}
+		[Test]
+		public void GetTask()
+		{
+			var tpl = M.Template("my template", Encoding.UTF8.GetBytes("aaa bbb"));
+			var setting = M.Setting("my setting", tpl.Id);
+			IReportTask task = M.Task("my task", "Fast reports", setting.Id);
+			_SessionProvider.FlushCurrentSession();
+
+			task = repo.GetTask(task.Id);
+
+			Assert.IsNotNull(task);
+			Assert.AreEqual("NUnit my task", task.Name);
+			Assert.AreEqual("NUnit Fast reports", task.Service.Name);
+			Assert.AreEqual(setting.Id, task.Setting.Id);
+		}
 	}
 }

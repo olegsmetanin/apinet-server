@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="ReportDataSchema" 
+		   targetNamespace="http://agosystems.com/ago/core/reporting/ReportDataSchema.xsd" 
+		   elementFormDefault="qualified" 
+		   xmlns="http://agosystems.com/ago/core/reporting/ReportDataSchema.xsd" 
+		   xmlns:mstns="http://agosystems.com/ago/core/reporting/ReportDataSchema.xsd" 
+		   xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="ValueType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="rangeName" use="required" />
+        <xs:attribute name="group" type="rangeName" use="optional" />
+        <xs:attribute name="typify" type="xs:boolean" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="rangeName">
+    <xs:restriction base="xs:string" />
+  </xs:simpleType>
+  <xs:complexType name="ItemType">
+    <xs:sequence>
+      <xs:element name="value" type="ValueType" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RangeType">
+    <xs:sequence>
+      <xs:element name="item" type="ItemType" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="name" type="rangeName" />
+    <xs:attribute name="sheetName" type="sheetName" use="required" />
+  </xs:complexType>
+  <xs:complexType name="ReportDataType">
+    <xs:complexContent>
+      <xs:restriction base="xs:anyType">
+        <xs:sequence>
+          <xs:element name="range" type="RangeType" minOccurs="1" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="generationDate" type="xs:dateTime" use="optional" />
+        <xs:attribute name="generationTimeSpan" type="xs:time" use="optional" />
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="reportData" type="ReportDataType" />
+  <xs:simpleType name="sheetName">
+    <xs:restriction base="xs:string" />
+  </xs:simpleType>
+</xs:schema>
