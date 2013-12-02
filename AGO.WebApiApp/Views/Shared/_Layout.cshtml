@@ -74,20 +74,22 @@
 	</div>
 	
 	@RenderBody()
-
+	
 	<script type="text/javascript">
 		(function (require) {
-			percent.setAttribute('style', 'width: 100%');
+			var percent = document.getElementById('percent');
 
 			require.config({
-				baseUrl: '../'
+				baseUrl: '/'
 			});
-			require(['angular', window.sysConfig.module], function (angular, module) {
-				var percent = document.getElementById('percent');
-
-				require(['domReady!'], function (document) {
-					percent.parentNode.parentNode.removeChild(percent.parentNode);
-					angular.bootstrap(document, [module.name]);
+			require(['ago/components/jquery-infrastructure'], function () {
+				require(['ago/components/angular-infrastructure', window.sysConfig.module], function (angular, module) {
+					percent.setAttribute('style', 'width: 100%');
+					
+					require(['domReady!'], function (document) {
+						percent.parentNode.parentNode.removeChild(percent.parentNode);
+						angular.bootstrap(document, [module.name]);
+					});
 				});
 			});
 		})(requirejs);

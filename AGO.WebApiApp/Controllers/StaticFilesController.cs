@@ -15,7 +15,7 @@ namespace AGO.WebApiApp.Controllers
 
 		public const string DevRoot = "~/ng-app/";
 
-		public const string ProdRoot = "~/ng-app/dist/";
+		public const string ProdRoot = "~/ng-app/";
 
 		public const int DaysToLive = 30;
 
