@@ -56,12 +56,12 @@ namespace AGO.Reporting.Common.Model
 		/// <summary>
 		/// Сообщение об ошибке (если она произошла)
 		/// </summary>
-		string ErrorMsg { get; }
+		string ErrorMsg { get; set; }
 
 		/// <summary>
 		/// Информация об ошибке (stack trace и прочие данные)
 		/// </summary>
-		string ErrorDetails { get; }
+		string ErrorDetails { get; set; }
 
 		#endregion
 

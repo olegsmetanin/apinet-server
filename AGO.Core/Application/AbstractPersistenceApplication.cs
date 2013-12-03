@@ -10,8 +10,6 @@ using AGO.Core.Config;
 using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
-using AGO.Core.Model.Reporting;
-using AGO.Reporting.Common;
 
 namespace AGO.Core.Application
 {

@@ -111,16 +111,20 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbstractReportWorker.cs" />
     <Compile Include="BaseReportGenerator.cs" />
     <Compile Include="CsvReportGenerator.cs" />
+    <Compile Include="CustomReportWorker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controllers\ReportingApiController.cs" />
     <Compile Include="ReportingException.cs" />
     <Compile Include="ReportingService.cs" />
+    <Compile Include="ReportWorker.cs" />
     <Compile Include="RtfReportGenerator.cs" />
     <Compile Include="ShapeReportGenerator.cs" />
     <Compile Include="SyncFusionDocReportGenerator.cs" />
     <Compile Include="SyncFusionXlsReportGenerator.cs" />
+    <Compile Include="TemplateResolver.cs" />
     <Compile Include="TIFixedMailMerge.cs" />
   </ItemGroup>
   <ItemGroup>

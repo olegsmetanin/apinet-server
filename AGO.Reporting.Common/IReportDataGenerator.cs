@@ -7,6 +7,6 @@ namespace AGO.Reporting.Common
 	/// </summary>
     public interface IReportDataGenerator
     {
-        XmlDocument GetReportData(string reportParams);
+        XmlDocument GetReportData(object reportParams);
     }
 }

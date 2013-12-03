@@ -35,5 +35,10 @@ namespace AGO.Core.Model.Reporting
 		{
 			return CurrentSession.Load<ReportTaskModel>(taskid);
 		}
+
+		public IReportTemplate GetTemplate(Guid templateId)
+		{
+			return CurrentSession.Load<ReportTemplateModel>(templateId);
+		}
 	}
 }

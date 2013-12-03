@@ -352,7 +352,7 @@ namespace AGO.Reporting.Common
 
         #region IReportDataGenerator Members
 
-        public abstract XmlDocument GetReportData(string parameters);
+        public abstract XmlDocument GetReportData(object parameters);
 
         #endregion
     }

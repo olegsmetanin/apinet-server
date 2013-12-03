@@ -15,5 +15,7 @@ namespace AGO.Reporting.Common
 		IReportingServiceDescriptor GetDescriptor(string name);
 
 		IReportTask GetTask(Guid taskid);
+
+		IReportTemplate GetTemplate(Guid templateId);
 	}
 }
