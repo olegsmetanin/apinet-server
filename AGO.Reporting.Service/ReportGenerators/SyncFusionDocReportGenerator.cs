@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Xml;
 using AGO.Reporting.Common;
 using Common.Logging;
@@ -11,7 +12,7 @@ using HorizontalAlignment = AGO.Reporting.Common.HorizontalAlignment;
 using TextDirection = AGO.Reporting.Common.TextDirection;
 using VerticalAlignment = AGO.Reporting.Common.VerticalAlignment;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     /// <summary>
     /// Генератор отчетов по XML-документам заданного формата (генерируется в Word с помощью DocIO).
@@ -47,9 +48,14 @@ namespace AGO.Reporting.Service
                 }
                 return reportFileName;
             }
-            set { if (string.IsNullOrEmpty(reportFileName)) reportFileName = value; }
         }
-        #endregion
+
+    	public string ContentType
+    	{
+			get { return "applicaton/msword"; }
+    	}
+
+    	#endregion
 
         private WordDocument report;
 
@@ -61,8 +67,9 @@ namespace AGO.Reporting.Service
             get { return report; }
         }
 
-        public void MakeReport(string pathToTemplate, XmlDocument data)
+        public void MakeReport(string pathToTemplate, XmlDocument data, CancellationToken token)
         {
+        	CancellationToken = token;
             if (data == null || data.DocumentElement == null)
             {
                 throw new ReportingException("Не заданы данные для генерации отчета (data).");

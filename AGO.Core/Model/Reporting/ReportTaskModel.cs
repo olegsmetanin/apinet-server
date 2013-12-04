@@ -48,6 +48,8 @@ namespace AGO.Core.Model.Reporting
 
 		public virtual ArrayBlob ResultContent { get; set; }
 
+		public virtual string ResultName { get; set; }
+
 		[NotLonger(128)]
 		public virtual string ResultContentType { get; set; }
 

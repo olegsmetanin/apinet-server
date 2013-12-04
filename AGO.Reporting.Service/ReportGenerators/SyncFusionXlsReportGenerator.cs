@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using AGO.Reporting.Common;
 using Syncfusion.XlsIO;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     /// <summary>
     /// Генератор отчетов по XML-документам заданного формата (генерируется в Excel с помощью
@@ -46,9 +47,14 @@ namespace AGO.Reporting.Service
                 }
                 return reportFileName;
             }
-            set { if (string.IsNullOrEmpty(reportFileName)) reportFileName = value; }
         }
-        #endregion
+
+    	public string ContentType
+    	{
+			get { return "application/vnd.ms-excel"; }
+    	}
+
+    	#endregion
 
         #region Методы построения отчета
 
@@ -60,8 +66,9 @@ namespace AGO.Reporting.Service
             get { return report; }
         }
 
-        public void MakeReport(string pathToTemplate, XmlDocument data)
+        public void MakeReport(string pathToTemplate, XmlDocument data, CancellationToken token)
         {
+        	CancellationToken = token;
             if (data == null || data.DocumentElement == null)
             {
                 throw new ArgumentException("Не заданы данные для генерации отчета (data).");

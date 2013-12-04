@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Threading;
 using System.Xml;
 using StringPair = System.Tuple<string, string>;
 
@@ -11,8 +13,9 @@ namespace AGO.Reporting.Common
     public abstract class BaseReportDataGenerator : IReportDataGenerator, IProgressTracker
     {
         private XmlDocument _doc;
-        private static readonly DateTime _minDate = new DateTime(1753, 1, 1);
+        private static readonly DateTime minDate = new DateTime(1753, 1, 1);
         private PercentTicker ticker;
+    	private CancellationToken cancellationToken;
 
         /// <summary>
         /// Результирующий xml-документ - результат работы с генератором.
@@ -71,14 +74,14 @@ namespace AGO.Reporting.Common
             sRubValue = sRubValue.Trim();
             if (withCapitalLetter && !String.IsNullOrEmpty(sRubValue))
             {
-                sRubValue = sRubValue[0].ToString().ToUpper() + sRubValue.Substring(1);
+                sRubValue = sRubValue[0].ToString(CultureInfo.CurrentCulture).ToUpper() + sRubValue.Substring(1);
             }
             return string.Format("{0:N0} ({1}) {2} {3:N0} {4}", rubValue, sRubValue, rubText, copValue, copText);
         }
 
         protected static bool IsNotEmptyDate(DateTime date)
         {
-            return date > _minDate;
+            return date > minDate;
         }
 
         #endregion
@@ -330,10 +333,8 @@ namespace AGO.Reporting.Common
         protected virtual void OnProgressChanged()
         {
             if (ProgressChanged != null) ProgressChanged(this, EventArgs.Empty);
-//            if (Canceled)
-//            {
-//                throw new CanceledException("Создание отчета прервано пользователем");
-//            }
+			if (cancellationToken != null)
+				cancellationToken.ThrowIfCancellationRequested();
         }
 
         public PercentTicker Ticker
@@ -352,9 +353,17 @@ namespace AGO.Reporting.Common
 
         #region IReportDataGenerator Members
 
-        public abstract XmlDocument GetReportData(object parameters);
+        public virtual XmlDocument GetReportData(object parameters, CancellationToken token)
+        {
+        	cancellationToken = token;
+        	MakeDocument();
+			FillReportData(parameters);
+        	return Document;
+        }
 
-        #endregion
+    	protected abstract void FillReportData(object parameters);
+
+    	#endregion
     }
 
     public static class ReportingXmlElementExtensions

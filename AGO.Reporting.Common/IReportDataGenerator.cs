@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Xml;
 
 namespace AGO.Reporting.Common
@@ -7,6 +8,6 @@ namespace AGO.Reporting.Common
 	/// </summary>
     public interface IReportDataGenerator
     {
-        XmlDocument GetReportData(object reportParams);
+        XmlDocument GetReportData(object reportParams, CancellationToken token);
     }
 }

@@ -15,6 +15,6 @@ namespace AGO.Reporting.Common.Model
 		/// <summary>
 		/// Наименование
 		/// </summary>
-		string Name { get; }
+		string Name { get; set; }
 	}
 }

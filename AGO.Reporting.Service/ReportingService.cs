@@ -150,7 +150,8 @@ namespace AGO.Reporting.Service
 
 		public void Dispose()
 		{
-			//TODO
+			RouteTable.Routes.Clear();
+			//TODO other shutdown (timers etc)
 		}
 
 		public bool Ping()
@@ -280,12 +281,15 @@ namespace AGO.Reporting.Service
 			             	? (AbstractReportWorker) new CustomReportWorker()
 			             	: new ReportWorker();
 			worker.TaskId = task.Id;
+			worker.Repository = IocContainer.GetInstance<IReportingRepository>();
 			worker.TemplateResolver = resolver;
+			worker.SessionProvider = SessionProvider;
 			worker.Parameters = !task.Parameters.IsNullOrWhiteSpace()
 			                    	? JsonConvert.DeserializeObject(task.Parameters, Type.GetType(task.Setting.ReportParameterType, true))
 			                    	: null;
-			worker.Timeout = new TimeSpan(ConcurrentWorkersTimeout * 1000);
-			//TODO session??
+			worker.Timeout = TimeSpan.FromSeconds(ConcurrentWorkersTimeout);
+			
+			worker.Prepare(task);
 
 			return worker;
 		}

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Xml;
 
 
@@ -17,9 +18,14 @@ namespace AGO.Reporting.Common
         Stream Result { get; }
 
         /// <summary>
-        /// Возвращает предлогаемое по умолчанию имя для файла отчета
+        /// Возвращает предлагаемое по умолчанию имя для файла отчета
         /// </summary>
-        string FileName { get; set; }
+        string FileName { get; }
+
+		/// <summary>
+		/// Возвращает MIME-тип файла с отчетом
+		/// </summary>
+    	string ContentType { get; }
     }
 
     /// <summary>
@@ -33,7 +39,8 @@ namespace AGO.Reporting.Common
         /// <param name="pathToTemplate">Путь к шаблону отчета. Если для генерации документа он
         /// не нужен, то может быть null или пустой строкой, зависит от потребностей самого генератора</param>
         /// <param name="data">Данные, по которым необходимо построить отчет</param>
-        void MakeReport(string pathToTemplate, XmlDocument data);
+        /// <param name="token">Токен для прерывания выполнения</param>
+        void MakeReport(string pathToTemplate, XmlDocument data, CancellationToken token);
     }
 
     /// <summary>
@@ -49,6 +56,7 @@ namespace AGO.Reporting.Common
         /// <param name="parameters">Параметры для генерации отчета (json)</param>
         /// <param name="templateResolver">Делегат для разрешения идентификатора шаблона отчета в путь к файлу шаблона</param>
         /// <param name="mainTemplateId">Идннтификатор основного шаблона отчета</param>
-        void MakeReport(string parameters, Func<Guid, string> templateResolver, Guid mainTemplateId);
+        /// <param name="token">Токен для прерывания выполнения</param>
+        void MakeReport(string parameters, Func<Guid, string> templateResolver, Guid mainTemplateId, CancellationToken token);
     }
 }

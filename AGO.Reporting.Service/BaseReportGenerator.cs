@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using AGO.Reporting.Common;
 
 namespace AGO.Reporting.Service
@@ -43,11 +44,12 @@ namespace AGO.Reporting.Service
 
         #region Progress tracking
         private PercentTicker ticker;
+    	protected CancellationToken CancellationToken;
 
-        protected void InitTicker(int ticks)
+    	protected void InitTicker(int ticks)
         {
             ticker = new PercentTicker(ticks);
-            ticker.Changed += Ticker_PercentCompletedChanged;
+            ticker.Changed += OnChanged;
         }
 
         protected PercentTicker Ticker
@@ -60,15 +62,10 @@ namespace AGO.Reporting.Service
             get { return ticker != null ? ticker.PercentCompleted : 0; }
         }
 
-        protected virtual void Ticker_PercentCompletedChanged(object sender, EventArgs e)
+        protected virtual void OnChanged(object sender, EventArgs e)
         {
             if (ProgressChanged != null) ProgressChanged(this, EventArgs.Empty);
-            //Здесь же проверка на отмененность операции, что бы не дублировать этот код
-            //везде в коде создания отчета. Это событие должно вызываться достаточно часто
-//            if (_isCanceled)
-//            {
-//                throw new CanceledException("Создание отчета отменено пользователем.");
-//            }
+			if (CancellationToken != null) CancellationToken.ThrowIfCancellationRequested();
         }
 
         public event EventHandler ProgressChanged;

@@ -1,18 +1,20 @@
 using System.IO;
+using System.Threading;
 using System.Xml;
 using AGO.Reporting.Common;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     /// <summary>
     /// Каркас для генератора отчетов, выдающего данные в формате ????
     /// </summary>
-    public class ShapeReportGenerator: IReportGenerator
+    public class ShapeReportGenerator: BaseReportGenerator, IReportGenerator
     {
         #region IReportGenerator Members
 
-        public void MakeReport(string pathToTemplate, XmlDocument data)
+        public void MakeReport(string pathToTemplate, XmlDocument data, CancellationToken token)
         {
+        	CancellationToken = token;
             throw new System.NotImplementedException();
         }
 
@@ -28,9 +30,13 @@ namespace AGO.Reporting.Service
         public string FileName
         {
             get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
         }
 
-        #endregion
+    	public string ContentType
+    	{
+    		get { throw new System.NotImplementedException(); }
+    	}
+
+    	#endregion
     }
 }

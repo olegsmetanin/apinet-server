@@ -36,22 +36,22 @@ namespace AGO.Reporting.Common.Model
 		/// <summary>
 		/// % выполнения задачи генерации данных для отчета
 		/// </summary>
-		byte DateGenerationProgress { get; }
+		byte DateGenerationProgress { get; set; }
 
 		/// <summary>
 		/// % выполнения задачи создания отчета по данным
 		/// </summary>
-		byte ReportGenerationProgress { get; }
+		byte ReportGenerationProgress { get; set; }
 
 		/// <summary>
 		/// Время начала создания отчета
 		/// </summary>
-		DateTime? StartedAt { get; }
+		DateTime? StartedAt { get; set; }
 
 		/// <summary>
 		/// Время завершения создания отчета (по любой причине, в т.ч. ошибка или отмена)
 		/// </summary>
-		DateTime? CompletedAt { get; }
+		DateTime? CompletedAt { get; set; }
 
 		/// <summary>
 		/// Сообщение об ошибке (если она произошла)
@@ -73,7 +73,12 @@ namespace AGO.Reporting.Common.Model
 		byte[] Result { get; set; }
 
 		/// <summary>
-		/// MIME-type результата
+		/// Результат (имя файла)
+		/// </summary>
+		string ResultName { get; set; }
+
+		/// <summary>
+		/// Результат (MIME-type)
 		/// </summary>
 		string ResultContentType { get; set; }
 

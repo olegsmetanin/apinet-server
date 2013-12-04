@@ -9,6 +9,7 @@ using AGO.Core.Model.Reporting;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;
+using NHibernate;
 using NUnit.Framework;
 using Newtonsoft.Json;
 
@@ -67,11 +68,11 @@ namespace AGO.Reporting.Tests
 			svc.RunReport(task.Id);
 
 			var safeCounter = 0;
-			while (safeCounter < 20)
+			while (safeCounter < 10)
 			{
 				Thread.Sleep(500);
 				safeCounter++;
-				task = Session.Get<ReportTaskModel>(task.Id);
+				Session.Refresh(task);
 				if (task.State == ReportTaskState.Completed) break;
 			}
 
@@ -88,23 +89,19 @@ namespace AGO.Reporting.Tests
 		[JsonProperty("a")]
 		public int A { get; set; }
 
-		[JsonProperty]
+		[JsonProperty("b")]
 		public string B { get; set; }
 	}
 
 	public class FakeGenerator: BaseReportDataGenerator
 	{
-		public override XmlDocument GetReportData(object parameters)
+		protected override void FillReportData(object parameters)
 		{
-			var p = (FakeParameters) parameters;
-
-			MakeDocument();
+			var p = (FakeParameters)parameters;
 			var range = MakeRange("data", string.Empty);
 			var item = MakeItem(range);
 			MakeValue(item, "num", p.A.ToString(CultureInfo.CurrentUICulture));
 			MakeValue(item, "txt", p.B, false);
-
-			return Document;
 		}
 	}
 }

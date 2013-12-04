@@ -95,7 +95,7 @@ namespace Syncfusion.DocIO.DLS
     }
 }
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     internal class DataReaderEnumerator : IRowsEnumerator
     {

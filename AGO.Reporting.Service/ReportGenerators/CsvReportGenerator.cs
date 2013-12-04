@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using AGO.Reporting.Common;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     /// <summary>
     /// Каркас для генератора отчетов в формате Comma-separated value (Csv)
@@ -18,15 +19,17 @@ namespace AGO.Reporting.Service
         private string reportFileName;
         private StringBuilder report;
 
-        private const string BEGIN_RANGE = "<range_{0}>";
+    	private const string BEGIN_RANGE = "<range_{0}>";
         private const string END_RANGE = "</range_{0}>";
 
         private readonly Regex MARKER_REGEX = new Regex("{[^{]+?}");
 
         #region IReportGenerator Members
 
-        public void MakeReport(string pathToTemplate, XmlDocument data)
+        public void MakeReport(string pathToTemplate, XmlDocument data, CancellationToken token)
         {
+        	CancellationToken = token;
+
             if (data == null || data.DocumentElement == null)
             {
                 throw new ArgumentException("Не заданы данные для генерации отчета (data).");
@@ -196,9 +199,9 @@ namespace AGO.Reporting.Service
             get
             {
                 string myString = report.ToString();
-                byte[] BOM = { 0xEF, 0xBB, 0xBF };
+                //byte[] BOM = { 0xEF, 0xBB, 0xBF };
                 byte[] myByteArray = Encoding.UTF8.GetBytes(myString);
-                byte[] allBytes =  BOM.Concat(myByteArray).ToArray();
+            	byte[] allBytes = myByteArray;// BOM.Concat(myByteArray).ToArray();
 
                 return new MemoryStream(allBytes);
             }
@@ -218,9 +221,13 @@ namespace AGO.Reporting.Service
                 }
                 return reportFileName;
             }
-            set { if (string.IsNullOrEmpty(reportFileName)) reportFileName = value; }
         }
 
-        #endregion
+    	public string ContentType
+    	{
+			get { return "text/csv"; }
+    	}
+
+    	#endregion
     }
 }

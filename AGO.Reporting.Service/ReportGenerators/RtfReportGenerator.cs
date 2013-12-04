@@ -1,10 +1,11 @@
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using AGO.Reporting.Common;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     /// <summary>
     /// Генератор отчетов в формате Rtf.
@@ -32,8 +33,9 @@ namespace AGO.Reporting.Service
             get { return MARKER_END_SYMBOL; }
         }
 
-        public void MakeReport(string pathToTemplate, XmlDocument data)
+        public void MakeReport(string pathToTemplate, XmlDocument data, CancellationToken token)
         {
+        	CancellationToken = token;
             reportBuilder = new StringBuilder();
             using(StreamReader sr = File.OpenText(pathToTemplate))
             {
@@ -157,9 +159,13 @@ namespace AGO.Reporting.Service
                 }
                 return reportName;
             }
-            set { if (string.IsNullOrEmpty(reportName)) reportName = value; }
         }
 
-        #endregion
+    	public string ContentType
+    	{
+			get { return "text/rtf"; }
+    	}
+
+    	#endregion
     }
 }

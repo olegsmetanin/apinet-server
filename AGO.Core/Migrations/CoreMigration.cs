@@ -92,6 +92,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportTaskModel>(m => m.ErrorMsg)
 				.WithValueColumn<ReportTaskModel>(m => m.ErrorDetails)
 				.WithBinaryColumn<ReportTaskModel>(m => m.ResultContent)
+				.WithValueColumn<ReportTaskModel>(m => m.ResultName)
 				.WithValueColumn<ReportTaskModel>(m => m.ResultContentType);
 		}
 
