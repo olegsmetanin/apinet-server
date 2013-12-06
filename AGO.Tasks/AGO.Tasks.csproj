@@ -35,10 +35,6 @@
     <Reference Include="AGO.Core">
       <HintPath>..\Build\Debug\AGO.Core.dll</HintPath>
     </Reference>
-    <Reference Include="AGO.Home, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Build\Debug\AGO.Home.dll</HintPath>
-    </Reference>
     <Reference Include="Common.Logging, Version=2.1.2.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <HintPath>..\packages\Common.Logging.2.1.2\lib\net40\Common.Logging.dll</HintPath>
     </Reference>

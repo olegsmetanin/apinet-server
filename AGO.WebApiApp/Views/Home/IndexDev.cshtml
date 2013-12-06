@@ -1,34 +1,18 @@
-﻿@model AGO.WebApiApp.Controllers.SysConfigData
-
-<script src="/debug/requireConfig.js" type="text/javascript"></script>
+﻿<script src="/core/requireConfigDev.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 	(function (require) {
 		var getCookie = function (cookie) {
 			var matches = cookie && cookie.length && document.cookie.match(new RegExp(
-			"(?:^|; )" + cookie.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-		));
-
+				"(?:^|; )" + cookie.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
 			return matches ? decodeURIComponent(matches[1]) : undefined;
-		};
-
-		var locale = getCookie('currentLocale') || window.navigator.userLanguage ||
-			window.navigator.language || 'en';
-
-		window.sysConfig = {
-			module: '@Model.Module',
-			project: '@Model.Project',
-			lang: locale,
-			supportedLocales: ['ru', 'en']
 		};
 
 		require.config({
 			config: {
 				i18n: {
-					locale: locale
-				},
-				'ago/core/module': {
-					sysConfig: window.sysConfig
+					locale: getCookie('currentLocale') || window.navigator.userLanguage ||
+						window.navigator.language || 'en'
 				}
 			}
 		});

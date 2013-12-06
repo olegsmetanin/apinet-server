@@ -2,7 +2,7 @@
 using System.Linq;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Projects;
+using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NHibernate;

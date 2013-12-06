@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using AGO.Core.Model;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Dictionary.Projects;
+using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using Newtonsoft.Json;
 
-namespace AGO.Home.Model.Projects
+namespace AGO.Core.Model.Projects
 {
-	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel, IHomeModel
+	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel
 	{
 		public const int PROJECT_CODE_SIZE = 32;
 

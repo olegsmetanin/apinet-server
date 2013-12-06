@@ -171,4 +171,7 @@
   <data name="NoSuchUserException" xml:space="preserve">
     <value>Пользователь не существует</value>
   </data>
+  <data name="NoSuchProjectException" xml:space="preserve">
+    <value>Запрашиваемый проект не найден</value>
+  </data>
 </root>

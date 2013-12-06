@@ -1,4 +1,4 @@
-﻿namespace AGO.Home.Model.Projects
+﻿namespace AGO.Core.Model.Projects
 {
 	public enum ProjectStatus
 	{

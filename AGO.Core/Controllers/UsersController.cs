@@ -5,17 +5,15 @@ using System.Linq;
 using System.Threading;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
-using AGO.Core.Controllers;
-using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
-using AGO.System.Model;
 using Newtonsoft.Json.Linq;
 
-namespace AGO.System.Controllers
+namespace AGO.Core.Controllers
 {
 	public class UsersController : AbstractController
 	{
@@ -52,7 +50,7 @@ namespace AGO.System.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public JToken LoadFilter(
-			[NotEmpty] string name, 
+			[NotEmpty] string name,
 			[NotEmpty] string group)
 		{
 			var currentUser = _AuthController.CurrentUser();
@@ -66,8 +64,8 @@ namespace AGO.System.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult SaveFilter(
-			[NotEmpty] string name, 
-			[NotEmpty] string group, 
+			[NotEmpty] string name,
+			[NotEmpty] string group,
 			[NotNull] JToken filter)
 		{
 			var validation = new ValidationResult();
@@ -80,14 +78,14 @@ namespace AGO.System.Controllers
 				var persistentModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 					.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
 					.Take(1).List().FirstOrDefault() ?? new UserFilterModel
-				{
-					Name = name,
-					GroupName = group,
-					User = currentUser
-				};
+					{
+						Name = name,
+						GroupName = group,
+						User = currentUser
+					};
 				persistentModel.Filter = filter.ToString();
 
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);			
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
 				if (!validation.Success)
 					return validation;
 
@@ -97,7 +95,7 @@ namespace AGO.System.Controllers
 			{
 				validation.AddErrors(_LocalizationService.MessageForException(e));
 			}
-			
+
 			return validation;
 		}
 
@@ -121,7 +119,7 @@ namespace AGO.System.Controllers
 		public IEnumerable<string> GetFilterNames([NotEmpty] string group)
 		{
 			return _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
-			    .Where(m => m.GroupName == group && m.User == _AuthController.CurrentUser())
+				.Where(m => m.GroupName == group && m.User == _AuthController.CurrentUser())
 				.OrderBy(m => m.Name).Asc
 				.Select(m => m.Name)
 				.List<string>();
@@ -141,7 +139,13 @@ namespace AGO.System.Controllers
 			var result = CultureInfo.CurrentUICulture.Name;
 			_ClientStateStorage[CurrentCultureKey] = result;
 
-			return new { currentLocale = result};
+			return new { currentLocale = result };
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public string GetRole()
+		{
+			return string.Empty;
 		}
 
 		#endregion

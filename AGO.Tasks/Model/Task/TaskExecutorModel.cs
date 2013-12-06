@@ -3,7 +3,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Projects;
+using AGO.Core.Model.Projects;
 
 namespace AGO.Tasks.Model.Task
 {

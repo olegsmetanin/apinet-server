@@ -8,8 +8,8 @@ using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Processing;
-using AGO.Home.Model.Dictionary.Projects;
-using AGO.Home.Model.Projects;
+using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Projects;
 using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
@@ -17,7 +17,7 @@ using AGO.Core.Modules.Attributes;
 using NHibernate.Criterion;
 
 
-namespace AGO.Home.Controllers
+namespace AGO.Core.Controllers
 {
 	public enum ProjectsRequestMode
 	{

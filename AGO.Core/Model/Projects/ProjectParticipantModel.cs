@@ -1,14 +1,13 @@
 ﻿using System;
 using AGO.Core.Attributes.Mapping;
-using AGO.Core.Model;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Security;
 using Newtonsoft.Json;
 
-namespace AGO.Home.Model.Projects
+namespace AGO.Core.Model.Projects
 {
-	public class ProjectParticipantModel : CoreModel<Guid>, IHomeModel
+	public class ProjectParticipantModel : CoreModel<Guid>
 	{
 		#region Persistent
 		

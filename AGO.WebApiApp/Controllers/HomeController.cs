@@ -1,5 +1,5 @@
 ﻿using System.Web.Mvc;
-using AGO.System.Controllers;
+using AGO.Core.Controllers;
 using AGO.WebApiApp.Application;
 
 namespace AGO.WebApiApp.Controllers
@@ -11,23 +11,7 @@ namespace AGO.WebApiApp.Controllers
 			var usersController = DependencyResolver.Current.GetService<UsersController>();
 			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
 
-			var model = new SysConfigData("src", "ago/home/module");
-
-			return WebApplication.DevMode == DevMode.Dev
-				? View("IndexDev", model)
-				: View("IndexProd", model);
-		}
-
-		public ActionResult Project(string project)
-		{
-			var usersController = DependencyResolver.Current.GetService<UsersController>();
-			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
-
-			var model = new SysConfigData("../../src", "../../", project, "ago/tasks/module"); //TODO get module from project
-
-			return WebApplication.DevMode == DevMode.Dev
-				? View("IndexDev", model)
-				: View("IndexProd", model);
+			return WebApplication.DevMode == DevMode.Dev ? View("IndexDev") : View("IndexProd");
 		}
 	}
 }

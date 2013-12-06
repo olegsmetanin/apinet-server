@@ -12,8 +12,8 @@ using AGO.Core.Controllers;
 using AGO.Core.Execution;
 using AGO.Core.Json;
 using AGO.Core.Localization;
-using AGO.System.Controllers;
 using Common.Logging;
+using UsersController = AGO.Core.Controllers.UsersController;
 
 namespace AGO.WebApiApp.Controllers
 {

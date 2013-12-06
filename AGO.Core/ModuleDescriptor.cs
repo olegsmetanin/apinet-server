@@ -30,7 +30,9 @@ namespace AGO.Core
 			Services = new List<IServiceDescriptor>
 			{
 				new AttributedWebServiceDescriptor<DictionaryController>(this),
-				new AttributedWebServiceDescriptor<AuthController>(this)
+				new AttributedWebServiceDescriptor<AuthController>(this),
+				new AttributedWebServiceDescriptor<ProjectsController>(this),
+				new AttributedWebServiceDescriptor<UsersController>(this)
 			};
 		}
 	}

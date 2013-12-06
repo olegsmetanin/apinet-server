@@ -86,6 +86,8 @@
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="AbstractDao.cs" />
     <Compile Include="AbstractTestDataService.cs" />
+    <Compile Include="Controllers\ProjectsController.cs" />
+    <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
@@ -99,18 +101,26 @@
     <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
+    <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
+    <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
     <Compile Include="Model\ICoreModel.cs" />
     <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
+    <Compile Include="Model\Projects\ProjectModel.cs" />
+    <Compile Include="Model\Projects\ProjectParticipantModel.cs" />
+    <Compile Include="Model\Projects\ProjectStatus.cs" />
+    <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
+    <Compile Include="Model\Projects\ProjectToTagModel.cs" />
     <Compile Include="Model\Reporting\ReportingRepository.cs" />
     <Compile Include="Model\Reporting\ReportingServiceDescriptorModel.cs" />
     <Compile Include="Model\Reporting\ReportSettingModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />
     <Compile Include="Model\Reporting\ReportTemplateModel.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
+    <Compile Include="Model\Security\UserFilterModel.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
     <Compile Include="QueryOverExtensions.cs" />
     <Compile Include="ValidationResult.cs" />
@@ -191,14 +201,6 @@
     <Compile Include="Model\Dictionary\IHierarchicalDictionaryItemModel.cs" />
     <Compile Include="Model\Dictionary\DepartmentModel.cs" />
     <Compile Include="Model\CoreModel.cs" />
-    <Compile Include="Model\Example\CommonModel.cs" />
-    <Compile Include="Model\Example\ExampleEnum.cs" />
-    <Compile Include="Model\Example\HierarchicalModel.cs" />
-    <Compile Include="Model\Example\ManyEndModel.cs" />
-    <Compile Include="Model\Example\ManyToMany1Model.cs" />
-    <Compile Include="Model\Example\ManyToMany2Model.cs" />
-    <Compile Include="Model\Example\OneEndModel.cs" />
-    <Compile Include="Model\Example\PrimitiveModel.cs" />
     <Compile Include="Model\IComponent.cs" />
     <Compile Include="Model\IdentifiedModel.cs" />
     <Compile Include="Model\IIdenitifedModel.cs" />
@@ -292,6 +294,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\ICoreModel.ru.resx">
       <DependentUpon>ICoreModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Projects\ProjectStatus.resx">
+      <DependentUpon>ProjectStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Projects\ProjectStatus.ru.resx">
+      <DependentUpon>ProjectStatus.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Security\SystemRole.resx">
       <DependentUpon>SystemRole.cs</DependentUpon>

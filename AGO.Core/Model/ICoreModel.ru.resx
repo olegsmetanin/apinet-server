@@ -216,4 +216,46 @@
   <data name="CoreModel.Project" xml:space="preserve">
     <value>Проект</value>
   </data>
+  <data name="ProjectModel.Participants" xml:space="preserve">
+    <value>Участники проекта</value>
+  </data>
+  <data name="ProjectModel.Status" xml:space="preserve">
+    <value>Статус проекта</value>
+  </data>
+  <data name="ProjectModel.StatusHistory" xml:space="preserve">
+    <value>История статусов учета</value>
+  </data>
+  <data name="ProjectModel.Tags" xml:space="preserve">
+    <value>Теги проекта</value>
+  </data>
+  <data name="ProjectModel.Type" xml:space="preserve">
+    <value>Тип проекта</value>
+  </data>
+  <data name="ProjectParticipantModel.GroupName" xml:space="preserve">
+    <value>Группа</value>
+  </data>
+  <data name="ProjectParticipantModel.IsDefaultGroup" xml:space="preserve">
+    <value>Группа по умолчанию</value>
+  </data>
+  <data name="ProjectParticipantModel.User" xml:space="preserve">
+    <value>Пользователь</value>
+  </data>
+  <data name="ProjectStatusHistoryModel.EndDate" xml:space="preserve">
+    <value>Дата конца</value>
+  </data>
+  <data name="ProjectStatusHistoryModel.StartDate" xml:space="preserve">
+    <value>Дата начала</value>
+  </data>
+  <data name="ProjectStatusHistoryModel.Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="ProjectStatusModel.IsFinal" xml:space="preserve">
+    <value>Конечный</value>
+  </data>
+  <data name="ProjectStatusModel.IsInitial" xml:space="preserve">
+    <value>Начальный</value>
+  </data>
+  <data name="ProjectToTagModel.Tag" xml:space="preserve">
+    <value>Тег</value>
+  </data>
 </root>

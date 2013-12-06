@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using AGO.Core.Model.Security;
+using AGO.Core.Model.Dictionary.Projects;
 
 namespace AGO.Core
 {
@@ -76,6 +77,30 @@ namespace AGO.Core
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user3);
+
+			_CrudDao.Store(new ProjectTagModel
+			{
+				Creator = admin,
+				Owner = admin,
+				Name = "Urgent",
+				FullName = "Urgent",
+			});
+
+			_CrudDao.Store(new ProjectTagModel
+			{
+				Creator = admin,
+				Owner = admin,
+				Name = "Important",
+				FullName = "Important",
+			});
+
+			_CrudDao.Store(new ProjectTagModel
+			{
+				Creator = admin,
+				Owner = admin,
+				Name = "Pay attention",
+				FullName = "Pay attention",
+			});
 		}
 
 		#endregion

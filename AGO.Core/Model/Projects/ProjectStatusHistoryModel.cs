@@ -5,9 +5,9 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using Newtonsoft.Json;
 
-namespace AGO.Home.Model.Projects
+namespace AGO.Core.Model.Projects
 {
-	public class ProjectStatusHistoryModel : SecureModel<Guid>, IHomeModel
+	public class ProjectStatusHistoryModel : SecureModel<Guid>
 	{
 		#region Persistent
 

@@ -2,8 +2,8 @@ using System;
 using AGO.Core.Application;
 using AGO.Core.Controllers;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Dictionary.Projects;
-using AGO.Home.Model.Projects;
+using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Projects;
 using NHibernate;
 
 namespace AGO.Tasks.Test
@@ -62,15 +62,15 @@ namespace AGO.Tasks.Test
 		{
 			var conn = _SessionProvider.CurrentSession.Connection;
 			ExecuteNonQuery(string.Format(@"
-					delete from Home.ProjectStatusHistoryModel where
-						ProjectId in (select Id from Home.ProjectModel where ProjectCode = '{0}')
+					delete from Core.ProjectStatusHistoryModel where
+						ProjectId in (select Id from Core.ProjectModel where ProjectCode = '{0}')
 					go
-					delete from Home.ProjectParticipantModel where
-						ProjectId in (select Id from Home.ProjectModel where ProjectCode = '{0}')
+					delete from Core.ProjectParticipantModel where
+						ProjectId in (select Id from Core.ProjectModel where ProjectCode = '{0}')
 					go
-					delete from Home.ProjectModel where ProjectCode = '{0}'
+					delete from Core.ProjectModel where ProjectCode = '{0}'
 					go
-					delete from Home.ProjectTypeModel where ProjectCode = '{0}'
+					delete from Core.ProjectTypeModel where ProjectCode = '{0}'
 					go", TestProject), conn);
 			_SessionProvider.CloseCurrentSession();
 			Logout();

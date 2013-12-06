@@ -1,7 +1,10 @@
 ﻿using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Migration;
+using AGO.Core.Model.Security;
 
 namespace AGO.Core.Migrations
 {
@@ -31,6 +34,12 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.JobName)
 				.AddValueColumn<UserModel>(m => m.WhomJobName)
 				.AddValueColumn<UserModel>(m => m.SystemRole);
+
+			Create.CoreModelTable<UserFilterModel>()
+				.WithValueColumn<UserFilterModel>(m => m.Name)
+				.WithValueColumn<UserFilterModel>(m => m.GroupName)
+				.WithValueColumn<UserFilterModel>(m => m.Filter)
+				.WithRefColumn<UserFilterModel>(m => m.User);
 
 			Create.SecureModelTable<DepartmentModel>()
 				.WithValueColumn<DepartmentModel>(m => m.ProjectCode)
@@ -64,6 +73,35 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<TagModel>(m => m.FullName)
 				.WithRefColumn<TagModel>(m => m.Parent)
 				.WithRefColumn<TagModel>(m => m.Owner);
+
+			Create.SecureModelTable<ProjectTypeModel>()
+				.WithValueColumn<ProjectTypeModel>(m => m.ProjectCode)
+				.WithValueColumn<ProjectTypeModel>(m => m.Name)
+				.WithValueColumn<ProjectTypeModel>(m => m.Description)
+				.WithValueColumn<ProjectTypeModel>(m => m.Module);
+
+			Create.SecureModelTable<ProjectModel>()
+				.WithValueColumn<ProjectModel>(m => m.ProjectCode)
+				.WithValueColumn<ProjectModel>(m => m.Name)
+				.WithValueColumn<ProjectModel>(m => m.Description)
+				.WithRefColumn<ProjectModel>(m => m.Type)
+				.WithValueColumn<ProjectModel>(m => m.Status);
+
+			Create.SecureModelTable<ProjectStatusHistoryModel>()
+				.WithValueColumn<ProjectStatusHistoryModel>(m => m.StartDate)
+				.WithValueColumn<ProjectStatusHistoryModel>(m => m.EndDate)
+				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Project)
+				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Status);
+
+			Create.CoreModelTable<ProjectParticipantModel>()
+				.WithValueColumn<ProjectParticipantModel>(m => m.GroupName)
+				.WithValueColumn<ProjectParticipantModel>(m => m.IsDefaultGroup)
+				.WithRefColumn<ProjectParticipantModel>(m => m.Project)
+				.WithRefColumn<ProjectParticipantModel>(m => m.User);
+
+			Create.SecureModelTable<ProjectToTagModel>()
+				.WithRefColumn<ProjectToTagModel>(m => m.Project)
+				.WithRefColumn<ProjectToTagModel>(m => m.Tag);
 
 			Create.CoreModelTable<ReportingServiceDescriptorModel>()
 				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.Name)

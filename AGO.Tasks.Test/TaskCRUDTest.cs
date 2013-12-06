@@ -2,8 +2,8 @@
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Filters;
-using AGO.Home;
-using AGO.Home.Model.Projects;
+using AGO.Core;
+using AGO.Core.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Task;

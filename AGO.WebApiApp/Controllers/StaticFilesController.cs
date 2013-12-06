@@ -13,9 +13,9 @@ namespace AGO.WebApiApp.Controllers
 	{
 		#region Constants
 
-		public const string DevRoot = "~/ng-app/";
+		public const string DevRoot = "~/ng-app/src/";
 
-		public const string ProdRoot = "~/ng-app/";
+		public const string ProdRoot = "~/ng-app/release/";
 
 		public const int DaysToLive = 30;
 

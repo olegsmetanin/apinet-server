@@ -72,14 +72,6 @@
       <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
       <Name>AGO.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AGO.Home\AGO.Home.csproj">
-      <Project>{A36378E2-910F-48E2-A146-51D00F3C39A9}</Project>
-      <Name>AGO.Home</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AGO.System\AGO.System.csproj">
-      <Project>{B72AAE6E-CD22-4255-8022-A03588670DE9}</Project>
-      <Name>AGO.System</Name>
-    </ProjectReference>
     <ProjectReference Include="..\AGO.Tasks\AGO.Tasks.csproj">
       <Project>{A8703384-0A00-471E-B76E-7BEEB4082475}</Project>
       <Name>AGO.Tasks</Name>

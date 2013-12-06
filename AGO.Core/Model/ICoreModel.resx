@@ -216,4 +216,46 @@
   <data name="CoreModel.Project" xml:space="preserve">
     <value>Project</value>
   </data>
+  <data name="ProjectModel.Participants" xml:space="preserve">
+    <value>Participants</value>
+  </data>
+  <data name="ProjectModel.Status" xml:space="preserve">
+    <value>Project status</value>
+  </data>
+  <data name="ProjectModel.StatusHistory" xml:space="preserve">
+    <value>Project status history</value>
+  </data>
+  <data name="ProjectModel.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="ProjectModel.Type" xml:space="preserve">
+    <value>Project type</value>
+  </data>
+  <data name="ProjectParticipantModel.GroupName" xml:space="preserve">
+    <value>Group name</value>
+  </data>
+  <data name="ProjectParticipantModel.IsDefaultGroup" xml:space="preserve">
+    <value>Is default  group</value>
+  </data>
+  <data name="ProjectParticipantModel.User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="ProjectStatusHistoryModel.EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="ProjectStatusHistoryModel.StartDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="ProjectStatusHistoryModel.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ProjectStatusModel.IsFinal" xml:space="preserve">
+    <value>Is final</value>
+  </data>
+  <data name="ProjectStatusModel.IsInitial" xml:space="preserve">
+    <value>Is initial</value>
+  </data>
+  <data name="ProjectToTagModel.Tag" xml:space="preserve">
+    <value>Tag</value>
+  </data>
 </root>

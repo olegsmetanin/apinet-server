@@ -3,8 +3,8 @@ using System.Linq;
 using AGO.Core;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Dictionary.Projects;
-using AGO.Home.Model.Projects;
+using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 namespace AGO.Tasks
@@ -43,7 +43,7 @@ namespace AGO.Tasks
 				{
 					Creator = admin,
 					Name = "Task management project",
-					Module = GetType().Assembly.FullName
+					Module = "tasks"
 				}
 			};
 

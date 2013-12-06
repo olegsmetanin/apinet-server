@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using AGO.Core.Model.Security;
-using AGO.Home.Model.Projects;
+using AGO.Core.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
 using NHibernate;
