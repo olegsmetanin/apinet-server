@@ -53,6 +53,12 @@ namespace AGO.Reporting.Service
 			task.Start();
 		}
 
+		public void Stop()
+		{
+			if (Finished) return;
+			TokenSource.Cancel();
+		}
+
 		private void RegisterStart()
 		{
 			ChangeState(rt =>

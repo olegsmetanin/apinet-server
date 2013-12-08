@@ -15,7 +15,7 @@ namespace AGO.Reporting.Common
         private XmlDocument _doc;
         private static readonly DateTime minDate = new DateTime(1753, 1, 1);
         private PercentTicker ticker;
-    	private CancellationToken cancellationToken;
+    	protected CancellationToken CancellationToken;
 
         /// <summary>
         /// Результирующий xml-документ - результат работы с генератором.
@@ -333,8 +333,8 @@ namespace AGO.Reporting.Common
         protected virtual void OnProgressChanged()
         {
             if (ProgressChanged != null) ProgressChanged(this, EventArgs.Empty);
-			if (cancellationToken != null)
-				cancellationToken.ThrowIfCancellationRequested();
+			if (CancellationToken != null)
+				CancellationToken.ThrowIfCancellationRequested();
         }
 
         public PercentTicker Ticker
@@ -355,7 +355,7 @@ namespace AGO.Reporting.Common
 
         public virtual XmlDocument GetReportData(object parameters, CancellationToken token)
         {
-        	cancellationToken = token;
+        	CancellationToken = token;
         	MakeDocument();
 			FillReportData(parameters);
         	return Document;

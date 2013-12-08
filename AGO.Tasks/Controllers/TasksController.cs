@@ -11,14 +11,13 @@ using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
-using AGO.Core.Modules.Attributes;
-using AGO.Core;
 using AGO.Core.Model.Projects;
+using AGO.Core.Modules.Attributes;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using NHibernate.Criterion;
 using Newtonsoft.Json.Linq;
+using NHibernate.Criterion;
 
 namespace AGO.Tasks.Controllers
 {

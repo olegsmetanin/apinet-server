@@ -27,19 +27,19 @@ namespace AGO.Reporting.Service
 		#region Configuration and initialization
 
 		private readonly List<Guid> waitingForRun;
-		private readonly Timer runTaskTimer;
+		private readonly SequentialTimer runTaskTimer;
 		private readonly Dictionary<Guid, AbstractReportWorker> runningWorkers;
 		private readonly ReaderWriterLockSlim rwlock;
-		private readonly Timer cleanFinishedTaskTimer;
+		private readonly SequentialTimer cleanFinishedTaskTimer;
 		private TemplateResolver resolver;
 
 		public ReportingService()
 		{
 			waitingForRun = new List<Guid>();
-			runTaskTimer = new Timer(ProcessWaitingTasks, null, Timeout.Infinite, Timeout.Infinite);
+			runTaskTimer = new SequentialTimer(ProcessWaitingTasks);
 			runningWorkers = new Dictionary<Guid, AbstractReportWorker>();
 			rwlock = new ReaderWriterLockSlim();
-			cleanFinishedTaskTimer = new Timer(CleanFinishedTasks, null, Timeout.Infinite, Timeout.Infinite);
+			cleanFinishedTaskTimer = new SequentialTimer(CleanFinishedTasks);
 		}
 
 		private ILog log;
@@ -67,6 +67,7 @@ namespace AGO.Reporting.Service
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 
 			ReadConfiguration();
+			ApplyConfiguration();
 		}
 
 		protected override void DoInitializeSingletons()
@@ -90,6 +91,12 @@ namespace AGO.Reporting.Service
 				int.TryParse(KeyValueProvider.Value("Reporting_CleanFinishedWorkersInterval"), out n) ? n : 5000; //5 секунд
 		}
 
+		private void ApplyConfiguration()
+		{
+			runTaskTimer.Interval = RunWorkersInterval;
+			cleanFinishedTaskTimer.Interval = CleanFinishedWorkersInterval;
+		}
+
 		protected override void DoInitializeCoreServices()
 		{
 			base.DoInitializeCoreServices();
@@ -107,6 +114,12 @@ namespace AGO.Reporting.Service
 			routes.MapRoute("api", "api/{method}", new { controller = "ReportingApi", action="Dispatch", service = this });
 		
 			//TODO default route for error
+		}
+
+		protected override void DoInitializeApplication()
+		{
+			base.DoInitializeApplication();
+			cleanFinishedTaskTimer.Run();
 		}
 
 		/// <summary>
@@ -150,6 +163,9 @@ namespace AGO.Reporting.Service
 
 		public void Dispose()
 		{
+			runTaskTimer.Stop();
+			cleanFinishedTaskTimer.Stop();
+
 			RouteTable.Routes.Clear();
 			//TODO other shutdown (timers etc)
 		}
@@ -166,7 +182,16 @@ namespace AGO.Reporting.Service
 
 		public bool CancelReport(Guid taskId)
 		{
-			throw new NotImplementedException();
+			bool canceled;
+			lock (waitingForRun)
+			{
+				canceled = waitingForRun.Remove(taskId);
+			}
+			if (!canceled)
+			{
+				canceled = StopWorker(taskId);
+			}
+			return canceled;
 		}
 
 		public bool IsRunning(Guid taskId)
@@ -191,10 +216,10 @@ namespace AGO.Reporting.Service
 				if (!waitingForRun.Contains(taskId))
 					waitingForRun.Add(taskId);
 			}
-			runTaskTimer.Change(0, Timeout.Infinite);
+			runTaskTimer.Run(0);
 		}
 
-		private void ProcessWaitingTasks(object state)
+		private void ProcessWaitingTasks()
 		{
 			if (waitingForRun.Count <= 0) return;
 			lock (waitingForRun)
@@ -252,7 +277,7 @@ namespace AGO.Reporting.Service
 					//Планируем свой следующий запуск, если необходимо
 					if (waitingForRun.Count > 0)
 					{
-						runTaskTimer.Change(RunWorkersInterval, Timeout.Infinite);
+						runTaskTimer.Run();
 					}
 				}
 				catch(ThreadAbortException)
@@ -317,7 +342,6 @@ namespace AGO.Reporting.Service
 			}
 		}
 
-
 		private bool HasWorker(Guid taskId, Func<AbstractReportWorker, bool> predicate)
 		{
 			rwlock.EnterUpgradeableReadLock();
@@ -331,23 +355,19 @@ namespace AGO.Reporting.Service
 			}
 		}
 
-		private void CleanFinishedTasks(object state)
+		private AbstractReportWorker RemoveWorker(Guid taskId)
 		{
-			if (runningWorkers.Count <= 0) return;
-
 			rwlock.EnterUpgradeableReadLock();
 			try
 			{
-				if (runningWorkers.Count <= 0) return;
-				//Избавился от проверок с помощью Linq, т.к. в закешированных выражения зависают ReportWorker-ы,
-				//чем порождают перерасход памяти
-				var finishedWorkerIds = runningWorkers.Keys.Where(taskId => runningWorkers[taskId].Finished).ToList();
-				if (finishedWorkerIds.Count <= 0) return;
+				if (!runningWorkers.ContainsKey(taskId)) return null;
 				rwlock.EnterWriteLock();
 				try
 				{
-					foreach (var taskId in finishedWorkerIds)
-						runningWorkers.Remove(taskId);
+					if (!runningWorkers.ContainsKey(taskId)) return null;
+					var worker = runningWorkers[taskId];
+					runningWorkers.Remove(taskId);
+					return worker;
 				}
 				finally
 				{
@@ -358,6 +378,48 @@ namespace AGO.Reporting.Service
 			{
 				rwlock.ExitUpgradeableReadLock();
 			}
+		}
+
+		private bool StopWorker(Guid taskId)
+		{
+			var worker = RemoveWorker(taskId);
+			if (worker != null && !worker.Finished)
+			{
+				worker.Stop();
+				return true;
+			}
+			return false;
+		}
+
+		private void CleanFinishedTasks()
+		{
+			if (runningWorkers.Count > 0)
+			{
+				rwlock.EnterUpgradeableReadLock();
+				try
+				{
+					if (runningWorkers.Count <= 0) return;
+					//Избавился от проверок с помощью Linq, т.к. в закешированных выражения зависают ReportWorker-ы,
+					//чем порождают перерасход памяти
+					var finishedWorkerIds = runningWorkers.Keys.Where(taskId => runningWorkers[taskId].Finished).ToList();
+					if (finishedWorkerIds.Count <= 0) return;
+					rwlock.EnterWriteLock();
+					try
+					{
+						foreach (var taskId in finishedWorkerIds)
+							runningWorkers.Remove(taskId);
+					}
+					finally
+					{
+						rwlock.ExitWriteLock();
+					}
+				}
+				finally
+				{
+					rwlock.ExitUpgradeableReadLock();
+				}
+			}
+			cleanFinishedTaskTimer.Run();
 		}
 	}
 

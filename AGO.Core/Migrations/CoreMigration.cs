@@ -4,7 +4,7 @@ using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Migration;
-using AGO.Core.Model.Security;
+
 
 namespace AGO.Core.Migrations
 {

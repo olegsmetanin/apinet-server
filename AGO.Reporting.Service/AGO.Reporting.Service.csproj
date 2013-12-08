@@ -124,6 +124,7 @@
     <Compile Include="ReportGenerators\ShapeReportGenerator.cs" />
     <Compile Include="ReportGenerators\SyncFusionDocReportGenerator.cs" />
     <Compile Include="ReportGenerators\SyncFusionXlsReportGenerator.cs" />
+    <Compile Include="SequentialTimer.cs" />
     <Compile Include="TemplateResolver.cs" />
     <Compile Include="ReportGenerators\TIFixedMailMerge.cs" />
   </ItemGroup>
