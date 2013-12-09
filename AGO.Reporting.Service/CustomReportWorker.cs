@@ -14,5 +14,10 @@ namespace AGO.Reporting.Service
 		{
 			throw new System.NotImplementedException();
 		}
+
+		protected override void InternalTrackProgress(IReportTask task)
+		{
+			throw new System.NotImplementedException();
+		}
 	}
 }

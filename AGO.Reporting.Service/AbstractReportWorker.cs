@@ -24,21 +24,27 @@ namespace AGO.Reporting.Service
 
 		public bool Finished { get; protected set; }
 
-		public TimeSpan Timeout { get; set; }
+		public int Timeout { get; set; }
+
+		public int TrackProgressInterval { get; set; }
 
 		public abstract void Prepare(IReportTask task);
 
 		private Task<IReportGeneratorResult> task;
+		private bool wasTimedOut;
 		protected CancellationTokenSource TokenSource;
+		private SequentialTimer trackProgressTimer;
+		private object tracklc = new object();
 
 		public void Start()
 		{
 			RegisterStart();
 			
 			TokenSource = new CancellationTokenSource();
-			task = new Task<IReportGeneratorResult> (InternalStart, TokenSource.Token);
-			var whenSuccess = task.ContinueWith(t => RegisterSuccessAndSaveResult(t.Result), TaskContinuationOptions.NotOnFaulted);
-			var whenCancel = task.ContinueWith(genTask => RegisterCancel(), TaskContinuationOptions.OnlyOnCanceled);
+			trackProgressTimer = new SequentialTimer(TrackProgress, TrackProgressInterval);
+			task = new Task<IReportGeneratorResult> (IntrenalWrappedStart, TokenSource.Token);
+			var whenSuccess = task.ContinueWith(t => RegisterSuccessAndSaveResult(t.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+			var whenCancel = task.ContinueWith(genTask => RegisterCancel(wasTimedOut), TaskContinuationOptions.OnlyOnCanceled);
 			var whenError = task.ContinueWith(t => 
 				{
 				    var ex = t.Exception != null && 
@@ -51,6 +57,7 @@ namespace AGO.Reporting.Service
 			
 			Task.Factory.ContinueWhenAny(new[] {whenSuccess, whenError, whenCancel}, t => Finish());
 			task.Start();
+			trackProgressTimer.Run();
 		}
 
 		public void Stop()
@@ -70,11 +77,12 @@ namespace AGO.Reporting.Service
 
 		private void RegisterSuccessAndSaveResult(IReportGeneratorResult result)
 		{
+			StopProgressTracking();
 			ChangeState(rt =>
 			{
 			    rt.State = ReportTaskState.Completed;
 			    rt.CompletedAt = DateTime.Now;
-			    rt.DateGenerationProgress = 100; //fix generator 
+			    rt.DataGenerationProgress = 100; //fix generator 
 			    rt.ReportGenerationProgress = 100; //ticker errors
 			    var buffer = new byte[result.Result.Length];
 			    result.Result.Position = 0;
@@ -87,6 +95,7 @@ namespace AGO.Reporting.Service
 
 		private void RegisterError(Exception ex)
 		{
+			StopProgressTracking();
 			ChangeState(rt =>
 			{
 			    rt.State = ReportTaskState.Error;
@@ -96,22 +105,83 @@ namespace AGO.Reporting.Service
 			});
 		}
 
-		private void RegisterCancel()
+		private void RegisterCancel(bool abortedByTimeout)
 		{
+			StopProgressTracking();
 			ChangeState(rt =>
 			{
 			    rt.State = ReportTaskState.Canceled;
 			    rt.CompletedAt = DateTime.Now;
+				if (abortedByTimeout)
+					rt.ErrorMsg = "Report execution was interrupted by timeout";
 			});
 		}
 
 		private void Finish()
 		{
-			//TODO close session, stop timers and so on
 			Finished = true;
 		}
 
+		/// <summary>
+		/// Provide mechanism for soft aborting non-responsible tasks.
+		/// Soft means that we register cancelation after timeout and don't wait innerTask, that may be running
+		/// some time. This can be quite load for service, but Thread.Abort is more danger approach. We try to use
+		/// cooperative multithreading as mush as possible in TPL.
+		/// </summary>
+		private IReportGeneratorResult IntrenalWrappedStart()
+		{
+			var innerTask = Task<IReportGeneratorResult>.Factory.StartNew(
+				() => DALHelper.Do(SessionProvider, s => InternalStart()), TokenSource.Token);
+			try
+			{
+				if (innerTask.Wait(Timeout, TokenSource.Token))
+				{
+					return innerTask.Result;
+				}
+				//if wait ended by cancelation via token, we go to the catch block and wasTimedOut = false
+				//and no additional check for TokenSource.IsCancellationRequested needed.
+				wasTimedOut = true;
+				if (!TokenSource.IsCancellationRequested)
+				{
+					TokenSource.Cancel();
+					TokenSource.Token.ThrowIfCancellationRequested();
+				}
+			}
+			catch (AggregateException aex)
+			{
+				if (aex.InnerExceptions[0].GetType() != typeof(TaskCanceledException))
+					throw;
+			}
+			return null;
+		}
+
 		protected abstract IReportGeneratorResult InternalStart();
+
+		protected abstract void InternalTrackProgress(IReportTask task);
+
+		private void TrackProgress()
+		{
+			Func<bool> notStopped = () => !Finished && !TokenSource.IsCancellationRequested;
+			Func<IReportTask, bool> notCompleted = rt => rt.DataGenerationProgress < 100 || rt.ReportGenerationProgress < 100;
+			ChangeState(rt =>
+			            {
+			            	InternalTrackProgress(rt);
+							if (notStopped() && notCompleted(rt))
+							{
+								trackProgressTimer.Run();
+							}
+			            });
+		}
+
+		private void StopProgressTracking()
+		{
+			lock (tracklc)
+			{
+				if (trackProgressTimer == null) return;
+				trackProgressTimer.Stop();
+				trackProgressTimer = null;
+			}
+		}
 
 		private readonly object stateChangeSync = new object();
 		//т.к. изменение состояния задачи вызывается двумя потоками - основным, делающим работу,
@@ -121,12 +191,15 @@ namespace AGO.Reporting.Service
 		{
 			lock (stateChangeSync)
 			{
-				var reportTask = Repository.GetTask(TaskId);
-				action(reportTask);
-				SessionProvider.CurrentSession.SaveOrUpdate(reportTask);
-				SessionProvider.FlushCurrentSession();
+				DALHelper.Do(SessionProvider, session =>
+				{
+					var reportTask = Repository.GetTask(TaskId);
+				    action(reportTask);
+					session.SaveOrUpdate(reportTask);
+				    SessionProvider.FlushCurrentSession();
+				});
+
 			}
 		}
-
 	}
 }

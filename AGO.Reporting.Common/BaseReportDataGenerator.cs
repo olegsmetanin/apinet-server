@@ -211,7 +211,7 @@ namespace AGO.Reporting.Common
             nameAttribute.Value = valueName;
             valueElement.Attributes.Append(nameAttribute);
             XmlAttribute typifyAttribute = _doc.CreateAttribute("typify");
-            typifyAttribute.Value = typify.ToString();
+            typifyAttribute.Value = typify.ToString(CultureInfo.InvariantCulture);
             valueElement.Attributes.Append(typifyAttribute);
             if (!string.IsNullOrEmpty(group))
             {
@@ -325,16 +325,15 @@ namespace AGO.Reporting.Common
 			ticker.Changed += (s, e) => OnProgressChanged();
         }
 
-        internal void InitTicker(PercentTicker ticker)
+        internal void InitTicker(PercentTicker percentTicker)
         {
-            this.ticker = ticker;
+			ticker = percentTicker;
         }
 
         protected virtual void OnProgressChanged()
         {
             if (ProgressChanged != null) ProgressChanged(this, EventArgs.Empty);
-			if (CancellationToken != null)
-				CancellationToken.ThrowIfCancellationRequested();
+			CancellationToken.ThrowIfCancellationRequested();
         }
 
         public PercentTicker Ticker
@@ -342,9 +341,9 @@ namespace AGO.Reporting.Common
             get { return ticker; }
         }
 
-        public int PercentCompleted
+        public byte PercentCompleted
         {
-            get { return ticker != null ? ticker.PercentCompleted : 0; }
+            get { return ticker != null ? ticker.PercentCompleted : byte.MinValue; }
         }
 
         public event EventHandler ProgressChanged;

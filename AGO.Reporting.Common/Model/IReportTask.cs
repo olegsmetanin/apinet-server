@@ -36,7 +36,7 @@ namespace AGO.Reporting.Common.Model
 		/// <summary>
 		/// % выполнения задачи генерации данных для отчета
 		/// </summary>
-		byte DateGenerationProgress { get; set; }
+		byte DataGenerationProgress { get; set; }
 
 		/// <summary>
 		/// % выполнения задачи создания отчета по данным

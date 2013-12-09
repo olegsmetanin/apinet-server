@@ -123,7 +123,7 @@ namespace AGO.Core.Migrations
 				.WithRefColumn<ReportTaskModel>(m => m.ReportingService)
 				.WithValueColumn<ReportTaskModel>(m => m.Parameters)
 				.WithValueColumn<ReportTaskModel>(m => m.State)
-				.WithValueColumn<ReportTaskModel>(m => m.DateGenerationProgress)
+				.WithValueColumn<ReportTaskModel>(m => m.DataGenerationProgress)
 				.WithValueColumn<ReportTaskModel>(m => m.ReportGenerationProgress)
 				.WithValueColumn<ReportTaskModel>(m => m.StartedAt)
 				.WithValueColumn<ReportTaskModel>(m => m.CompletedAt)

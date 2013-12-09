@@ -33,7 +33,7 @@ namespace AGO.Core.Model.Reporting
 		public virtual ReportTaskState State { get; set; }
 
 		[InRange(0, 100)]
-		public virtual byte DateGenerationProgress { get; set; }
+		public virtual byte DataGenerationProgress { get; set; }
 
 		[InRange(0, 100)]
 		public virtual byte ReportGenerationProgress { get; set; }

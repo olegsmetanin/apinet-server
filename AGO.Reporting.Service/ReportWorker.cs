@@ -36,6 +36,16 @@ namespace AGO.Reporting.Service
 			return reportGenerator;
 		}
 
+		protected override void InternalTrackProgress(IReportTask task)
+		{
+			var tracker = dataGenerator as IProgressTracker;
+			if (tracker != null && task.DataGenerationProgress < tracker.PercentCompleted) 
+				task.DataGenerationProgress = tracker.PercentCompleted;
+			tracker = reportGenerator as IProgressTracker;
+			if (tracker != null && task.ReportGenerationProgress < tracker.PercentCompleted)
+				task.ReportGenerationProgress = tracker.PercentCompleted;
+		}
+
 		#region Создание параметров и генераторов
 
 		private static IReportDataGenerator CreateDataGeneratorInstance(string typeName)

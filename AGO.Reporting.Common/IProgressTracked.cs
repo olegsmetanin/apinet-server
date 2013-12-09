@@ -4,7 +4,7 @@ namespace AGO.Reporting.Common
 {
     public interface IProgressTracker
     {
-        int PercentCompleted { get; }
+        byte PercentCompleted { get; }
 
         event EventHandler ProgressChanged;
     }

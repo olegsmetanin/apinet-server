@@ -82,6 +82,7 @@ namespace AGO.Reporting.Service
 			TemplatesCacheDirectory = KeyValueProvider.Value("Reporting_TemplatesCacheDirectory");
 			int n;
 			RunWorkersInterval = int.TryParse(KeyValueProvider.Value("Reporting_RunWorkersInterval"), out n) ? n : 100; //10 раз в секунду
+			TrackProgressInterval = int.TryParse(KeyValueProvider.Value("Reporting_TrackProgressInterval"), out n) ? n : 2000; //раз в 2 секунды
 			ConcurrentWorkersLimit = int.TryParse(KeyValueProvider.Value("Reporting_ConcurrentWorkersLimit"), out n) ? n : 5;
 			ConcurrentWorkersMemoryLimitInMb = 
 				int.TryParse(KeyValueProvider.Value("Reporting_ConcurrentWorkersMemoryLimitInMb"), out n) ? n : 512;
@@ -136,6 +137,11 @@ namespace AGO.Reporting.Service
 		/// Интервал запуска новых отчетов из очереди ожидания
 		/// </summary>
 		private int RunWorkersInterval { get; set; }
+
+		/// <summary>
+		/// Интервал сохранения прогресса выполнения
+		/// </summary>
+		private int TrackProgressInterval { get; set; }
 
 		/// <summary>
 		/// Количество одновременно запущенных worker-ов
@@ -263,7 +269,7 @@ namespace AGO.Reporting.Service
 							task.ErrorMsg = ex.Message;
 							task.ErrorDetails = ex.ToString();
 							SessionProvider.CurrentSession.SaveOrUpdate(task);
-							SessionProvider.CurrentSession.Flush();
+							SessionProvider.FlushCurrentSession();
 						}
 					}
 
@@ -312,7 +318,8 @@ namespace AGO.Reporting.Service
 			worker.Parameters = !task.Parameters.IsNullOrWhiteSpace()
 			                    	? JsonConvert.DeserializeObject(task.Parameters, Type.GetType(task.Setting.ReportParameterType, true))
 			                    	: null;
-			worker.Timeout = TimeSpan.FromSeconds(ConcurrentWorkersTimeout);
+			worker.Timeout = ConcurrentWorkersTimeout * 1000;
+			worker.TrackProgressInterval = TrackProgressInterval;
 			
 			worker.Prepare(task);
 

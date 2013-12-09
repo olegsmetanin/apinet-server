@@ -57,15 +57,17 @@ namespace AGO.Reporting.Service
             get { return ticker; }
         }
 
-        public int PercentCompleted
+        public byte PercentCompleted
         {
-            get { return ticker != null ? ticker.PercentCompleted : 0; }
+            get { return ticker != null ? ticker.PercentCompleted : byte.MinValue; }
         }
 
         protected virtual void OnChanged(object sender, EventArgs e)
         {
-            if (ProgressChanged != null) ProgressChanged(this, EventArgs.Empty);
-			if (CancellationToken != null) CancellationToken.ThrowIfCancellationRequested();
+            if (ProgressChanged != null) 
+				ProgressChanged(this, EventArgs.Empty);
+
+			CancellationToken.ThrowIfCancellationRequested();
         }
 
         public event EventHandler ProgressChanged;

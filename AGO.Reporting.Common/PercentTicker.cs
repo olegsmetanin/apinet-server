@@ -71,9 +71,9 @@ namespace AGO.Reporting.Common
         /// ѕроцентов выполнено (вычисл€етс€ от кол-ва пройденных тиков и их общего кол-ва, т.к.
         /// общее кол-во может измен€тьс€ в процессе работы
         /// </summary>
-        public int PercentCompleted
+        public byte PercentCompleted
         {
-            get { return Convert.ToInt32(Math.Round(completedTicks * percentInTick)); }
+            get { return Convert.ToByte(Math.Min(Math.Round(completedTicks * percentInTick), 100)); }
         }
 
         /// <summary>
@@ -93,10 +93,10 @@ namespace AGO.Reporting.Common
         /// <summary>
         /// ƒобавл€ет следующий шаг
         /// </summary>
-        public void AddTicks(int Count) {
+        public void AddTicks(int cnt) {
 
             int i;
-            for (i = 0; i < Count; i++)
+			for (i = 0; i < cnt; i++)
                 AddTick();
         }
 
