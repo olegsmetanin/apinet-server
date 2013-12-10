@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 
@@ -100,6 +101,20 @@ namespace AGO.Core
 				Owner = admin,
 				Name = "Pay attention",
 				FullName = "Pay attention",
+			});
+
+			_CrudDao.Store(new ReportingServiceDescriptorModel
+			{
+			    Name = "Default",
+				EndPoint = "http://localhost:36652",
+				LongRunning = false
+			});
+
+			_CrudDao.Store(new ReportingServiceDescriptorModel
+			{
+				Name = "Long-runnign reports",
+				EndPoint = "http://localhost:36652",
+				LongRunning = true
 			});
 		}
 
