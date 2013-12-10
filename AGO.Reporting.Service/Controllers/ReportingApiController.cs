@@ -92,6 +92,11 @@ namespace AGO.Reporting.Service.Controllers
 
 		}
 
+		public ActionResult Error()
+		{
+			return new HttpNotFoundResult();
+		}
+
 		private void LogException(Exception e)
 		 {
 			 if (e is AbstractApplicationException)

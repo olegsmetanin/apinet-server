@@ -27,8 +27,7 @@ namespace AGO.Reporting.Service
 		{
 			lock (lc)
 			{
-				if (timer == null)
-					throw new ObjectDisposedException("SequentialTimer");
+				if (timer == null) return false; //already disposed, as original timer does
 
 				var nextrun = when.HasValue ? when.Value : Interval;
 				return timer.Change(nextrun, Timeout.Infinite);

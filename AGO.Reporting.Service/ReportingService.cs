@@ -14,7 +14,7 @@ using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;
 using Common.Logging;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SimpleInjector.Integration.Web.Mvc;
 using WebActivator;
 
@@ -101,8 +101,6 @@ namespace AGO.Reporting.Service
 		protected override void DoInitializeCoreServices()
 		{
 			base.DoInitializeCoreServices();
-//			if (!WebEnabled)
-//				return;
 
 			RegisterReportingRoutes(RouteTable.Routes);
 			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
@@ -110,11 +108,12 @@ namespace AGO.Reporting.Service
 
 		protected void RegisterReportingRoutes(RouteCollection routes)
 		{
+			//Have't any web resources
 			routes.RouteExistingFiles = false;
-
+			//Our api
 			routes.MapRoute("api", "api/{method}", new { controller = "ReportingApi", action="Dispatch", service = this });
-		
-			//TODO default route for error
+			//default route (error)
+			routes.MapRoute("any", "{*value}", new {controller = "ReportingApi", action = "Error"});
 		}
 
 		protected override void DoInitializeApplication()
@@ -126,6 +125,7 @@ namespace AGO.Reporting.Service
 		/// <summary>
 		/// Имя текущего сервиса отчетов
 		/// </summary>
+		//TODO use in logging or remove (and from reporttask too)
 		private string ServiceName { get; set; }
 
 		/// <summary>
@@ -309,15 +309,14 @@ namespace AGO.Reporting.Service
 		private AbstractReportWorker CreateWorker(IReportTask task)
 		{
 			var worker = task.Setting.GeneratorType == GeneratorType.CustomGenerator
-			             	? (AbstractReportWorker) new CustomReportWorker()
-			             	: new ReportWorker();
-			worker.TaskId = task.Id;
-			worker.Repository = IocContainer.GetInstance<IReportingRepository>();
-			worker.TemplateResolver = resolver;
-			worker.SessionProvider = SessionProvider;
-			worker.Parameters = !task.Parameters.IsNullOrWhiteSpace()
-			                    	? JsonConvert.DeserializeObject(task.Parameters, Type.GetType(task.Setting.ReportParameterType, true))
-			                    	: null;
+			             	? (AbstractReportWorker) new CustomReportWorker(task.Id, IocContainer, resolver)
+							: new ReportWorker(task.Id, IocContainer, resolver);
+			if (!task.Parameters.IsNullOrWhiteSpace())
+			{
+				var tokenReader = new JTokenReader(JToken.Parse(task.Parameters)) { CloseInput = false };
+				var paramType = Type.GetType(task.Setting.ReportParameterType, true);
+				worker.Parameters = JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
+			}
 			worker.Timeout = ConcurrentWorkersTimeout * 1000;
 			worker.TrackProgressInterval = TrackProgressInterval;
 			

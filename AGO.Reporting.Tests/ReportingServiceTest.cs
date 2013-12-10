@@ -1,12 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Threading;
+using AGO.Core;
 using AGO.Core.Config;
+using AGO.Core.Filters;
+using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Security;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;
 using Newtonsoft.Json;
+using NHibernate.Criterion;
 using NUnit.Framework;
 
 namespace AGO.Reporting.Tests
@@ -88,6 +95,49 @@ namespace AGO.Reporting.Tests
 			Assert.IsNotNull(task.CompletedAt);
 			Assert.Greater(task.CompletedAt.Value, task.StartedAt.Value);
 			StringAssert.AreEqualIgnoringCase("\"1\",\"zxc\"", Encoding.UTF8.GetString(task.Result));
+		}
+
+		[Test]
+		public void GenerateProjectTagsReport()
+		{
+			const string search = "en";
+			realsvc.Initialize();
+
+			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$id$}\",\"{$author$}\",\"{$name$}\"</range_data>"));
+			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+				typeof(ModelDataGenerator).AssemblyQualifiedName,
+				typeof(ModelParameters).AssemblyQualifiedName);
+			var param = new ModelParameters();
+			param.UserId = CurrentUser.Id;
+			param.CriteriaJson = FilteringService.GenerateJsonFromFilter(
+				FilteringService.Filter<ProjectTagModel>().WhereString(m => m.Name).Like(search, true, true));
+			var writer = new StringWriter();
+			JsonService.CreateSerializer().Serialize(writer, param);
+			var task = M.Task("controlled", "Fast reports", stg.Id, writer.ToString());
+			_SessionProvider.FlushCurrentSession();
+
+			svc.RunReport(task.Id);
+
+			var safeCounter = 0;
+			while (safeCounter < 10)
+			{
+				Thread.Sleep(500);
+				safeCounter++;
+				Session.Refresh(task);
+				if (task.State == ReportTaskState.Completed) break;
+			}
+
+			Assert.AreEqual(ReportTaskState.Completed, task.State);
+			var tags = Session.QueryOver<ProjectTagModel>().WhereRestrictionOn(m => m.Name).IsLike(search, MatchMode.Anywhere)
+				.List<ProjectTagModel>();
+			var report = Encoding.UTF8.GetString(task.Result);
+			foreach (var tag in tags)
+			{
+				StringAssert.Contains(tag.Id.ToString(), report);
+				StringAssert.Contains(tag.Creator.Name, report);
+				StringAssert.Contains(tag.Name, report);
+			}
+			StringAssert.Contains(CurrentUser.Name, report);
 		}
 
 		[Test]
@@ -239,7 +289,7 @@ namespace AGO.Reporting.Tests
 			while (safeCounter < 200 && task.State == ReportTaskState.Running && task.DataGenerationProgress < 100)
 			{
 				Session.Refresh(task);
-				Assert.IsTrue(task.DataGenerationProgress > prev);
+				Assert.IsTrue(task.DataGenerationProgress >= prev);
 				prev = task.DataGenerationProgress;
 				Thread.Sleep(100);
 				safeCounter++;
@@ -305,6 +355,55 @@ namespace AGO.Reporting.Tests
 			var item = MakeItem(range);
 			MakeValue(item, "num", p.A.ToString(CultureInfo.CurrentUICulture));
 			MakeValue(item, "txt", p.B, false);
+		}
+	}
+
+	public class ModelParameters
+	{
+		[JsonProperty("user")]
+		public Guid UserId { get; set; }
+
+		[JsonProperty("filter")]
+		public string CriteriaJson { get; set; }
+	}
+
+	public class ModelDataGenerator: BaseReportDataGenerator
+	{
+		private readonly ISessionProvider sp;
+		private readonly IFilteringService fs;
+
+		public ModelDataGenerator(ISessionProvider provider, IFilteringService service)
+		{
+			sp = provider;
+			fs = service;
+		}
+
+		protected override void FillReportData(object parameters)
+		{
+			var param = parameters as ModelParameters;
+			if (param == null) 
+				throw new ArgumentException("parameters is not ModelParameters", "parameters");
+
+			var filter = fs.ParseFilterFromJson(param.CriteriaJson, typeof(ProjectTagModel));
+			var predicate = fs.CompileFilter(filter, typeof (ProjectTagModel));
+			var tags = predicate.GetExecutableCriteria(sp.CurrentSession).List<ProjectTagModel>();
+			var executor = sp.CurrentSession.Get<UserModel>(param.UserId);
+			
+			InitTicker(tags.Count + 1);
+			var range = MakeRange("data", string.Empty);
+			foreach (var tag in tags)
+			{
+				var item = MakeItem(range);
+				MakeValue(item, "id", tag.Id.ToString());
+				MakeValue(item, "author", tag.Creator != null ? tag.Creator.FullName : "<none>");
+				MakeValue(item, "name", tag.FullName);
+				Ticker.AddTick();
+			}
+			var userItem = MakeItem(range);
+			MakeValue(userItem, "id", string.Empty);
+			MakeValue(userItem, "author", "Executor:");
+			MakeValue(userItem, "name", executor.FullName);
+			Ticker.AddTick();
 		}
 	}
 }

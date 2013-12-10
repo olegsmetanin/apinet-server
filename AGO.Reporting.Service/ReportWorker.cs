@@ -2,6 +2,7 @@
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service.ReportGenerators;
+using SimpleInjector;
 
 namespace AGO.Reporting.Service
 {
@@ -10,6 +11,10 @@ namespace AGO.Reporting.Service
 		private string pathToTemplate;
 		private IReportDataGenerator dataGenerator;
 		private IReportGenerator reportGenerator;
+
+		public ReportWorker(Guid taskId, Container di, TemplateResolver resolver) : base(taskId, di, resolver)
+		{
+		}
 
 		public override void Prepare(IReportTask task)
 		{
@@ -26,9 +31,6 @@ namespace AGO.Reporting.Service
 			var data = dataGenerator.GetReportData(Parameters, TokenSource.Token);
 			//генератор не нужен, т.к. результат уже есть у нас. можно попробовать отпустить память
 			dataGenerator = null;
-
-			//TODO закрываем сессию, т.к. она нам больше не нужна
-			//???
 
 			TokenSource.Token.ThrowIfCancellationRequested();
 
@@ -48,15 +50,15 @@ namespace AGO.Reporting.Service
 
 		#region Создание параметров и генераторов
 
-		private static IReportDataGenerator CreateDataGeneratorInstance(string typeName)
+		private IReportDataGenerator CreateDataGeneratorInstance(string typeName)
 		{
-			var dataGeneratorType = Type.GetType(typeName, true);
-			var dataGenerator = Activator.CreateInstance(dataGeneratorType) as IReportDataGenerator;
-			if (dataGenerator == null)
+			var dgtype = Type.GetType(typeName, true);
+			var dg = Container.GetInstance(dgtype) as IReportDataGenerator;
+			if (dg == null)
 			{
 				throw new ReportingException(string.Format("Не удалось создать экземпляр генератора данных, заданного типом '{0}'", typeName));
 			}
-			return dataGenerator;
+			return dg;
 		}
 
 		private static IReportGenerator CreateReportGeneratorInstance(GeneratorType type)

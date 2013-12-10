@@ -12,13 +12,32 @@ namespace AGO.Reporting.Service
 	/// </summary>
 	public abstract class AbstractReportWorker
 	{
-		public Guid TaskId { get; set; }
+		protected AbstractReportWorker(Guid taskId, SimpleInjector.Container di, TemplateResolver resolver)
+		{
+			if (taskId == default(Guid))
+				throw new ArgumentNullException("taskId");
+			if (di == null)
+				throw new ArgumentNullException("di");
+			if (resolver == null)
+				throw new ArgumentNullException("resolver");
 
-		public TemplateResolver TemplateResolver { get; set; }
+			TaskId = taskId;
+			Container = di;
+			TemplateResolver = resolver;
 
-		public IReportingRepository Repository { get; set; }
+			Repository = Container.GetInstance<IReportingRepository>();
+			SessionProvider = Container.GetInstance<ISessionProvider>();
+		}
 
-		public ISessionProvider SessionProvider { get; set; }
+		public Guid TaskId { get; private set; }
+
+		protected SimpleInjector.Container Container { get; private set; }
+
+		protected TemplateResolver TemplateResolver { get; private set; }
+
+		protected IReportingRepository Repository { get; private set; }
+
+		protected ISessionProvider SessionProvider { get; private set; }
 
 		public object Parameters { get; set; }
 
