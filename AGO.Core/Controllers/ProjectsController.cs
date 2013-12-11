@@ -170,6 +170,18 @@ namespace AGO.Core.Controllers
 			return MetadataForModelAndRelations<ProjectModel>();
 		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public object ProjectInfo([NotEmpty] string project)
+		{
+			var projectModel = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
+			    .Where(m => m.ProjectCode == project)
+			    .Take(1).SingleOrDefault();
+			if (projectModel == null || projectModel.Type == null)
+				throw new NoSuchProjectException();
+
+			return new { projectModel.Type.Module };
+		}
+
 		#endregion
 	}
 }
