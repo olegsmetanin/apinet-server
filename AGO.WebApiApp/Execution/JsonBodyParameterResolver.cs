@@ -38,6 +38,8 @@ namespace AGO.WebApiApp.Execution
 		{
 			if (HttpContext.Current.Request.ContentLength == 0)
 				return false;
+			if (!HttpContext.Current.Request.ContentType.Contains("application/json"))
+				return false;
 
 			var token = ScopeStorage.CurrentScope.ContainsKey(JsonRequestBodyKey)
 				? ScopeStorage.CurrentScope[JsonRequestBodyKey] as JObject

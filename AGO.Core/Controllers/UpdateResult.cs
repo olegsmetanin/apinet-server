@@ -1,7 +1,6 @@
-using AGO.Core;
 using Newtonsoft.Json;
 
-namespace AGO.Tasks.Controllers.DTO
+namespace AGO.Core.Controllers
 {
 	/// <summary>
 	/// Результат изменения атрибутов сущности (в процессе создания или апдейта).

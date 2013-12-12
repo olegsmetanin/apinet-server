@@ -32,7 +32,8 @@ namespace AGO.Core
 				new AttributedWebServiceDescriptor<DictionaryController>(this),
 				new AttributedWebServiceDescriptor<AuthController>(this),
 				new AttributedWebServiceDescriptor<ProjectsController>(this),
-				new AttributedWebServiceDescriptor<UsersController>(this)
+				new AttributedWebServiceDescriptor<UsersController>(this),
+				new AttributedWebServiceDescriptor<ReportingController>(this)
 			};
 		}
 	}

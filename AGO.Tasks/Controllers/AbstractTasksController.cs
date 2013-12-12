@@ -10,7 +10,6 @@ using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
-using AGO.Tasks.Controllers.DTO;
 using Common.Logging;
 using NHibernate;
 using NHibernate.Criterion;

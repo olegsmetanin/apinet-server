@@ -76,8 +76,6 @@
     <Compile Include="Controllers\DTO\TaskDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTagDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
-    <Compile Include="Controllers\DTO\UpdateResult.cs" />
-    <Compile Include="Controllers\ModelsResponse.cs" />
     <Compile Include="Controllers\TaskPredefinedFilter.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Migrations\TasksBootstrapMigration.cs" />

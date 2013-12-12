@@ -10,7 +10,6 @@ namespace AGO.Core.Model.Reporting
 	/// <summary>
 	/// Модель шаблона отчета
 	/// </summary>
-	[MetadataExclude]
 	public class ReportTemplateModel: CoreModel<Guid>, IReportTemplate
 	{
 		#region Persistent
@@ -18,7 +17,7 @@ namespace AGO.Core.Model.Reporting
 		[NotEmpty, NotLonger(250)]
 		public virtual string Name { get; set; }
 
-		[NotEmpty]
+		[NotEmpty, MetadataExclude]
 		public virtual ArrayBlob TemplateContent { get; set; }
 
 
