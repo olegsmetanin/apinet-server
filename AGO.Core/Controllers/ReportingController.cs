@@ -42,6 +42,14 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public int GetTemplatesCount([NotNull] ICollection<IModelFilterNode> filter)
+		{
+			//TODO templates for system, module, project, project member
+
+			return _FilteringDao.RowCount<ReportTemplateModel>(filter);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public UploadedFiles UploadTemplate([NotEmpty]HttpRequestBase request, [NotEmpty]HttpFileCollectionBase files)
 		{
 			var result = new UploadResult[files.Count];

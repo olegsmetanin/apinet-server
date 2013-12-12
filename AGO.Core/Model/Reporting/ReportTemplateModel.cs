@@ -4,6 +4,7 @@ using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Lob;
 using AGO.Reporting.Common.Model;
+using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Reporting
 {
@@ -14,14 +15,13 @@ namespace AGO.Core.Model.Reporting
 	{
 		#region Persistent
 
-		[NotEmpty, NotLonger(250)]
+		[NotEmpty, NotLonger(250), JsonProperty]
 		public virtual string Name { get; set; }
 
 		[NotEmpty, MetadataExclude]
 		public virtual ArrayBlob TemplateContent { get; set; }
 
-
-		[NotEmpty]
+		[NotEmpty, JsonProperty]
 		public virtual DateTime LastChange { get; set; }
 
 		#endregion
@@ -31,6 +31,12 @@ namespace AGO.Core.Model.Reporting
 		{
 			get { return TemplateContent != null ? TemplateContent.Data : null; }
 			set { TemplateContent = value != null ? new ArrayBlob(value) : null; }
+		}
+
+		[NotMapped, JsonProperty]
+		public virtual int Size
+		{
+			get { return Content != null ? Content.Length : 0; }
 		}
 	}
 }
