@@ -198,6 +198,21 @@ namespace AGO.WebApiApp.Application
 				"AllModelsMetadata",
 				"metadata/AllModelsMetadata",
 				new { controller = "Metadata", action = "AllModelsMetadata" });
+
+			RegisterDownloadRoutes(routes);
+		}
+
+		protected void RegisterDownloadRoutes(RouteCollection routes)
+		{
+			routes.MapRoute(Downloader.REPORT_TEMPLATE_TYPE,
+			                "download/" + Downloader.REPORT_TEMPLATE_TYPE + "/{id}",
+			                new {controller = "Download", action = "DownloadReportTemplate"});
+			routes.MapRoute(Downloader.REPORT_TYPE,
+							"download/" + Downloader.REPORT_TYPE + "/{id}",
+							new { controller = "Download", action = "DownloadReport" });
+			routes.MapRoute(Downloader.FILE_TYPE,
+							"download/" + Downloader.FILE_TYPE + "/{id}",
+							new { controller = "Download", action = "DownloadFile" });
 		}
 
 		protected void RegisterDefaultRoute(RouteCollection routes)

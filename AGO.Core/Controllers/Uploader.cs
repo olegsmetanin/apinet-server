@@ -5,6 +5,9 @@ using System.Web;
 
 namespace AGO.Core.Controllers
 {
+	/// <summary>
+	/// Вспомогательный класс для обработки запросов на закачку файлов
+	/// </summary>
 	public class Uploader
 	{
 		private const string RANGE_HEADER = "Content-Range";
@@ -24,6 +27,10 @@ namespace AGO.Core.Controllers
 			var fileName = Path.GetFileName(file.FileName);
 			var bytes = request.Headers[RANGE_HEADER];
 			var uploadid = request.Form[UPLOADID_FORM_FIELD];
+			if (uploadid.IsNullOrWhiteSpace())
+			{
+				throw new ArgumentException("UploadId parameter not found in form data", "request");
+			}
 			if (bytes.IsNullOrWhiteSpace() || !rangeParser.IsMatch(bytes))
 			{
 				//as single file

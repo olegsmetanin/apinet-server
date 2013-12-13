@@ -80,12 +80,14 @@
     <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
+    <Compile Include="Controllers\Downloader.cs" />
     <Compile Include="Controllers\Extensions.cs" />
     <Compile Include="Controllers\IStateStorage.cs" />
     <Compile Include="Controllers\LookupEntry.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
     <Compile Include="AbstractDao.cs" />
     <Compile Include="AbstractTestDataService.cs" />
+    <Compile Include="Controllers\MimeAssistant.cs" />
     <Compile Include="Controllers\ProjectsController.cs" />
     <Compile Include="Controllers\ReportingController.cs" />
     <Compile Include="Controllers\UpdateResult.cs" />
@@ -107,6 +109,7 @@
     <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
     <Compile Include="Model\ICoreModel.cs" />
+    <Compile Include="Model\IFileResource.cs" />
     <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
