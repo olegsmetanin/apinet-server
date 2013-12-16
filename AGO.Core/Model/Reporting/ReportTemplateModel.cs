@@ -21,7 +21,7 @@ namespace AGO.Core.Model.Reporting
 		[NotEmpty, MetadataExclude]
 		public virtual ArrayBlob TemplateContent { get; set; }
 
-		[NotEmpty, JsonProperty]
+		[NotEmpty, Timestamp, JsonProperty]
 		public virtual DateTime LastChange { get; set; }
 
 		#endregion

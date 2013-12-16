@@ -104,7 +104,7 @@ namespace AGO.Core.Controllers
 		private void NotFound(HttpResponseBase response, string reason)
 		{
 			response.StatusCode = 404;
-			//response.StatusDescription = reason;
+			response.StatusDescription = reason;
 		}
 
 		private string MakeContentDispositionHeader(string fileName, HttpRequestBase request, bool inline)

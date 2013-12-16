@@ -64,8 +64,8 @@ namespace AGO.Core.Controllers
 							var template = new ReportTemplateModel
 							{
 								Name = fileName,
-								CreationTime = DateTime.Now,
-								LastChange = DateTime.Now,
+								CreationTime = DateTime.UtcNow,
+								LastChange = DateTime.UtcNow,
 								Content = buffer
 							};
 
@@ -83,6 +83,17 @@ namespace AGO.Core.Controllers
 			}
 
 			return new UploadedFiles { Files = result };
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void DeleteTemplate([NotEmpty]Guid templateId)
+		{
+			var template = _CrudDao.Get<ReportTemplateModel>(templateId);
+			//TODO security checks
+			if (_CrudDao.Exists<ReportSettingModel>(q => q.Where(m => m.ReportTemplate == template)))
+				throw new CannotDeleteReferencedItemException();
+
+			_CrudDao.Delete(template);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
