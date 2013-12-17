@@ -17,6 +17,8 @@ namespace AGO.Core.Controllers
 {
 	public class ReportingController: AbstractController
 	{
+		private const string TEMPLATE_ID_FORM_KEY = "templateId";
+
 		public ReportingController(
 			IJsonService jsonService, 
 			IFilteringService filteringService, 
@@ -58,16 +60,17 @@ namespace AGO.Core.Controllers
 				var idx = fileIndex;
 				var file = files[idx];
 				Debug.Assert(file != null);
+				var sTemplateId = request.Form[TEMPLATE_ID_FORM_KEY];
+				var templateId = !sTemplateId.IsNullOrWhiteSpace() ? new Guid(sTemplateId) : (Guid?) null;
 				new Uploader(@"c:\tmp\upload").HandleRequest(request, file, 
 					(fileName, buffer) =>
 						{
-							var template = new ReportTemplateModel
-							{
-								Name = fileName,
-								CreationTime = DateTime.UtcNow,
-								LastChange = DateTime.UtcNow,
-								Content = buffer
-							};
+							var template = templateId.HasValue 
+								? _CrudDao.Get<ReportTemplateModel>(templateId)
+								: new ReportTemplateModel { CreationTime = DateTime.UtcNow };
+							template.Name = fileName;
+							template.LastChange = DateTime.UtcNow;
+							template.Content = buffer;
 
 							_CrudDao.Store(template);
 
