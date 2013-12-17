@@ -81,6 +81,8 @@ namespace AGO.Core.Controllers
 							template.LastChange = DateTime.UtcNow;
 							template.Content = buffer;
 
+							_CrudDao.Store(template);
+
 							result[idx] = new UploadResult
 							{
 								Name = template.Name,
