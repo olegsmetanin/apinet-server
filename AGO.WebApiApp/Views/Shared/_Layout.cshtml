@@ -75,22 +75,36 @@
 	
 	@RenderBody()
 	
+	<script type="text/javascript" src="core/components/requirejs/require.js"></script>
+
 	<script type="text/javascript">
 		(function (require) {
-			var percent = document.getElementById('percent');
+			var getCookie = function (cookie) {
+				var matches = cookie && cookie.length && document.cookie.match(new RegExp(
+					"(?:^|; )" + cookie.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+				return matches ? decodeURIComponent(matches[1]) : undefined;
+			};
 
 			require.config({
-				baseUrl: '/'
+				waitSeconds: 60,
+				baseUrl: './',
+				paths: {
+					'jquery': 'core/components/jquery/jquery'
+				},
+				packages: ['core', 'tasks'],
+				config: {
+					'i18n': {
+						locale: getCookie('currentLocale') || window.navigator.userLanguage ||
+							window.navigator.language || 'en'
+					}
+				}
 			});
-			require(['jquery'], function ($) {
-				require(['angular'], function (angular) {
-					percent.setAttribute('style', 'width: 100%');
 
-					require(['core/module', 'domReady!'], function (module) {
-						percent.parentNode.parentNode.removeChild(percent.parentNode);
-						angular.bootstrap($('body'), [module.name]);
-					});
-				});
+			require(['jquery'], function () {
+				var percent = document.getElementById('percent');
+				percent.setAttribute('style', 'width: 100%');
+
+				require(['core', 'core/module'], function () { percent.parentNode.parentNode.removeChild(percent.parentNode); });
 			});
 		})(requirejs);
 	</script>
