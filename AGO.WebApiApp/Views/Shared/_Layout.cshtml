@@ -104,7 +104,7 @@
 				var percent = document.getElementById('percent');
 				percent.setAttribute('style', 'width: 100%');
 
-				require(['core', 'core/module'], function () { percent.parentNode.parentNode.removeChild(percent.parentNode); });
+				require(['core'], function () { percent.parentNode.parentNode.removeChild(percent.parentNode); });
 			});
 		})(requirejs);
 	</script>
