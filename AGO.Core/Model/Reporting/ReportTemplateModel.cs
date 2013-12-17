@@ -15,7 +15,7 @@ namespace AGO.Core.Model.Reporting
 	{
 		#region Persistent
 
-		[NotEmpty, NotLonger(250), JsonProperty]
+		[NotEmpty, NotLonger(250), JsonProperty, UniqueProperty]
 		public virtual string Name { get; set; }
 
 		[NotEmpty, MetadataExclude]

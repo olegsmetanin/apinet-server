@@ -65,14 +65,21 @@ namespace AGO.Core.Controllers
 				new Uploader(@"c:\tmp\upload").HandleRequest(request, file, 
 					(fileName, buffer) =>
 						{
+
+							var checkQuery = _SessionProvider.CurrentSession.QueryOver<ReportTemplateModel>();
+							checkQuery = templateId.HasValue
+							             	? checkQuery.Where(m => m.Name == fileName && m.Id != templateId)
+							             	: checkQuery.Where(m => m.Name == fileName);
+							var count = checkQuery.ToRowCountQuery().UnderlyingCriteria.UniqueResult<int>();
+							if (count > 0)
+								throw new MustBeUniqueException();
+
 							var template = templateId.HasValue 
 								? _CrudDao.Get<ReportTemplateModel>(templateId)
 								: new ReportTemplateModel { CreationTime = DateTime.UtcNow };
 							template.Name = fileName;
 							template.LastChange = DateTime.UtcNow;
 							template.Content = buffer;
-
-							_CrudDao.Store(template);
 
 							result[idx] = new UploadResult
 							{
