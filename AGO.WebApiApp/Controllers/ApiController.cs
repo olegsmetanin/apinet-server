@@ -19,8 +19,12 @@ namespace AGO.WebApiApp.Controllers
 {
 	public class ApiController : Controller
 	{
+		private const string OptionsHttpMethod = "OPTIONS";
 		public ActionResult Dispatch()
 		{
+			if (OptionsHttpMethod.Equals(Request.HttpMethod, StringComparison.InvariantCultureIgnoreCase))
+				return Content(string.Empty);
+
 			var usersController = DependencyResolver.Current.GetService<UsersController>();
 			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
 
