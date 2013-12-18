@@ -18,6 +18,7 @@ namespace AGO.Core.Controllers
 	public class ReportingController: AbstractController
 	{
 		private const string TEMPLATE_ID_FORM_KEY = "templateId";
+		private string uploadPath;
 
 		public ReportingController(
 			IJsonService jsonService, 
@@ -30,6 +31,28 @@ namespace AGO.Core.Controllers
 			AuthController authController) 
 			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
+		}
+
+		protected override void DoSetConfigProperty(string key, string value)
+		{
+			if ("UploadPath".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				uploadPath = value;
+			else
+				base.DoSetConfigProperty(key, value);
+		}
+
+		protected override string DoGetConfigProperty(string key)
+		{
+			if ("UploadPath".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				return uploadPath;
+			return base.DoGetConfigProperty(key);
+		}
+
+		protected override void DoFinalizeConfig()
+		{
+			base.DoFinalizeConfig();
+			if (uploadPath.IsNullOrWhiteSpace())
+				uploadPath = System.IO.Path.GetTempPath();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -62,7 +85,7 @@ namespace AGO.Core.Controllers
 				Debug.Assert(file != null);
 				var sTemplateId = request.Form[TEMPLATE_ID_FORM_KEY];
 				var templateId = !sTemplateId.IsNullOrWhiteSpace() ? new Guid(sTemplateId) : (Guid?) null;
-				new Uploader(@"c:\tmp\upload").HandleRequest(request, file, 
+				new Uploader(uploadPath).HandleRequest(request, file, 
 					(fileName, buffer) =>
 						{
 
