@@ -53,6 +53,8 @@
     <Compile Include="Model\ReportTaskState.cs" />
     <Compile Include="PercentTicker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReportingClientException.cs" />
+    <Compile Include="ServiceClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReportDataSchema.xsd">

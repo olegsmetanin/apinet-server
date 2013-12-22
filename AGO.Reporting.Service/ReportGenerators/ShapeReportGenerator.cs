@@ -27,9 +27,9 @@ namespace AGO.Reporting.Service.ReportGenerators
             get { throw new System.NotImplementedException(); }
         }
 
-        public string FileName
+        public string GetFileName(string proposed)
         {
-            get { throw new System.NotImplementedException(); }
+            throw new System.NotImplementedException();
         }
 
     	public string ContentType

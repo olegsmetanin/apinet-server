@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Web;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -11,7 +12,10 @@ using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Modules.Attributes;
+using AGO.Reporting.Common;
+using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AGO.Core.Controllers
 {
@@ -135,6 +139,53 @@ namespace AGO.Core.Controllers
 		public IEnumerable<IModelMetadata> TemplateMetadata()
 		{
 			return MetadataForModelAndRelations<ReportTemplateModel>();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<ReportSettingModel> GetSettings([NotEmpty] string[] types)
+		{
+			return _SessionProvider.CurrentSession.QueryOver<ReportSettingModel>()
+				.WhereRestrictionOn(m => m.TypeCode).IsIn(types.Cast<object>().ToArray())
+				.OrderBy(m => m.Name).Asc
+				.UnderlyingCriteria.List<ReportSettingModel>();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public ReportTaskModel RunReport([NotEmpty] Guid settingsId, JObject parameters)
+		{
+			try
+			{
+				var settings = _CrudDao.Get<ReportSettingModel>(settingsId);
+				//TODO algorithm for selecting rigth service (from user choice? from user profile?)
+				var service = _SessionProvider.CurrentSession.QueryOver<ReportingServiceDescriptorModel>()
+					.List<ReportingServiceDescriptorModel>().First();
+
+				var task = new ReportTaskModel
+				           	{
+				           		CreationTime = DateTime.UtcNow,
+				           		Creator = _AuthController.CurrentUser(),
+				           		State = ReportTaskState.NotStarted,
+				           		ReportSetting = settings,
+				           		ReportingService = service,
+								Name = settings.Name + " " + DateTime.UtcNow.ToString("yyyy-MM-dd"), 
+								Parameters = parameters.ToStringSafe()
+								//TODO result name from user (optional)
+				           	};
+				_CrudDao.Store(task);
+				_SessionProvider.FlushCurrentSession();
+
+				using (var client = new ServiceClient(service.EndPoint))
+				{
+					client.RunReport(task.Id);
+				}
+
+				return task;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Ошибка при создании задачи на генерацию отчета", ex);
+				throw;
+			}
 		}
 
 		public class UploadResult

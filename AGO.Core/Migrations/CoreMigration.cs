@@ -113,11 +113,12 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportTemplateModel>(m => m.LastChange);
 			Create.CoreModelTable<ReportSettingModel>()
 				.WithValueColumn<ReportSettingModel>(m => m.Name)
+				.WithValueColumn<ReportSettingModel>(m => m.TypeCode)
 				.WithValueColumn<ReportSettingModel>(m => m.GeneratorType)
 				.WithValueColumn<ReportSettingModel>(m => m.DataGeneratorType)
 				.WithValueColumn<ReportSettingModel>(m => m.ReportParameterType)
 				.WithRefColumn<ReportSettingModel>(m => m.ReportTemplate);
-			Create.CoreModelTable<ReportTaskModel>()
+			Create.SecureModelTable<ReportTaskModel>()
 				.WithValueColumn<ReportTaskModel>(m => m.Name)
 				.WithRefColumn<ReportTaskModel>(m => m.ReportSetting)
 				.WithRefColumn<ReportTaskModel>(m => m.ReportingService)

@@ -4,31 +4,35 @@ using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
+using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Reporting
 {
 	/// <summary>
 	/// Модель настроек отчета
 	/// </summary>
-	[MetadataExclude]
 	public class ReportSettingModel: CoreModel<Guid>, IReportSetting
 	{
 		#region Persistent
 
-		[NotEmpty, UniqueProperty]
+		[NotEmpty, UniqueProperty, JsonProperty]
 		public virtual string Name { get; set; }
 
+		[NotEmpty, NotLonger(128), JsonProperty]
+		public virtual string TypeCode { get; set; }
+
+		[JsonProperty]
 		public virtual GeneratorType GeneratorType { get; set; }
 
-		[NotEmpty, NotLonger(2048)]
+		[NotEmpty, NotLonger(2048), JsonProperty]
 		public virtual string DataGeneratorType { get; set; }
 
-		[NotEmpty, NotLonger(2048)]
+		[NotEmpty, NotLonger(2048), JsonProperty]
 		public virtual string ReportParameterType { get; set; }
 
-		[NotNull]
+		[NotNull, JsonProperty]
 		public virtual ReportTemplateModel ReportTemplate { get; set; }
-		[ReadOnlyProperty]
+		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ReportTemplateId { get; set; }
 
 		#endregion

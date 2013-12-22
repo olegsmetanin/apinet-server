@@ -17,10 +17,10 @@ namespace AGO.Reporting.Common
         /// </summary>
         Stream Result { get; }
 
-        /// <summary>
-        /// Возвращает предлагаемое по умолчанию имя для файла отчета
-        /// </summary>
-        string FileName { get; }
+    	/// <summary>
+    	/// Возвращает имя для файла отчета (если существует предложенное, то только меняет расширение)
+    	/// </summary>
+    	string GetFileName(string proposed);
 
 		/// <summary>
 		/// Возвращает MIME-тип файла с отчетом

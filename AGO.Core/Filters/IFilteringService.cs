@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using NHibernate.Criterion;
 using AGO.Core.Model;
+using Newtonsoft.Json.Linq;
 
 namespace AGO.Core.Filters
 {
@@ -15,6 +16,16 @@ namespace AGO.Core.Filters
 		IModelFilterNode ParseFilterFromJson(string str, Type validateForModelType = null);
 
 		IModelFilterNode ParseFilterFromJson(Stream stream, Type validateForModelType = null);
+
+		IModelFilterNode ParseUserFilterFromJson(string str, Type validateForModelType = null);
+
+		IModelFilterNode ParseSimpleFilterFromJson(string str, Type validateForModelType = null);
+
+		IModelFilterNode ParseSimpleFilterFromJson(JObject filterObject, Type validateForModelType = null);
+
+		ICollection<IModelFilterNode> ParseFilterSetFromJson(string str);
+
+		ICollection<IModelFilterNode> ParseFilterSetFromJson(JObject filterObject);
 
 		string GenerateJsonFromFilter(IModelFilterNode node);
 

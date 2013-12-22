@@ -77,55 +77,7 @@ namespace AGO.Tasks.Controllers
 		private IEnumerable<IModelFilterNode> MakeTasksPredicate(string project, IEnumerable<IModelFilterNode> filter, TaskPredefinedFilter predefined)
 		{
 			IModelFilterNode projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
-			IModelFilterNode predefinedPredicate = null;
-			if (predefined != TaskPredefinedFilter.All)
-			{
-				var today = DateTime.Today;
-				var f = _FilteringService.Filter<TaskModel>();
-
-				switch (predefined)
-				{
-					case TaskPredefinedFilter.Overdue:
-						{
-							var tomorrow = today.AddDays(1);
-							predefinedPredicate = f.Where(m => m.Status != TaskStatus.Closed && m.DueDate < tomorrow);
-						}
-						break;
-					case TaskPredefinedFilter.DayLeft:
-						{
-							var dayAfterTomorrow = today.AddDays(2);
-							predefinedPredicate = f.Where(m => m.Status != TaskStatus.Closed && m.DueDate < dayAfterTomorrow);
-						}
-						break;
-					case TaskPredefinedFilter.WeekLeft:
-						{
-							var weekLater = today.AddDays(8);
-							predefinedPredicate = f.Where(m => m.Status != TaskStatus.Closed && m.DueDate < weekLater);
-						}
-						break;
-					case TaskPredefinedFilter.NoLimit:
-						predefinedPredicate = f.WhereProperty(m => m.DueDate).Not().Exists();
-						break;
-					case TaskPredefinedFilter.ClosedToday:
-						{
-							var tomorrow = today.AddDays(1);
-							predefinedPredicate = f.And()
-								.Where(m => m.Status == TaskStatus.Closed)
-								.WhereCollection(m => m.StatusHistory)
-								.Where(m => m.Status == TaskStatus.Closed && m.Start >= today && m.Start < tomorrow).End();
-						}
-						break;
-					case TaskPredefinedFilter.ClosedYesterday:
-						var yesterday = today.AddDays(-1);
-						predefinedPredicate = f.And()
-							.Where(m => m.Status == TaskStatus.Closed)
-							.WhereCollection(m => m.StatusHistory)
-							.Where(m => m.Status == TaskStatus.Closed && m.Start >= yesterday && m.Start < today).End();
-						break;
-					default:
-						throw new ArgumentOutOfRangeException("predefined");
-				}
-			}
+			IModelFilterNode predefinedPredicate = predefined.ToFilter(_FilteringService.Filter<TaskModel>());
 			var predicate = filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray();
 			return predicate;
 		}

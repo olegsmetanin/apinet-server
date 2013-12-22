@@ -21,6 +21,12 @@ namespace AGO.Core.Filters
 	{
 		#region Configuration properties, fields and methods
 
+		public const string SimpleFilterName = "simple";
+
+		public const string ComplexFilterName = "complex";
+
+		public const string UserFilterName = "user";
+
 		protected FilteringServiceOptions _Options = new FilteringServiceOptions();
 		public FilteringServiceOptions Options
 		{
@@ -143,6 +149,195 @@ namespace AGO.Core.Filters
 				throw new ArgumentNullException("stream");
 
 			return ParseFilterFromJson(new StreamReader(stream, true), validateForModelType);			
+		}
+
+		public IModelFilterNode ParseUserFilterFromJson(string str, Type validateForModelType = null)
+		{
+			if (str.IsNullOrWhiteSpace()) return null;
+
+			var result = new ModelFilterNode { Operator = ModelFilterOperators.And, Path = "CustomProperties" };
+			result.AddItem(ParseFilterFromJson(str, validateForModelType));
+
+			if (validateForModelType == null)
+				return result;
+
+			ValidateFilter(result, validateForModelType);
+			return result;
+		}
+
+		public IModelFilterNode ParseSimpleFilterFromJson(string str, Type validateForModelType = null)
+		{
+			if (str.IsNullOrWhiteSpace()) return null;
+
+			return ParseSimpleFilterFromJson(JObject.Parse(str), validateForModelType);
+		}
+
+		public IModelFilterNode ParseSimpleFilterFromJson(JObject filterObject, Type validateForModelType = null)
+		{
+			if (filterObject == null) return null;
+
+			var result = new ModelFilterNode { Operator = ModelFilterOperators.And };
+
+			foreach (var filterEntry in filterObject.Properties().Select(p => p.Value).OfType<JObject>())
+			{
+				string path = null;
+				ValueFilterOperators? op = null;
+				ModelFilterOperators? modelOp = null;
+				var negative = false;
+				JToken value = null;
+				IEnumerable<JToken> items = null;
+
+				foreach (var property in filterEntry.Properties())
+				{
+					if ("path".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+						path = property.Value.TokenValue().TrimSafe();
+					else if ("op".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+					{
+						op = ValueFilterOperatorFromToken(property.Value);
+						modelOp = ModelFilterOperatorFromToken(property.Value);
+					}
+					else if ("not".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+						negative = property.Value.TokenValue().ConvertSafe<bool>();
+					else if ("value".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+						value = property.Value;
+					else if ("items".Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+						items = property.Value;
+				}
+
+				if (modelOp != null)
+				{
+					foreach (var item in (items ?? Enumerable.Empty<JToken>()).OfType<JObject>())
+					{
+						var subFilter = ParseSimpleFilterFromJson(new JObject { new JProperty("Item", item) });
+						if (subFilter != null)
+							result.AddItem(subFilter);
+					}
+					continue;
+				}
+
+				var arrayValue = value as JArray;
+				var valValue = value as JValue;
+				var objValue = value as JObject;
+
+				if (path == null || path.IsNullOrEmpty() || op == null)
+					continue;
+
+				var needValue = new ValueFilterNode
+				{
+					Path = path,
+					Operator = op
+				}.IsBinary;
+
+				if (needValue && objValue != null)
+				{
+					var idProperty = objValue.Property("id");
+					if (idProperty != null)
+						valValue = idProperty.Value as JValue;
+				}
+
+				if (needValue && (arrayValue == null || arrayValue.Count == 0) && valValue == null)
+					continue;
+
+				var parent = result as IModelFilterNode;
+				var pathParts = path.Split('.');
+				for (var i = 0; i < pathParts.Length - 1; i++)
+				{
+					var part = pathParts[i];
+
+					var newParent = parent.Items.OfType<IModelFilterNode>().FirstOrDefault(
+						m => part.Equals(m.Path, StringComparison.InvariantCulture));
+					if (newParent != null)
+					{
+						parent = newParent;
+						continue;
+					}
+
+					newParent = new ModelFilterNode { Operator = ModelFilterOperators.And, Path = part };
+					parent.AddItem(newParent);
+					parent = newParent;
+				}
+				path = pathParts[pathParts.Length - 1];
+
+				if (!needValue)
+				{
+					parent.AddItem(new ValueFilterNode
+					{
+						Path = path,
+						Operator = op,
+						Negative = negative
+					});
+					continue;
+				}
+
+				if (valValue != null)
+				{
+					var strValue = valValue.TokenValue();
+					if (!strValue.IsNullOrEmpty())
+					{
+						parent.AddItem(new ValueFilterNode
+						{
+							Path = path,
+							Operator = op,
+							Negative = negative,
+							Operand = strValue
+						});
+					}
+					continue;
+				}
+
+				var orNode = new ModelFilterNode { Operator = ModelFilterOperators.Or };
+				parent.AddItem(orNode);
+
+				foreach (var arrayEntry in arrayValue)
+				{
+					orNode.AddItem(new ValueFilterNode
+					{
+						Path = path,
+						Operator = op,
+						Negative = negative,
+						Operand = arrayEntry.TokenValue(arrayEntry is JObject ? "id" : null)
+					});
+				}
+			}
+
+			if (validateForModelType == null)
+				return result;
+
+			ValidateFilter(result, validateForModelType);
+			return result;
+		}
+
+		public ICollection<IModelFilterNode> ParseFilterSetFromJson(string str)
+		{
+			if (str.IsNullOrWhiteSpace())
+				return Enumerable.Empty<IModelFilterNode>().ToList();
+
+			return ParseFilterSetFromJson(JObject.Parse(str));
+		}
+
+		public ICollection<IModelFilterNode> ParseFilterSetFromJson(JObject filterObject)
+		{
+			var result = new List<IModelFilterNode>();
+
+			if (filterObject != null)
+			{
+				var simpleFilterProperty = filterObject.Property(SimpleFilterName);
+				var simpleFilter = simpleFilterProperty != null ? ParseSimpleFilterFromJson(simpleFilterProperty.Value as JObject) : null;
+				if (simpleFilter != null)
+					result.Add(simpleFilter);
+
+				var complexFilterProperty = filterObject.Property(ComplexFilterName);
+				var complexFilter = complexFilterProperty != null ? ParseFilterFromJson(complexFilterProperty.Value.ToStringSafe()) : null;
+				if (complexFilter != null)
+					result.Add(complexFilter);
+
+				var userFilterProperty = filterObject.Property(UserFilterName);
+				var userFilter = userFilterProperty != null ? ParseUserFilterFromJson(userFilterProperty.Value.ToStringSafe()) : null;
+				if (userFilter != null)
+					result.Add(userFilter);
+			}
+
+			return result;
 		}
 
 		public string GenerateJsonFromFilter(IModelFilterNode node)

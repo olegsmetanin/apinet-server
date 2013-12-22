@@ -107,7 +107,7 @@ namespace AGO.Reporting.Service
 			    result.Result.Position = 0;
 			    result.Result.Read(buffer, 0, buffer.Length);
 			    rt.Result = buffer;
-			    rt.ResultName = result.FileName ?? rt.Name;
+			    rt.ResultName = result.GetFileName(rt.ResultName);
 			    rt.ResultContentType = result.ContentType;
 			});
 		}

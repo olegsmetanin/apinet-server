@@ -3,6 +3,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Lob;
+using AGO.Core.Model.Security;
 using AGO.Reporting.Common.Model;
 
 namespace AGO.Core.Model.Reporting
@@ -11,7 +12,7 @@ namespace AGO.Core.Model.Reporting
 	/// Модель задачи на создание отчета
 	/// </summary>
 	[MetadataExclude]
-	public class ReportTaskModel: CoreModel<Guid>, IReportTask
+	public class ReportTaskModel: SecureModel<Guid>, IReportTask
 	{
 		#region Persistent
 

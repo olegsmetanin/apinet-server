@@ -189,7 +189,6 @@ namespace AGO.Reporting.Service.ReportGenerators
             contentRanges.Add(uniqueRangeKey, content);
         }
 
-
         #endregion
 
         #region IReportGeneratorResult Members
@@ -207,20 +206,19 @@ namespace AGO.Reporting.Service.ReportGenerators
             }
         }
 
-        public string FileName
+        public string GetFileName(string proposed)
         {
-            get
+			//priority: user proposed, data gen proposed, template name
+			if (!string.IsNullOrWhiteSpace(proposed))
+			{
+				reportFileName = proposed;
+			} 
+			else if (string.IsNullOrEmpty(reportFileName))
             {
-                if (string.IsNullOrEmpty(reportFileName))
-                {
-                    reportFileName = Path.ChangeExtension(templateFileName, "csv");
-                }
-                if (!reportFileName.EndsWith("csv"))
-                {
-                    reportFileName = reportFileName + ".csv";
-                }
-                return reportFileName;
+                reportFileName = templateFileName;
             }
+
+			return Path.ChangeExtension(reportFileName, "csv");
         }
 
     	public string ContentType

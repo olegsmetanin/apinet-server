@@ -13,6 +13,7 @@ using AGO.Core.Model.Reporting;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;
+using AGO.Reporting.Service.Controllers;
 using Common.Logging;
 using Newtonsoft.Json.Linq;
 using SimpleInjector.Integration.Web.Mvc;
@@ -64,6 +65,9 @@ namespace AGO.Reporting.Service
 			base.DoRegisterCoreServices();
 
 			IocContainer.Register<IReportingRepository, ReportingRepository>();
+			IocContainer.RegisterAll<IActionParameterResolver>(new [] { typeof(JsonBodyParameterResolver) });
+			IocContainer.RegisterAll<IActionParameterTransformer>(
+				new [] { typeof(AttributeValidatingParameterTransformer), typeof(JsonTokenParameterTransformer) });
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 
 			ReadConfiguration();

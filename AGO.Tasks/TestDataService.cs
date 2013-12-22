@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using AGO.Core;
 using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
+using AGO.Reporting.Common;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
+using AGO.Tasks.Reports;
+
 namespace AGO.Tasks
 {
 	public class TestDataService : AbstractTestDataService, ITestDataService
@@ -59,6 +64,7 @@ namespace AGO.Tasks
 			var paramTypes = DoPopulatePropertyTypes(context, projects);
 			var tags = DoPopulateTags(context, projects);
 			DoPopulateTasks(context, projects, types, paramTypes, tags);
+			DoPopulateReports(context);
 		}
 
 		#endregion
@@ -444,6 +450,53 @@ namespace AGO.Tasks
 			addTag(ht8, htg.Level2);
 
 // ReSharper restore UnusedVariable
+		}
+
+		protected void DoPopulateReports(dynamic context)
+		{
+			const string simpleTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$executors$}\"</range_data>";
+			const string detailedTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$content$}\",\"{$dueDate$}\",\"{$executors$}\"</range_data>";
+
+			var st = new ReportTemplateModel
+			{
+			    CreationTime = DateTime.UtcNow,
+			    LastChange = DateTime.UtcNow,
+			    Name = "TaskList.csv",
+			    Content = Encoding.UTF8.GetBytes(simpleTemplate)
+			};
+			var dt = new ReportTemplateModel
+			{
+				CreationTime = DateTime.UtcNow,
+				LastChange = DateTime.UtcNow,
+				Name = "DetailedTaskList.csv",
+				Content = Encoding.UTF8.GetBytes(detailedTemplate)
+			};
+			CurrentSession.Save(st);
+			CurrentSession.Save(dt);
+			CurrentSession.Flush();
+
+			var ss = new ReportSettingModel
+			{
+			    CreationTime = DateTime.UtcNow,
+			    Name = "Task list",
+				TypeCode = "task-list",
+			    DataGeneratorType = typeof(SimpleTaskListDataGenerator).AssemblyQualifiedName,
+			    GeneratorType = GeneratorType.CvsGenerator,
+			    ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
+			    ReportTemplate = st
+			};
+			var ds = new ReportSettingModel
+			{
+				CreationTime = DateTime.UtcNow,
+				Name = "Detailed task list",
+				TypeCode = "task-list",
+				DataGeneratorType = typeof(DetailedTaskListDataGenerator).AssemblyQualifiedName,
+				GeneratorType = GeneratorType.CvsGenerator,
+				ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
+				ReportTemplate = dt
+			};
+			_CrudDao.Store(ss);
+			_CrudDao.Store(ds);
 		}
 
 		#endregion

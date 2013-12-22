@@ -63,7 +63,7 @@ namespace AGO.Reporting.Common
             set
             {
                 ticks = value;
-                percentInTick = 100.0 / ticks;
+                percentInTick = 100.0 / Math.Max(ticks, 1);
             }
         }
 

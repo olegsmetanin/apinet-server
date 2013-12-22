@@ -34,20 +34,19 @@ namespace AGO.Reporting.Service.ReportGenerators
             }
         }
 
-        public string FileName
+        public string GetFileName(string proposed)
         {
-            get
+			//priority: user proposed, data gen proposed, template name
+			if (!string.IsNullOrWhiteSpace(proposed))
+			{
+				reportFileName = proposed;
+			} 
+			else if (string.IsNullOrEmpty(reportFileName))
             {
-                if (string.IsNullOrEmpty(reportFileName))
-                {
-                    reportFileName = Path.ChangeExtension(templateFileName, "doc");
-                }
-                if (!reportFileName.EndsWith("doc"))
-                {
-                    reportFileName = reportFileName + ".doc";
-                }
-                return reportFileName;
+                reportFileName = templateFileName;
             }
+
+			return Path.ChangeExtension(reportFileName, "doc");
         }
 
     	public string ContentType
