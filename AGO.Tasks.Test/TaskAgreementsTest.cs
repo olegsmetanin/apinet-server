@@ -4,7 +4,6 @@ using AGO.Core.Model.Security;
 using AGO.Core.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
-using NHibernate;
 using NUnit.Framework;
 
 namespace AGO.Tasks.Test
