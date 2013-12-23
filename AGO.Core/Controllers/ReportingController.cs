@@ -167,6 +167,8 @@ namespace AGO.Core.Controllers
 				var service = _CrudDao.Get<ReportingServiceDescriptorModel>(serviceId);
 				var settings = _CrudDao.Get<ReportSettingModel>(settingsId);
 
+				var name = (!resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : settings.Name)
+				           + " " + DateTime.UtcNow.ToString("yyyy-MM-dd");
 				var task = new ReportTaskModel
 				           	{
 				           		CreationTime = DateTime.UtcNow,
@@ -174,7 +176,7 @@ namespace AGO.Core.Controllers
 				           		State = ReportTaskState.NotStarted,
 				           		ReportSetting = settings,
 				           		ReportingService = service,
-								Name = settings.Name + " " + DateTime.UtcNow.ToString("yyyy-MM-dd"), 
+								Name = name, 
 								Parameters = parameters.ToStringSafe(),
 								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null,
 								ResultUnread = true
@@ -219,6 +221,22 @@ namespace AGO.Core.Controllers
 			}
 
 			return running.Concat(unread);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void CancelReport([NotEmpty] Guid id)
+		{
+			var task = _CrudDao.Get<ReportTaskModel>(id);
+			using (var client = new ServiceClient(task.Service.EndPoint))
+			{
+				if (client.CancelReport(task.Id)) return;
+
+				if (task.State == ReportTaskState.NotStarted || task.State == ReportTaskState.Running)
+				{
+					task.State = ReportTaskState.Canceled;
+					_CrudDao.Store(task);
+				}
+			}
 		}
 
 		public class UploadResult

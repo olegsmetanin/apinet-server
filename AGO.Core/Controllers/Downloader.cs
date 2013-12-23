@@ -33,10 +33,11 @@ namespace AGO.Core.Controllers
 
 		public void ServeDownloadWebRequest(HttpRequestBase request, string type, Guid id)
 		{
+			var sp = diContainer.GetInstance<ISessionProvider>();
 			switch (type)
 			{
 				case REPORT_TEMPLATE_TYPE:
-					var template = diContainer.GetInstance<ISessionProvider>().CurrentSession.Get<ReportTemplateModel>(id);
+					var template = sp.CurrentSession.Get<ReportTemplateModel>(id);
 					if (template == null)
 					{
 						NotFound(request.RequestContext.HttpContext.Response, "Report template with given id not exists");
@@ -48,7 +49,19 @@ namespace AGO.Core.Controllers
 					}
 					break;
 				case REPORT_TYPE:
-					throw new NotImplementedException();
+					var report = sp.CurrentSession.Get<ReportTaskModel>(id);
+					if (report == null)
+					{
+						NotFound(request.RequestContext.HttpContext.Response, "Report with given id not exists");
+					}
+					else
+					{
+						var wrapper = new ReportWrapper(report);
+						Send(request, wrapper);
+						report.ResultUnread = false;
+						diContainer.GetInstance<ICrudDao>().Store(report);
+						sp.FlushCurrentSession();
+					}
 					break;
 				case FILE_TYPE:
 					throw new NotImplementedException();
@@ -236,6 +249,36 @@ namespace AGO.Core.Controllers
 			public Stream Content
 			{
 				get { return new MemoryStream(template.Content); }
+			}
+		}
+
+		private class ReportWrapper: IFileResource
+		{
+			private readonly ReportTaskModel task;
+
+			public ReportWrapper(ReportTaskModel task)
+			{
+				this.task = task;
+			}
+
+			public string FileName
+			{
+				get { return task.ResultName; }
+			}
+
+			public string ContentType
+			{
+				get { return task.ResultContentType ?? MimeAssistant.GetMimeType(task.ResultName); }
+			}
+
+			public DateTime LastChange
+			{
+				get { return task.LastChangeTime ?? task.CreationTime.GetValueOrDefault(); }
+			}
+
+			public Stream Content
+			{
+				get { return task.ResultContent.OpenReader(); }
 			}
 		}
 	}

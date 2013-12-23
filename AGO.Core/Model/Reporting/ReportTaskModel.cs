@@ -61,6 +61,7 @@ namespace AGO.Core.Model.Reporting
 		[NotLonger(128)]
 		public virtual string ResultContentType { get; set; }
 
+		[JsonProperty]
 		public virtual bool ResultUnread { get; set; }
 
 		#endregion
