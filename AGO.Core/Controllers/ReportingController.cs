@@ -60,6 +60,15 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> GetServices()
+		{
+			//TODO calculate available services for user and/or project/module/...
+			return _SessionProvider.CurrentSession
+				.QueryOver<ReportingServiceDescriptorModel>()
+				.LookupModelsList(m => m.Name);
+		}
+			
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ReportTemplateModel> GetTemplates(
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
@@ -151,14 +160,12 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ReportTaskModel RunReport([NotEmpty] Guid settingsId, JObject parameters)
+		public ReportTaskModel RunReport([NotEmpty] Guid serviceId, [NotEmpty] Guid settingsId, string resultName, JObject parameters)
 		{
 			try
 			{
+				var service = _CrudDao.Get<ReportingServiceDescriptorModel>(serviceId);
 				var settings = _CrudDao.Get<ReportSettingModel>(settingsId);
-				//TODO algorithm for selecting rigth service (from user choice? from user profile?)
-				var service = _SessionProvider.CurrentSession.QueryOver<ReportingServiceDescriptorModel>()
-					.List<ReportingServiceDescriptorModel>().First();
 
 				var task = new ReportTaskModel
 				           	{
@@ -168,8 +175,8 @@ namespace AGO.Core.Controllers
 				           		ReportSetting = settings,
 				           		ReportingService = service,
 								Name = settings.Name + " " + DateTime.UtcNow.ToString("yyyy-MM-dd"), 
-								Parameters = parameters.ToStringSafe()
-								//TODO result name from user (optional)
+								Parameters = parameters.ToStringSafe(),
+								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null
 				           	};
 				_CrudDao.Store(task);
 				_SessionProvider.FlushCurrentSession();

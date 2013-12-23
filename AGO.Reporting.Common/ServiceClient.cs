@@ -40,7 +40,7 @@ namespace AGO.Reporting.Common
 		{
 			var request = WebRequest.Create(endpoint + "/api/" + method);
 			request.UseDefaultCredentials = true;
-			var payload = "{" + json + "}";
+			var payload = json != null ? "{" + json + "}" : string.Empty;
 			request.ContentType = JSON_TYPE;
 			request.Method = WebRequestMethods.Http.Post;
 			var buffer = Encoding.UTF8.GetBytes(payload);
