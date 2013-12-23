@@ -132,7 +132,8 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportTaskModel>(m => m.ErrorDetails)
 				.WithBinaryColumn<ReportTaskModel>(m => m.ResultContent)
 				.WithValueColumn<ReportTaskModel>(m => m.ResultName)
-				.WithValueColumn<ReportTaskModel>(m => m.ResultContentType);
+				.WithValueColumn<ReportTaskModel>(m => m.ResultContentType)
+				.WithValueColumn<ReportTaskModel>(m => m.ResultUnread);
 		}
 
 		public override void Down()

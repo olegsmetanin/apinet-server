@@ -5,6 +5,7 @@ using AGO.Core.Attributes.Model;
 using AGO.Core.Model.Lob;
 using AGO.Core.Model.Security;
 using AGO.Reporting.Common.Model;
+using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Reporting
 {
@@ -16,7 +17,7 @@ namespace AGO.Core.Model.Reporting
 	{
 		#region Persistent
 
-		[NotEmpty, NotLonger(250)]
+		[NotEmpty, NotLonger(250), JsonProperty]
 		public virtual string Name { get; set; }
 
 		[NotNull]
@@ -31,28 +32,36 @@ namespace AGO.Core.Model.Reporting
 
 		public virtual string Parameters { get; set; }
 
+		[JsonProperty]
 		public virtual ReportTaskState State { get; set; }
 
-		[InRange(0, 100)]
+		[InRange(0, 100), JsonProperty]
 		public virtual byte DataGenerationProgress { get; set; }
 
-		[InRange(0, 100)]
+		[InRange(0, 100), JsonProperty]
 		public virtual byte ReportGenerationProgress { get; set; }
 
+		[JsonProperty]
 		public virtual DateTime? StartedAt { get; set; }
 
+		[JsonProperty]
 		public virtual DateTime? CompletedAt { get; set; }
 
+		[JsonProperty]
 		public virtual string ErrorMsg { get; set; }
 
+		[JsonProperty]
 		public virtual string ErrorDetails { get; set; }
 
 		public virtual ArrayBlob ResultContent { get; set; }
 
+		[JsonProperty]
 		public virtual string ResultName { get; set; }
 
 		[NotLonger(128)]
 		public virtual string ResultContentType { get; set; }
+
+		public virtual bool ResultUnread { get; set; }
 
 		#endregion
 

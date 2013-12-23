@@ -176,7 +176,8 @@ namespace AGO.Core.Controllers
 				           		ReportingService = service,
 								Name = settings.Name + " " + DateTime.UtcNow.ToString("yyyy-MM-dd"), 
 								Parameters = parameters.ToStringSafe(),
-								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null
+								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null,
+								ResultUnread = true
 				           	};
 				_CrudDao.Store(task);
 				_SessionProvider.FlushCurrentSession();
@@ -193,6 +194,31 @@ namespace AGO.Core.Controllers
 				Log.Error("Ошибка при создании задачи на генерацию отчета", ex);
 				throw;
 			}
+		}
+
+		private const int TOP_REPORTS = 10;
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<ReportTaskModel> GetTopLastReports()
+		{
+			var running = _SessionProvider.CurrentSession.QueryOver<ReportTaskModel>()
+				.Where(m => m.State == ReportTaskState.Running || m.State == ReportTaskState.NotStarted)
+				.OrderBy(m => m.CreationTime).Desc
+				.UnderlyingCriteria.SetMaxResults(10)
+				.List<ReportTaskModel>();
+
+			var unread = Enumerable.Empty<ReportTaskModel>();
+			var rest = TOP_REPORTS - running.Count;
+			if (rest > 0)
+			{
+				unread = _SessionProvider.CurrentSession.QueryOver<ReportTaskModel>()
+					.Where(m => m.State != ReportTaskState.NotStarted && m.State != ReportTaskState.Running)
+					.OrderBy(m => m.CreationTime).Desc
+					.UnderlyingCriteria.SetMaxResults(rest)
+					.List<ReportTaskModel>();
+			}
+
+			return running.Concat(unread);
 		}
 
 		public class UploadResult
