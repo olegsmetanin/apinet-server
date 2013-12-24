@@ -64,6 +64,15 @@
       <DependentUpon>ReportDataSchema.xsd</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Model\ReportTaskState.resx">
+      <DependentUpon>ReportTaskState.cs</DependentUpon>
+      <LastGenOutput>ReportTaskState.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\ReportTaskState.ru.resx">
+      <DependentUpon>ReportTaskState.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

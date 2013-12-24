@@ -3,6 +3,7 @@ using AGO.Core.Application;
 using AGO.Core.Localization;
 using AGO.Core.Modules;
 using AGO.Core.Controllers;
+using AGO.Reporting.Common.Model;
 
 namespace AGO.Core
 {
@@ -23,6 +24,7 @@ namespace AGO.Core
 		public void Initialize(IApplication app)
 		{
 			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
+			app.LocalizationService.RegisterModuleLocalizers(typeof(ReportTaskState).Assembly);
 		}
 
 		public ModuleDescriptor()

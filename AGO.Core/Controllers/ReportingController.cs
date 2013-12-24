@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -11,6 +12,7 @@ using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Reporting;
+using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
@@ -201,15 +203,17 @@ namespace AGO.Core.Controllers
 		private const int TOP_REPORTS = 10;
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<ReportTaskModel> GetTopLastReports()
+		public IEnumerable GetTopLastReports()
 		{
 			var running = _SessionProvider.CurrentSession.QueryOver<ReportTaskModel>()
 				.Where(m => m.State == ReportTaskState.Running || m.State == ReportTaskState.NotStarted)
 				.OrderBy(m => m.CreationTime).Desc
 				.UnderlyingCriteria.SetMaxResults(10)
-				.List<ReportTaskModel>();
+				.List<ReportTaskModel>()
+				.Select(ReportTaskToDTO)
+				.ToList();
 
-			var unread = Enumerable.Empty<ReportTaskModel>();
+			var unread = Enumerable.Empty<object>();
 			var rest = TOP_REPORTS - running.Count;
 			if (rest > 0)
 			{
@@ -217,26 +221,118 @@ namespace AGO.Core.Controllers
 					.Where(m => m.State != ReportTaskState.NotStarted && m.State != ReportTaskState.Running)
 					.OrderBy(m => m.CreationTime).Desc
 					.UnderlyingCriteria.SetMaxResults(rest)
-					.List<ReportTaskModel>();
+					.List<ReportTaskModel>()
+					.Select(ReportTaskToDTO)
+					.ToList();
 			}
 
 			return running.Concat(unread);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void CancelReport([NotEmpty] Guid id)
+		public object CancelReport([NotEmpty] Guid id)
 		{
 			var task = _CrudDao.Get<ReportTaskModel>(id);
 			using (var client = new ServiceClient(task.Service.EndPoint))
 			{
-				if (client.CancelReport(task.Id)) return;
-
-				if (task.State == ReportTaskState.NotStarted || task.State == ReportTaskState.Running)
+				if (!client.CancelReport(task.Id))
 				{
-					task.State = ReportTaskState.Canceled;
-					_CrudDao.Store(task);
+					_SessionProvider.CurrentSession.Refresh(task);
+					if (task.State == ReportTaskState.NotStarted || task.State == ReportTaskState.Running)
+					{
+						task.State = ReportTaskState.Canceled;
+						_CrudDao.Store(task);
+						_SessionProvider.FlushCurrentSession();
+					}
+				}
+				_SessionProvider.CurrentSession.Refresh(task);
+				return ReportTaskToDTO(task);
+			}
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void DeleteReport([NotEmpty] Guid id)
+		{
+			var task = _CrudDao.Get<ReportTaskModel>(id);
+			using (var client = new ServiceClient(task.Service.EndPoint))
+			{
+				try
+				{
+					if (client.IsRunning(task.Id) || client.IsWaitingForRun(task.Id))
+						client.CancelReport(task.Id);
+				}
+				catch(Exception ex)
+				{
+					Log.Error("Error when attempt to cancel report", ex);
+				}
+				finally
+				{
+					//delete in any situation
+					try
+					{
+						_SessionProvider.CurrentSession.Refresh(task);
+						_CrudDao.Delete(task);
+					}
+					catch (DataAccessException)
+					{
+						//may be we try to delete record, that was updated by reporting service,
+						//retry one time
+						_SessionProvider.CurrentSession.Refresh(task);
+						_CrudDao.Delete(task);
+					}
 				}
 			}
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable GetReports(
+			[InRange(0, null)] int page,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
+		{
+			//TODO templates for system, module, project, project member
+
+			var user = _AuthController.CurrentUser();
+			if (user.SystemRole != SystemRole.Administrator)
+			{
+				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator == user));
+			}
+
+			return _FilteringDao.List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetReportsCount([NotNull] ICollection<IModelFilterNode> filter)
+		{
+			//TODO templates for system, module, project, project member
+			var user = _AuthController.CurrentUser();
+			if (user.SystemRole != SystemRole.Administrator)
+			{
+				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator == user));
+			}
+
+			return _FilteringDao.RowCount<ReportTaskModel>(filter);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<IModelMetadata> ReportTaskMetadata()
+		{
+			return MetadataForModelAndRelations<ReportTaskModel>();
+		}
+
+		private object ReportTaskToDTO(ReportTaskModel task)
+		{
+			return new
+			{
+				task.Id, task.Name, task.State,
+				StateName = _LocalizationService.MessageForType(typeof(ReportTaskState), task.State) ?? task.State.ToString(),
+				Author = task.Creator.FullName,
+				task.CreationTime, task.StartedAt, task.CompletedAt,
+				task.DataGenerationProgress, task.ReportGenerationProgress,
+				task.ErrorMsg, 
+				ErrorDetails = _AuthController.CurrentUser().SystemRole == SystemRole.Administrator ? task.ErrorDetails : null,
+				task.ResultUnread
+			};
 		}
 
 		public class UploadResult

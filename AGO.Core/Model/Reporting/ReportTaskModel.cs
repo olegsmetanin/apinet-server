@@ -12,7 +12,6 @@ namespace AGO.Core.Model.Reporting
 	/// <summary>
 	/// Модель задачи на создание отчета
 	/// </summary>
-	[MetadataExclude]
 	public class ReportTaskModel: SecureModel<Guid>, IReportTask
 	{
 		#region Persistent
@@ -53,12 +52,13 @@ namespace AGO.Core.Model.Reporting
 		[JsonProperty]
 		public virtual string ErrorDetails { get; set; }
 
+		[MetadataExclude]
 		public virtual ArrayBlob ResultContent { get; set; }
 
 		[JsonProperty]
 		public virtual string ResultName { get; set; }
 
-		[NotLonger(128)]
+		[NotLonger(128), MetadataExclude]
 		public virtual string ResultContentType { get; set; }
 
 		[JsonProperty]

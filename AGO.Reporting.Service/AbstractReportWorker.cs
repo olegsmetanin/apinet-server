@@ -53,7 +53,7 @@ namespace AGO.Reporting.Service
 		private bool wasTimedOut;
 		protected CancellationTokenSource TokenSource;
 		private SequentialTimer trackProgressTimer;
-		private object tracklc = new object();
+		private readonly object tracklc = new object();
 
 		public void Start()
 		{
