@@ -119,3 +119,4 @@ UpgradeLog*.XML
 ._.DS_Store
 ._*
 /.nuget/NuGet.exe
+/publish
