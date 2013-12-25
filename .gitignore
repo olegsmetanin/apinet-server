@@ -38,6 +38,9 @@ x64/
 *.orig
 .builds
 
+#Automapping build results
+AGO.WebApiApp/App_Data/Mappings
+
 # Visual C++ cache files
 ipch/
 *.aps

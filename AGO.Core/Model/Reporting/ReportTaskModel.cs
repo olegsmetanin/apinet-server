@@ -52,7 +52,7 @@ namespace AGO.Core.Model.Reporting
 		[JsonProperty]
 		public virtual string ErrorDetails { get; set; }
 
-		[MetadataExclude]
+		[MetadataExclude/*, LazyLoad not work, see PropertyConventions comment*/]
 		public virtual ArrayBlob ResultContent { get; set; }
 
 		[JsonProperty]

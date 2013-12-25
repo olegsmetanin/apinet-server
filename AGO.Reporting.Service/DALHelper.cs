@@ -1,5 +1,6 @@
 ﻿using System;
 using AGO.Core;
+using Common.Logging;
 using NHibernate;
 
 namespace AGO.Reporting.Service
@@ -17,6 +18,10 @@ namespace AGO.Reporting.Service
 			{
 				action(provider.CurrentSession);
 			}
+			catch(Exception ex)
+			{
+				LogManager.GetLogger(typeof(DALHelper)).Error("Error when accessing database from report service", ex);					
+			}
 			finally
 			{
 				provider.CloseCurrentSession();
@@ -25,14 +30,9 @@ namespace AGO.Reporting.Service
 
 		internal static TResult Do<TResult>(ISessionProvider provider, Func<ISession, TResult> action)
 		{
-			try
-			{
-				return action(provider.CurrentSession);
-			}
-			finally
-			{
-				provider.CloseCurrentSession();
-			}
+			var result = default(TResult);
+			Do(provider, s => { result = action(s); });
+			return result;
 		}
 	}
 }

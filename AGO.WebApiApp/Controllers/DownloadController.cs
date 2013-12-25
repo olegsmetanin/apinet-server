@@ -45,6 +45,8 @@ namespace AGO.WebApiApp.Controllers
 			{
 				try
 				{
+					LogException(e);
+
 					HttpContext.Response.TrySkipIisCustomErrors = true;
 
 					HttpContext.Response.StatusCode = 500;

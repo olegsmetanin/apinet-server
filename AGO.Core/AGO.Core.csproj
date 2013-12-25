@@ -50,6 +50,7 @@
     <Compile Include="Attributes\Constraints\NotShorterAttribute.cs" />
     <Compile Include="Attributes\Controllers\RequireAuthorizationAttribute.cs" />
     <Compile Include="Attributes\Mapping\CascadeType.cs" />
+    <Compile Include="Attributes\Mapping\LazyLoadAttribute.cs" />
     <Compile Include="Attributes\Mapping\MetadataExcludeAttribute.cs" />
     <Compile Include="Attributes\Mapping\ManyToOneAttribute.cs" />
     <Compile Include="Attributes\Mapping\PersistentCollectionAttribute.cs" />

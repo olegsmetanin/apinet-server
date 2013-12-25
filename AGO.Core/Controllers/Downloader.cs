@@ -278,7 +278,7 @@ namespace AGO.Core.Controllers
 
 			public Stream Content
 			{
-				get { return task.ResultContent.OpenReader(); }
+				get { return new MemoryStream(task.Result); }
 			}
 		}
 	}

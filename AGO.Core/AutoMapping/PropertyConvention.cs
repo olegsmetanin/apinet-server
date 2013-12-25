@@ -1,4 +1,5 @@
 ﻿using System;
+using AGO.Core.Attributes.Mapping;
 using FluentNHibernate.Conventions;
 using FluentNHibernate.Conventions.Instances;
 using AGO.Core.Attributes.Constraints;
@@ -16,6 +17,11 @@ namespace AGO.Core.AutoMapping
 			if (readOnly != null)
 				instance.ReadOnly();
 
+			//not really work at all in ms sql
+//			var lazy = instance.Property.MemberInfo.FirstAttribute<LazyLoadAttribute>(true);
+//			if (lazy != null)
+//				instance.LazyLoad();
+
 			var propertyType = instance.Property.PropertyType;
 			if (propertyType.IsNullable())
 			{
@@ -24,6 +30,8 @@ namespace AGO.Core.AutoMapping
 				if (typeof(DateTime).IsAssignableFrom(propertyType))
 					instance.CustomType<NullableDateTime>();
 			}
+
+			
 
 			if (!typeof(string).IsAssignableFrom(propertyType))
 				return;
