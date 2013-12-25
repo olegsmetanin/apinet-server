@@ -50,9 +50,6 @@ namespace AGO.Tasks.Reports
 			{
 				foreach (var task in tasks)
 				{
-					//TODO testing remove
-					System.Threading.Thread.Sleep(5000);
-
 					var item = MakeItem(range);
 					MakeItemValues(item, task);
 
