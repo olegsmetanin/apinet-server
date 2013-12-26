@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using AGO.Core;
 using AGO.Core.Model.Dictionary;
-using AGO.Core.Model.Reporting;
-using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
+using AGO.Core.Model.Reporting;
+using AGO.Core.Model.Security;
 using AGO.Reporting.Common;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -454,49 +455,101 @@ namespace AGO.Tasks
 
 		protected void DoPopulateReports(dynamic context)
 		{
-			const string simpleTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$executors$}\"</range_data>";
-			const string detailedTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$content$}\",\"{$dueDate$}\",\"{$executors$}\"</range_data>";
+			const string csvSimpleTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$executors$}\"</range_data>";
+			const string csvDetailedTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$content$}\",\"{$dueDate$}\",\"{$executors$}\"</range_data>";
+			byte[] xltSimpleTemplate;
+			byte[] xltDetailedTemplate;
+			using (var rs = Assembly.GetExecutingAssembly().GetManifestResourceStream("AGO.Tasks.Reports.TaskList.xlt"))
+			{
+				System.Diagnostics.Debug.Assert(rs != null, "No report template resource in assembly");
+				xltSimpleTemplate = new byte[rs.Length];
+				rs.Read(xltSimpleTemplate, 0, xltSimpleTemplate.Length);
+			}
+			using (var rs = Assembly.GetExecutingAssembly().GetManifestResourceStream("AGO.Tasks.Reports.DetailedTaskList.xlt"))
+			{
+				System.Diagnostics.Debug.Assert(rs != null, "No report template resource in assembly");
+				xltDetailedTemplate = new byte[rs.Length];
+				rs.Read(xltDetailedTemplate, 0, xltDetailedTemplate.Length);
+			}
 
 			var st = new ReportTemplateModel
 			{
 			    CreationTime = DateTime.UtcNow,
 			    LastChange = DateTime.UtcNow,
 			    Name = "TaskList.csv",
-			    Content = Encoding.UTF8.GetBytes(simpleTemplate)
+			    Content = Encoding.UTF8.GetBytes(csvSimpleTemplate)
 			};
 			var dt = new ReportTemplateModel
 			{
 				CreationTime = DateTime.UtcNow,
 				LastChange = DateTime.UtcNow,
 				Name = "DetailedTaskList.csv",
-				Content = Encoding.UTF8.GetBytes(detailedTemplate)
+				Content = Encoding.UTF8.GetBytes(csvDetailedTemplate)
+			};
+			var xst = new ReportTemplateModel
+			{
+			    CreationTime = DateTime.UtcNow,
+			    LastChange = DateTime.UtcNow,
+			    Name = "TaskList.xlt",
+			    Content = xltSimpleTemplate
+			};
+			var xdt = new ReportTemplateModel
+			{
+				CreationTime = DateTime.UtcNow,
+				LastChange = DateTime.UtcNow,
+				Name = "DetailedTaskList.xlt",
+				Content = xltDetailedTemplate
 			};
 			CurrentSession.Save(st);
 			CurrentSession.Save(dt);
+			CurrentSession.Save(xst);
+			CurrentSession.Save(xdt);
 			CurrentSession.Flush();
 
 			var ss = new ReportSettingModel
 			{
 			    CreationTime = DateTime.UtcNow,
-			    Name = "Task list",
+			    Name = "Task list (csv)",
 				TypeCode = "task-list",
 			    DataGeneratorType = typeof(SimpleTaskListDataGenerator).AssemblyQualifiedName,
 			    GeneratorType = GeneratorType.CvsGenerator,
 			    ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
 			    ReportTemplate = st
 			};
+			var xss = new ReportSettingModel
+			{
+				CreationTime = DateTime.UtcNow,
+				Name = "Task list (MS Excel)",
+				TypeCode = "task-list",
+				DataGeneratorType = typeof(SimpleTaskListDataGenerator).AssemblyQualifiedName,
+				GeneratorType = GeneratorType.XlsSyncFusionGenerator,
+				ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
+				ReportTemplate = xst
+			};
 			var ds = new ReportSettingModel
 			{
 				CreationTime = DateTime.UtcNow,
-				Name = "Detailed task list",
+				Name = "Detailed task list (csv)",
 				TypeCode = "task-list",
 				DataGeneratorType = typeof(DetailedTaskListDataGenerator).AssemblyQualifiedName,
 				GeneratorType = GeneratorType.CvsGenerator,
 				ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
 				ReportTemplate = dt
 			};
+			var xds = new ReportSettingModel
+			{
+				CreationTime = DateTime.UtcNow,
+				Name = "Detailed task list (MS Excel)",
+				TypeCode = "task-list",
+				DataGeneratorType = typeof(DetailedTaskListDataGenerator).AssemblyQualifiedName,
+				GeneratorType = GeneratorType.XlsSyncFusionGenerator,
+				ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
+				ReportTemplate = xdt
+			};
 			_CrudDao.Store(ss);
+			_CrudDao.Store(xss);
 			_CrudDao.Store(ds);
+			_CrudDao.Store(xds);
 		}
 
 		#endregion

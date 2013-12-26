@@ -103,6 +103,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <EmbeddedResource Include="Reports\TaskList.xlt" />
+    <EmbeddedResource Include="Reports\DetailedTaskList.xlt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Model\ITasksModel.resx">

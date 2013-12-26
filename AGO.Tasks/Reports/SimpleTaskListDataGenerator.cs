@@ -39,7 +39,7 @@ namespace AGO.Tasks.Reports
 				filter.Add(predefinedPredicate);
 
 			var count = dao.RowCount<TaskModel>(filter);
-			var range = MakeRange("data", string.Empty);
+			var range = MakeRange("data", "Tasks");
 
 			if (count <= 0) return;
 
