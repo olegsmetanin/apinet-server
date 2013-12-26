@@ -54,6 +54,10 @@ namespace AGO.Core.Controllers
 					{
 						NotFound(request.RequestContext.HttpContext.Response, "Report with given id not exists");
 					}
+					else if (report.ResultContent == null)
+					{
+						NotFound(request.RequestContext.HttpContext.Response, "Report without result");
+					}
 					else
 					{
 						var wrapper = new ReportWrapper(report);

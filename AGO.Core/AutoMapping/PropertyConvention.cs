@@ -5,6 +5,7 @@ using FluentNHibernate.Conventions.Instances;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Nullables;
+using NHibernate;
 
 namespace AGO.Core.AutoMapping
 {
@@ -30,17 +31,21 @@ namespace AGO.Core.AutoMapping
 					instance.CustomType<NullableDateTime>();
 			}
 
-			
-
-			if (!typeof(string).IsAssignableFrom(propertyType))
-				return;
 			var notLonger = instance.Property.MemberInfo.FirstAttribute<NotLongerAttribute>(true);
-			if (notLonger != null)
-				instance.Length(notLonger.Limit);
-			else
+			if (typeof(byte[]).IsAssignableFrom(propertyType))
 			{
-				instance.CustomSqlType("StringClobSqlType");
-				instance.Length(int.MaxValue);
+				instance.CustomSqlType("BinaryBlobSqlType");
+				instance.Length(notLonger != null ? notLonger.Limit : int.MaxValue);
+			} 
+			else if (typeof(string).IsAssignableFrom(propertyType))
+			{
+				if (notLonger != null)
+					instance.Length(notLonger.Limit);
+				else
+				{
+					instance.CustomSqlType("StringClobSqlType");
+					instance.Length(int.MaxValue);
+				}
 			}
 		}
 	}

@@ -74,6 +74,13 @@ namespace AGO.Core
 			set { SetConfigProperty(DialectConfigKey, value.AssemblyQualifiedName); }
 		}
 
+		protected const string PrepareSqlConfigKey = "prepare_sql";
+		public bool PrepareSql
+		{
+			get { return GetConfigProperty(PrepareSqlConfigKey).ConvertSafe<bool>(); }
+			set { SetConfigProperty(PrepareSqlConfigKey, value.ToString(CultureInfo.InvariantCulture)); }
+		}
+
 		protected FlushMode _DefaultFlushMode = FlushMode.Never;
 
 		protected override void DoSetConfigProperty(string key, string value)
