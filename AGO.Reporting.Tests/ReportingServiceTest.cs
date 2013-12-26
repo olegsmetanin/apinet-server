@@ -94,7 +94,7 @@ namespace AGO.Reporting.Tests
 			Assert.IsNotNull(task.StartedAt);
 			Assert.IsNotNull(task.CompletedAt);
 			Assert.Greater(task.CompletedAt.Value, task.StartedAt.Value);
-			StringAssert.AreEqualIgnoringCase("\"1\",\"zxc\"", Encoding.UTF8.GetString(task.Result));
+			StringAssert.AreEqualIgnoringCase("\"1\",\"zxc\"", Encoding.UTF8.GetString(task.ResultContent));
 		}
 
 		[Test]
@@ -130,7 +130,7 @@ namespace AGO.Reporting.Tests
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
 			var tags = Session.QueryOver<ProjectTagModel>().WhereRestrictionOn(m => m.Name).IsLike(search, MatchMode.Anywhere)
 				.List<ProjectTagModel>();
-			var report = Encoding.UTF8.GetString(task.Result);
+			var report = Encoding.UTF8.GetString(task.ResultContent);
 			foreach (var tag in tags)
 			{
 				StringAssert.Contains(tag.Id.ToString(), report);

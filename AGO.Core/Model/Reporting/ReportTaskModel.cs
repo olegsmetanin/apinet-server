@@ -2,7 +2,6 @@
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
-using AGO.Core.Model.Lob;
 using AGO.Core.Model.Security;
 using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
@@ -12,6 +11,7 @@ namespace AGO.Core.Model.Reporting
 	/// <summary>
 	/// Модель задачи на создание отчета
 	/// </summary>
+	[LazyLoad]
 	public class ReportTaskModel: SecureModel<Guid>, IReportTask
 	{
 		#region Persistent
@@ -52,8 +52,8 @@ namespace AGO.Core.Model.Reporting
 		[JsonProperty]
 		public virtual string ErrorDetails { get; set; }
 
-		[MetadataExclude/*, LazyLoad not work, see PropertyConventions comment*/]
-		public virtual ArrayBlob ResultContent { get; set; }
+		[MetadataExclude, LazyLoad]
+		public virtual byte[] ResultContent { get; set; }
 
 		[JsonProperty]
 		public virtual string ResultName { get; set; }
@@ -76,13 +76,6 @@ namespace AGO.Core.Model.Reporting
 		public virtual IReportingServiceDescriptor Service
 		{
 			get { return ReportingService; }
-		}
-
-		[NotMapped]
-		public virtual byte[] Result
-		{
-			get { return ResultContent != null ? ResultContent.Data : null; } 
-			set { ResultContent = value != null ? new ArrayBlob(value) : null; }
 		}
 	}
 }

@@ -140,8 +140,8 @@ namespace AGO.Core.Migration
 			return next.ColumnOptions<TModel>(propertyInfo);
 		}
 
-		public static ICreateTableColumnOptionOrWithColumnSyntax WithBinaryColumn<TModel>(
-            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, Blob>> expression)
+		private static ICreateTableColumnOptionOrWithColumnSyntax WithBinaryColumn<TModel, TBinary>(
+			ICreateTableWithColumnSyntax self, Expression<Func<TModel, TBinary>> expression)
 		{
 			var length = Int32.MaxValue;
 			var propertyInfo = expression.PropertyInfoFromExpression();
@@ -151,6 +151,18 @@ namespace AGO.Core.Migration
 			if (notLonger != null)
 				length = notLonger.Limit > 0 ? notLonger.Limit : length;
 			return self.WithColumn(propertyInfo.Name).AsBinary(length).ColumnOptions<TModel>(propertyInfo);
+		}
+
+		public static ICreateTableColumnOptionOrWithColumnSyntax WithBinaryColumn<TModel>(
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, Blob>> expression)
+		{
+			return WithBinaryColumn<TModel, Blob>(self, expression);
+		}
+
+		public static ICreateTableColumnOptionOrWithColumnSyntax WithBinaryColumn<TModel>(
+			this ICreateTableWithColumnSyntax self, Expression<Func<TModel, byte[]>> expression)
+		{
+			return WithBinaryColumn<TModel, byte[]>(self, expression);
 		}
 
 		public static ICreateTableColumnOptionOrWithColumnSyntax WithTypeColumn<TModel>(

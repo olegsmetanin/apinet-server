@@ -58,9 +58,12 @@ namespace AGO.Core.Controllers
 					{
 						var wrapper = new ReportWrapper(report);
 						Send(request, wrapper);
-						report.ResultUnread = false;
-						diContainer.GetInstance<ICrudDao>().Store(report);
-						sp.FlushCurrentSession();
+						if (report.ResultUnread)
+						{
+							report.ResultUnread = false;
+							diContainer.GetInstance<ICrudDao>().Store(report);
+							sp.FlushCurrentSession();
+						}
 					}
 					break;
 				case FILE_TYPE:
@@ -248,7 +251,7 @@ namespace AGO.Core.Controllers
 
 			public Stream Content
 			{
-				get { return new MemoryStream(template.Content); }
+				get { return template.Content != null ? new MemoryStream(template.Content) : null; }
 			}
 		}
 
@@ -278,7 +281,7 @@ namespace AGO.Core.Controllers
 
 			public Stream Content
 			{
-				get { return new MemoryStream(task.Result); }
+				get { return task.ResultContent != null ? new MemoryStream(task.ResultContent) : null; }
 			}
 		}
 	}

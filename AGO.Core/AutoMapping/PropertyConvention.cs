@@ -17,10 +17,9 @@ namespace AGO.Core.AutoMapping
 			if (readOnly != null)
 				instance.ReadOnly();
 
-			//not really work at all in ms sql
-//			var lazy = instance.Property.MemberInfo.FirstAttribute<LazyLoadAttribute>(true);
-//			if (lazy != null)
-//				instance.LazyLoad();
+			var lazy = instance.Property.MemberInfo.FirstAttribute<LazyLoadAttribute>(true);
+			if (lazy != null)
+				instance.LazyLoad();
 
 			var propertyType = instance.Property.PropertyType;
 			if (propertyType.IsNullable())

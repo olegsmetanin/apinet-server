@@ -28,9 +28,12 @@ namespace AGO.Core.AutoMapping
 
 		public override bool ShouldMap(Member member)
 		{
-			if (typeof (ICollection).IsAssignableFrom(member.PropertyType) &&
-					member.MemberInfo.FirstAttribute<PersistentCollectionAttribute>(true) == null)
+			if (typeof(ICollection).IsAssignableFrom(member.PropertyType) &&
+				!typeof(byte[]).IsAssignableFrom(member.PropertyType) &&
+				member.MemberInfo.FirstAttribute<PersistentCollectionAttribute>(true) == null)
+			{
 				return false;
+			}
 			return member.MemberInfo.FirstAttribute<NotMappedAttribute>(true) == null && base.ShouldMap(member);
 		}
 

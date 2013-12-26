@@ -25,10 +25,14 @@ namespace AGO.Core.AutoMapping
 				table = tableAttribute.TableName.TrimSafe();
 			if (tableAttribute != null && !tableAttribute.SchemaName.IsNullOrWhiteSpace())
 				schema = tableAttribute.SchemaName.TrimSafe();
-			
+
 			instance.Table(table);
 			if(!AutoMappedSessionFactoryBuilder.DisableSchemas)
 				instance.Schema(schema);
+
+			var lazyLoadAttribute = instance.EntityType.FirstAttribute<LazyLoadAttribute>(true);
+			if (lazyLoadAttribute != null)
+				instance.LazyLoad();
 
 			var optimisticLockAttribute = instance.EntityType.FirstAttribute<OptimisticLockAttribute>(true);
 			if (optimisticLockAttribute == null)

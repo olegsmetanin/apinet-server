@@ -109,7 +109,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.LongRunning);
 			Create.CoreModelTable<ReportTemplateModel>()
 				.WithValueColumn<ReportTemplateModel>(m => m.Name)
-				.WithBinaryColumn<ReportTemplateModel>(m => m.TemplateContent)
+				.WithBinaryColumn<ReportTemplateModel>(m => m.Content)
 				.WithValueColumn<ReportTemplateModel>(m => m.LastChange);
 			Create.CoreModelTable<ReportSettingModel>()
 				.WithValueColumn<ReportSettingModel>(m => m.Name)

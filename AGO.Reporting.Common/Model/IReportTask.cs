@@ -70,7 +70,7 @@ namespace AGO.Reporting.Common.Model
 		/// <summary>
 		/// Результат (файл отчета)
 		/// </summary>
-		byte[] Result { get; set; }
+		byte[] ResultContent { get; set; }
 
 		/// <summary>
 		/// Результат (имя файла)
