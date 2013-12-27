@@ -136,6 +136,7 @@ namespace AGO.WebApiApp.Application
 				return base.AllActionParameterResolvers.Concat(new[]
 				{
 					typeof(HttpRuntimeParameterResolver),
+					typeof(FormOrQueryParameterResolver),
 					typeof(JsonBodyParameterResolver)
 				});
 			}
@@ -174,30 +175,13 @@ namespace AGO.WebApiApp.Application
 						.OfType<IWebServiceDescriptor>().OrderBy(s => s.Priority))
 					webServiceDescriptor.InitializeWeb(this);
 			}
-
-			RegisterDefaultRoute(RouteTable.Routes);
 		}
 
 		protected void RegisterCoreRoutes(RouteCollection routes)
 		{
-			routes.RouteExistingFiles = true;
+			routes.RouteExistingFiles = false;
 
 			routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
-
-			/*routes.MapRoute(
-				"Home",
-				"",
-				new { controller = "Home", action = "Index" });
-
-			routes.MapRoute(
-				"ProjectPage",
-				"projects/{project}",
-				new { controller = "Home", action = "Project" });
-
-			routes.MapRoute(
-				"AllModelsMetadata",
-				"metadata/AllModelsMetadata",
-				new { controller = "Metadata", action = "AllModelsMetadata" });*/
 
 			RegisterDownloadRoutes(routes);
 		}
@@ -214,15 +198,7 @@ namespace AGO.WebApiApp.Application
 							"download/" + Downloader.FILE_TYPE + "/{id}",
 							new { controller = "Download", action = "DownloadFile" });
 		}
-
-		protected void RegisterDefaultRoute(RouteCollection routes)
-		{
-			/*RouteTable.Routes.MapRoute(
-				"ng-app",
-				"{*path}",
-				new { controller = "StaticFiles", action = "StaticFile" });*/
-		}
-
+		
 		#endregion
 	}
 
