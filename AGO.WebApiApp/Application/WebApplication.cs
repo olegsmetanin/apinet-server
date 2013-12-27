@@ -184,7 +184,7 @@ namespace AGO.WebApiApp.Application
 
 			routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
-			routes.MapRoute(
+			/*routes.MapRoute(
 				"Home",
 				"",
 				new { controller = "Home", action = "Index" });
@@ -197,7 +197,7 @@ namespace AGO.WebApiApp.Application
 			routes.MapRoute(
 				"AllModelsMetadata",
 				"metadata/AllModelsMetadata",
-				new { controller = "Metadata", action = "AllModelsMetadata" });
+				new { controller = "Metadata", action = "AllModelsMetadata" });*/
 
 			RegisterDownloadRoutes(routes);
 		}
@@ -217,10 +217,10 @@ namespace AGO.WebApiApp.Application
 
 		protected void RegisterDefaultRoute(RouteCollection routes)
 		{
-			RouteTable.Routes.MapRoute(
+			/*RouteTable.Routes.MapRoute(
 				"ng-app",
 				"{*path}",
-				new { controller = "StaticFiles", action = "StaticFile" });
+				new { controller = "StaticFiles", action = "StaticFile" });*/
 		}
 
 		#endregion

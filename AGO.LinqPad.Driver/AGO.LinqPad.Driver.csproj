@@ -96,7 +96,7 @@
     <ItemGroup>
       <ZipFiles Include="$(OutputPath)*.*" />
     </ItemGroup>
-    <Zip Files="@(ZipFiles)" WorkingDirectory="$(OutputPath)$(Configuration)" ZipFileName="..\Build\$(Configuration)\AGO.LinqPad.Driver.lpx" ZipLevel="9" />
+    <Zip Files="@(ZipFiles)" WorkingDirectory="$(OutputPath)$(Configuration)" ZipFileName="$(OutputPath)AGO.LinqPad.Driver.lpx" ZipLevel="9" />
   </Target>
   <PropertyGroup>
     <PostBuildEvent>
