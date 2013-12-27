@@ -1,12 +1,31 @@
-﻿using System.Reflection;
+﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Web;
 using System.Linq;
+using AGO.Core;
 using AGO.Core.Execution;
+using AGO.Core.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AGO.WebApiApp.Execution
 {
 	public class FormOrQueryParameterResolver : IActionParameterResolver
 	{
+		#region Properties, fields, constructors
+		
+		protected readonly IJsonService _JsonService;
+
+		public FormOrQueryParameterResolver(IJsonService jsonService)
+		{
+			if (jsonService == null)
+				throw new ArgumentNullException("jsonService");
+			_JsonService = jsonService;
+		}
+
+		#endregion
+
 		#region Interfaces implementation
 
 		public bool Accepts(ParameterInfo parameterInfo)
@@ -21,6 +40,21 @@ namespace AGO.WebApiApp.Execution
 		{
 			parameterValue = HttpContext.Current.Request.Form[parameterInfo.Name] ??
 				HttpContext.Current.Request.QueryString[parameterInfo.Name];
+
+			if (parameterValue is string && !typeof (string).IsAssignableFrom(parameterInfo.ParameterType) &&
+			    !parameterInfo.ParameterType.IsValue())
+			{
+				using (var jsonReader = _JsonService.CreateReader(new StringReader((string) parameterValue)))
+				{
+					try
+					{
+						parameterValue = JToken.ReadFrom(jsonReader);
+					}
+					catch (JsonReaderException)
+					{
+					}
+				}	
+			}
 
 			return parameterValue != null;
 		}
