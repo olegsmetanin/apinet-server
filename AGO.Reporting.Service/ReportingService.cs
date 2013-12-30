@@ -17,7 +17,7 @@ using AGO.Reporting.Service.Controllers;
 using Common.Logging;
 using Newtonsoft.Json.Linq;
 using SimpleInjector.Integration.Web.Mvc;
-using WebActivator;
+using WebActivatorEx;
 
 [assembly: PostApplicationStartMethod(typeof(Initializer), "Initialize")]
 

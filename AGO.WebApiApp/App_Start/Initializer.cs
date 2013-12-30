@@ -1,5 +1,5 @@
 ﻿using AGO.WebApiApp.Application;
-using WebActivator;
+using WebActivatorEx;
 using Initializer = AGO.WebApiApp.App_Start.Initializer;
 
 [assembly: PostApplicationStartMethod(typeof(Initializer), "Initialize")]

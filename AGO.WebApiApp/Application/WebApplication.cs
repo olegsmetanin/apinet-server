@@ -14,7 +14,7 @@ using AGO.WebApiApp.App_Start;
 using AGO.WebApiApp.Controllers;
 using AGO.WebApiApp.Execution;
 using SimpleInjector.Integration.Web.Mvc;
-using WebActivator;
+using WebActivatorEx;
 
 [assembly: PostApplicationStartMethod(typeof(Initializer), "Initialize")]
 
