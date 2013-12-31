@@ -1,0 +1,25 @@
+Microsoft.Owin.Host.SystemWeb.OwinAppContext Information: 0 : No support for WebSockets has been detected.
+Microsoft.Owin.Host.SystemWeb.OwinAppContext Information: 0 : No support for WebSockets has been detected.
+Microsoft.Owin.Host.SystemWeb.OwinAppContext Error: 0 : The OWIN entry point threw an exception:
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---> System.IO.FileNotFoundException: Could not load file or assembly 'FluentMigrator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aacfc7de5acabf05' or one of its dependencies. Не удается найти указанный файл.
+   at System.Reflection.RuntimeAssembly.GetExportedTypes(RuntimeAssembly assembly, ObjectHandleOnStack retTypes)
+   at System.Reflection.RuntimeAssembly.GetExportedTypes()
+   at AGO.Core.Application.AbstractApplication.<get_ModuleDescriptors>b__2(Assembly a) in c:\Work\proj\apinet-server\AGO.Core\Application\AbstractApplication.cs:line 53
+   at System.Linq.Enumerable.<SelectManyIterator>d__14`2.MoveNext()
+   at System.Linq.Enumerable.WhereSelectEnumerableIterator`2.MoveNext()
+   at System.Linq.Enumerable.<OfTypeIterator>d__aa`1.MoveNext()
+   at System.Linq.Buffer`1..ctor(IEnumerable`1 source)
+   at System.Linq.OrderedEnumerable`1.<GetEnumerator>d__0.MoveNext()
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at AGO.Core.Application.AbstractApplication.get_ModuleDescriptors() in c:\Work\proj\apinet-server\AGO.Core\Application\AbstractApplication.cs:line 52
+   at AGO.Core.Application.AbstractApplication.Initialize() in c:\Work\proj\apinet-server\AGO.Core\Application\AbstractApplication.cs:line 94
+   at AGO.Reporting.Service.OwinStartup.Configuration(IAppBuilder app) in c:\Work\proj\apinet-server\AGO.Reporting.Service\OwinStartup.cs:line 18
+   --- End of inner exception stack trace ---
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Object[] arguments, Signature sig, Boolean constructor)
+   at System.Reflection.RuntimeMethodInfo.UnsafeInvokeInternal(Object obj, Object[] parameters, Object[] arguments)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+   at Owin.Loader.DefaultLoader.<>c__DisplayClass1.<LoadImplementation>b__0(IAppBuilder builder)
+   at Microsoft.Owin.Host.SystemWeb.OwinAppContext.Initialize(Action`1 startup)
+Microsoft.Owin.Host.SystemWeb.OwinAppContext Information: 0 : No support for WebSockets has been detected.
+Microsoft.Owin.Host.SystemWeb.OwinAppContext Information: 0 : No support for WebSockets has been detected.

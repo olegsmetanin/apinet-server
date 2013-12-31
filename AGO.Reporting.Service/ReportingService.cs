@@ -10,16 +10,15 @@ using AGO.Core.Application;
 using AGO.Core.Config;
 using AGO.Core.Execution;
 using AGO.Core.Model.Reporting;
+using AGO.Notifications;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
-using AGO.Reporting.Service;
 using AGO.Reporting.Service.Controllers;
 using Common.Logging;
+using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
 using SimpleInjector.Integration.Web.Mvc;
-using WebActivatorEx;
 
-[assembly: PostApplicationStartMethod(typeof(Initializer), "Initialize")]
 
 namespace AGO.Reporting.Service
 {
@@ -70,6 +69,8 @@ namespace AGO.Reporting.Service
 				new [] { typeof(AttributeValidatingParameterTransformer), typeof(JsonTokenParameterTransformer) });
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 
+			IocContainer.RegisterSingle<IHubContext>(() => GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>());
+
 			ReadConfiguration();
 			ApplyConfiguration();
 		}
@@ -107,7 +108,8 @@ namespace AGO.Reporting.Service
 			base.DoInitializeCoreServices();
 
 			RegisterReportingRoutes(RouteTable.Routes);
-			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
+			//DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
+			ReportingApiController.resolver = new SimpleInjectorDependencyResolver(IocContainer);
 		}
 
 		protected void RegisterReportingRoutes(RouteCollection routes)
@@ -176,6 +178,8 @@ namespace AGO.Reporting.Service
 			runTaskTimer.Stop();
 			cleanFinishedTaskTimer.Stop();
 
+			rwlock.Dispose();
+
 			RouteTable.Routes.Clear();
 			//TODO other shutdown (timers etc)
 		}
@@ -240,6 +244,7 @@ namespace AGO.Reporting.Service
 				{
 					var processed = new List<Guid>();
 					var repository = IocContainer.GetInstance<IReportingRepository>();
+					var hub = IocContainer.GetInstance<IHubContext>();
 					foreach (var taskId in waitingForRun)
 					{
 						//Запускаем не больше лимита
@@ -266,6 +271,7 @@ namespace AGO.Reporting.Service
 							AddWorker(worker);
 							worker.Start();
 							processed.Add(taskId);
+							hub.Clients.All.onReportChanged(task.Id);
 						}
 						catch (Exception ex)
 						{
@@ -408,20 +414,24 @@ namespace AGO.Reporting.Service
 				rwlock.EnterUpgradeableReadLock();
 				try
 				{
-					if (runningWorkers.Count <= 0) return;
-					//Избавился от проверок с помощью Linq, т.к. в закешированных выражения зависают ReportWorker-ы,
-					//чем порождают перерасход памяти
-					var finishedWorkerIds = runningWorkers.Keys.Where(taskId => runningWorkers[taskId].Finished).ToList();
-					if (finishedWorkerIds.Count <= 0) return;
-					rwlock.EnterWriteLock();
-					try
+					if (runningWorkers.Count > 0)
 					{
-						foreach (var taskId in finishedWorkerIds)
-							runningWorkers.Remove(taskId);
-					}
-					finally
-					{
-						rwlock.ExitWriteLock();
+						//Избавился от проверок с помощью Linq, т.к. в закешированных выражения зависают ReportWorker-ы,
+						//чем порождают перерасход памяти
+						var finishedWorkerIds = runningWorkers.Keys.Where(taskId => runningWorkers[taskId].Finished).ToList();
+						if (finishedWorkerIds.Count > 0)
+						{
+							rwlock.EnterWriteLock();
+							try
+							{
+								foreach (var taskId in finishedWorkerIds)
+									runningWorkers.Remove(taskId);
+							}
+							finally
+							{
+								rwlock.ExitWriteLock();
+							}
+						}
 					}
 				}
 				finally
@@ -430,14 +440,6 @@ namespace AGO.Reporting.Service
 				}
 			}
 			cleanFinishedTaskTimer.Run();
-		}
-	}
-
-	public static class Initializer
-	{
-		public static void Initialize()
-		{
-			new ReportingService().Initialize();
 		}
 	}
 }

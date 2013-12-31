@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AGO.Core;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
+using Microsoft.AspNet.SignalR;
 
 namespace AGO.Reporting.Service
 {
@@ -27,6 +28,7 @@ namespace AGO.Reporting.Service
 
 			Repository = Container.GetInstance<IReportingRepository>();
 			SessionProvider = Container.GetInstance<ISessionProvider>();
+			Hub = Container.GetInstance<IHubContext>();
 		}
 
 		public Guid TaskId { get; private set; }
@@ -38,6 +40,8 @@ namespace AGO.Reporting.Service
 		protected IReportingRepository Repository { get; private set; }
 
 		protected ISessionProvider SessionProvider { get; private set; }
+
+		protected IHubContext Hub { get; private set; }
 
 		public object Parameters { get; set; }
 
@@ -216,6 +220,8 @@ namespace AGO.Reporting.Service
 				    action(reportTask);
 					session.SaveOrUpdate(reportTask);
 				    SessionProvider.FlushCurrentSession();
+
+					Hub.Clients.All.onReportChanged(reportTask.Id);
 				});
 
 			}

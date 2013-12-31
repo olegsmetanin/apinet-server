@@ -10,13 +10,9 @@ using AGO.Core.Application;
 using AGO.Core.Config;
 using AGO.Core.Controllers;
 using AGO.Core.Modules;
-using AGO.WebApiApp.App_Start;
 using AGO.WebApiApp.Controllers;
 using AGO.WebApiApp.Execution;
 using SimpleInjector.Integration.Web.Mvc;
-using WebActivatorEx;
-
-[assembly: PostApplicationStartMethod(typeof(Initializer), "Initialize")]
 
 namespace AGO.WebApiApp.Application
 {
