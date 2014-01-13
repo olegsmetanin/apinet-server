@@ -13,7 +13,8 @@ namespace AGO.WebApiApp
 
 		public void Configuration(IAppBuilder app)
 		{
-			AGO.Notifications.Startup.StartupAsNotificationHost(app, ConfigurationManager.AppSettings["Hibernate_connection.connection_string"]);
+			//TODO replace with new redis startup
+			//AGO.Notifications.Startup.StartupAsNotificationHost(app, ConfigurationManager.AppSettings["Hibernate_connection.connection_string"]);
 
 			webapp = new WebApplication { WebEnabled = true };
 			webapp.Initialize();

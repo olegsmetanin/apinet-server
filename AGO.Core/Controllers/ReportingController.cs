@@ -17,7 +17,6 @@ using AGO.Core.Modules.Attributes;
 using AGO.Notifications;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
-using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -188,13 +187,15 @@ namespace AGO.Core.Controllers
 				_CrudDao.Store(task);
 				_SessionProvider.FlushCurrentSession();
 
-				var hub = GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>();
-				hub.Clients.All.onReportChanged(task.Id);
+				//Replace with call to redis publish
+				//var hub = GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>();
+				//hub.Clients.All.onReportChanged(task.Id);
 
 				using (var client = new ServiceClient(service.EndPoint))
 				{
 					client.RunReport(task.Id);
-					hub.Clients.All.onReportChanged(task.Id);
+					//TODO: replace with call to redis publishing
+					//hub.Clients.All.onReportChanged(task.Id);
 				}
 
 				return task;

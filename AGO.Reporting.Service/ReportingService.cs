@@ -10,12 +10,10 @@ using AGO.Core.Application;
 using AGO.Core.Config;
 using AGO.Core.Execution;
 using AGO.Core.Model.Reporting;
-using AGO.Notifications;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service.Controllers;
 using Common.Logging;
-using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
 using SimpleInjector.Integration.Web.Mvc;
 
@@ -69,7 +67,8 @@ namespace AGO.Reporting.Service
 				new [] { typeof(AttributeValidatingParameterTransformer), typeof(JsonTokenParameterTransformer) });
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 
-			IocContainer.RegisterSingle<IHubContext>(() => GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>());
+			//TODO: replace with redis publishing mechanism
+			//IocContainer.RegisterSingle<IHubContext>(() => GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>());
 
 			ReadConfiguration();
 			ApplyConfiguration();
