@@ -108,8 +108,7 @@ namespace AGO.Reporting.Service
 			base.DoInitializeCoreServices();
 
 			RegisterReportingRoutes(RouteTable.Routes);
-			//DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
-			ReportingApiController.resolver = new SimpleInjectorDependencyResolver(IocContainer);
+			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
 		}
 
 		protected void RegisterReportingRoutes(RouteCollection routes)
@@ -244,7 +243,6 @@ namespace AGO.Reporting.Service
 				{
 					var processed = new List<Guid>();
 					var repository = IocContainer.GetInstance<IReportingRepository>();
-					var hub = IocContainer.GetInstance<IHubContext>();
 					foreach (var taskId in waitingForRun)
 					{
 						//Запускаем не больше лимита
@@ -271,7 +269,6 @@ namespace AGO.Reporting.Service
 							AddWorker(worker);
 							worker.Start();
 							processed.Add(taskId);
-							hub.Clients.All.onReportChanged(task.Id);
 						}
 						catch (Exception ex)
 						{

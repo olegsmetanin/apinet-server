@@ -14,7 +14,7 @@
     <RootNamespace>AGO.Reporting.Service</RootNamespace>
     <AssemblyName>AGO.Reporting.Service</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <UseIISExpress>false</UseIISExpress>
+    <UseIISExpress>true</UseIISExpress>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -243,7 +243,7 @@
           <AutoAssignPort>False</AutoAssignPort>
           <DevelopmentServerPort>36652</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:36652</IISUrl>
+          <IISUrl>http://localhost:36652/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

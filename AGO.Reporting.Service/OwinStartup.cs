@@ -16,7 +16,6 @@ namespace AGO.Reporting.Service
 		{
 			//TODO extract from isessionprovider
 			AGO.Notifications.Startup.StartupAsPublisher(ConfigurationManager.AppSettings["Hibernate_connection.connection_string"]);
-			//AGO.Notifications.Startup.StartupAsNotificationHost(app, ConfigurationManager.AppSettings["Hibernate_connection.connection_string"]);
 
 			service = new ReportingService();
 			service.Initialize();

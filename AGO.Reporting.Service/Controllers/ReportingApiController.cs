@@ -16,8 +16,6 @@ namespace AGO.Reporting.Service.Controllers
 {
 	public class ReportingApiController: Controller
 	{
-		internal static IDependencyResolver resolver;
-
 		public ActionResult Dispatch()
 		{
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
@@ -32,8 +30,7 @@ namespace AGO.Reporting.Service.Controllers
 					if (method == null)
 						throw new Exception("method is null");
 
-					var executor = resolver.GetService<IActionExecutor>();
-						//DependencyResolver.Current.GetService<IActionExecutor>();
+					var executor = DependencyResolver.Current.GetService<IActionExecutor>();
 					object result;
 					try
 					{
@@ -45,8 +42,7 @@ namespace AGO.Reporting.Service.Controllers
 						throw;
 					}
 
-					var jsonService = resolver.GetService<IJsonService>();
-						//DependencyResolver.Current.GetService<IJsonService>();
+					var jsonService = DependencyResolver.Current.GetService<IJsonService>();
 					var stringBuilder = new StringBuilder();
 					var outputWriter = jsonService.CreateWriter(new StringWriter(stringBuilder), true);
 					jsonService.CreateSerializer().Serialize(outputWriter, result);
@@ -70,8 +66,7 @@ namespace AGO.Reporting.Service.Controllers
 							HttpContext.Response.StatusCode = httpException.GetHttpCode();
 
 						var message = new StringBuilder();
-						var localizationService = resolver.GetService<ILocalizationService>();
-							//DependencyResolver.Current.GetService<ILocalizationService>();
+						var localizationService = DependencyResolver.Current.GetService<ILocalizationService>();
 
 						message.Append(localizationService.MessageForException(e));
 						if (message.Length == 0)
