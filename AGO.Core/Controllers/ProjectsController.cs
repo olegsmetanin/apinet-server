@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
-using AGO.Core.Controllers;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
-using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
@@ -47,7 +45,7 @@ namespace AGO.Core.Controllers
 		#region Json endpoints
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public object CreateProject([NotNull] ProjectModel model)
+		public object CreateProject([NotNull] ProjectModel model, [NotNull] ISet<Guid> tagIds)
 		{
 			var validation = new ValidationResult();
 
@@ -70,7 +68,7 @@ namespace AGO.Core.Controllers
 					return validation;
 
 				_CrudDao.Store(newProject);
-
+				
 				var statusHistoryRow = new ProjectStatusHistoryModel
 				{
 					StartDate = DateTime.Now,
@@ -78,6 +76,16 @@ namespace AGO.Core.Controllers
 					Status = ProjectStatus.New
 				};
 				_CrudDao.Store(statusHistoryRow);
+
+				foreach (var tag in tagIds.Select(id => _CrudDao.Get<ProjectTagModel>(id)))
+				{
+					_CrudDao.Store(new ProjectToTagModel
+					{
+						Creator = _AuthController.CurrentUser(),
+						Tag = tag,
+						Project = newProject
+					});
+				}
 
 				return newProject;
 			}
