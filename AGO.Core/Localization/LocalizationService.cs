@@ -191,10 +191,19 @@ namespace AGO.Core.Localization
 				? _ExceptionLocalizers[culture].FirstOrDefault(l => l.Accept(exception))
 				: null;
 
-			return localizer != null 
+			var result = localizer != null 
 				? localizer.Message(exception, culture) 
 				: (MessageFor(exception, null, culture) ?? 
 					MessageFor(exception, exception.GetType().Name, culture));
+
+			if (!result.IsNullOrWhiteSpace())
+				return result;
+
+			localizer = _ExceptionLocalizers.ContainsKey(culture)
+				? _ExceptionLocalizers[culture].FirstOrDefault(l => l.Accept(new ExceptionDetailsHidden()))
+				: null;
+
+			return localizer != null ? localizer.Message(exception, culture) : "Unknown error";
 		}
 
 		public void RegisterLocalizers(IEnumerable<ILocalizer> localizers)
