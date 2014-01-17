@@ -12,6 +12,7 @@ using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using Newtonsoft.Json.Linq;
+using NHibernate.Criterion;
 
 namespace AGO.Core.Controllers
 {
@@ -116,13 +117,19 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<string> GetFilterNames([NotEmpty] string group)
+		public IEnumerable<LookupEntry> LookupFilterNames(
+			[NotEmpty] string group,
+			[InRange(0, null)] int page,
+			string term)
 		{
-			return _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
+			var query = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
 				.Where(m => m.GroupName == group && m.User == _AuthController.CurrentUser())
 				.OrderBy(m => m.Name).Asc
-				.Select(m => m.Name)
-				.List<string>();
+				.Select(m => m.Name);
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return _CrudDao.PagedQuery(query, page).LookupList(m => m.Name, m => m.Name, false);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
