@@ -14,7 +14,7 @@ using AGO.Core.Model.Processing;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
-using AGO.Notifications;
+using AGO.Core.Notification;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
@@ -26,6 +26,7 @@ namespace AGO.Core.Controllers
 	{
 		private const string TEMPLATE_ID_FORM_KEY = "templateId";
 		private string uploadPath;
+		private readonly INotificationService bus;
 
 		public ReportingController(
 			IJsonService jsonService, 
@@ -35,9 +36,14 @@ namespace AGO.Core.Controllers
 			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
-			AuthController authController) 
+			AuthController authController,
+			INotificationService notificationService) 
 			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
+			if (notificationService == null)
+				throw new ArgumentNullException("notificationService");
+
+			bus = notificationService;
 		}
 
 		protected override void DoSetConfigProperty(string key, string value)
@@ -187,16 +193,10 @@ namespace AGO.Core.Controllers
 				_CrudDao.Store(task);
 				_SessionProvider.FlushCurrentSession();
 
-				//Replace with call to redis publish
-				//var hub = GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>();
-				//hub.Clients.All.onReportChanged(task.Id);
-
-				using (var client = new ServiceClient(service.EndPoint))
-				{
-					client.RunReport(task.Id);
-					//TODO: replace with call to redis publishing
-					//hub.Clients.All.onReportChanged(task.Id);
-				}
+				//emit event for reporting service (about new task to work)
+				bus.EmitRunReport(task.Id);
+				//emit event for client (about his task in queue and start soon)
+				bus.EmitReportChanged(ReportTaskToDTO(task));
 
 				return task;
 			}
@@ -327,19 +327,9 @@ namespace AGO.Core.Controllers
 			return MetadataForModelAndRelations<ReportTaskModel>();
 		}
 
-		private object ReportTaskToDTO(ReportTaskModel task)
+		private ReportTaskDTO ReportTaskToDTO(ReportTaskModel task)
 		{
-			return new
-			{
-				task.Id, task.Name, task.State,
-				StateName = _LocalizationService.MessageForType(typeof(ReportTaskState), task.State) ?? task.State.ToString(),
-				Author = task.Creator.FullName,
-				task.CreationTime, task.StartedAt, task.CompletedAt,
-				task.DataGenerationProgress, task.ReportGenerationProgress,
-				task.ErrorMsg, 
-				ErrorDetails = _AuthController.CurrentUser().SystemRole == SystemRole.Administrator ? task.ErrorDetails : null,
-				task.ResultUnread
-			};
+			return ReportTaskDTO.FromTask(task, _LocalizationService, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);
 		}
 
 		public class UploadResult

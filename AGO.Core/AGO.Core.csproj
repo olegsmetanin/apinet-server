@@ -128,10 +128,13 @@
     <Compile Include="Model\Reporting\ReportingServiceDescriptorModel.cs" />
     <Compile Include="Model\Reporting\ReportSettingModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />
+    <Compile Include="Model\Reporting\ReportTaskDTO.cs" />
     <Compile Include="Model\Reporting\ReportTemplateModel.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Model\Security\UserFilterModel.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
+    <Compile Include="Notification\INotificationService.cs" />
+    <Compile Include="Notification\NotificationService.cs" />
     <Compile Include="QueryOverExtensions.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
@@ -245,6 +248,9 @@
     <Compile Include="SessionFactoryBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="BookSleeve">
+      <HintPath>..\packages\BookSleeve.1.3.41\lib\BookSleeve.dll</HintPath>
+    </Reference>
     <Reference Include="Common.Logging">
       <HintPath>..\packages\Common.Logging.2.1.2\lib\net40\Common.Logging.dll</HintPath>
     </Reference>
@@ -335,10 +341,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AGO.Notifications\AGO.Notifications.csproj">
-      <Project>{36788acb-eae4-4ee4-a8ac-5156ce1e7c5b}</Project>
-      <Name>AGO.Notifications</Name>
-    </ProjectReference>
     <ProjectReference Include="..\AGO.Reporting.Common\AGO.Reporting.Common.csproj">
       <Project>{74F04C01-CF94-4901-BBC1-EF7BAE7590E9}</Project>
       <Name>AGO.Reporting.Common</Name>

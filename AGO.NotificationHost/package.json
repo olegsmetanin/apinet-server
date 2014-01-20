@@ -1,0 +1,17 @@
+{
+    "name": "apinet-notifications",
+    "description": "Socket.io notification host",
+    "version": "0.0.1",
+    "homepage": "http://olegsmith.github.com/",
+    "author": {
+        "name": "Oleg Smetanin & Artem Naumov & Alexey Rumyantsev"
+    },
+    "licenses": [{
+        "type": "MIT",
+        "url": "https://github.com/angular-ui/ui-router/blob/master/LICENSE"
+    }],
+    "dependencies": {
+		"redis": "0.10.x",
+	    "socket.io": "0.9.x"
+    }
+}

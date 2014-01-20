@@ -120,3 +120,6 @@ UpgradeLog*.XML
 ._*
 /.nuget/NuGet.exe
 /publish
+
+#Node.js modules
+/AGO.NotificationHost/node_modules

@@ -201,10 +201,6 @@
       <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
       <Name>AGO.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AGO.Notifications\AGO.Notifications.csproj">
-      <Project>{36788acb-eae4-4ee4-a8ac-5156ce1e7c5b}</Project>
-      <Name>AGO.Notifications</Name>
-    </ProjectReference>
     <ProjectReference Include="..\AGO.Reporting.Common\AGO.Reporting.Common.csproj">
       <Project>{74F04C01-CF94-4901-BBC1-EF7BAE7590E9}</Project>
       <Name>AGO.Reporting.Common</Name>

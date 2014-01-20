@@ -10,6 +10,7 @@ using AGO.Core.Config;
 using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
+using AGO.Core.Notification;
 
 namespace AGO.Core.Application
 {
@@ -37,7 +38,10 @@ namespace AGO.Core.Application
 
 		protected IList<Type> _TestDataServices = new List<Type>();
 		public IList<Type> TestDataServices { get { return _TestDataServices; } }
-		
+
+		protected INotificationService notificationService;
+		public INotificationService NotificationService { get { return notificationService; } }
+
 		#endregion
 
 		#region Template methods
@@ -47,6 +51,7 @@ namespace AGO.Core.Application
 			base.DoRegisterCoreServices();
 
 			DoRegisterPersistence();
+			DoRegisterNotification();
 		}
 
 		protected virtual void DoRegisterPersistence()
@@ -76,6 +81,13 @@ namespace AGO.Core.Application
 			IocContainer.RegisterAll<IModelValidator>(AllModelValidators);
 		}
 
+		protected virtual void DoRegisterNotification()
+		{
+			IocContainer.RegisterSingle<INotificationService, NotificationService>();
+			IocContainer.RegisterInitializer<NotificationService>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^Notification_(.*)", KeyValueProvider)).ApplyTo(service));
+		}
+
 		protected virtual IEnumerable<Type> AllModelValidators
 		{
 			get { return new[] { typeof(AttributeValidatingModelValidator) }; }
@@ -97,6 +109,7 @@ namespace AGO.Core.Application
 			base.DoInitializeCoreServices();
 
 			DoInitializePersistence();
+			DoInitializeNotification();
 		}
 
 		protected virtual void DoInitializePersistence()
@@ -107,6 +120,11 @@ namespace AGO.Core.Application
 			_CrudDao = IocContainer.GetInstance<ICrudDao>();
 			_MigrationService = IocContainer.GetInstance<IMigrationService>();
 			_ModelProcessingService = IocContainer.GetInstance<IModelProcessingService>();
+		}
+
+		protected virtual void DoInitializeNotification()
+		{
+			notificationService = IocContainer.GetInstance<INotificationService>();
 		}
 
 		protected virtual void DoCreateDatabase()

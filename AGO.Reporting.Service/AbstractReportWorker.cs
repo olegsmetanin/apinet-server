@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using AGO.Core;
+using AGO.Core.Notification;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 
@@ -27,8 +28,7 @@ namespace AGO.Reporting.Service
 
 			Repository = Container.GetInstance<IReportingRepository>();
 			SessionProvider = Container.GetInstance<ISessionProvider>();
-			//TODO: see comment above Hub property
-			//Hub = Container.GetInstance<IHubContext>();
+			Bus = Container.GetInstance<INotificationService>();
 		}
 
 		public Guid TaskId { get; private set; }
@@ -41,8 +41,7 @@ namespace AGO.Reporting.Service
 
 		protected ISessionProvider SessionProvider { get; private set; }
 
-		//TODO: replace with redis message bus (or our notification abstraction)
-		//protected IHubContext Hub { get; private set; }
+		protected INotificationService Bus { get; private set; }
 
 		public object Parameters { get; set; }
 
@@ -221,9 +220,8 @@ namespace AGO.Reporting.Service
 				    action(reportTask);
 					session.SaveOrUpdate(reportTask);
 				    SessionProvider.FlushCurrentSession();
-
-					//TODO: See comment above Hub property
-					//Hub.Clients.All.onReportChanged(reportTask.Id);
+					//Not wait for the task complete - no care if some of messages was lost
+					Bus.EmitReportChanged(Repository.GetTaskAsDTO(reportTask.Id));
 				});
 
 			}

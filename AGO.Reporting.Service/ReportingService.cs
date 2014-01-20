@@ -67,9 +67,6 @@ namespace AGO.Reporting.Service
 				new [] { typeof(AttributeValidatingParameterTransformer), typeof(JsonTokenParameterTransformer) });
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 
-			//TODO: replace with redis publishing mechanism
-			//IocContainer.RegisterSingle<IHubContext>(() => GlobalHost.ConnectionManager.GetHubContext<NotificationsHub>());
-
 			ReadConfiguration();
 			ApplyConfiguration();
 		}
@@ -108,6 +105,9 @@ namespace AGO.Reporting.Service
 
 			RegisterReportingRoutes(RouteTable.Routes);
 			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
+
+			NotificationService.SubscribeToRunReport(id => RunReport(id));
+			NotificationService.SubscribeToCancelReport(id => CancelReport(id));
 		}
 
 		protected void RegisterReportingRoutes(RouteCollection routes)
@@ -279,7 +279,7 @@ namespace AGO.Reporting.Service
 						}
 					}
 
-					//Все обработанные удаляем из очереди, неважно нормально они запущени или были
+					//Все обработанные удаляем из очереди, неважно нормально они запущены или были
 					//какие-то проблемы. Они по идее записаны в таск и/или лог, и в повторной обработке
 					//эти задачи не нуждаются
 					foreach (var taskId in processed)
