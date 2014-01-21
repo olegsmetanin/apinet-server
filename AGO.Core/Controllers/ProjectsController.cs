@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.Controllers.Projects;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
@@ -13,7 +14,6 @@ using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using NHibernate.Criterion;
-
 
 namespace AGO.Core.Controllers
 {
@@ -97,7 +97,7 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<ProjectModel> GetProjects(
+		public IEnumerable<ProjectViewModel> GetProjects(
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters,
@@ -114,12 +114,26 @@ namespace AGO.Core.Controllers
 				});
 				filter.Add(modeFilter);
 			}
-
-			return _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
+			
+			var projects = _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
 			{
 				Page = page,
 				Sorters = sorters
 			});
+
+			return projects.Select(project =>
+			{
+				var viewModel = new ProjectViewModel(project);
+
+				var allowed = project.Tags.Where(m => m.Tag.OwnerId == null || m.Tag.OwnerId == _AuthController.CurrentUser().Id);
+				viewModel.Tags.UnionWith(allowed.OrderBy(tl => tl.Tag.Owner).ThenBy(tl => tl.Tag.FullName).Select(m => new LookupEntry
+				{
+					Id = m.Tag.Id.ToString(),
+					Text = m.Tag.FullName
+				}));
+
+				return viewModel;
+			}).ToList();
 		}
 
 		[JsonEndpoint, RequireAuthorization]

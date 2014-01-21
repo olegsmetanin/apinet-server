@@ -93,6 +93,7 @@
     <Compile Include="AbstractTestDataService.cs" />
     <Compile Include="Controllers\MimeAssistant.cs" />
     <Compile Include="Controllers\ProjectsController.cs" />
+    <Compile Include="Controllers\Projects\ProjectViewModel.cs" />
     <Compile Include="Controllers\ReportingController.cs" />
     <Compile Include="Controllers\UpdateResult.cs" />
     <Compile Include="Controllers\Uploader.cs" />
