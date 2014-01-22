@@ -49,6 +49,7 @@ namespace AGO.Core.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectTagModel> GetProjectTags(
+			Guid? parentId,
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
@@ -56,12 +57,33 @@ namespace AGO.Core.Controllers
 			var ownerFilter = new ModelFilterNode();
 			ownerFilter.AddItem(new ValueFilterNode
 			{
-				Path = "Owner",
+				Path = "Creator",
 				Operator = ValueFilterOperators.Eq,
 				Operand = _AuthController.CurrentUser().Id.ToString()
 			});
 
 			filter.Add(ownerFilter);
+
+			var parentFilter = new ModelFilterNode();
+			if (parentId != null && !default(Guid).Equals(parentId))
+			{
+				parentFilter.AddItem(new ValueFilterNode
+				{
+					Path = "Parent",
+					Operator = ValueFilterOperators.Eq,
+					Operand = parentId.ToStringSafe()
+				});
+			}
+			else
+			{
+				parentFilter.AddItem(new ValueFilterNode
+				{
+					Path = "Parent",
+					Operator = ValueFilterOperators.Exists,
+					Negative = true
+				});
+			}
+			filter.Add(parentFilter);
 
 			return _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
 			{
@@ -76,7 +98,7 @@ namespace AGO.Core.Controllers
 			var ownerFilter = new ModelFilterNode();
 			ownerFilter.AddItem(new ValueFilterNode
 			{
-				Path = "Owner",
+				Path = "Creator",
 				Operator = ValueFilterOperators.Eq,
 				Operand = _AuthController.CurrentUser().Id.ToString()
 			});
@@ -87,18 +109,12 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ProjectTagModel GetProjectTag([NotEmpty] Guid id, bool dontFetchReferences)
-		{
-			return GetModel<ProjectTagModel, Guid>(id, dontFetchReferences);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupProjectTags(
 			[InRange(0, null)] int page,
 			string term)
 		{
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
-				.Where(m => m.Owner == _AuthController.CurrentUser() || m.Owner == null)
+				.Where(m => m.Creator == _AuthController.CurrentUser())
 				.OrderBy(m => m.Name).Asc;
 
 			if (!term.IsNullOrWhiteSpace())
@@ -114,36 +130,35 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ValidationResult EditProjectTag([NotNull] ProjectTagModel model)
+		public object CreateProjectTag(Guid parentId, [NotEmpty] string name)
 		{
 			var validation = new ValidationResult();
 
 			try
 			{
 				var currentUser = _AuthController.CurrentUser();
-				var persistentModel = default(Guid).Equals(model.Id) 
-					? new ProjectTagModel
-						{
-							Creator = currentUser,
-							Owner = currentUser
-						}
-					: _CrudDao.Get<ProjectTagModel>(model.Id, true);
 
-				if (persistentModel.Owner != null && !currentUser.Equals(persistentModel.Owner) && currentUser.SystemRole != SystemRole.Administrator)
+				var tag = new ProjectTagModel
+				{
+					Creator = currentUser,
+					Name = name.TrimSafe(),
+					Parent = !default(Guid).Equals(parentId) ? _CrudDao.Get<ProjectTagModel>(parentId, true) : null
+				};
+
+				if (tag.Parent != null && !tag.Creator.Equals(tag.Parent.Creator) && currentUser.SystemRole != SystemRole.Administrator)
 					throw new AccessForbiddenException();
-				persistentModel.Name = model.Name.TrimSafe();
 
 				if (_SessionProvider.CurrentSession.QueryOver<ProjectTagModel>().Where(
-						m => m.Name == persistentModel.Name && m.Owner == persistentModel.Owner && m.Id != persistentModel.Id).RowCount() > 0)
+						m => m.Name == tag.Name && m.Parent == tag.Parent && m.Creator == tag.Creator).RowCount() > 0)
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
+				_ModelProcessingService.ValidateModelSaving(tag, validation);
 				if (!validation.Success)
 					return validation;
 
 				var parentsStack = new Stack<TagModel>();
 
-				var current = persistentModel as TagModel;
+				var current = tag as TagModel;
 				while (current != null)
 				{
 					parentsStack.Push(current);
@@ -158,9 +173,10 @@ namespace AGO.Core.Controllers
 						fullName.Append(" / ");
 					fullName.Append(current.Name);
 				}
-				persistentModel.FullName = fullName.ToString();
+				tag.FullName = fullName.ToString();
 
-				_CrudDao.Store(persistentModel);
+				_CrudDao.Store(tag);
+				return tag;
 			}
 			catch (Exception e)
 			{
@@ -171,21 +187,83 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public bool DeleteProjectTag([NotEmpty] Guid id)
+		public object UpdateProjectTag([NotEmpty] Guid id, [NotEmpty] string name)
 		{
-			var model = _CrudDao.Get<ProjectTagModel>(id, true);
+			var validation = new ValidationResult();
 
-			var currentUser = _AuthController.CurrentUser();
-			if (model.Owner != null && !currentUser.Equals(model.Owner) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
+			try
+			{
+				var currentUser = _AuthController.CurrentUser();
+				var tag = _CrudDao.Get<ProjectTagModel>(id, true);
 
-			if (_SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-					.Where(m => m.Tag == model).RowCount() > 0)
-				throw new CannotDeleteReferencedItemException();
+				if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+					throw new AccessForbiddenException();
 
-			_CrudDao.Delete(model);
+				tag.Name = name.TrimSafe();
 
-			return true;
+				if (_SessionProvider.CurrentSession.QueryOver<ProjectTagModel>().Where(
+						m => m.Name == tag.Name && m.Parent == tag.Parent && m.Creator == tag.Creator && m.Id != tag.Id).RowCount() > 0)
+					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
+
+				_ModelProcessingService.ValidateModelSaving(tag, validation);
+				if (!validation.Success)
+					return validation;
+
+				var parentsStack = new Stack<TagModel>();
+
+				var current = tag as TagModel;
+				while (current != null)
+				{
+					parentsStack.Push(current);
+					current = current.Parent;
+				}
+
+				var fullName = new StringBuilder();
+				while (parentsStack.Count > 0)
+				{
+					current = parentsStack.Pop();
+					if (fullName.Length > 0)
+						fullName.Append(" / ");
+					fullName.Append(current.Name);
+				}
+				tag.FullName = fullName.ToString();
+
+				_CrudDao.Store(tag);
+				return tag;
+			}
+			catch (Exception e)
+			{
+				validation.AddErrors(_LocalizationService.MessageForException(e));
+			}
+
+			return validation;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public ValidationResult DeleteProjectTag([NotEmpty] Guid id)
+		{
+			var validation = new ValidationResult();
+
+			try
+			{
+				var tag = _CrudDao.Get<ProjectTagModel>(id, true);
+
+				var currentUser = _AuthController.CurrentUser();
+				if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+					throw new AccessForbiddenException();
+
+				if (_SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+						.Where(m => m.Tag == tag).RowCount() > 0)
+					throw new CannotDeleteReferencedItemException();
+
+				_CrudDao.Delete(tag);
+			}
+			catch (Exception e)
+			{
+				validation.AddErrors(_LocalizationService.MessageForException(e));
+			}
+
+			return validation;
 		}
 
 		[JsonEndpoint, RequireAuthorization]

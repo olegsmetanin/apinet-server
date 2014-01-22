@@ -125,8 +125,8 @@ namespace AGO.Core.Controllers
 			{
 				var viewModel = new ProjectViewModel(project);
 
-				var allowed = project.Tags.Where(m => m.Tag.OwnerId == null || m.Tag.OwnerId == _AuthController.CurrentUser().Id);
-				viewModel.Tags.UnionWith(allowed.OrderBy(tl => tl.Tag.Owner).ThenBy(tl => tl.Tag.FullName).Select(m => new LookupEntry
+				var allowed = project.Tags.Where(m => m.Tag.CreatorId != null && m.Tag.CreatorId == _AuthController.CurrentUser().Id);
+				viewModel.Tags.UnionWith(allowed.OrderBy(tl => tl.Tag.Creator).ThenBy(tl => tl.Tag.FullName).Select(m => new LookupEntry
 				{
 					Id = m.Tag.Id.ToString(),
 					Text = m.Tag.FullName

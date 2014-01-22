@@ -11,8 +11,10 @@ namespace AGO.Core.Model.Reporting
 		{
 			if (m == null)
 				throw new ArgumentNullException("m");
+			if(m.Creator == null)
+				throw new ArgumentException("m.Creator == null");
 
-			var hide = hideErrorDetails ?? (m.Creator == null || m.Creator.SystemRole != SystemRole.Administrator);
+			var hide = hideErrorDetails ?? m.Creator.SystemRole != SystemRole.Administrator;
 
 			return new ReportTaskDTO
 			{

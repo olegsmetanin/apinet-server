@@ -82,7 +82,6 @@ namespace AGO.Core
 			_CrudDao.Store(new ProjectTagModel
 			{
 				Creator = admin,
-				Owner = admin,
 				Name = "Urgent",
 				FullName = "Urgent",
 			});
@@ -90,7 +89,6 @@ namespace AGO.Core
 			_CrudDao.Store(new ProjectTagModel
 			{
 				Creator = admin,
-				Owner = admin,
 				Name = "Important",
 				FullName = "Important",
 			});
@@ -98,7 +96,6 @@ namespace AGO.Core
 			_CrudDao.Store(new ProjectTagModel
 			{
 				Creator = admin,
-				Owner = admin,
 				Name = "Pay attention",
 				FullName = "Pay attention",
 			});

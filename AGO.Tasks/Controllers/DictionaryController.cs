@@ -167,7 +167,7 @@ namespace AGO.Tasks.Controllers
 		{
 			//доступны только персональные теги текущего пользователя
 			var query = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project && m.Owner.Id == _AuthController.CurrentUser().Id);
+				.Where(m => m.ProjectCode == project && m.Creator.Id == _AuthController.CurrentUser().Id);
 			if (!term.IsNullOrWhiteSpace())
 			{
 				foreach (var termPart in term.Split(new []{',', ' ', '\\'}, StringSplitOptions.RemoveEmptyEntries))
@@ -199,7 +199,7 @@ namespace AGO.Tasks.Controllers
 		private TaskTagModel FindOrCreate(string project, string[] path, ref List<TaskTagModel> created)
 		{
 			var parent = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project && m.Owner.Id == _AuthController.CurrentUser().Id && 
+				.Where(m => m.ProjectCode == project && m.Creator.Id == _AuthController.CurrentUser().Id && 
 					m.FullName == string.Join("\\", path))
 				.SingleOrDefault();
 			if (parent != null) return parent; //already exists
@@ -211,7 +211,7 @@ namespace AGO.Tasks.Controllers
 				currentPath = i == 0 ? path[i].TrimSafe() : currentPath + "\\" + path[i].TrimSafe();
 				var cpath = currentPath;
 				parent = Session.QueryOver<TaskTagModel>()
-					.Where(m => m.ProjectCode == project && m.Owner.Id == _AuthController.CurrentUser().Id).Where(m => m.FullName == cpath).SingleOrDefault();
+					.Where(m => m.ProjectCode == project && m.Creator.Id == _AuthController.CurrentUser().Id).Where(m => m.FullName == cpath).SingleOrDefault();
 				
 				if (parent == null)
 				{
@@ -219,7 +219,6 @@ namespace AGO.Tasks.Controllers
 					                	{
 					                		ProjectCode = project,
 					                		Creator = _AuthController.CurrentUser(),
-					                		Owner = _AuthController.CurrentUser(),
 											Parent = currentParent,
 											Name = path[i].TrimSafe(),
 					                		FullName = currentPath
@@ -258,7 +257,7 @@ namespace AGO.Tasks.Controllers
 			var res = Edit<TaskTagModel, TaskTagDTO>(model.Id, project,
 				(tag, vr) =>
 					{
-						tag.Owner = _AuthController.CurrentUser();
+						tag.Creator = _AuthController.CurrentUser();
 						createdParents = UpdateTagNameAndParent(project, model, tag);
 					},
 				adapter.Fill);

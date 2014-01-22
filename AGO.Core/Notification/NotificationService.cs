@@ -101,8 +101,8 @@ namespace AGO.Core.Notification
 		{
 			base.DoInitialize();
 
-			Interlocked.Exchange(ref state, State.Connecting);
-			Start().Wait();
+			/*Interlocked.Exchange(ref state, State.Connecting);
+			Start().Wait();*/
 		}
 
 		private static class State

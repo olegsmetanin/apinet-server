@@ -168,7 +168,7 @@
   <data name="CoreModel.ProjectCode" xml:space="preserve">
     <value>Project code</value>
   </data>
-  <data name="TagModel.Owner" xml:space="preserve">
+  <data name="TagModel.Creator" xml:space="preserve">
     <value>Owner</value>
   </data>
   <data name="UserModel.Active" xml:space="preserve">

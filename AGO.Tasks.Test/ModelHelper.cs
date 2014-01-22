@@ -121,11 +121,10 @@ namespace AGO.Tasks.Test
 			var tag = new TaskTagModel
 			          	{
 			          		ProjectCode = project,
-			          		Creator = currentUser(),
+							Creator = owner ?? currentUser(),
 			          		Name = name,
 							FullName = parent != null ? parent.FullName + " \\ " + name : name,
-			          		Parent = parent,
-			          		Owner = owner ?? currentUser()
+			          		Parent = parent
 			          	};
 			session().Save(tag);
 			session().FlushMode = FlushMode.Auto;

@@ -94,8 +94,8 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			var dto = base.Fill(task);
 			//Только общие или свои персональные теги
-			var allowed = task.Tags.Where(tl => tl.Tag.Owner == null || tl.Tag.Owner.Id == currentUser.Id);
-			dto.Tags = allowed.OrderBy(tl => tl.Tag.Owner).ThenBy(tl => tl.Tag.FullName).Select(ToTag).ToArray();
+			var allowed = task.Tags.Where(tl => tl.Tag.Creator != null && tl.Tag.Creator.Id == currentUser.Id);
+			dto.Tags = allowed.OrderBy(tl => tl.Tag.Creator).ThenBy(tl => tl.Tag.FullName).Select(ToTag).ToArray();
 			return dto;
 		}
 	}
