@@ -19,13 +19,8 @@ namespace AGO.Core.Model.Dictionary
 		[JsonProperty, NotLonger(128), NotEmpty]
 		public virtual string Name { get; set; }
 
-		[JsonProperty, NotLonger(1024), UniqueProperty("ProjectCode", "Owner")]
+		[JsonProperty, NotLonger(1024), UniqueProperty("ProjectCode", "Creator")]
 		public virtual string FullName { get; set; }
-
-		[NotNull]
-		public virtual UserModel Owner { get; set; }
-		[ReadOnlyProperty, MetadataExclude]
-		public virtual Guid? OwnerId { get; set; }
 
 		[JsonProperty]
 		public virtual TagModel Parent { get; set; }

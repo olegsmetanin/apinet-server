@@ -12,13 +12,13 @@ namespace AGO.Core.Model.Reporting
 			if (m == null)
 				throw new ArgumentNullException("m");
 
-			var hide = hideErrorDetails ?? (m.Creator == null || m.Creator.SystemRole != SystemRole.Administrator);
+			var hide = hideErrorDetails ?? m.Creator.SystemRole != SystemRole.Administrator;
 
 			return new ReportTaskDTO
 			{
 				Id = m.Id,
 				Name = m.Name,
-				State = m.State,
+				State = m.State, //TODO not in json???
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
 				Author = m.Creator != null ? m.Creator.FullName : null,
 				CreationTime = m.CreationTime,

@@ -273,10 +273,10 @@ namespace AGO.Tasks.Test
 			sub = Session.Get<TaskTagModel>(sub.Id);
 			Assert.AreEqual("aaa\\bbb\\sub", sub.FullName);
 			var aaa = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Owner == CurrentUser && m.FullName == "aaa")
+				.Where(m => m.ProjectCode == TestProject && m.Creator == CurrentUser && m.FullName == "aaa")
 				.SingleOrDefault();
 			var bbb = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Owner == CurrentUser && m.FullName == "aaa\\bbb")
+				.Where(m => m.ProjectCode == TestProject && m.Creator == CurrentUser && m.FullName == "aaa\\bbb")
 				.SingleOrDefault();
 			
 			Assert.AreEqual(bbb.Id, sub.Parent.Id);

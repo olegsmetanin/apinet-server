@@ -207,7 +207,7 @@
   <data name="DepartmentModel.Users" xml:space="preserve">
     <value>Пользователи</value>
   </data>
-  <data name="TagModel.Owner" xml:space="preserve">
+  <data name="TagModel.Creator" xml:space="preserve">
     <value>Владелец</value>
   </data>
   <data name="CoreModel.Description" xml:space="preserve">

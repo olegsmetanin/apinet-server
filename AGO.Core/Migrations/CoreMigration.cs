@@ -71,8 +71,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<TagModel>(m => m.ProjectCode)
 				.WithValueColumn<TagModel>(m => m.Name)
 				.WithValueColumn<TagModel>(m => m.FullName)
-				.WithRefColumn<TagModel>(m => m.Parent)
-				.WithRefColumn<TagModel>(m => m.Owner);
+				.WithRefColumn<TagModel>(m => m.Parent);
 
 			Create.SecureModelTable<ProjectTypeModel>()
 				.WithValueColumn<ProjectTypeModel>(m => m.ProjectCode)

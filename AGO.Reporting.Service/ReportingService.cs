@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Configuration;
 using System.Web.Mvc;
 using System.Web.Routing;
@@ -38,6 +39,11 @@ namespace AGO.Reporting.Service
 			runningWorkers = new Dictionary<Guid, AbstractReportWorker>();
 			rwlock = new ReaderWriterLockSlim();
 			cleanFinishedTaskTimer = new SequentialTimer(CleanFinishedTasks);
+			TaskScheduler.UnobservedTaskException += (sender, args) =>
+			{
+				Log.Error("Unobserver exception in reporting service task", args.Exception);
+				args.SetObserved();
+			};
 		}
 
 		private ILog log;
@@ -177,8 +183,10 @@ namespace AGO.Reporting.Service
 			cleanFinishedTaskTimer.Stop();
 
 			rwlock.Dispose();
+			NotificationService.Dispose();
 
 			RouteTable.Routes.Clear();
+			
 			//TODO other shutdown (timers etc)
 		}
 

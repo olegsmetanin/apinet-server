@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AGO.Core.Notification
@@ -10,7 +7,7 @@ namespace AGO.Core.Notification
 	/// Сервис оповещений для межсервисного общения внутри приложения и для comet-like 
 	/// оповещений клиентов
 	/// </summary>
-	public interface INotificationService
+	public interface INotificationService: IDisposable
 	{
 		Task EmitRunReport(Guid reportId);
 

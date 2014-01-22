@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -32,6 +33,33 @@ namespace AGO.Reporting.Tests
 			watch = null;
 			s.Dispose();
 		}
+
+		//Test if lock and not awaited task inside block execution - no, don't block
+//		[Test]
+//		public void TestLockAndAsync()
+//		{
+//			const int sleep = 50;
+//			var lc = new object();
+//			Action<string> log = msg => Debug.WriteLine("{0}: {1}", Thread.CurrentThread.ManagedThreadId, msg);
+//			Func<int, Task> runAsync = async i =>
+//			{
+//				log(i + " async started");
+//				await Task.Delay(sleep);
+//				log(i + " async completed");
+//			};
+//			Action<int> action = i =>
+//			{
+//				lock (lc)
+//				{
+//					log(i + " action started");
+//					runAsync(i);
+//					log(i + " action completed");
+//				}
+//			};
+//
+//			Task.WaitAll(Enumerable.Range(0, 3).Select(i => Task.Run(() => action(i))).ToArray());
+//			Thread.Sleep(sleep * 4);
+//		}
 
 		[Test]
 		public void Cancel()

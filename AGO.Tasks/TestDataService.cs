@@ -44,7 +44,7 @@ namespace AGO.Tasks
 				UrgentTag = CurrentSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Name == "Urgent").SingleOrDefault(),
 				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
-					.Where(m => m.Owner == admin).List(),
+					.Where(m => m.Creator == admin).List(),
 				ProjectType = new ProjectTypeModel
 				{
 					Creator = admin,
@@ -240,10 +240,9 @@ namespace AGO.Tasks
 			    var tag = new TaskTagModel
 			                {
 			                    ProjectCode = project.ProjectCode,
-			                    Creator = context.Admin,
+								Creator = owner,
 								Name = name,
-								FullName = name,
-			                    Owner = owner
+								FullName = name
 			                };
 				_CrudDao.Store(tag);
 			    return tag;
