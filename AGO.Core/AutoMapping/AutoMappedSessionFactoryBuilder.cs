@@ -109,6 +109,7 @@ namespace AGO.Core.AutoMapping
 		protected override void DoFinalizeConfig()
 		{
 			base.DoFinalizeConfig();
+			_HibernateConfiguration.SetNamingStrategy(new QuotedNamesNamingStrategy());
 
 			if (!AutoMappingsDumpPath.IsNullOrWhiteSpace())
 			{
@@ -147,6 +148,7 @@ namespace AGO.Core.AutoMapping
 			if (!AutoMappingsDumpPath.IsNullOrWhiteSpace())
 				autoPersistenceModel.WriteMappingsTo(AutoMappingsDumpPath);
 
+			
 			_HibernateConfiguration = Fluently.Configure(_HibernateConfiguration).Mappings(mappingConfig =>
 			{
 				foreach (var assembly in _AutoMappingAssemblies)

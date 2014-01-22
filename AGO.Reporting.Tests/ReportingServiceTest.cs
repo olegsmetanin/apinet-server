@@ -8,11 +8,13 @@ using AGO.Core;
 using AGO.Core.Config;
 using AGO.Core.Filters;
 using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;
 using Newtonsoft.Json;
+using NHibernate;
 using NHibernate.Criterion;
 using NUnit.Framework;
 
@@ -59,6 +61,24 @@ namespace AGO.Reporting.Tests
 			base.TearDown();
 		}
 
+		private ReportTaskModel WaitForState(ISession s, Guid taskId, TimeSpan waitTimeout, ReportTaskState waitState = ReportTaskState.Completed)
+		{
+			var checker = Session.CreateCriteria<ReportTaskModel>()
+				.SetProjection(Projections.Property<ReportTaskModel>(m => m.State))
+				.Add(Restrictions.Eq("Id", taskId));
+
+			const int sleepTime = 100;
+			var safeCounter = 0;
+			var safeLimit = waitTimeout.TotalMilliseconds/sleepTime;
+			while (safeCounter < safeLimit)
+			{
+				Thread.Sleep(sleepTime);
+				safeCounter++;
+				if (waitState == checker.UniqueResult<ReportTaskState>()) break;
+			}
+			return s.Load<ReportTaskModel>(taskId);
+		}
+
 		[Test]
 		public void PingAlwaysReturnTrue()
 		{
@@ -77,23 +97,15 @@ namespace AGO.Reporting.Tests
 				typeof (FakeGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
-			_SessionProvider.FlushCurrentSession();
-
+			_SessionProvider.CloseCurrentSession();
+			
 			svc.RunReport(task.Id);
-
-			var safeCounter = 0;
-			while (safeCounter < 10)
-			{
-				Thread.Sleep(500);
-				safeCounter++;
-				Session.Refresh(task);
-				if (task.State == ReportTaskState.Completed) break;
-			}
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(5));
 
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
 			Assert.IsNotNull(task.StartedAt);
 			Assert.IsNotNull(task.CompletedAt);
-			Assert.Greater(task.CompletedAt.Value, task.StartedAt.Value);
+			Assert.Greater(task.CompletedAt, task.StartedAt);
 			StringAssert.AreEqualIgnoringCase("\"1\",\"zxc\"", Encoding.UTF8.GetString(task.ResultContent));
 		}
 
@@ -114,19 +126,12 @@ namespace AGO.Reporting.Tests
 			var writer = new StringWriter();
 			JsonService.CreateSerializer().Serialize(writer, param);
 			var task = M.Task("controlled", "Fast reports", stg.Id, writer.ToString());
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
 
-			var safeCounter = 0;
-			while (safeCounter < 10)
-			{
-				Thread.Sleep(500);
-				safeCounter++;
-				Session.Refresh(task);
-				if (task.State == ReportTaskState.Completed) break;
-			}
-
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(5));
+			
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
 			var tags = Session.QueryOver<ProjectTagModel>().WhereRestrictionOn(m => m.Name).IsLike(search, MatchMode.Anywhere)
 				.List<ProjectTagModel>();
@@ -150,30 +155,16 @@ namespace AGO.Reporting.Tests
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
 
-			var safeCounter = 0;
-			while (safeCounter < 10)
-			{
-				Thread.Sleep(100);
-				safeCounter++;
-				Session.Refresh(task);
-				if (task.State == ReportTaskState.Running) break;
-			}
+			WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
 
-			safeCounter = 0;
-			while (safeCounter < 10)
-			{
-				Thread.Sleep(100);
-				safeCounter++;
-				Session.Refresh(task);
-				if (task.State != ReportTaskState.Running) break;
-			}
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Canceled);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 		}
@@ -189,15 +180,11 @@ namespace AGO.Reporting.Tests
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
-			Thread.Sleep(200);//get time to run
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
 
-			//wait slightly greater than timeout
-			Thread.Sleep(2500);
-
-			Session.Refresh(task);
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
 		}
@@ -213,15 +200,11 @@ namespace AGO.Reporting.Tests
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
-			Thread.Sleep(200);//get time to run
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
 
-			//wait slightly greater than timeout
-			Thread.Sleep(2500);
-
-			Session.Refresh(task);
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
 		}
@@ -236,25 +219,18 @@ namespace AGO.Reporting.Tests
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
 
-			var safeCounter = 0;
-			while (safeCounter < 10)
-			{
-				Thread.Sleep(100);
-				safeCounter++;
-				Session.Refresh(task);
-				if (task.State == ReportTaskState.Running) break;
-			}
-
+			WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
 
 			//Must be aborted in reasonable time
 			Thread.Sleep(2000);
-			Session.Refresh(task);
+			task = Session.Load<ReportTaskModel>(task.Id);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 		}
@@ -270,31 +246,25 @@ namespace AGO.Reporting.Tests
 				typeof(FakeTenIterationGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
-			_SessionProvider.FlushCurrentSession();
+			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
-			Thread.Sleep(50);//time to run
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 
 			var safeCounter = 0;
-			Session.Refresh(task);
-			while (safeCounter < 20 && task.State == ReportTaskState.NotStarted)
-			{
-				Thread.Sleep(50);
-				Session.Refresh(task);
-			}
-
-			safeCounter = 0;
 			var prev = -1;
-			Session.Refresh(task);
 			while (safeCounter < 200 && task.State == ReportTaskState.Running && task.DataGenerationProgress < 100)
 			{
-				Session.Refresh(task);
+				Session.Clear();
+				task = Session.Load<ReportTaskModel>(task.Id);
+
 				Assert.IsTrue(task.DataGenerationProgress >= prev);
 				prev = task.DataGenerationProgress;
 				Thread.Sleep(100);
 				safeCounter++;
 			}
-			Session.Refresh(task);
+			Session.Clear();
+			task = Session.Load<ReportTaskModel>(task.Id);
 			Assert.AreEqual(100, task.DataGenerationProgress);
 		}
 	}

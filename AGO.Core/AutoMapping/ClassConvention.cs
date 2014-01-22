@@ -1,8 +1,8 @@
 ﻿using System.Linq;
-using FluentNHibernate.Conventions;
-using FluentNHibernate.Conventions.Instances;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
+using FluentNHibernate.Conventions;
+using FluentNHibernate.Conventions.Instances;
 
 namespace AGO.Core.AutoMapping
 {
@@ -28,7 +28,7 @@ namespace AGO.Core.AutoMapping
 
 			instance.Table(table);
 			if(!AutoMappedSessionFactoryBuilder.DisableSchemas)
-				instance.Schema(schema);
+				instance.Schema(QuotedNamesNamingStrategy.DoubleQuote(schema));
 
 			var lazyLoadAttribute = instance.EntityType.FirstAttribute<LazyLoadAttribute>(true);
 			if (lazyLoadAttribute != null)

@@ -20,7 +20,7 @@ namespace AGO.Core.Model.Reporting
 				Name = m.Name,
 				State = m.State,
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
-				Author = m.Creator.FullName,
+				Author = m.Creator != null ? m.Creator.FullName : null,
 				CreationTime = m.CreationTime,
 				StartedAt = m.StartedAt,
 				CompletedAt = m.CompletedAt,

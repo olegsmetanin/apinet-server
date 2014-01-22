@@ -10,6 +10,7 @@ using FluentMigrator.Runner.Processors.SqlServer;
 using FluentMigrator.Runner.Processors.Sqlite;
 using FluentMigrator.VersionTableInfo;
 using AGO.Core.AutoMapping;
+using FluentMigrator.Runner.Processors.Postgres;
 
 namespace AGO.Core.Migration
 {
@@ -99,6 +100,7 @@ namespace AGO.Core.Migration
 			var announcer = new TextWriterAnnouncer(Console.Out) { ShowSql = true };
 			var runnerContext = new RunnerContext(announcer);
 			var processorOptions = new ProcessorOptions { Timeout = 60, PreviewOnly = previewOnly };
+			var pgsqlFactory = new PostgresProcessorFactory();
 			var sqliteFactory = new SqliteProcessorFactory();
 			var sql2008Factory = new SqlServer2008ProcessorFactory();
 			var sql2005Factory = new SqlServer2005ProcessorFactory();
@@ -106,7 +108,13 @@ namespace AGO.Core.Migration
 			IMigrationProcessor migrationProcessor = null;
 
 			if (Dialect.Name.StartsWith("SQLite", StringComparison.InvariantCultureIgnoreCase))
+			{
 				migrationProcessor = sqliteFactory.Create(ConnectionString, announcer, processorOptions);
+			}
+			else if (Dialect.Name.StartsWith("PostgreSQL", StringComparison.InvariantCultureIgnoreCase))
+			{
+				migrationProcessor = pgsqlFactory.Create(ConnectionString, announcer, processorOptions);
+			}
 			else if (Dialect.Name.StartsWith("MsSql", StringComparison.InvariantCultureIgnoreCase))
 			{
 				if (Dialect.Name.Contains("2008"))

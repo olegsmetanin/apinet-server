@@ -106,7 +106,7 @@ namespace AGO.Reporting.Service
 			RegisterReportingRoutes(RouteTable.Routes);
 			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
 
-			NotificationService.SubscribeToRunReport(id => RunReport(id));
+			NotificationService.SubscribeToRunReport(RunReport);
 			NotificationService.SubscribeToCancelReport(id => CancelReport(id));
 		}
 
