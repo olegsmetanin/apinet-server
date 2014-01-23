@@ -18,6 +18,10 @@ namespace AGO.Reporting.Service
 			{
 				action(provider.CurrentSession);
 			}
+			catch (OperationCanceledException)
+			{
+				//this is expected situation
+			}
 			catch(Exception ex)
 			{
 				LogManager.GetLogger(typeof(DALHelper)).Error("Error when accessing database from report service", ex);					

@@ -61,21 +61,28 @@ namespace AGO.Reporting.Tests
 			base.TearDown();
 		}
 
+		private bool WaitFor(TimeSpan waitTimeout, Func<bool> checker)
+		{
+			const int sleepTime = 100;
+			var safeCounter = 0;
+			var safeLimit = waitTimeout.TotalMilliseconds / sleepTime;
+			while (safeCounter < safeLimit)
+			{
+				Thread.Sleep(sleepTime);
+				safeCounter++;
+				if (checker()) return true;
+			}
+			return false;
+		}
+
 		private ReportTaskModel WaitForState(ISession s, Guid taskId, TimeSpan waitTimeout, ReportTaskState waitState = ReportTaskState.Completed)
 		{
 			var checker = Session.CreateCriteria<ReportTaskModel>()
 				.SetProjection(Projections.Property<ReportTaskModel>(m => m.State))
 				.Add(Restrictions.Eq("Id", taskId));
 
-			const int sleepTime = 100;
-			var safeCounter = 0;
-			var safeLimit = waitTimeout.TotalMilliseconds/sleepTime;
-			while (safeCounter < safeLimit)
-			{
-				Thread.Sleep(sleepTime);
-				safeCounter++;
-				if (waitState == checker.UniqueResult<ReportTaskState>()) break;
-			}
+			WaitFor(waitTimeout, () => waitState == checker.UniqueResult<ReportTaskState>());
+
 			return s.Load<ReportTaskModel>(taskId);
 		}
 
@@ -164,9 +171,13 @@ namespace AGO.Reporting.Tests
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
 
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Canceled);
+			var waitResult = WaitFor(TimeSpan.FromSeconds(1), () => !realsvc.IsRunning(task.Id));
+			Assert.IsTrue(waitResult);
 
-			Assert.AreEqual(ReportTaskState.Canceled, task.State);
+			//Because registering canceled state moved to api from service (for manual cancelation)
+			//we can't assert on task state
+			//task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Canceled);
+			//Assert.AreEqual(ReportTaskState.Canceled, task.State);
 		}
 
 		[Test]
@@ -230,9 +241,9 @@ namespace AGO.Reporting.Tests
 
 			//Must be aborted in reasonable time
 			Thread.Sleep(2000);
-			task = Session.Load<ReportTaskModel>(task.Id);
+			Assert.IsTrue(!realsvc.IsRunning(task.Id));
 
-			Assert.AreEqual(ReportTaskState.Canceled, task.State);
+			//See CancelLongReport for comment about asserting
 		}
 
 		[Test]
