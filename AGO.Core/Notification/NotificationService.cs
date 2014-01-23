@@ -115,6 +115,7 @@ namespace AGO.Core.Notification
 		}
 
 		private const string EVENT_REPOR_CHANGED = "reports_changed";
+		private const string EVENT_REPOR_DELETED = "reports_deleted";
 		private const string EVENT_REPORT_RUN = "reports_run";
 		private const string EVENT_REPORT_CANCEL = "reports_cancel";
 		private RedisConnection pubConnection;
@@ -319,6 +320,17 @@ namespace AGO.Core.Notification
 			{
 				var dtojson = JsonConvert.SerializeObject(dto);
 				var emitTask = pubConnection.Publish(EVENT_REPOR_CHANGED, dtojson);
+				pubConnection.Wait(emitTask);
+				return null;
+			});
+		}
+
+		public Task EmitReportDeleted(object dto)
+		{
+			return DoWithRedis<object>(() =>
+			{
+				var dtojson = JsonConvert.SerializeObject(dto);
+				var emitTask = pubConnection.Publish(EVENT_REPOR_DELETED, dtojson);
 				pubConnection.Wait(emitTask);
 				return null;
 			});

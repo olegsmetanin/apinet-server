@@ -133,6 +133,13 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportTaskModel>(m => m.ResultName)
 				.WithValueColumn<ReportTaskModel>(m => m.ResultContentType)
 				.WithValueColumn<ReportTaskModel>(m => m.ResultUnread);
+			//Hash token:login, that will be used in socket.io for sending messages
+			//to particulat user
+			Create.Table("TokenToLogin").InSchema(MODULE_SCHEMA)
+				.WithColumn("Token").AsGuid().NotNullable().PrimaryKey()
+				.WithColumn("Login").AsString(UserModel.LOGIN_SIZE).NotNullable()
+				.WithColumn("CreatedAt").AsDateTime().NotNullable();
+
 		}
 
 		public override void Down()

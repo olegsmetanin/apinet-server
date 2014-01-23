@@ -15,6 +15,8 @@ namespace AGO.Core.Notification
 
 		Task EmitReportChanged(object dto);
 
+		Task EmitReportDeleted(object dto);
+
 		void SubscribeToRunReport(Action<Guid> subscriber);
 
 		void SubscribeToCancelReport(Action<Guid> subscriber);

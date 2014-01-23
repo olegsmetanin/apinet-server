@@ -15,7 +15,6 @@ using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Notification;
-using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -147,7 +146,7 @@ namespace AGO.Core.Controllers
 		{
 			var template = _CrudDao.Get<ReportTemplateModel>(templateId);
 			//TODO security checks
-			if (_CrudDao.Exists<ReportSettingModel>(q => q.Where(m => m.ReportTemplate == template)))
+			if (_CrudDao.Exists<ReportSettingModel>(q => q.Where(m => m.ReportTemplate.Id == template.Id)))
 				throw new CannotDeleteReferencedItemException();
 
 			_CrudDao.Delete(template);
@@ -169,7 +168,7 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ReportTaskModel RunReport([NotEmpty] Guid serviceId, [NotEmpty] Guid settingsId, string resultName, JObject parameters)
+		public void RunReport([NotEmpty] Guid serviceId, [NotEmpty] Guid settingsId, string resultName, JObject parameters)
 		{
 			try
 			{
@@ -198,7 +197,7 @@ namespace AGO.Core.Controllers
 				//emit event for client (about his task in queue and start soon)
 				bus.EmitReportChanged(ReportTaskToDTO(task));
 
-				return task;
+				//return ReportTaskToDTO(task);
 			}
 			catch (Exception ex)
 			{
@@ -237,58 +236,37 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object CancelReport([NotEmpty] Guid id)
+		public void CancelReport([NotEmpty] Guid id)
 		{
 			var task = _CrudDao.Get<ReportTaskModel>(id);
-			using (var client = new ServiceClient(task.Service.EndPoint))
-			{
-				if (!client.CancelReport(task.Id))
-				{
-					_SessionProvider.CurrentSession.Refresh(task);
-					if (task.State == ReportTaskState.NotStarted || task.State == ReportTaskState.Running)
-					{
-						task.State = ReportTaskState.Canceled;
-						_CrudDao.Store(task);
-						_SessionProvider.FlushCurrentSession();
-					}
-				}
-				_SessionProvider.CurrentSession.Refresh(task);
-				return ReportTaskToDTO(task);
-			}
+			//emit event for reporting service (interrupt task if running or waiting)
+			bus.EmitCancelReport(task.Id);
+
+			task.State = ReportTaskState.Canceled;
+			task.CompletedAt = DateTime.Now;
+			task.ErrorMsg = "Canceled by user request";
+			_CrudDao.Store(task);
+
+			//emit event for client (about his task is canceled)
+			bus.EmitReportChanged(ReportTaskToDTO(task));
+
+			_SessionProvider.FlushCurrentSession();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public void DeleteReport([NotEmpty] Guid id)
 		{
 			var task = _CrudDao.Get<ReportTaskModel>(id);
-			using (var client = new ServiceClient(task.Service.EndPoint))
-			{
-				try
-				{
-					if (client.IsRunning(task.Id) || client.IsWaitingForRun(task.Id))
-						client.CancelReport(task.Id);
-				}
-				catch(Exception ex)
-				{
-					Log.Error("Error when attempt to cancel report", ex);
-				}
-				finally
-				{
-					//delete in any situation
-					try
-					{
-						_SessionProvider.CurrentSession.Refresh(task);
-						_CrudDao.Delete(task);
-					}
-					catch (DataAccessException)
-					{
-						//may be we try to delete record, that was updated by reporting service,
-						//retry one time
-						_SessionProvider.CurrentSession.Refresh(task);
-						_CrudDao.Delete(task);
-					}
-				}
-			}
+			//May be this task is running
+			bus.EmitCancelReport(task.Id);
+
+			var dto = ReportTaskToDTO(task);
+			_CrudDao.Delete(task);
+
+			//emit event for client (about his task is successfully deleted)
+			bus.EmitReportDeleted(dto);
+
+			_SessionProvider.FlushCurrentSession();
 		}
 
 		[JsonEndpoint, RequireAuthorization]

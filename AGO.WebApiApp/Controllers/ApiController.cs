@@ -72,10 +72,13 @@ namespace AGO.WebApiApp.Controllers
 						throw;
 					}
 
-					var jsonService = DependencyResolver.Current.GetService<IJsonService>();
 					var stringBuilder = new StringBuilder();
-					var outputWriter = jsonService.CreateWriter(new StringWriter(stringBuilder), true);
-					jsonService.CreateSerializer().Serialize(outputWriter, result);
+					if (result != null)
+					{
+						var jsonService = DependencyResolver.Current.GetService<IJsonService>();
+						var outputWriter = jsonService.CreateWriter(new StringWriter(stringBuilder), true);
+						jsonService.CreateSerializer().Serialize(outputWriter, result);
+					}
 
 					return Content(stringBuilder.ToString(), "application/json", Encoding.UTF8);
 				}

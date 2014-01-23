@@ -131,13 +131,16 @@ namespace AGO.Reporting.Service
 		private void RegisterCancel(bool abortedByTimeout)
 		{
 			StopProgressTracking();
-			ChangeState(rt =>
+			//if not timeouted - reportingcontroller write about cancel himself, we only register interrupt, that we trigger in our code
+			if (abortedByTimeout)
 			{
-			    rt.State = ReportTaskState.Canceled;
-			    rt.CompletedAt = DateTime.Now;
-				if (abortedByTimeout)
+				ChangeState(rt =>
+				{
+					rt.State = ReportTaskState.Canceled;
+					rt.CompletedAt = DateTime.Now;
 					rt.ErrorMsg = "Report execution was interrupted by timeout";
-			});
+				});
+			}
 		}
 
 		private void Finish()

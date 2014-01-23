@@ -5,7 +5,7 @@ using AGO.Reporting.Common.Model;
 
 namespace AGO.Core.Model.Reporting
 {
-	class ReportTaskDTO
+	public class ReportTaskDTO
 	{
 		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, bool? hideErrorDetails = null)
 		{
@@ -18,9 +18,10 @@ namespace AGO.Core.Model.Reporting
 			{
 				Id = m.Id,
 				Name = m.Name,
-				State = m.State, //TODO not in json???
+				State = m.State.ToString(),
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
 				Author = m.Creator != null ? m.Creator.FullName : null,
+				Login = m.Creator != null ? m.Creator.Login : null,
 				CreationTime = m.CreationTime,
 				StartedAt = m.StartedAt,
 				CompletedAt = m.CompletedAt,
@@ -36,11 +37,13 @@ namespace AGO.Core.Model.Reporting
 
 		public string Name { get; set; }
 
-		public ReportTaskState State { get; set; }
+		public string State { get; set; }
 
 		public string StateName { get; set; }
 
 		public string Author { get; set; }
+
+		public string Login { get; set; }
 
 		public DateTime? CreationTime { get; set; }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -93,9 +94,10 @@ namespace AGO.Core.Controllers
 				validation.AddFieldErrors("password", _LocalizationService.MessageForException(new InvalidPwdException()));
 				return validation;
 			}
-
+			//TODO избавиться от сессии (stateless)
+			user.Token = RegisterToken(user.Login);
 			_StateStorage["CurrentUser"] = user;
-
+			
 			return user;
 		}
 
@@ -115,7 +117,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public UserModel CurrentUser()
 		{
-			return _StateStorage["CurrentUser"] as UserModel;
+			return  _StateStorage["CurrentUser"] as UserModel;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -126,20 +128,67 @@ namespace AGO.Core.Controllers
 
 		#endregion
 
-		#region Helper methods
+		#region Token manipulation method
 
-		protected object UserToJsonUser(UserModel user)
+		private const string RegisterTokenCmd = @"
+delete from ""Core"".""TokenToLogin"" where ""Login"" = :login and ""CreatedAt"" < :expireDate;
+insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") values(:token, :login, :createDate);";
+
+		private Guid RegisterToken(string login)
 		{
-			return new
-			{
-				id = user.Id,
-				firstName = user.Name,
-				lastName = user.LastName,
-				email = user.Login,
-				admin = user.SystemRole == SystemRole.Administrator
-			};
+			if (login.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("login");
+
+			var token = Guid.NewGuid();
+			var conn = _SessionProvider.CurrentSession.Connection;
+			var cmd = conn.CreateCommand();
+			cmd.CommandText = RegisterTokenCmd;
+
+			var pLogin = cmd.CreateParameter();
+			pLogin.ParameterName = "login";
+			pLogin.DbType = DbType.String;
+			pLogin.Size = UserModel.LOGIN_SIZE;
+			pLogin.Value = login;
+			var pExpireDate = cmd.CreateParameter();
+			pExpireDate.ParameterName = "expireDate";
+			pExpireDate.DbType = DbType.DateTime;
+			pExpireDate.Value = DateTime.UtcNow.AddDays(-7);
+			var pToken = cmd.CreateParameter();
+			pToken.ParameterName = "token";
+			pToken.DbType = DbType.Guid;
+			pToken.Value = token;
+			var pCreateDate = cmd.CreateParameter();
+			pCreateDate.ParameterName = "createDate";
+			pCreateDate.DbType = DbType.DateTime;
+			pCreateDate.Value = DateTime.UtcNow;
+			cmd.Parameters.Add(pLogin);
+			cmd.Parameters.Add(pExpireDate);
+			cmd.Parameters.Add(pToken);
+			cmd.Parameters.Add(pCreateDate);
+
+			cmd.ExecuteNonQuery();
+
+			return token;
 		}
 
 		#endregion
+
+		//Может понадобиться, когда из UserModel будем удалять Token и переделывать по нормальному
+//		#region Helper methods
+//
+//		protected object UserToJsonUser(UserModel user, string token)
+//		{
+//			return new
+//			{
+//				id = user.Id,
+//				firstName = user.Name,
+//				lastName = user.LastName,
+//				email = user.Login,
+//				admin = user.SystemRole == SystemRole.Administrator,
+//				token
+//			};
+//		}
+//
+//		#endregion
 	}
 }
