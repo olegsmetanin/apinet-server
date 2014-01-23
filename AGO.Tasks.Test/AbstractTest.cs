@@ -62,16 +62,16 @@ namespace AGO.Tasks.Test
 		{
 			var conn = _SessionProvider.CurrentSession.Connection;
 			ExecuteNonQuery(string.Format(@"
-					delete from Core.ProjectStatusHistoryModel where
-						ProjectId in (select Id from Core.ProjectModel where ProjectCode = '{0}')
+					delete from ""Core"".""ProjectStatusHistoryModel"" where
+						""ProjectId"" in (select ""Id"" from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Core.ProjectParticipantModel where
-						ProjectId in (select Id from Core.ProjectModel where ProjectCode = '{0}')
+					delete from ""Core"".""ProjectParticipantModel"" where
+						""ProjectId"" in (select ""Id"" from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Core.ProjectModel where ProjectCode = '{0}'
+					delete from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}'
 					go
-					delete from Core.ProjectTypeModel where ProjectCode = '{0}'
-					go", TestProject), conn);
+					delete from ""Core"".""ProjectTypeModel"" where ""ProjectCode"" = '{0}'", 
+					TestProject), conn);
 			_SessionProvider.CloseCurrentSession();
 			Logout();
 		}
@@ -80,29 +80,29 @@ namespace AGO.Tasks.Test
 		{
 			var conn = _SessionProvider.CurrentSession.Connection;
 			ExecuteNonQuery(string.Format(@"
-					delete from Tasks.TaskStatusHistoryModel where 
-						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					delete from ""Tasks"".""TaskStatusHistoryModel"" where 
+						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Tasks.TaskExecutorModel where
-						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					delete from ""Tasks"".""TaskExecutorModel"" where
+						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Tasks.TaskAgreementModel where
-						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					delete from ""Tasks"".""TaskAgreementModel"" where
+						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Tasks.TaskToTagModel where
-						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					delete from ""Tasks"".""TaskToTagModel"" where
+						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Core.TagModel where ProjectCode = '{0}'
+					delete from ""Core"".""TagModel"" where ""ProjectCode"" = '{0}'
 					go
-					delete from Core.CustomPropertyInstanceModel where
-						TaskId in (select Id from Tasks.TaskModel where ProjectCode = '{0}')
+					delete from ""Core"".""CustomPropertyInstanceModel"" where
+						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from Core.CustomPropertyTypeModel where ProjectCode = '{0}'
+					delete from ""Core"".""CustomPropertyTypeModel"" where ""ProjectCode"" = '{0}'
 					go
-					delete from Tasks.TaskModel where ProjectCode = '{0}'
+					delete from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}'
 					go
-					delete from Tasks.TaskTypeModel where ProjectCode = '{0}'
-					go", TestProject), conn);
+					delete from ""Tasks"".""TaskTypeModel"" where ""ProjectCode"" = '{0}'", 
+					TestProject), conn);
 			_SessionProvider.CloseCurrentSession();
 		}
 

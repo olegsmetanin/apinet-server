@@ -42,7 +42,8 @@ namespace AGO.Reporting.Tests
 			var descriptors = repo.GetAllDescriptors().ToList();
 
 			Assert.IsNotNull(descriptors);
-			Assert.AreEqual(2, descriptors.Count);
+			Assert.AreEqual(4, descriptors.Count); //2 from test data and 2 from unit test init
+			Assert.AreEqual(2, descriptors.Count(d => d.Name.StartsWith("NUnit")));
 		}
 
 		[Test]

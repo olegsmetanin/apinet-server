@@ -11,8 +11,6 @@ namespace AGO.Core.Model.Reporting
 		{
 			if (m == null)
 				throw new ArgumentNullException("m");
-			if(m.Creator == null)
-				throw new ArgumentException("m.Creator == null");
 
 			var hide = hideErrorDetails ?? m.Creator.SystemRole != SystemRole.Administrator;
 
@@ -20,9 +18,9 @@ namespace AGO.Core.Model.Reporting
 			{
 				Id = m.Id,
 				Name = m.Name,
-				State = m.State,
+				State = m.State, //TODO not in json???
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
-				Author = m.Creator.FullName,
+				Author = m.Creator != null ? m.Creator.FullName : null,
 				CreationTime = m.CreationTime,
 				StartedAt = m.StartedAt,
 				CompletedAt = m.CompletedAt,

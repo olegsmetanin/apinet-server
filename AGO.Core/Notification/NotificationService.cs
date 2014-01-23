@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BookSleeve;
@@ -101,8 +99,11 @@ namespace AGO.Core.Notification
 		{
 			base.DoInitialize();
 
-			/*Interlocked.Exchange(ref state, State.Connecting);
-			Start().Wait();*/
+			Interlocked.Exchange(ref state, State.Connecting);
+// ReSharper disable CSharpWarnings::CS4014
+			//don't wait for connect - there will be infinity loop if redis not started
+			Start();
+// ReSharper restore CSharpWarnings::CS4014
 		}
 
 		private static class State
@@ -248,7 +249,7 @@ namespace AGO.Core.Notification
 				{
 					if (ex is RedisException || ex is TimeoutException || ex is IOException || ex is InvalidOperationException)
 					{
-						LogInfo("Error when send to redis, attemts " + attempt + ". Error: " + ex.ToString());
+						LogInfo("Error when send to redis, attemts " + attempt + ". Error: " + ex);
 						if (attempt <= 0)
 							throw;
 						if (state == State.Connected)
@@ -294,27 +295,33 @@ namespace AGO.Core.Notification
 
 		public Task EmitRunReport(Guid reportId)
 		{
-			return DoWithRedis<Task<long>>(() =>
+			return DoWithRedis<object>(() =>
 			{
-				return pubConnection.Publish(EVENT_REPORT_RUN, reportId.ToByteArray());
-			}).Result;
+				var emitTask = pubConnection.Publish(EVENT_REPORT_RUN, reportId.ToByteArray());
+				pubConnection.Wait(emitTask);
+				return null;
+			});
 		}
 
 		public Task EmitCancelReport(Guid reportId)
 		{
-			return DoWithRedis<Task<long>>(() =>
+			return DoWithRedis<object>(() =>
 			{
-				return pubConnection.Publish(EVENT_REPORT_CANCEL, reportId.ToByteArray());
-			}).Result;
+				var emitTask = pubConnection.Publish(EVENT_REPORT_CANCEL, reportId.ToByteArray());
+				pubConnection.Wait(emitTask);
+				return null;
+			});
 		}
 
 		public Task EmitReportChanged(object dto)
 		{
-			return DoWithRedis<Task<long>>(() =>
+			return DoWithRedis<object>(() =>
 			{
 				var dtojson = JsonConvert.SerializeObject(dto);
-				return pubConnection.Publish(EVENT_REPOR_CHANGED, dtojson);
-			}).Result;
+				var emitTask = pubConnection.Publish(EVENT_REPOR_CHANGED, dtojson);
+				pubConnection.Wait(emitTask);
+				return null;
+			});
 		}
 
 		public void SubscribeToRunReport(Action<Guid> subscriber)
@@ -332,5 +339,10 @@ namespace AGO.Core.Notification
 		}
 
 		#endregion
+
+		public void Dispose()
+		{
+			Stop();
+		}
 	}
 }

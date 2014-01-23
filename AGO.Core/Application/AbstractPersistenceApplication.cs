@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using System.Data.Common;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -132,6 +133,10 @@ namespace AGO.Core.Application
 			var config = new KeyValueConfigurableDictionary();
 			new KeyValueConfigProvider(new RegexKeyValueProvider("^Persistence_(.*)", KeyValueProvider)).ApplyTo(config);
 
+			ProviderName = config.GetConfigProperty("ProviderName").TrimSafe();
+			if (ProviderName.IsNullOrEmpty())
+				throw new Exception("ProviderName is empty");
+
 			var masterConnectionStr = config.GetConfigProperty("MasterConnectionString").TrimSafe();
 			if (masterConnectionStr.IsNullOrEmpty())
 				throw new Exception("MasterConnectionString is empty");
@@ -148,25 +153,49 @@ namespace AGO.Core.Application
 			if (loginPwd.IsNullOrEmpty())
 				throw new Exception("LoginPwd is empty");
 
-			var masterConnection = new SqlConnection(masterConnectionStr);
-			try
+			var connectionFactory = DbProviderFactories.GetFactory(ProviderName);
+			using (var masterConnection = connectionFactory.CreateConnection())
 			{
+				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
+
+				masterConnection.ConnectionString = masterConnectionStr;
 				masterConnection.Open();
-				DoExecuteCreateDatabaseScript(masterConnection, databaseName, loginName, loginPwd);
-			}
-			finally
-			{
+				DoExecuteCreateDatabaseScript(masterConnection, ProviderName, databaseName, loginName, loginPwd);
 				masterConnection.Close();
 			}
 		}
 
+		protected string ProviderName { get; private set; }
+
 		protected virtual void DoExecuteCreateDatabaseScript(
 			IDbConnection masterConnection,
+			string provider,
 			string databaseName,
 			string loginName,
 			string loginPwd)
 		{
-			ExecuteNonQuery(string.Format(@"
+			var sql = CreateDbScripts[provider];
+			ExecuteNonQuery(string.Format(sql, databaseName, loginName, loginPwd), masterConnection);
+		}
+
+		private static readonly Dictionary<string, string> CreateDbScripts = new Dictionary<string, string>
+		{
+			{"PostgreSQL", @"
+				select pg_terminate_backend(pg_stat_activity.pid)
+				from pg_stat_activity
+				where datname = '{0}';
+				go
+				drop database if exists {0};
+				go
+				drop role if exists {1};
+				go
+				create database {0};
+				go
+				create role {1} login password '{2}';
+				go
+				alter database {0} owner to {1}"},
+
+			{"System.Data.SqlClient", @"
 				IF EXISTS(SELECT name FROM sys.databases WHERE name = '{0}') BEGIN
 					ALTER DATABASE [{0}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 					DROP DATABASE [{0}]
@@ -203,9 +232,8 @@ namespace AGO.Core.Application
 					END TRY
 					BEGIN CATCH
 					END CATCH
-				end			
-				go", databaseName, loginName, loginPwd), masterConnection);
-		}
+				end"}
+		};
 
 		protected virtual void DoPopulateDatabase()
 		{
@@ -256,6 +284,9 @@ namespace AGO.Core.Application
 
 					line = reader.ReadLine();
 				}
+
+				if (currentBatch.Length > 0)
+					scripts.Add(currentBatch.ToString());
 			}
 
 			foreach (var str in scripts)

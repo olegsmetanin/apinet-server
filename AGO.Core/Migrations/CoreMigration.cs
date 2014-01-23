@@ -11,7 +11,7 @@ namespace AGO.Core.Migrations
 	[MigrationVersion(2013, 09, 01, 01)]
 	public class CoreMigration : FluentMigrator.Migration
 	{
-		internal const string MODULE_SCHEMA = "Core";
+		internal const string MODULE_SCHEMA = "\"Core\"";
 
 		public override void Up()
 		{

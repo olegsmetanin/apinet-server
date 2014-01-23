@@ -36,7 +36,7 @@ namespace AGO.Reporting.Tests
 			          		LastChange = DateTime.Now
 			          	};
 			session().Save(tpl);
-			session().FlushMode = FlushMode.Auto;
+			session().Flush();
 
 			return tpl;
 		}
@@ -47,13 +47,14 @@ namespace AGO.Reporting.Tests
 			var setting = new ReportSettingModel
 			              	{
 								Name = "NUnit " + name,
+								TypeCode = "NUnit",
 			              		GeneratorType = type,
 			              		DataGeneratorType = datagen,
 			              		ReportParameterType = param,
 			              		ReportTemplate = session().Get<ReportTemplateModel>(templateId)
 			              	};
 			session().Save(setting);
-			session().FlushMode = FlushMode.Auto;
+			session().Flush();
 
 			return setting;
 		}
@@ -68,10 +69,12 @@ namespace AGO.Reporting.Tests
 			           		ReportSetting = setting,
 			           		ReportingService = svc,
 			           		Parameters = param,
-			           		State = ReportTaskState.NotStarted
+			           		State = ReportTaskState.NotStarted,
+							Creator = currentUser(),
+							CreationTime = DateTime.UtcNow
 			           	};
 			session().Save(task);
-			session().FlushMode = FlushMode.Auto;
+			session().Flush();
 
 			return task;
 		}

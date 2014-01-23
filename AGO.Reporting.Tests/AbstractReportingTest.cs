@@ -42,31 +42,26 @@ namespace AGO.Reporting.Tests
 			           		LongRunning = true
 			           	};
 			_CrudDao.Store(quick);
-			Session.SaveOrUpdate(slow);
+			_CrudDao.Store(slow);
 			_SessionProvider.CloseCurrentSession();
 		}
 
 		protected virtual void Cleanup()
 		{
 			var conn = _SessionProvider.CurrentSession.Connection;
-			ExecuteNonQuery(string.Format(@"
-					delete from Core.ReportingServiceDescriptorModel where Name like 'NUnit%'
-					go"
-					), conn);
+			ExecuteNonQuery(@"delete from ""Core"".""ReportingServiceDescriptorModel"" where ""Name"" like 'NUnit%'", conn);
 			Logout();
 		}
 
 		protected virtual void TearDown()
 		{
 			var conn = _SessionProvider.CurrentSession.Connection;
-			ExecuteNonQuery(string.Format(@"
-					delete from Core.ReportTaskModel where Name like 'NUnit%'
+			ExecuteNonQuery(@"
+					delete from ""Core"".""ReportTaskModel"" where ""Name"" like 'NUnit%'
 					go
-					delete from Core.ReportSettingModel where Name like 'NUnit%'
+					delete from ""Core"".""ReportSettingModel"" where ""Name"" like 'NUnit%'
 					go
-					delete from Core.ReportTemplateModel where Name like 'NUnit%'
-					go"
-					), conn);
+					delete from ""Core"".""ReportTemplateModel"" where ""Name"" like 'NUnit%'", conn);
 			_SessionProvider.CloseCurrentSession();
 		}
 

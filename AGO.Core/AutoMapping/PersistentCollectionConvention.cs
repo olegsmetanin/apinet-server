@@ -1,6 +1,6 @@
-﻿using FluentNHibernate.Conventions;
+﻿using AGO.Core.Attributes.Mapping;
+using FluentNHibernate.Conventions;
 using FluentNHibernate.Conventions.Instances;
-using AGO.Core.Attributes.Mapping;
 
 namespace AGO.Core.AutoMapping
 {
@@ -51,11 +51,11 @@ namespace AGO.Core.AutoMapping
 				return;
 
 			if (!attribute.LinkSchema.IsNullOrWhiteSpace())
-				instance.Schema(attribute.LinkSchema.TrimSafe());
+				instance.Schema(QuotedNamesNamingStrategy.DoubleQuote(attribute.LinkSchema.TrimSafe()));
 			else
 			{
 				var parts = instance.EntityType.Assembly.GetName().Name.Split('.');
-				instance.Schema(parts[parts.Length - 1]);
+				instance.Schema(QuotedNamesNamingStrategy.DoubleQuote(parts[parts.Length - 1]));
 			}
 		}
 	}

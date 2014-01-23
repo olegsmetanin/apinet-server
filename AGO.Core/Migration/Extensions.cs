@@ -212,7 +212,7 @@ namespace AGO.Core.Migration
 			{
 			    var fkName = "FK_" + TableName<TModel>() + "_" + ColumnName(expression);
 				if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
-				result.ForeignKey(fkName, SchemaName(foreignType), TableName(foreignType), "Id");
+					result.ForeignKey(fkName, SchemaName(foreignType), TableName(foreignType), "Id");
 				else
 					result.ForeignKey(fkName, TableName(foreignType), "Id");
 			}
