@@ -1,9 +1,10 @@
 var app = require('http').createServer(handler)
   , io = require('socket.io').listen(app)
   , redis = require("redis")
+  , pg = require('pg')
   , client = redis.createClient()
-  , authClient = redis.createClient()
   , login2socket = {}
+  , connStr = 'pg://ago_user:123@localhost:5432/ago_apinet';
 
 io.configure(function() {
 	io.set('log level', 2);
@@ -19,22 +20,25 @@ io.configure(function() {
 		}
 
 		var token = handshakeData.query.token;
-		authClient.get("token:" + token, function(err, reply) {
-    		if (reply == null) {
-    			callback("Invalid token", false);
-    			return;
-    		}
-
-    		handshakeData.login = reply;
-    		callback(null, true);
+		pg.connect(connStr, function(err, client, done) {
+			client.query('select "Login" from "Core"."TokenToLogin" where "Token" = $1', [token], function(err, result) {
+				if (result && result.rows && result.rows.length > 0) {
+					handshakeData.login = result.rows[0].Login;
+					callback(null, true);
+					done();
+					return;
+				}
+				callback("Invalid token", false);
+			});
 		});
 	});
 })
 
-app.listen(7777);
+app.listen(36653);
 
 client.on("ready", function () {
 	client.subscribe('reports_changed');
+	client.subscribe('reports_deleted');
 });
 
 io.sockets.on('connection', function (s) {
@@ -58,18 +62,18 @@ io.sockets.on('connection', function (s) {
 });
 
 client.on("message", function(channel, message) {
-	//assume, that channel is reports_changed and message is ReportTask object
-	console.log(message);
+	//assume, that channel is reports_changed or reports_deleted and message is ReportTask object
 	var task = JSON.parse(message);
 	if (!login2socket[task.Login]) {
 		console.log('User ' + task.Login + ' not connected, remove message');
 		console.log(login2socket);
 		return;
 	}
-
+	console.log('Arrived message: ' + channel);
+	console.log(task);
 	var socks = login2socket[task.Login].sockets;
 	for(var i = 0; i < socks.length; i++) {
-		socks[i].emit('reports', message);
+		socks[i].emit(channel, message);
 	}
 });
 
