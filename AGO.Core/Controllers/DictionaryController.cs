@@ -246,17 +246,7 @@ namespace AGO.Core.Controllers
 
 			try
 			{
-				var tag = _CrudDao.Get<ProjectTagModel>(id, true);
-
-				var currentUser = _AuthController.CurrentUser();
-				if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-					throw new AccessForbiddenException();
-
-				if (_SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-						.Where(m => m.Tag == tag).RowCount() > 0)
-					throw new CannotDeleteReferencedItemException();
-
-				_CrudDao.Delete(tag);
+				DoDeleteProjectTag(_CrudDao.Get<ProjectTagModel>(id, true), _AuthController.CurrentUser());
 			}
 			catch (Exception e)
 			{
@@ -306,6 +296,26 @@ namespace AGO.Core.Controllers
 		{
 			return MetadataForModelAndRelations<CustomPropertyTypeModel>().Concat(
 				MetadataForModelAndRelations<CustomPropertyInstanceModel>());
+		}
+
+		#endregion
+
+		#region Helper methods
+
+		public void DoDeleteProjectTag(ProjectTagModel tag, UserModel currentUser)
+		{
+			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			if (_SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+					.Where(m => m.Tag == tag).RowCount() > 0)
+				throw new CannotDeleteReferencedItemException();
+
+			foreach (var subTag in _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
+					.Where(m => m.Parent == tag).List())
+				DoDeleteProjectTag(subTag, currentUser);
+
+			_CrudDao.Delete(tag);
 		}
 
 		#endregion
