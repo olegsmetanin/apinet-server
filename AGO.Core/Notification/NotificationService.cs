@@ -136,7 +136,7 @@ namespace AGO.Core.Notification
 
 		public async Task<object> Start()
 		{
-			LogDebug("Enter start");
+			//LogDebug("Enter start");
 
 			do
 			{
@@ -144,18 +144,18 @@ namespace AGO.Core.Notification
 				try
 				{
 					connectTask.Wait();
-					LogDebug("Connect task successfull");
+					//LogDebug("Connect task successfull");
 					Interlocked.Exchange(ref state, State.Connected);
 					LogInfo("Started");
 				}
 				catch (AggregateException ex)
 				{
 					ex.Handle(e => {
-						Log.ErrorFormat("Notification service: error on connecting.", e);
+						Log.InfoFormat("Notification service: error on connecting.", e);
 						return true;
 					});
 
-					LogDebug("Connect task faulted");
+					//LogDebug("Connect task faulted");
 					if (state == State.Closed)
 					{
 						return null;
@@ -177,34 +177,34 @@ namespace AGO.Core.Notification
 				pubConnection = null;
 			}
 
-			RedisConnection connection = new RedisConnection(redisHost, port: redisPort);
-			LogDebug("Opening connection");
+			var connection = new RedisConnection(redisHost, port: redisPort);
+			//LogDebug("Opening connection");
 			await connection.Open();
-			LogDebug("Connection open, next subscribe");
-			RedisSubscriberConnection channel = connection.GetOpenSubscriberChannel();
+			//LogDebug("Connection open, next subscribe");
+			var channel = connection.GetOpenSubscriberChannel();
 			channel.CompletionMode = ResultCompletionMode.PreserveOrder;
 			await Task.WhenAll(
 				channel.Subscribe(EVENT_REPORT_RUN, (type, msg) => OnReportEvent(msg, runReportSubscribers)),
 				channel.Subscribe(EVENT_REPORT_CANCEL, (type, msg) => OnReportEvent(msg, cancelReportSubscribers)));
-			LogDebug("Subscribed successfully");
+			//LogDebug("Subscribed successfully");
 			subConnection = channel;
 			pubConnection = connection;
 			connection.Closed += Reconnect;
 			connection.Error += Reconnect;
-			LogDebug("Redis connection ready to work");
+			//LogDebug("Redis connection ready to work");
 		}
 
 		private void Reconnect(object sender, EventArgs e)
 		{
-			LogDebug("Try set disconnected on reconnecting");
+			//LogDebug("Try set disconnected on reconnecting");
 
 			if (State.Connected != Interlocked.CompareExchange(ref state, State.Disconnected, State.Connected))
 			{
-				LogDebug("Loose disconnect set, another thread first set state");
+				//LogDebug("Loose disconnect set, another thread first set state");
 				return;
 			}
 
-			LogDebug("Try set connecting on reconnecting");
+			//LogDebug("Try set connecting on reconnecting");
 
 			if (State.Disconnected == Interlocked.CompareExchange(ref state, State.Connecting, State.Disconnected))
 			{
