@@ -3,7 +3,7 @@ using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using SimpleInjector;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.Workers
 {
 	public class CustomReportWorker: AbstractReportWorker
 	{

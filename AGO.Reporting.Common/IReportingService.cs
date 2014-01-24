@@ -34,12 +34,5 @@ namespace AGO.Reporting.Common
         /// <param name="taskId">Идентификатор задачи</param>
         /// <returns><b>true</b>, если задача в настоящий момент выполняется</returns>
         bool IsRunning(Guid taskId);
-
-        /// <summary>
-        /// Узнает у сервиса, ожидает ли задача выполнения в настоящий момент
-        /// </summary>
-        /// <param name="taskId">Идентификатор задачи</param>
-        /// <returns><b>true</b>, если задача в настоящий момент ожидает выполнения</returns>
-        bool IsWaitingForRun(Guid taskId);
     }
 }

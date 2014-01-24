@@ -4,19 +4,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Configuration;
-using System.Web.Mvc;
 using System.Web.Routing;
 using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Config;
-using AGO.Core.Execution;
 using AGO.Core.Model.Reporting;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
-using AGO.Reporting.Service.Controllers;
+using AGO.Reporting.Service.Workers;
 using Common.Logging;
 using Newtonsoft.Json.Linq;
-using SimpleInjector.Integration.Web.Mvc;
 
 
 namespace AGO.Reporting.Service
@@ -68,10 +65,6 @@ namespace AGO.Reporting.Service
 			base.DoRegisterCoreServices();
 
 			IocContainer.Register<IReportingRepository, ReportingRepository>();
-			IocContainer.RegisterAll<IActionParameterResolver>(new [] { typeof(JsonBodyParameterResolver) });
-			IocContainer.RegisterAll<IActionParameterTransformer>(
-				new [] { typeof(AttributeValidatingParameterTransformer), typeof(JsonTokenParameterTransformer) });
-			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 
 			ReadConfiguration();
 			ApplyConfiguration();
@@ -109,26 +102,14 @@ namespace AGO.Reporting.Service
 		{
 			base.DoInitializeCoreServices();
 
-			RegisterReportingRoutes(RouteTable.Routes);
-			DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(IocContainer));
-
 			NotificationService.SubscribeToRunReport(RunReport);
 			NotificationService.SubscribeToCancelReport(id => CancelReport(id));
-		}
-
-		protected void RegisterReportingRoutes(RouteCollection routes)
-		{
-			//Have't any web resources
-			routes.RouteExistingFiles = false;
-			//Our api
-			routes.MapRoute("api", "api/{method}", new { controller = "ReportingApi", action="Dispatch", service = this });
-			//default route (error)
-			routes.MapRoute("any", "{*value}", new {controller = "ReportingApi", action = "Error"});
 		}
 
 		protected override void DoInitializeApplication()
 		{
 			base.DoInitializeApplication();
+			//last step
 			cleanFinishedTaskTimer.Run();
 		}
 
@@ -217,14 +198,6 @@ namespace AGO.Reporting.Service
 		public bool IsRunning(Guid taskId)
 		{
 			return HasWorker(taskId, rw => !rw.Finished);
-		}
-
-		public bool IsWaitingForRun(Guid taskId)
-		{
-			lock (waitingForRun)
-			{
-				return waitingForRun.Contains(taskId);
-			}
 		}
 
 		#endregion

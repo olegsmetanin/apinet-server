@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using AGO.Reporting.Common;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.ReportGenerators
 {
     /// <summary>
     /// Базовый генератор отчетов. Содержит общую функциональность.

@@ -6,7 +6,7 @@ using AGO.Core.Notification;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.Workers
 {
 	/// <summary>
 	/// Базовый класс для worker-ов - генераторов отчетов.

@@ -4,7 +4,7 @@ using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service.ReportGenerators;
 using SimpleInjector;
 
-namespace AGO.Reporting.Service
+namespace AGO.Reporting.Service.Workers
 {
 	public class ReportWorker: AbstractReportWorker
 	{
