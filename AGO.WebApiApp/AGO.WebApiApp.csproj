@@ -199,6 +199,7 @@
   <ItemGroup>
     <Content Include="logs\Web.config" />
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\artem1.pubxml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AGO.Core\AGO.Core.csproj">
