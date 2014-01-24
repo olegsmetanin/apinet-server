@@ -4,7 +4,8 @@ var app = require('http').createServer(handler)
   , pg = require('pg')
   , client = redis.createClient(6379, '127.0.0.1', {retry_max_delay: 1000 * 60})
   , login2socket = {}
-  , connStr = 'pg://ago_user:123@localhost:5432/ago_apinet';
+  , connStr = 'pg://ago_user:123@localhost:5432/ago_apinet'
+  , listenPort = process.argv && process.argv.length > 2 ? process.argv[2] : 36653;
 
  pg.on('error', function(err, client) {
 	console.error('Error on postgresql connection', err);
@@ -51,7 +52,7 @@ io.configure(function() {
 	});
 })
 
-app.listen(36653);
+app.listen(listenPort);
 
 client.on('error', function(err) { console.error(err); } );
 client.on('ready', function () {
