@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using System.Web;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -15,9 +17,11 @@ using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Notification;
+using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NHibernate;
 
 namespace AGO.Core.Controllers
 {
@@ -195,9 +199,7 @@ namespace AGO.Core.Controllers
 				//emit event for reporting service (about new task to work)
 				bus.EmitRunReport(task.Id);
 				//emit event for client (about his task in queue and start soon)
-				bus.EmitReportChanged(ReportTaskToDTO(task));
-
-				//return ReportTaskToDTO(task);
+				bus.EmitReportChanged(ReportEvents.CREATED, _AuthController.CurrentUser().Login,  ReportTaskToDTO(task));
 			}
 			catch (Exception ex)
 			{
@@ -209,30 +211,72 @@ namespace AGO.Core.Controllers
 		private const int TOP_REPORTS = 10;
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable GetTopLastReports()
+		public object GetTopLastReports()
 		{
-			var running = _SessionProvider.CurrentSession.QueryOver<ReportTaskModel>()
-				.Where(m => m.State == ReportTaskState.Running || m.State == ReportTaskState.NotStarted)
-				.OrderBy(m => m.CreationTime).Desc
-				.UnderlyingCriteria.SetMaxResults(10)
-				.List<ReportTaskModel>()
-				.Select(ReportTaskToDTO)
-				.ToList();
+			var user = _AuthController.CurrentUser();
 
-			var unread = Enumerable.Empty<object>();
-			var rest = TOP_REPORTS - running.Count;
-			if (rest > 0)
+			Func<ISession, 
+				Expression<Func<ReportTaskModel, bool>>, 
+				IQueryOver<ReportTaskModel, ReportTaskModel>> buildQuery = (s, predicate) =>
 			{
-				unread = _SessionProvider.CurrentSession.QueryOver<ReportTaskModel>()
-					.Where(m => m.State != ReportTaskState.NotStarted && m.State != ReportTaskState.Running)
-					.OrderBy(m => m.CreationTime).Desc
-					.UnderlyingCriteria.SetMaxResults(rest)
-					.List<ReportTaskModel>()
-					.Select(ReportTaskToDTO)
-					.ToList();
-			}
+				var q = s.QueryOver<ReportTaskModel>();
+				if (predicate != null)
+					q = q.Where(predicate);
+				if (user.SystemRole != SystemRole.Administrator)
+					q = q.Where(m => m.Creator.Id == user.Id);
+				return q;
+			};
 
-			return running.Concat(unread);
+			Action<Action<ISession>> doInSessionContext = action =>
+			{
+				//separate session - don't use CurrentSession, that binded to request thread
+				using (var session = _SessionProvider.SessionFactory.OpenSession())
+				{
+					action(session);
+					session.Close();
+				}
+			};
+
+			var activeCountTask = Task.Factory.StartNew(() =>
+			{
+				var count = 0;
+				doInSessionContext(s =>
+				{
+					count = buildQuery(s, m => m.State == ReportTaskState.Running || m.State == ReportTaskState.NotStarted).RowCount();
+				});
+				return count;
+			});
+			var unreadCountTask = Task.Factory.StartNew(() =>
+			{
+				var count = 0;
+				doInSessionContext(s =>
+				{
+					count = buildQuery(s, m => m.State == ReportTaskState.Completed && m.ResultUnread).RowCount();
+				});
+				return count;
+			});
+			var topLastTask = Task.Factory.StartNew(() =>
+			{
+				IList<ReportTaskModel> reports = null;
+				doInSessionContext(s =>
+				{
+					reports = buildQuery(s, null)
+						.Fetch(m => m.Creator).Eager //beause after doInSessionContext session will be closed and then the user proxy will not be loaded
+						.OrderBy(m => m.CreationTime).Desc
+						.UnderlyingCriteria.SetMaxResults(TOP_REPORTS)
+						.List<ReportTaskModel>();
+				});
+				return reports;
+			});
+
+			Task.WaitAll(activeCountTask, unreadCountTask, topLastTask);
+
+			return new
+			{
+				active = activeCountTask.Result,
+				unread = unreadCountTask.Result,
+				reports = topLastTask.Result.Select(ReportTaskToDTO).ToList()
+			};
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -248,7 +292,13 @@ namespace AGO.Core.Controllers
 			_CrudDao.Store(task);
 
 			//emit event for client (about his task is canceled)
-			bus.EmitReportChanged(ReportTaskToDTO(task));
+			var dto = ReportTaskToDTO(task);
+			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Login, dto);
+			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
+			{
+				//and to creator, if another person cancel task (admin, for example)
+				bus.EmitReportChanged(ReportEvents.CANCELED, task.AuthorLogin, dto);
+			}
 
 			_SessionProvider.FlushCurrentSession();
 		}
@@ -264,7 +314,12 @@ namespace AGO.Core.Controllers
 			_CrudDao.Delete(task);
 
 			//emit event for client (about his task is successfully deleted)
-			bus.EmitReportDeleted(dto);
+			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Login, dto);
+			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
+			{
+				//and to creator, if another person delete task (admin, for example)
+				bus.EmitReportChanged(ReportEvents.DELETED, task.AuthorLogin, dto);
+			}
 
 			_SessionProvider.FlushCurrentSession();
 		}
@@ -280,7 +335,7 @@ namespace AGO.Core.Controllers
 			var user = _AuthController.CurrentUser();
 			if (user.SystemRole != SystemRole.Administrator)
 			{
-				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator == user));
+				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator.Id == user.Id));
 			}
 
 			return _FilteringDao.List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
@@ -293,7 +348,7 @@ namespace AGO.Core.Controllers
 			var user = _AuthController.CurrentUser();
 			if (user.SystemRole != SystemRole.Administrator)
 			{
-				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator == user));
+				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator.Id == user.Id));
 			}
 
 			return _FilteringDao.RowCount<ReportTaskModel>(filter);

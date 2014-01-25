@@ -9,6 +9,7 @@ using AGO.Core.Model;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Notification;
+using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using SimpleInjector;
 
@@ -74,7 +75,7 @@ namespace AGO.Core.Controllers
 							var user = diContainer.GetInstance<AuthController>().CurrentUser();
 							//User must be logged in to download report, so, we don't check user to null
 							var dto = ReportTaskDTO.FromTask(report, lc, user.SystemRole != SystemRole.Administrator);
-							diContainer.GetInstance<INotificationService>().EmitReportChanged(dto);
+							diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Login, dto);
 
 							sp.FlushCurrentSession();
 						}

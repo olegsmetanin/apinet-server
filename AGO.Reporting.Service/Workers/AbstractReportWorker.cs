@@ -95,7 +95,7 @@ namespace AGO.Reporting.Service.Workers
 			{
 				rt.State = ReportTaskState.Running;
 				rt.StartedAt = DateTime.Now;
-			});
+			}, ReportEvents.RUNNED);
 		}
 
 		private void RegisterSuccessAndSaveResult(IReportGeneratorResult result)
@@ -113,7 +113,7 @@ namespace AGO.Reporting.Service.Workers
 				rt.ResultContent = buffer;
 			    rt.ResultName = result.GetFileName(rt.ResultName);
 			    rt.ResultContentType = result.ContentType;
-			});
+			}, ReportEvents.COMPLETED);
 		}
 
 		private void RegisterError(Exception ex)
@@ -125,7 +125,7 @@ namespace AGO.Reporting.Service.Workers
 			    rt.CompletedAt = DateTime.Now;
 			    rt.ErrorMsg = ex != null ? ex.Message : "Unknown error";
 			    rt.ErrorDetails = ex != null ? ex.ToString() : string.Empty;
-			});
+			}, ReportEvents.ERROR);
 		}
 
 		private void RegisterCancel(bool abortedByTimeout)
@@ -139,7 +139,7 @@ namespace AGO.Reporting.Service.Workers
 					rt.State = ReportTaskState.Canceled;
 					rt.CompletedAt = DateTime.Now;
 					rt.ErrorMsg = "Report execution was interrupted by timeout";
-				});
+				}, ReportEvents.ABORTED);
 			}
 		}
 
@@ -190,13 +190,13 @@ namespace AGO.Reporting.Service.Workers
 			Func<bool> notStopped = () => !Finished && !TokenSource.IsCancellationRequested;
 			Func<IReportTask, bool> notCompleted = rt => rt.DataGenerationProgress < 100 || rt.ReportGenerationProgress < 100;
 			ChangeState(rt =>
-			            {
-			            	InternalTrackProgress(rt);
-							if (notStopped() && notCompleted(rt))
-							{
-								trackProgressTimer.Run();
-							}
-			            });
+			{
+				InternalTrackProgress(rt);
+				if (notStopped() && notCompleted(rt))
+				{
+					trackProgressTimer.Run();
+				}
+			}, ReportEvents.PROGRESS);
 		}
 
 		private void StopProgressTracking()
@@ -213,7 +213,7 @@ namespace AGO.Reporting.Service.Workers
 		//т.к. изменение состояния задачи вызывается двумя потоками - основным, делающим работу,
 		//и таймером, обновляющим процент выполнения, используем синхронизацию, что бы не получить
 		//LockingException на пустом месте
-		protected void ChangeState(Action<IReportTask> action)
+		protected void ChangeState(Action<IReportTask> action, string type)
 		{
 			lock (stateChangeSync)
 			{
@@ -222,9 +222,10 @@ namespace AGO.Reporting.Service.Workers
 					var reportTask = Repository.GetTask(TaskId);
 				    action(reportTask);
 					session.SaveOrUpdate(reportTask);
+					var login = reportTask.AuthorLogin;//cache login, because after flush user proxy can't be loaded
 				    SessionProvider.FlushCurrentSession();
 					//Not wait for the task complete - no care if some of messages was lost
-					Bus.EmitReportChanged(Repository.GetTaskAsDTO(reportTask.Id));
+					Bus.EmitReportChanged(type, login, Repository.GetTaskAsDTO(reportTask.Id));
 				});
 
 			}

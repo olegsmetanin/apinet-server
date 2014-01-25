@@ -30,6 +30,9 @@ namespace AGO.Core.Model.Reporting
 		public virtual Guid? ReportingServiceId { get; set; }
 
 		public virtual string Parameters { get; set; }
+		
+		[NotMapped, MetadataExclude]
+		public virtual string AuthorLogin { get { return Creator != null ? Creator.Login : null; } }
 
 		[JsonProperty]
 		public virtual ReportTaskState State { get; set; }

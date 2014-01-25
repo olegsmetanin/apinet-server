@@ -56,6 +56,7 @@
     <Compile Include="Model\ReportTaskState.cs" />
     <Compile Include="PercentTicker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReportEvents.cs" />
     <Compile Include="ReportingClientException.cs" />
   </ItemGroup>
   <ItemGroup>

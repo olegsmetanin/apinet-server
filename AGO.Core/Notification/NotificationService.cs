@@ -114,10 +114,9 @@ namespace AGO.Core.Notification
 			public const int Closed = 3;
 		}
 
-		private const string EVENT_REPOR_CHANGED = "reports_changed";
-		private const string EVENT_REPOR_DELETED = "reports_deleted";
 		private const string EVENT_REPORT_RUN = "reports_run";
 		private const string EVENT_REPORT_CANCEL = "reports_cancel";
+		private const string EVENT_REPORT_CHANGED = "reports_changed";
 		private RedisConnection pubConnection;
 		private RedisSubscriberConnection subConnection;
 		private readonly List<Action<Guid>> runReportSubscribers = new List<Action<Guid>>();
@@ -177,7 +176,7 @@ namespace AGO.Core.Notification
 				pubConnection = null;
 			}
 
-			var connection = new RedisConnection(redisHost, port: redisPort);
+			var connection = new RedisConnection(redisHost, redisPort);
 			//LogDebug("Opening connection");
 			await connection.Open();
 			//LogDebug("Connection open, next subscribe");
@@ -314,27 +313,28 @@ namespace AGO.Core.Notification
 			});
 		}
 
-		public Task EmitReportChanged(object dto)
+		public Task EmitReportChanged(string type, string login, object dto)
 		{
 			return DoWithRedis<object>(() =>
 			{
-				var dtojson = JsonConvert.SerializeObject(dto);
-				var emitTask = pubConnection.Publish(EVENT_REPOR_CHANGED, dtojson);
+				var msg = new { type, login, report = dto };
+				var msgjson = JsonConvert.SerializeObject(msg);
+				var emitTask = pubConnection.Publish(EVENT_REPORT_CHANGED, msgjson);
 				pubConnection.Wait(emitTask);
 				return null;
 			});
 		}
 
-		public Task EmitReportDeleted(object dto)
-		{
-			return DoWithRedis<object>(() =>
-			{
-				var dtojson = JsonConvert.SerializeObject(dto);
-				var emitTask = pubConnection.Publish(EVENT_REPOR_DELETED, dtojson);
-				pubConnection.Wait(emitTask);
-				return null;
-			});
-		}
+//		public Task EmitReportDeleted(object dto)
+//		{
+//			return DoWithRedis<object>(() =>
+//			{
+//				var dtojson = JsonConvert.SerializeObject(dto);
+//				var emitTask = pubConnection.Publish(EVENT_REPOR_DELETED, dtojson);
+//				pubConnection.Wait(emitTask);
+//				return null;
+//			});
+//		}
 
 		public void SubscribeToRunReport(Action<Guid> subscriber)
 		{

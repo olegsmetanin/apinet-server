@@ -21,7 +21,6 @@ namespace AGO.Core.Model.Reporting
 				State = m.State.ToString(),
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
 				Author = m.Creator != null ? m.Creator.FullName : null,
-				Login = m.Creator != null ? m.Creator.Login : null,
 				CreationTime = m.CreationTime,
 				StartedAt = m.StartedAt,
 				CompletedAt = m.CompletedAt,
@@ -42,8 +41,6 @@ namespace AGO.Core.Model.Reporting
 		public string StateName { get; set; }
 
 		public string Author { get; set; }
-
-		public string Login { get; set; }
 
 		public DateTime? CreationTime { get; set; }
 

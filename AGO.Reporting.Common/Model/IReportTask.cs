@@ -24,6 +24,11 @@ namespace AGO.Reporting.Common.Model
 		/// </summary>
 		string Parameters { get; }
 
+		/// <summary>
+		/// Логин автора
+		/// </summary>
+		string AuthorLogin { get; }
+
 		#endregion
 
 		#region State

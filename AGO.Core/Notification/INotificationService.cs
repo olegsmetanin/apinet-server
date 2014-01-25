@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace AGO.Core.Notification
@@ -9,13 +10,28 @@ namespace AGO.Core.Notification
 	/// </summary>
 	public interface INotificationService: IDisposable
 	{
+		/// <summary>
+		/// Оповещение о необходимости запустить отчет на выполнение
+		/// </summary>
+		/// <param name="reportId">Идентификатор задачи отчета</param>
+		/// <remarks>Для межсервисного взаимодействия</remarks>
 		Task EmitRunReport(Guid reportId);
 
+		/// <summary>
+		/// Оповещение о необходимости прервать выполняющийся отчет
+		/// </summary>
+		/// <param name="reportId">Идентификатор задачи отчета</param>
+		/// <remarks>Для межсервисного взаимодействия</remarks>
 		Task EmitCancelReport(Guid reportId);
 
-		Task EmitReportChanged(object dto);
-
-		Task EmitReportDeleted(object dto);
+		/// <summary>
+		/// Оповещение об изменении состояния задачи (статус, % выполнения либо удаление задачи)
+		/// </summary>
+		/// <param name="type">Тип изменения</param>
+		/// <param name="login">Логин пользователя, которому адресовано оповещение</param>
+		/// <param name="dto">Данные задачи отчета</param>
+		/// <remarks>Для оповещения оконечных клиентских приложений</remarks>
+		Task EmitReportChanged(string type, string login, object dto);
 
 		void SubscribeToRunReport(Action<Guid> subscriber);
 
