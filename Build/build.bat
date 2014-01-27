@@ -44,7 +44,6 @@ call grunt build >> %CURDIR%\build.log
 popd
 
 robocopy %APINET_CLIENT%\release\ distr\client /MIR >> build.log
-robocopy %APINET_CLIENT%\ distr\client index.html >> build.log
 
 rem Copy unbuildable stuff
 robocopy distr\api\bin\ distr\reporting\bin\ AGO.Tasks.* >> build.log
