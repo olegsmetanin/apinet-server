@@ -82,6 +82,7 @@
     <Compile Include="Config\KeyValueConfigurableDictionary.cs" />
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
+    <Compile Include="Controllers\AbstractTagsAwareController.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
