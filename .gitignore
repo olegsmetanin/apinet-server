@@ -82,6 +82,10 @@ publish
 # Publish Web Output
 *.Publish.xml
 
+# Build&publish
+/build/*
+!/build/build.bat
+
 # NuGet Packages Directory
 packages
 nuget.exe
