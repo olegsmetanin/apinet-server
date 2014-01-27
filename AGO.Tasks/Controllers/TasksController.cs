@@ -12,6 +12,7 @@ using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
+using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
@@ -26,6 +27,63 @@ namespace AGO.Tasks.Controllers
     /// </summary>
     public class TasksController: AbstractTasksController
     {
+		[JsonEndpoint, RequireAuthorization]
+		public bool TagTask(
+			[NotEmpty] Guid taskId,
+			[NotEmpty] Guid tagId)
+		{
+			var currentUser = _AuthController.CurrentUser();
+
+			var taskToTag = _SessionProvider.CurrentSession.QueryOver<TaskToTagModel>()
+				.Where(m => m.Task.Id == taskId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+
+			if (taskToTag != null)
+				return false;
+
+			var task = _CrudDao.Get<TaskModel>(taskId, true);
+			if ((task.Creator == null || !currentUser.Equals(task.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			var tag = _CrudDao.Get<TaskTagModel>(tagId, true);
+			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			_CrudDao.Store(new TaskToTagModel
+			{
+				Creator = currentUser,
+				Task = task,
+				Tag = tag
+			});
+
+			return true;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DetagTask(
+			[NotEmpty] Guid taskId,
+			[NotEmpty] Guid tagId)
+		{
+			var currentUser = _AuthController.CurrentUser();
+
+			var taskToTag = _SessionProvider.CurrentSession.QueryOver<TaskToTagModel>()
+				.Where(m => m.Task.Id == taskId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+
+			if (taskToTag == null)
+				return false;
+
+			var task = taskToTag.Task;
+			if ((task.Creator == null || !currentUser.Equals(task.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			var tag = taskToTag.Tag;
+			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			_CrudDao.Delete(taskToTag);
+
+			return true;
+		}
+
         public TasksController(
             IJsonService jsonService, 
             IFilteringService filteringService,

@@ -44,6 +44,63 @@ namespace AGO.Core.Controllers
 
 		#region Json endpoints
 
+		[JsonEndpoint, RequireAuthorization]
+		public bool TagProject(
+			[NotEmpty] Guid projectId,
+			[NotEmpty] Guid tagId)
+		{
+			var currentUser = _AuthController.CurrentUser();
+
+			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+				.Where(m => m.Project.Id == projectId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+
+			if (projectToTag != null)
+				return false;
+
+			var project = _CrudDao.Get<ProjectModel>(projectId, true);
+			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			var tag = _CrudDao.Get<ProjectTagModel>(tagId, true);
+			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			_CrudDao.Store(new ProjectToTagModel
+			{
+				Creator = currentUser,
+				Project = project,
+				Tag = tag
+			});
+
+			return true;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DetagProject(
+			[NotEmpty] Guid projectId, 
+			[NotEmpty] Guid tagId)
+		{
+			var currentUser = _AuthController.CurrentUser();
+
+			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+				.Where(m => m.Project.Id == projectId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+
+			if (projectToTag == null)
+				return false;
+
+			var project = projectToTag.Project;
+			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			var tag = projectToTag.Tag;
+			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
+				throw new AccessForbiddenException();
+
+			_CrudDao.Delete(projectToTag);
+
+			return true;
+		}
+
 		[JsonEndpoint, RequireAuthorization(true)]
 		public object CreateProject([NotNull] ProjectModel model, [NotNull] ISet<Guid> tagIds)
 		{

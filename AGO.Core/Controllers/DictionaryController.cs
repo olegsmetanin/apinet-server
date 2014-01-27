@@ -115,12 +115,12 @@ namespace AGO.Core.Controllers
 		{
 			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
 				.Where(m => m.Creator == _AuthController.CurrentUser())
-				.OrderBy(m => m.Name).Asc;
+				.OrderBy(m => m.FullName).Asc;
 
 			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
 
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
