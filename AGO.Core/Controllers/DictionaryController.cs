@@ -48,8 +48,51 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupProjectTags(
+			[InRange(0, null)] int page,
+			string term)
+		{
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
+				.Where(m => m.Creator == _AuthController.CurrentUser())
+				.OrderBy(m => m.FullName).Asc;
+
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
+
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupProjectTypes(
+			[InRange(0, null)] int page,
+			string term)
+		{
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTypeModel>()
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
+			[NotEmpty] string project,
+			[InRange(0, null)] int page,
+			string term)
+		{
+			var query = _SessionProvider.CurrentSession.QueryOver<CustomPropertyTypeModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.Name).Asc;
+
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectTagModel> GetProjectTags(
-			Guid? parentId,
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
@@ -63,27 +106,6 @@ namespace AGO.Core.Controllers
 			});
 
 			filter.Add(ownerFilter);
-
-			var parentFilter = new ModelFilterNode();
-			if (parentId != null && !default(Guid).Equals(parentId))
-			{
-				parentFilter.AddItem(new ValueFilterNode
-				{
-					Path = "Parent",
-					Operator = ValueFilterOperators.Eq,
-					Operand = parentId.ToStringSafe()
-				});
-			}
-			else
-			{
-				parentFilter.AddItem(new ValueFilterNode
-				{
-					Path = "Parent",
-					Operator = ValueFilterOperators.Exists,
-					Negative = true
-				});
-			}
-			filter.Add(parentFilter);
 
 			return _FilteringDao.List<ProjectTagModel>(filter, new FilteringOptions
 			{
@@ -106,27 +128,6 @@ namespace AGO.Core.Controllers
 			filter.Add(ownerFilter);
 
 			return _FilteringDao.RowCount<ProjectTagModel>(filter);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectTags(
-			[InRange(0, null)] int page,
-			string term)
-		{
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
-				.Where(m => m.Creator == _AuthController.CurrentUser())
-				.OrderBy(m => m.FullName).Asc;
-
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
-
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> ProjectTagMetadata()
-		{
-			return MetadataForModelAndRelations<ProjectTagModel>();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -156,26 +157,8 @@ namespace AGO.Core.Controllers
 				if (!validation.Success)
 					return validation;
 
-				var parentsStack = new Stack<TagModel>();
-
-				var current = tag as TagModel;
-				while (current != null)
-				{
-					parentsStack.Push(current);
-					current = current.Parent;
-				}
-
-				var fullName = new StringBuilder();
-				while (parentsStack.Count > 0)
-				{
-					current = parentsStack.Pop();
-					if (fullName.Length > 0)
-						fullName.Append(" / ");
-					fullName.Append(current.Name);
-				}
-				tag.FullName = fullName.ToString();
-
-				_CrudDao.Store(tag);
+				var affected = new HashSet<ProjectTagModel>();
+				DoUpdateProjectTag(tag, affected);
 				return tag;
 			}
 			catch (Exception e)
@@ -209,27 +192,9 @@ namespace AGO.Core.Controllers
 				if (!validation.Success)
 					return validation;
 
-				var parentsStack = new Stack<TagModel>();
-
-				var current = tag as TagModel;
-				while (current != null)
-				{
-					parentsStack.Push(current);
-					current = current.Parent;
-				}
-
-				var fullName = new StringBuilder();
-				while (parentsStack.Count > 0)
-				{
-					current = parentsStack.Pop();
-					if (fullName.Length > 0)
-						fullName.Append(" / ");
-					fullName.Append(current.Name);
-				}
-				tag.FullName = fullName.ToString();
-
-				_CrudDao.Store(tag);
-				return tag;
+				var affected = new HashSet<ProjectTagModel>();
+				DoUpdateProjectTag(tag, affected);
+				return affected;
 			}
 			catch (Exception e)
 			{
@@ -240,13 +205,15 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public ValidationResult DeleteProjectTag([NotEmpty] Guid id)
+		public object DeleteProjectTag([NotEmpty] Guid id)
 		{
 			var validation = new ValidationResult();
 
 			try
 			{
-				DoDeleteProjectTag(_CrudDao.Get<ProjectTagModel>(id, true), _AuthController.CurrentUser());
+				var deletedIds = new HashSet<Guid>();
+				DoDeleteProjectTag(_CrudDao.Get<ProjectTagModel>(id, true), _AuthController.CurrentUser(), deletedIds);
+				return deletedIds;
 			}
 			catch (Exception e)
 			{
@@ -254,35 +221,6 @@ namespace AGO.Core.Controllers
 			}
 
 			return validation;
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectTypes(
-			[InRange(0, null)] int page,
-			string term)
-		{
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectTypeModel>()
-				.OrderBy(m => m.Name).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
-			[NotEmpty] string project,
-			[InRange(0, null)] int page,
-			string term)
-		{
-			var query = _SessionProvider.CurrentSession.QueryOver<CustomPropertyTypeModel>()
-				.Where(m => m.ProjectCode == project)
-				.OrderBy(m => m.Name).Asc;
-
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -298,24 +236,45 @@ namespace AGO.Core.Controllers
 				MetadataForModelAndRelations<CustomPropertyInstanceModel>());
 		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<IModelMetadata> ProjectTagMetadata()
+		{
+			return MetadataForModelAndRelations<ProjectTagModel>();
+		}
+
 		#endregion
 
 		#region Helper methods
 
-		public void DoDeleteProjectTag(ProjectTagModel tag, UserModel currentUser)
+		protected void DoDeleteProjectTag(ProjectTagModel tag, UserModel currentUser, ISet<Guid> deletedIds)
 		{
 			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
 				throw new AccessForbiddenException();
 
-			if (_SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-					.Where(m => m.Tag == tag).RowCount() > 0)
-				throw new CannotDeleteReferencedItemException();
-
 			foreach (var subTag in _SessionProvider.CurrentSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Parent == tag).List())
-				DoDeleteProjectTag(subTag, currentUser);
+				DoDeleteProjectTag(subTag, currentUser, deletedIds);
 
+			deletedIds.Add(tag.Id);
 			_CrudDao.Delete(tag);
+		}
+
+		protected void DoUpdateProjectTag(ProjectTagModel tag, ISet<ProjectTagModel> affected)
+		{
+			if (tag == null)
+				return;
+
+			var fullName = new StringBuilder(tag.Parent != null ? tag.Parent.FullName : string.Empty);		
+			if (fullName.Length > 0)
+				fullName.Append(" / ");
+			fullName.Append(tag.Name);
+
+			tag.FullName = fullName.ToString();
+			_CrudDao.Store(tag);
+			affected.Add(tag);
+
+			foreach (var subTag in tag.Children.OfType<ProjectTagModel>())
+				DoUpdateProjectTag(subTag, affected);
 		}
 
 		#endregion
