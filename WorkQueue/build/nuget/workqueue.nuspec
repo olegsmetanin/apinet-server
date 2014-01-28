@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AGO.WorkQueue</id>
+    <version>0.0.1</version>
+    <authors>artem1</authors>
+    <owners>artem1</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>AGO Systems. CoreNext. WorkQueue</description>
+    <releaseNotes>RC build.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>AGO CoreNext WorkQueue</tags>
+    <dependencies>
+      <dependency id="Npgsql" version="2.0.14.3" />
+    </dependencies>
+  </metadata>
+</package>

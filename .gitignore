@@ -85,6 +85,10 @@ publish
 # Build&publish
 /build/*
 !/build/build.bat
+# Build workqueue
+/WorkQueue/build/*.nupkg
+/WorkQueue/build/*.log
+/WorkQueue/build/nuget/lib/*
 
 # NuGet Packages Directory
 packages
