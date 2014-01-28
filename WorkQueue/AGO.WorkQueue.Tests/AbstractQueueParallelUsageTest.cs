@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
@@ -8,16 +8,18 @@ using NUnit.Framework;
 namespace AGO.WorkQueue.Tests
 {
 	[TestFixture]
-	public class QueueParallelUsageTest
+	public abstract class AbstractQueueParallelUsageTest
 	{
 		private IWorkQueue queue;
 		private Guid userId;
 		private ConcurrentQueue<QueueItem> completed;
 
+		protected abstract IWorkQueue CreateQueue();
+
 		[SetUp]
 		public void SetUp()
 		{
-			queue = new InMemoryWorkQueue();
+			queue = CreateQueue();
 			userId = Guid.NewGuid();
 			completed = new ConcurrentQueue<QueueItem>();
 		}
@@ -145,7 +147,5 @@ namespace AGO.WorkQueue.Tests
 				Assert.AreEqual(0, qi.UserPriority);
 			}
 		}
-
-
 	}
 }

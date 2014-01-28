@@ -30,6 +30,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mono.Security">
+      <HintPath>..\packages\Npgsql.2.0.14.3\lib\net45\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql">
+      <HintPath>..\packages\Npgsql.2.0.14.3\lib\net45\Npgsql.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -42,10 +48,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="QueueConsumptionTest.cs" />
+    <Compile Include="AbstractQueueConsumptionTest.cs" />
+    <Compile Include="AbstractQueueParallelUsageTest.cs" />
+    <Compile Include="InMemoryQueueConsumptionTest.cs" />
+    <Compile Include="PostgreSqlHelper.cs" />
+    <Compile Include="PostgreSqlQueueConsumptionTest.cs" />
+    <Compile Include="PostgreSqlQueueParallelUsageTest.cs" />
     <Compile Include="QueueItemTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueueParallelUsageTest.cs" />
+    <Compile Include="InMemoryQueueParallelUsageTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

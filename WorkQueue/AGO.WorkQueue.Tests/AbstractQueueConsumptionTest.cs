@@ -1,27 +1,26 @@
-﻿using System;
+using System;
 using System.Linq;
 using NUnit.Framework;
 
 namespace AGO.WorkQueue.Tests
 {
-	/// <summary>
-	/// Тесты базовых сценариев использования очереди задач
-	/// </summary>
 	[TestFixture]
-	public class QueueConsumptionTest
+	public abstract class AbstractQueueConsumptionTest
 	{
-		private IWorkQueue queue;
+		protected IWorkQueue Queue;
+
+		protected abstract IWorkQueue CreateQueue();
 
 		[SetUp]
-		public void Setup()
+		public virtual void SetUp()
 		{
-			queue = new InMemoryWorkQueue();
+			Queue = CreateQueue();
 		}
 
 		[TearDown]
-		public void TearDown()
+		public virtual void TearDown()
 		{
-			queue = null;
+			Queue = null;
 		}
 
 		[Test]
@@ -31,10 +30,10 @@ namespace AGO.WorkQueue.Tests
 			const string proj2 = "proj2";
 			var p1Item = new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid());
 			var p2Item = new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid());
-			queue.Add(p2Item);
-			queue.Add(p1Item);
+			Queue.Add(p2Item);
+			Queue.Add(p1Item);
 
-			var item = queue.Get(proj1);
+			var item = Queue.Get(proj1);
 
 			Assert.AreEqual(p1Item.Project, item.Project);
 			Assert.AreEqual(p1Item.TaskType, item.TaskType);
@@ -45,9 +44,9 @@ namespace AGO.WorkQueue.Tests
 		public void QueueReturnNullForNonExistingProject()
 		{
 			const string proj1 = "proj1";
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
 
-			var item = queue.Get("non existing project");
+			var item = Queue.Get("non existing project");
 
 			Assert.IsNull(item);
 		}
@@ -60,10 +59,10 @@ namespace AGO.WorkQueue.Tests
 			var user2 = Guid.NewGuid();
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, user1) { PriorityType = 1, UserPriority = 10 };
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, user2) { PriorityType = 1, UserPriority = 20 };
-			queue.Add(i1);
-			queue.Add(i2);
+			Queue.Add(i1);
+			Queue.Add(i2);
 
-			var item = queue.Get(proj);
+			var item = Queue.Get(proj);
 
 			Assert.AreEqual(i2.TaskId, item.TaskId);
 		}
@@ -75,10 +74,10 @@ namespace AGO.WorkQueue.Tests
 			var uid = Guid.NewGuid();
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, uid) { PriorityType = 1, UserPriority = 10 };
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, uid) { PriorityType = 1, UserPriority = 10 };
-			queue.Add(i1);
-			queue.Add(i2);
+			Queue.Add(i1);
+			Queue.Add(i2);
 
-			var item = queue.Get(proj);
+			var item = Queue.Get(proj);
 
 			Assert.AreEqual(i1.TaskId, item.TaskId);
 		}
@@ -90,10 +89,10 @@ namespace AGO.WorkQueue.Tests
 			var uid = Guid.NewGuid();
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, uid); //PriorityType = 0 by default, so, not used
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, uid);
-			queue.Add(i1);
-			queue.Add(i2);
+			Queue.Add(i1);
+			Queue.Add(i2);
 
-			var item = queue.Get(proj);
+			var item = Queue.Get(proj);
 
 			Assert.AreEqual(i1.TaskId, item.TaskId);
 		}
@@ -105,10 +104,10 @@ namespace AGO.WorkQueue.Tests
 			var uid = Guid.NewGuid();
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, uid);
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, uid) { UserPriority = 10};
-			queue.Add(i1);
-			queue.Add(i2);
+			Queue.Add(i1);
+			Queue.Add(i2);
 
-			var item = queue.Get(proj);
+			var item = Queue.Get(proj);
 
 			Assert.AreEqual(i1.TaskId, item.TaskId);
 		}
@@ -116,12 +115,12 @@ namespace AGO.WorkQueue.Tests
 		[Test]
 		public void QueueDumpDataAsRawShallowCopyList()
 		{
-			queue.Add(new QueueItem("a", Guid.NewGuid(), "p1", Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), "p2", Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), "p3", Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p1", Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p2", Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p3", Guid.NewGuid()));
 
 			// ReSharper disable PossibleMultipleEnumeration
-			var dump = queue.Dump(); //special not materialize - test dump is copy, not reference to underlying data
+			var dump = Queue.Dump(); //special not materialize - test dump is copy, not reference to underlying data
 
 			Assert.AreEqual(3, dump.Count());
 
@@ -129,7 +128,7 @@ namespace AGO.WorkQueue.Tests
 			Assert.IsTrue(dump.Any(qi => qi.Project == "p2"));
 			Assert.IsTrue(dump.Any(qi => qi.Project == "p3"));
 
-			queue.Clear();
+			Queue.Clear();
 
 			Assert.AreEqual(3, dump.Count());
 			Assert.IsTrue(dump.Any(qi => qi.Project == "p1"));
@@ -157,17 +156,17 @@ namespace AGO.WorkQueue.Tests
 			var i8 = new QueueItem("a", Guid.NewGuid(), p3, u1);
 			var i9 = new QueueItem("a", Guid.NewGuid(), p3, u2);
 
-			queue.Add(i1);
-			queue.Add(i2);
-			queue.Add(i3);
-			queue.Add(i4);
-			queue.Add(i5);
-			queue.Add(i6);
-			queue.Add(i7);
-			queue.Add(i8);
-			queue.Add(i9);
+			Queue.Add(i1);
+			Queue.Add(i2);
+			Queue.Add(i3);
+			Queue.Add(i4);
+			Queue.Add(i5);
+			Queue.Add(i6);
+			Queue.Add(i7);
+			Queue.Add(i8);
+			Queue.Add(i9);
 
-			var snapshot = queue.Snapshot();
+			var snapshot = Queue.Snapshot();
 
 			/*
 			 * u1: priority 20 in proj1
@@ -217,21 +216,21 @@ namespace AGO.WorkQueue.Tests
 			Assert.AreEqual(i9.TaskId, snapshot[u2][p3][0].TaskId);
 			Assert.AreEqual(2, snapshot[u2][p3][0].OrderInQueue);
 		}
-		
+
 		[Test]
 		public void QueueReturnUniqueProjectCodes()
 		{
 			const string proj1 = "proj1";
 			const string proj2 = "proj2";
 			const string proj3 = "proj3";
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj3, Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid()));
-			queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj3, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
 
-			var projects = queue.UniqueProjects().ToArray();
+			var projects = Queue.UniqueProjects().ToArray();
 
 			Assert.AreEqual(3, projects.Length);
 			Assert.IsTrue(projects.Contains(proj1));
