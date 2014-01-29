@@ -21,7 +21,14 @@ namespace AGO.Core.Watchers
 		private long changes;
 		private DateTime lastRun;
 
-		public WorkQueueWatchService(INotificationService ns, IWorkQueue wq, int throttleDelay = 2000)
+		//Ioc need this constructor
+		public WorkQueueWatchService(INotificationService ns, IWorkQueue wq)
+			: this(ns, wq, 2000)
+		{
+			
+		}
+
+		internal WorkQueueWatchService(INotificationService ns, IWorkQueue wq, int throttleDelay)
 		{
 			if (ns == null)
 				throw new ArgumentNullException("ns");

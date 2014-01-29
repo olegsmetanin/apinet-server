@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGO.Reporting.Tests", "AGO.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGO.Reporting.Service", "AGO.Reporting.Service\AGO.Reporting.Service.csproj", "{FA5736B5-7D93-42F7-A092-28BD14C5A0C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGO.WatchersHost", "AGO.WatchersHost\AGO.WatchersHost.csproj", "{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +94,12 @@ Global
 		{FA5736B5-7D93-42F7-A092-28BD14C5A0C8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FA5736B5-7D93-42F7-A092-28BD14C5A0C8}.Stend|Any CPU.ActiveCfg = Release|Any CPU
 		{FA5736B5-7D93-42F7-A092-28BD14C5A0C8}.Stend|Any CPU.Build.0 = Release|Any CPU
+		{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}.Stend|Any CPU.ActiveCfg = Release|Any CPU
+		{BB1A523B-FE85-45AE-9B30-92F302F9A1D0}.Stend|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

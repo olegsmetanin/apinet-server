@@ -549,6 +549,18 @@ namespace AGO.Tasks
 			_CrudDao.Store(xss);
 			_CrudDao.Store(ds);
 			_CrudDao.Store(xds);
+
+			var fake = new ReportSettingModel
+			{
+				CreationTime = DateTime.UtcNow,
+				Name = "Fake long running report (csv)",
+				TypeCode = "task-list",
+				DataGeneratorType = typeof (FakeLongRunningDataGenerator).AssemblyQualifiedName,
+				GeneratorType = GeneratorType.CvsGenerator,
+				ReportParameterType = typeof (TaskListReportParameters).AssemblyQualifiedName,
+				ReportTemplate = st
+			};
+			_CrudDao.Store(fake);
 		}
 
 		#endregion

@@ -57,6 +57,7 @@ app.listen(listenPort);
 client.on('error', function(err) { console.error(err); } );
 client.on('ready', function () {
 	client.subscribe('reports_changed');
+	client.subscribe('workqueue_changed');
 });
 
 io.sockets.on('connection', function (s) {
@@ -80,7 +81,7 @@ io.sockets.on('connection', function (s) {
 });
 
 client.on('message', function(channel, message) {
-	//assume, that channel is reports_changed and message in Object#{type, login, task}
+	//assume, that message is Object#{login, ...any other fields}
 	var parsedMsg = JSON.parse(message);
 	if (!login2socket[parsedMsg.login]) {
 		console.log('User ' + parsedMsg.login + ' not connected, remove message');
@@ -88,8 +89,11 @@ client.on('message', function(channel, message) {
 		return;
 	}
 	//TODO remove debug code
-	console.log('Arrived message: ' + channel);
-	console.log(parsedMsg);
+	if (channel !== 'reports_changed') {
+		console.log('Arrived message: ' + channel);
+		console.log(parsedMsg);
+	}
+	
 	var socks = login2socket[parsedMsg.login].sockets;
 	delete parsedMsg['login'];//sensitive information, not needed on client, remove
 	for(var i = 0; i < socks.length; i++) {

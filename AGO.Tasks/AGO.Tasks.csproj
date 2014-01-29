@@ -98,6 +98,7 @@
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reports\DetailedTaskListDataGenerator.cs" />
+    <Compile Include="Reports\FakeLongRunningDataGenerator.cs" />
     <Compile Include="Reports\SimpleTaskListDataGenerator.cs" />
     <Compile Include="Reports\TaskListReportParameters.cs" />
     <Compile Include="TasksException.cs" />
