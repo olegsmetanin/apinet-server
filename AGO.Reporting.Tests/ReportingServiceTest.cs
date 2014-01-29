@@ -89,7 +89,7 @@ namespace AGO.Reporting.Tests
 
 		private void WriteTaskToQueue(ReportTaskModel task)
 		{
-			var qi = new QueueItem("Report", task.Id, "fake", task.Creator.Id);
+			var qi = new QueueItem("Report", task.Id, "fake", task.Creator.Login);
 			realsvc.WorkQueue.Add(qi);
 		}
 

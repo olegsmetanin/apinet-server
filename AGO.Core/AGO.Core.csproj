@@ -44,6 +44,7 @@
     <Compile Include="Application\IControllersApplication.cs" />
     <Compile Include="Application\IPersistenceApplication.cs" />
     <Compile Include="Application\ITestDataApplication.cs" />
+    <Compile Include="Application\WatcherApplication.cs" />
     <Compile Include="Attributes\Constraints\RegexValidatedAttribute.cs" />
     <Compile Include="Attributes\Constraints\UniquePropertyAttribute.cs" />
     <Compile Include="Attributes\Constraints\InRangeAttribute.cs" />
@@ -249,11 +250,12 @@
     <Compile Include="Json\JsonService.cs" />
     <Compile Include="Json\IJsonService.cs" />
     <Compile Include="SessionFactoryBuilder.cs" />
+    <Compile Include="Watchers\WorkQueueWatchService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AGO.WorkQueue, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\AGO.WorkQueue.1.0.0.0\lib\AGO.WorkQueue.dll</HintPath>
+      <HintPath>..\packages\AGO.WorkQueue.1.0.0.1\lib\AGO.WorkQueue.dll</HintPath>
     </Reference>
     <Reference Include="BookSleeve">
       <HintPath>..\packages\BookSleeve.1.3.41\lib\BookSleeve.dll</HintPath>

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace AGO.Core.Notification
@@ -36,5 +35,9 @@ namespace AGO.Core.Notification
 		void SubscribeToRunReport(Action<Guid> subscriber);
 
 		void SubscribeToCancelReport(Action<Guid> subscriber);
+
+		void SubscribeToReportChanged(Action<string, string, object> subscriber);
+
+		Task EmitWorkQueueChanged(string login, object dto);
 	}
 }

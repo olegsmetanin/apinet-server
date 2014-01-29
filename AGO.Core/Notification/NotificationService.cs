@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AGO.Core.Model.Reporting;
 using BookSleeve;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AGO.Core.Notification
 {
@@ -117,10 +120,12 @@ namespace AGO.Core.Notification
 		private const string EVENT_REPORT_RUN = "reports_run";
 		private const string EVENT_REPORT_CANCEL = "reports_cancel";
 		private const string EVENT_REPORT_CHANGED = "reports_changed";
+		private const string EVENT_WORK_QUEUE_CHANGED = "workqueue_changed";
 		private RedisConnection pubConnection;
 		private RedisSubscriberConnection subConnection;
 		private readonly List<Action<Guid>> runReportSubscribers = new List<Action<Guid>>();
 		private readonly List<Action<Guid>> cancelReportSubscribers = new List<Action<Guid>>();
+		private readonly List<Action<string, string, object>> reportChandedSubscribers = new List<Action<string, string, object>>();
 		private int state = State.Disconnected;
 
 		private void LogInfo(string message)
@@ -183,8 +188,9 @@ namespace AGO.Core.Notification
 			var channel = connection.GetOpenSubscriberChannel();
 			channel.CompletionMode = ResultCompletionMode.PreserveOrder;
 			await Task.WhenAll(
-				channel.Subscribe(EVENT_REPORT_RUN, (type, msg) => OnReportEvent(msg, runReportSubscribers)),
-				channel.Subscribe(EVENT_REPORT_CANCEL, (type, msg) => OnReportEvent(msg, cancelReportSubscribers)));
+				channel.Subscribe(EVENT_REPORT_RUN, (type, msg) => OnReportActionEvent(msg, runReportSubscribers)),
+				channel.Subscribe(EVENT_REPORT_CANCEL, (type, msg) => OnReportActionEvent(msg, cancelReportSubscribers)),
+				channel.Subscribe(EVENT_REPORT_CHANGED, (type, msg) => OnReportChangedEvent(msg)));
 			//LogDebug("Subscribed successfully");
 			subConnection = channel;
 			pubConnection = connection;
@@ -226,12 +232,24 @@ namespace AGO.Core.Notification
 			}
 		}
 
-		private void OnReportEvent(byte[] msg, IEnumerable<Action<Guid>> subscribers)
+		private static void OnReportActionEvent(byte[] msg, IEnumerable<Action<Guid>> subscribers)
 		{
 			var taskId = new Guid(msg);
 			foreach (var subscriber in subscribers)
 			{
 				subscriber(taskId);
+			}
+		}
+
+		private void OnReportChangedEvent(byte[] msg)
+		{
+			var jobj = JObject.Parse(Encoding.UTF8.GetString(msg));
+			var type = jobj.TokenValue("type");
+			var login = jobj.TokenValue("login");
+			var dto = jobj.Property("report").Value.ToObject<ReportTaskDTO>();
+			foreach (var subscriber in reportChandedSubscribers)
+			{
+				subscriber(type, login, dto);
 			}
 		}
 
@@ -247,7 +265,11 @@ namespace AGO.Core.Notification
 				}
 				catch (Exception ex)
 				{
-					if (ex is RedisException || ex is TimeoutException || ex is IOException || ex is InvalidOperationException)
+					if (ex is RedisException || 
+						ex is TimeoutException || 
+						ex is IOException || 
+						ex is InvalidOperationException || 
+						ex is NullReferenceException) //last is are result of pubConnection=null in reconnect process, that may occurs in the middle of action() execution
 					{
 						LogInfo("Error when send to redis, attemts " + attempt + ". Error: " + ex);
 						if (attempt <= 0)
@@ -325,17 +347,6 @@ namespace AGO.Core.Notification
 			});
 		}
 
-//		public Task EmitReportDeleted(object dto)
-//		{
-//			return DoWithRedis<object>(() =>
-//			{
-//				var dtojson = JsonConvert.SerializeObject(dto);
-//				var emitTask = pubConnection.Publish(EVENT_REPOR_DELETED, dtojson);
-//				pubConnection.Wait(emitTask);
-//				return null;
-//			});
-//		}
-
 		public void SubscribeToRunReport(Action<Guid> subscriber)
 		{
 			if (subscriber == null) return;
@@ -348,6 +359,25 @@ namespace AGO.Core.Notification
 			if (subscriber == null) return;
 
 			cancelReportSubscribers.Add(subscriber);
+		}
+
+		public void SubscribeToReportChanged(Action<string, string, object> subscriber)
+		{
+			if (subscriber == null) return;
+
+			reportChandedSubscribers.Add(subscriber);
+		}
+
+		public Task EmitWorkQueueChanged(string login, object dto)
+		{
+			return DoWithRedis<object>(() =>
+			{
+				var msg = new { login, data = dto };
+				var msgjson = JsonConvert.SerializeObject(msg);
+				var emitTask = pubConnection.Publish(EVENT_WORK_QUEUE_CHANGED, msgjson);
+				pubConnection.Wait(emitTask);
+				return null;
+			});
 		}
 
 		#endregion

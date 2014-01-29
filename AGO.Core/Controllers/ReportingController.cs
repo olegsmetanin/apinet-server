@@ -202,7 +202,7 @@ namespace AGO.Core.Controllers
 				_SessionProvider.FlushCurrentSession();
 
 				//Add task to system shared work queue, so one of workers can grab and execute it
-				var qi = new QueueItem("Report", task.Id, project, user.Id)
+				var qi = new QueueItem("Report", task.Id, project, user.Login)
 				{
 					PriorityType = priority,
 					UserPriority = participant != null ? participant.UserPriority : 0

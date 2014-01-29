@@ -102,7 +102,7 @@ namespace AGO.Core.Application
 					TaskTypeColumn = "\"TaskType\"",
 					TaskIdColumn = "\"TaskId\"",
 					ProjectColumn = "\"Project\"",
-					UserIdColumn = "\"UserId\"",
+					UserIdColumn = "\"User\"",
 					CreateDateColumn = "\"CreateDate\"",
 					PriorityTypeColumn = "\"PriorityType\"",
 					UserPriorityColumn = "\"UserPriority\""
