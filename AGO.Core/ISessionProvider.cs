@@ -15,6 +15,8 @@ namespace AGO.Core
 
 		ISessionFactory SessionFactory { get; }
 
+		string ConnectionString { get; }
+
 		IEnumerable<IModelMetadata> AllModelsMetadata { get; }
 
 		IModelMetadata ModelMetadata(Type modelType);

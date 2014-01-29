@@ -61,7 +61,9 @@ namespace AGO.Reporting.Tests
 					go
 					delete from ""Core"".""ReportSettingModel"" where ""Name"" like 'NUnit%'
 					go
-					delete from ""Core"".""ReportTemplateModel"" where ""Name"" like 'NUnit%'", conn);
+					delete from ""Core"".""ReportTemplateModel"" where ""Name"" like 'NUnit%'
+					go
+					truncate ""Core"".""WorkQueue""", conn);
 			_SessionProvider.CloseCurrentSession();
 		}
 

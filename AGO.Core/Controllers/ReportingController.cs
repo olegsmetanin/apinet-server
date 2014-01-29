@@ -13,12 +13,14 @@ using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Notification;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
+using AGO.WorkQueue;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NHibernate;
@@ -30,6 +32,7 @@ namespace AGO.Core.Controllers
 		private const string TEMPLATE_ID_FORM_KEY = "templateId";
 		private string uploadPath;
 		private readonly INotificationService bus;
+		private readonly IWorkQueue workQueue;
 
 		public ReportingController(
 			IJsonService jsonService, 
@@ -40,13 +43,17 @@ namespace AGO.Core.Controllers
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
-			INotificationService notificationService) 
+			INotificationService notificationService,
+			IWorkQueue workQueue) 
 			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
 		{
 			if (notificationService == null)
 				throw new ArgumentNullException("notificationService");
+			if (workQueue == null)
+				throw new ArgumentNullException("workQueue");
 
 			bus = notificationService;
+			this.workQueue = workQueue;
 		}
 
 		protected override void DoSetConfigProperty(string key, string value)
@@ -69,15 +76,6 @@ namespace AGO.Core.Controllers
 			base.DoFinalizeConfig();
 			if (uploadPath.IsNullOrWhiteSpace())
 				uploadPath = System.IO.Path.GetTempPath();
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> GetServices()
-		{
-			//TODO calculate available services for user and/or project/module/...
-			return _SessionProvider.CurrentSession
-				.QueryOver<ReportingServiceDescriptorModel>()
-				.LookupModelsList(m => m.Name);
 		}
 			
 		[JsonEndpoint, RequireAuthorization]
@@ -172,22 +170,29 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void RunReport([NotEmpty] Guid serviceId, [NotEmpty] Guid settingsId, string resultName, JObject parameters)
+		public void RunReport(
+			[NotEmpty] string project,
+			[NotEmpty] Guid settingsId, 
+			int priority,
+			string resultName, 
+			JObject parameters)
 		{
 			try
 			{
-				var service = _CrudDao.Get<ReportingServiceDescriptorModel>(serviceId);
 				var settings = _CrudDao.Get<ReportSettingModel>(settingsId);
+				var user = _AuthController.CurrentUser();
+				var participant = _FilteringService.Filter<ProjectParticipantModel>()
+					.Where(m => m.User.Id == user.Id && m.Project.ProjectCode == project)
+					.List(_FilteringDao).FirstOrDefault();
 
 				var name = (!resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : settings.Name)
 				           + " " + DateTime.UtcNow.ToString("yyyy-MM-dd");
 				var task = new ReportTaskModel
 				           	{
 				           		CreationTime = DateTime.UtcNow,
-				           		Creator = _AuthController.CurrentUser(),
+				           		Creator = user,
 				           		State = ReportTaskState.NotStarted,
 				           		ReportSetting = settings,
-				           		ReportingService = service,
 								Name = name, 
 								Parameters = parameters.ToStringSafe(),
 								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null,
@@ -196,10 +201,17 @@ namespace AGO.Core.Controllers
 				_CrudDao.Store(task);
 				_SessionProvider.FlushCurrentSession();
 
+				//Add task to system shared work queue, so one of workers can grab and execute it
+				var qi = new QueueItem("Report", task.Id, project, user.Id)
+				{
+					PriorityType = priority,
+					UserPriority = participant != null ? participant.UserPriority : 0
+				};
+				workQueue.Add(qi);
 				//emit event for reporting service (about new task to work)
 				bus.EmitRunReport(task.Id);
 				//emit event for client (about his task in queue and start soon)
-				bus.EmitReportChanged(ReportEvents.CREATED, _AuthController.CurrentUser().Login,  ReportTaskToDTO(task));
+				bus.EmitReportChanged(ReportEvents.CREATED, user.Login,  ReportTaskToDTO(task));
 			}
 			catch (Exception ex)
 			{

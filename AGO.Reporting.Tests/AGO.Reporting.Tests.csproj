@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,6 +36,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AGO.WorkQueue, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AGO.WorkQueue.1.0.0.0\lib\AGO.WorkQueue.dll</HintPath>
+    </Reference>
     <Reference Include="FluentMigrator">
       <HintPath>..\packages\Migrator.1.0.0\lib\FluentMigrator.dll</HintPath>
       <Private>True</Private>
@@ -118,6 +123,7 @@
     <Compile Include="AbstractReportingTest.cs" />
     <Compile Include="ModelHelper.cs" />
     <Compile Include="OverridableAppSettingsKeyValueProvider.cs" />
+    <Compile Include="ProjectSelectorTest.cs" />
     <Compile Include="ReportingRepositoryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReportingServiceTest.cs" />

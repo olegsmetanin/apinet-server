@@ -1,16 +1,29 @@
-﻿using System.Web.Hosting;
-
+﻿using System;
 
 namespace AGO.Reporting.Service
 {
-	public class Starter: IProcessHostPreloadClient
+	public class Starter
 	{
-		private ReportingService service;
+		private static ReportingService service;
 
-		public void Preload(string[] parameters)
+		public static void Main(string[] args)
 		{
-			service = new ReportingService();
-			service.Initialize();
+			try
+			{
+				service = new ReportingService();
+				service.Initialize();
+
+				Console.WriteLine("Reporting service {0} is running. Servicing projects '{1}'. Press Enter for stop", 
+					service.ServiceName, service.ServicedProjects);
+				Console.ReadLine();
+
+				service.Dispose();
+				Console.WriteLine("Reporting service stopped");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
 		}
 	}
 }

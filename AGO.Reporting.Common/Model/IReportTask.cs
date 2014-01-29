@@ -15,11 +15,6 @@ namespace AGO.Reporting.Common.Model
 		IReportSetting Setting { get; }
 
 		/// <summary>
-		/// Сервис, на котором выполняется задача
-		/// </summary>
-		IReportingServiceDescriptor Service { get; }
-
-		/// <summary>
 		/// Сериализованное (json) представление параметров отчета
 		/// </summary>
 		string Parameters { get; }

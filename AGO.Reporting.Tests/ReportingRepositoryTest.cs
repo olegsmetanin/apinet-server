@@ -65,14 +65,13 @@ namespace AGO.Reporting.Tests
 		{
 			var tpl = M.Template("my template", Encoding.UTF8.GetBytes("aaa bbb"));
 			var setting = M.Setting("my setting", tpl.Id);
-			IReportTask task = M.Task("my task", "Fast reports", setting.Id);
+			IReportTask task = M.Task("my task", setting.Id);
 			_SessionProvider.FlushCurrentSession();
 
 			task = repo.GetTask(task.Id);
 
 			Assert.IsNotNull(task);
 			Assert.AreEqual("NUnit my task", task.Name);
-			Assert.AreEqual("NUnit Fast reports", task.Service.Name);
 			Assert.AreEqual(setting.Id, task.Setting.Id);
 		}
 	}

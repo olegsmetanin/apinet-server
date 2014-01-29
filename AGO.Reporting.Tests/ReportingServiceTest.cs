@@ -13,6 +13,7 @@ using AGO.Core.Model.Security;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;
+using AGO.WorkQueue;
 using Newtonsoft.Json;
 using NHibernate;
 using NHibernate.Criterion;
@@ -86,6 +87,12 @@ namespace AGO.Reporting.Tests
 			return s.Load<ReportTaskModel>(taskId);
 		}
 
+		private void WriteTaskToQueue(ReportTaskModel task)
+		{
+			var qi = new QueueItem("Report", task.Id, "fake", task.Creator.Id);
+			realsvc.WorkQueue.Add(qi);
+		}
+
 		[Test]
 		public void PingAlwaysReturnTrue()
 		{
@@ -103,7 +110,8 @@ namespace AGO.Reporting.Tests
 			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator, 
 				typeof (FakeGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 			
 			svc.RunReport(task.Id);
@@ -132,7 +140,8 @@ namespace AGO.Reporting.Tests
 				FilteringService.Filter<ProjectTagModel>().WhereString(m => m.Name).Like(search, true, true));
 			var writer = new StringWriter();
 			JsonService.CreateSerializer().Serialize(writer, param);
-			var task = M.Task("controlled", "Fast reports", stg.Id, writer.ToString());
+			var task = M.Task("controlled", stg.Id, writer.ToString());
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
@@ -161,7 +170,8 @@ namespace AGO.Reporting.Tests
 			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
@@ -190,7 +200,8 @@ namespace AGO.Reporting.Tests
 			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
@@ -210,11 +221,12 @@ namespace AGO.Reporting.Tests
 			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
+			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(4), ReportTaskState.Canceled);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
@@ -229,7 +241,8 @@ namespace AGO.Reporting.Tests
 			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);
@@ -256,7 +269,8 @@ namespace AGO.Reporting.Tests
 			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeTenIterationGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", "Fast reports", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
 			svc.RunReport(task.Id);

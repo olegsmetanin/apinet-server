@@ -12,6 +12,7 @@ using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
 using AGO.Core.Notification;
+using AGO.WorkQueue;
 
 namespace AGO.Core.Application
 {
@@ -40,8 +41,9 @@ namespace AGO.Core.Application
 		protected IList<Type> _TestDataServices = new List<Type>();
 		public IList<Type> TestDataServices { get { return _TestDataServices; } }
 
-		protected INotificationService notificationService;
-		public INotificationService NotificationService { get { return notificationService; } }
+		public INotificationService NotificationService { get; protected set; }
+
+		public IWorkQueue WorkQueue { get; protected set; }
 
 		#endregion
 
@@ -53,6 +55,7 @@ namespace AGO.Core.Application
 
 			DoRegisterPersistence();
 			DoRegisterNotification();
+			DoRegisterWorkQueue();
 		}
 
 		protected virtual void DoRegisterPersistence()
@@ -89,6 +92,26 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Notification_(.*)", KeyValueProvider)).ApplyTo(service));
 		}
 
+		protected virtual void DoRegisterWorkQueue()
+		{
+			IocContainer.RegisterSingle<IWorkQueue>(() =>
+			{
+				var schema = new PostgreSqlWorkQueue.Schema
+				{
+					Table = "\"Core\".\"WorkQueue\"",
+					TaskTypeColumn = "\"TaskType\"",
+					TaskIdColumn = "\"TaskId\"",
+					ProjectColumn = "\"Project\"",
+					UserIdColumn = "\"UserId\"",
+					CreateDateColumn = "\"CreateDate\"",
+					PriorityTypeColumn = "\"PriorityType\"",
+					UserPriorityColumn = "\"UserPriority\""
+				};
+				var sp = IocContainer.GetInstance<ISessionProvider>();
+				return new PostgreSqlWorkQueue(sp.ConnectionString, schema);
+			});
+		}
+
 		protected virtual IEnumerable<Type> AllModelValidators
 		{
 			get { return new[] { typeof(AttributeValidatingModelValidator) }; }
@@ -111,6 +134,7 @@ namespace AGO.Core.Application
 
 			DoInitializePersistence();
 			DoInitializeNotification();
+			DoInitializeWorkQueue();
 		}
 
 		protected virtual void DoInitializePersistence()
@@ -125,7 +149,12 @@ namespace AGO.Core.Application
 
 		protected virtual void DoInitializeNotification()
 		{
-			notificationService = IocContainer.GetInstance<INotificationService>();
+			NotificationService = IocContainer.GetInstance<INotificationService>();
+		}
+
+		protected virtual void DoInitializeWorkQueue()
+		{
+			WorkQueue = IocContainer.GetInstance<IWorkQueue>();
 		}
 
 		protected virtual void DoCreateDatabase()

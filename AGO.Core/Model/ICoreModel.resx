@@ -258,4 +258,7 @@
   <data name="ProjectToTagModel.Tag" xml:space="preserve">
     <value>Tag</value>
   </data>
+  <data name="ProjectParticipantModel.UserPriority" xml:space="preserve">
+    <value>User work priority</value>
+  </data>
 </root>

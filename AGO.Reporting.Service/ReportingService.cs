@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Configuration;
-using System.Web.Routing;
 using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Config;
@@ -22,16 +20,16 @@ namespace AGO.Reporting.Service
 	{
 		#region Configuration and initialization
 
-		private readonly List<Guid> waitingForRun;
+		private int processingNext;
 		private readonly SequentialTimer runTaskTimer;
 		private readonly Dictionary<Guid, AbstractReportWorker> runningWorkers;
 		private readonly ReaderWriterLockSlim rwlock;
 		private readonly SequentialTimer cleanFinishedTaskTimer;
 		private TemplateResolver resolver;
+		private ProjectSelector selector;
 
 		public ReportingService()
 		{
-			waitingForRun = new List<Guid>();
 			runTaskTimer = new SequentialTimer(ProcessWaitingTasks);
 			runningWorkers = new Dictionary<Guid, AbstractReportWorker>();
 			rwlock = new ReaderWriterLockSlim();
@@ -53,8 +51,7 @@ namespace AGO.Reporting.Service
 		{
 			get
 			{
-				_KeyValueProvider = _KeyValueProvider ?? new AppSettingsKeyValueProvider(
-					WebConfigurationManager.OpenWebConfiguration("~/Web.config"));
+				_KeyValueProvider = _KeyValueProvider ?? new AppSettingsKeyValueProvider();
 				return _KeyValueProvider;
 			}
 			set { base.KeyValueProvider = value; }
@@ -74,22 +71,24 @@ namespace AGO.Reporting.Service
 		{
 			base.DoInitializeSingletons();
 			resolver = new TemplateResolver(IocContainer.GetInstance<IReportingRepository>(), TemplatesCacheDirectory);
+			selector = new ProjectSelector(ServicedProjects);
 		}
 
 		private void ReadConfiguration()
 		{
 			ServiceName = KeyValueProvider.Value("Reporting_ServiceName");
+			ServicedProjects = KeyValueProvider.Value("Reporting_ServicedProjects") ?? "*";
 			TemplatesCacheDirectory = KeyValueProvider.Value("Reporting_TemplatesCacheDirectory");
 			int n;
-			RunWorkersInterval = int.TryParse(KeyValueProvider.Value("Reporting_RunWorkersInterval"), out n) ? n : 100; //10 раз в секунду
+			RunWorkersInterval = int.TryParse(KeyValueProvider.Value("Reporting_RunWorkersInterval"), out n) ? n : 1*60*1000; //1 раз в минуту
 			TrackProgressInterval = int.TryParse(KeyValueProvider.Value("Reporting_TrackProgressInterval"), out n) ? n : 2000; //раз в 2 секунды
 			ConcurrentWorkersLimit = int.TryParse(KeyValueProvider.Value("Reporting_ConcurrentWorkersLimit"), out n) ? n : 5;
 			ConcurrentWorkersMemoryLimitInMb = 
 				int.TryParse(KeyValueProvider.Value("Reporting_ConcurrentWorkersMemoryLimitInMb"), out n) ? n : 512;
 			ConcurrentWorkersTimeout = 
 				int.TryParse(KeyValueProvider.Value("Reporting_ConcurrentWorkersTimeout"), out n) ? n : 60*60*24; //сутки
-			CleanFinishedWorkersInterval = 
-				int.TryParse(KeyValueProvider.Value("Reporting_CleanFinishedWorkersInterval"), out n) ? n : 5000; //5 секунд
+			CleanFinishedWorkersInterval =
+				int.TryParse(KeyValueProvider.Value("Reporting_CleanFinishedWorkersInterval"), out n) ? n : 1 * 60 * 1000; //1 раз в минуту
 		}
 
 		private void ApplyConfiguration()
@@ -110,14 +109,20 @@ namespace AGO.Reporting.Service
 		{
 			base.DoInitializeApplication();
 			//last step
+			runTaskTimer.Run();
 			cleanFinishedTaskTimer.Run();
 		}
 
 		/// <summary>
 		/// Имя текущего сервиса отчетов
 		/// </summary>
-		//TODO use in logging or remove (and from reporttask too)
-		private string ServiceName { get; set; }
+		public string ServiceName { get; set; }
+
+		/// <summary>
+		/// Проекты, задачи которых обслуживаются сервисом.
+		/// Можно задать код проекта, несколько кодов проектов через запятую или * (все проекты)
+		/// </summary>
+		public string ServicedProjects { get; set; }
 
 		/// <summary>
 		/// Путь к папке, в которой распологается кеш шаблонов отчетов
@@ -125,7 +130,7 @@ namespace AGO.Reporting.Service
 		private string TemplatesCacheDirectory { get; set; }
 
 		/// <summary>
-		/// Интервал запуска новых отчетов из очереди ожидания
+		/// Интервал запуска новых отчетов из очереди задач
 		/// </summary>
 		private int RunWorkersInterval { get; set; }
 
@@ -150,7 +155,8 @@ namespace AGO.Reporting.Service
 		private int ConcurrentWorkersTimeout { get; set; }
 
 		/// <summary>
-		/// Интервал очистки списка запущенных worker-ов от завершившихся
+		/// Интервал очистки списка запущенных worker-ов от завершившихся нештатным образом 
+		/// (штатно воркер удаляется из списка когда заканчивает работу и дергает событие)
 		/// </summary>
 		private int CleanFinishedWorkersInterval { get; set; }
 
@@ -163,12 +169,13 @@ namespace AGO.Reporting.Service
 			runTaskTimer.Stop();
 			cleanFinishedTaskTimer.Stop();
 
-			rwlock.Dispose();
+			StopAllWorkers();
+
 			NotificationService.Dispose();
 
-			RouteTable.Routes.Clear();
-			
-			//TODO other shutdown (timers etc)
+			rwlock.Dispose();//buggable place. if some of datagenerators don't stop on cancel call and after service disposing will be stopped, 
+							 //there may be exception, when RemoveWorker called on disposed rwlock. But this situation - shutdown of service -
+							 //not sou dangerous
 		}
 
 		public bool Ping()
@@ -178,20 +185,13 @@ namespace AGO.Reporting.Service
 
 		public void RunReport(Guid taskId)
 		{
-			AddWaitingTask(taskId);
+			runTaskTimer.Run(0);
 		}
 
 		public bool CancelReport(Guid taskId)
 		{
-			bool canceled;
-			lock (waitingForRun)
-			{
-				canceled = waitingForRun.Remove(taskId);
-			}
-			if (!canceled)
-			{
-				canceled = StopWorker(taskId);
-			}
+			var canceled = StopWorker(taskId);
+			runTaskTimer.Run(100); //slight time later, give worker a chance to finish and remove from running list
 			return canceled;
 		}
 
@@ -202,89 +202,71 @@ namespace AGO.Reporting.Service
 
 		#endregion
 
-		private void AddWaitingTask(Guid taskId)
-		{
-			lock(waitingForRun)
-			{
-				if (!waitingForRun.Contains(taskId))
-					waitingForRun.Add(taskId);
-			}
-			runTaskTimer.Run(0);
-		}
-
 		private void ProcessWaitingTasks()
 		{
-			if (waitingForRun.Count <= 0) return;
-			lock (waitingForRun)
+			if (0 != Interlocked.CompareExchange(ref processingNext, 0, 1)) return;
+
+			try
 			{
-				if (waitingForRun.Count <= 0) return;
-
-				try
+				Func<bool> maxWorkersExceed = () => CalculateRunningWorkers() >= ConcurrentWorkersLimit;
+				Func<bool> maxMemoryExceed = () => CalculateMemoryBarier() >= ConcurrentWorkersMemoryLimitInMb;
+				var repository = IocContainer.GetInstance<IReportingRepository>();
+				while (!maxWorkersExceed() && !maxMemoryExceed())
 				{
-					var processed = new List<Guid>();
-					var repository = IocContainer.GetInstance<IReportingRepository>();
-					foreach (var taskId in waitingForRun)
+					var qi = WorkQueue.Get(selector.NextProject(WorkQueue.UniqueProjects));
+					if (qi == null)
 					{
-						//Запускаем не больше лимита
-						if (runningWorkers.Count >= ConcurrentWorkersLimit) break;
-						//Перед запуском проверяем ограничение по кол-ву используемой памяти
-						if (CalculateMemoryBarier() >= ConcurrentWorkersMemoryLimitInMb) break;
-
-						var task = repository.GetTask(taskId);
-						if (task == null)
-						{
-							//странно, задачу запустили и потом сразу удалили? такое может случиться
-							processed.Add(taskId);
-							continue;
-						}
-						try
-						{
-							if (task.State != ReportTaskState.NotStarted || HasWorker(task.Id, w => true))
-							{
-								//уже запущена, либо отменена до запуска
-								processed.Add(taskId);
-								continue;
-							}
-							var worker = CreateWorker(task);
-							AddWorker(worker);
-							worker.Start();
-							processed.Add(taskId);
-						}
-						catch (Exception ex)
-						{
-							task.State = ReportTaskState.Error;
-							task.ErrorMsg = ex.Message;
-							task.ErrorDetails = ex.ToString();
-							SessionProvider.CurrentSession.SaveOrUpdate(task);
-							SessionProvider.FlushCurrentSession();
-						}
+						//work queue is empty
+						break;
 					}
-
-					//Все обработанные удаляем из очереди, неважно нормально они запущены или были
-					//какие-то проблемы. Они по идее записаны в таск и/или лог, и в повторной обработке
-					//эти задачи не нуждаются
-					foreach (var taskId in processed)
+					var task = repository.GetTask(qi.TaskId);
+					if (task == null)
 					{
-						waitingForRun.Remove(taskId);
+						//странно, задачу запустили и потом сразу удалили? такое может случиться
+						Log.WarnFormat("ReportTask with id '{0}' not found and can't be runned. Ignore.", qi.TaskId);
+						continue;
 					}
-					//Планируем свой следующий запуск, если необходимо
-					if (waitingForRun.Count > 0)
+					if (task.State != ReportTaskState.NotStarted || HasWorker(task.Id, w => true))
 					{
-						runTaskTimer.Run();
+						//уже запущена, либо отменена до запуска, но вообще непонятно как такое могло произойти. 
+						//накладка по вызовам таймера?
+						Log.WarnFormat("ReportTask with id '{0}' has invalid state for running ({1}) or worker already runned for this task. Ignore.", task.Id, task.State);
+						continue;
+					}
+					try
+					{
+
+						var worker = CreateWorker(task);
+						AddWorker(worker);
+						worker.Start();
+						worker.End += RemoveWorker;
+					}
+					catch (Exception ex)
+					{
+						task.State = ReportTaskState.Error;
+						task.ErrorMsg = ex.Message;
+						task.ErrorDetails = ex.ToString();
+						SessionProvider.CurrentSession.SaveOrUpdate(task);
+						SessionProvider.FlushCurrentSession();
 					}
 				}
-				catch(ThreadAbortException)
-				{
-					throw;
-				}
-				catch(OutOfMemoryException)
-				{
-					throw;
-				}
-				catch (Exception ex)
-				{
-					Log.Error("Ошибка при обработке задач к запуску", ex);
-				}
+			}
+			catch (ThreadAbortException)
+			{
+				throw;
+			}
+			catch (OutOfMemoryException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Ошибка при обработке задач к запуску", ex);
+			}
+			finally
+			{
+				Interlocked.Exchange(ref processingNext, 0);
+				runTaskTimer.Run();
 			}
 		}
 
@@ -335,17 +317,38 @@ namespace AGO.Reporting.Service
 			}
 		}
 
+		private int CalculateRunningWorkers()
+		{
+			rwlock.EnterReadLock();
+			try
+			{
+				return runningWorkers.Count;
+			}
+			finally
+			{
+				rwlock.ExitReadLock();
+			}
+		}
+
 		private bool HasWorker(Guid taskId, Func<AbstractReportWorker, bool> predicate)
 		{
-			rwlock.EnterUpgradeableReadLock();
+			rwlock.EnterReadLock();
 			try
 			{
 				return runningWorkers.ContainsKey(taskId) && predicate(runningWorkers[taskId]);
 			}
 			finally
 			{
-				rwlock.ExitUpgradeableReadLock();
+				rwlock.ExitReadLock();
 			}
+		}
+
+		private void RemoveWorker(object sender, EventArgs e)
+		{
+			var worker = (AbstractReportWorker) sender;
+			worker.End -= RemoveWorker;
+			RemoveWorker(worker.TaskId);
+			runTaskTimer.Run(0);
 		}
 
 		private AbstractReportWorker RemoveWorker(Guid taskId)
@@ -382,6 +385,23 @@ namespace AGO.Reporting.Service
 				return true;
 			}
 			return false;
+		}
+
+		private void StopAllWorkers()
+		{
+			rwlock.EnterWriteLock();
+			try
+			{
+				foreach (var worker in runningWorkers.Values)
+				{
+					worker.Stop();
+				}
+				runningWorkers.Clear();
+			}
+			finally
+			{
+				rwlock.ExitWriteLock();
+			}
 		}
 
 		private void CleanFinishedTasks()

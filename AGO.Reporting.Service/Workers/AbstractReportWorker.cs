@@ -53,6 +53,8 @@ namespace AGO.Reporting.Service.Workers
 
 		public abstract void Prepare(IReportTask task);
 
+		public event EventHandler End;
+
 		private Task<IReportGeneratorResult> task;
 		private bool wasTimedOut;
 		protected CancellationTokenSource TokenSource;
@@ -146,6 +148,8 @@ namespace AGO.Reporting.Service.Workers
 		private void Finish()
 		{
 			Finished = true;
+			if (End != null)
+				End(this, EventArgs.Empty);
 		}
 
 		/// <summary>

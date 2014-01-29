@@ -96,7 +96,8 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectParticipantModel>(m => m.GroupName)
 				.WithValueColumn<ProjectParticipantModel>(m => m.IsDefaultGroup)
 				.WithRefColumn<ProjectParticipantModel>(m => m.Project)
-				.WithRefColumn<ProjectParticipantModel>(m => m.User);
+				.WithRefColumn<ProjectParticipantModel>(m => m.User)
+				.WithValueColumn<ProjectParticipantModel>(m => m.UserPriority);
 
 			Create.SecureModelTable<ProjectToTagModel>()
 				.WithRefColumn<ProjectToTagModel>(m => m.Project)
@@ -120,7 +121,6 @@ namespace AGO.Core.Migrations
 			Create.SecureModelTable<ReportTaskModel>()
 				.WithValueColumn<ReportTaskModel>(m => m.Name)
 				.WithRefColumn<ReportTaskModel>(m => m.ReportSetting)
-				.WithRefColumn<ReportTaskModel>(m => m.ReportingService)
 				.WithValueColumn<ReportTaskModel>(m => m.Parameters)
 				.WithValueColumn<ReportTaskModel>(m => m.State)
 				.WithValueColumn<ReportTaskModel>(m => m.DataGenerationProgress)
@@ -140,6 +140,15 @@ namespace AGO.Core.Migrations
 				.WithColumn("Login").AsString(UserModel.LOGIN_SIZE).NotNullable()
 				.WithColumn("CreatedAt").AsDateTime().NotNullable();
 
+			//WorkQueue, will be used later as source for all async worker (now only for reporting service)
+			Create.Table("WorkQueue").InSchema(MODULE_SCHEMA)
+				.WithColumn("TaskType").AsString(128).NotNullable()
+				.WithColumn("TaskId").AsGuid().NotNullable().PrimaryKey()
+				.WithColumn("Project").AsString(ProjectModel.PROJECT_CODE_SIZE).NotNullable()
+				.WithColumn("UserId").AsGuid().NotNullable()
+				.WithColumn("CreateDate").AsDateTime().NotNullable()
+				.WithColumn("PriorityType").AsInt32().NotNullable()
+				.WithColumn("UserPriority").AsInt32().NotNullable();
 		}
 
 		public override void Down()

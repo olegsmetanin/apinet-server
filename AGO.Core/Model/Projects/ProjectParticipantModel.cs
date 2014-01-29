@@ -27,6 +27,8 @@ namespace AGO.Core.Model.Projects
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? UserId { get; set; }
 
+		public virtual int UserPriority { get; set; }
+
 		#endregion
 	}
 }

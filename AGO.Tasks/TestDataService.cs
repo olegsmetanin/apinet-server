@@ -95,19 +95,19 @@ namespace AGO.Tasks
 					Status = ProjectStatus.New
 				});
 
-				var pcAdmin = new ProjectParticipantModel { User = context.Admin, Project = project };
+				var pcAdmin = new ProjectParticipantModel { User = context.Admin, Project = project, UserPriority = 50};
 				_CrudDao.Store(pcAdmin);
 				project.Participants.Add(pcAdmin);
 
-				var pcUser1 = new ProjectParticipantModel { User = context.User1, Project = project };
+				var pcUser1 = new ProjectParticipantModel { User = context.User1, Project = project, UserPriority = 25};
 				_CrudDao.Store(pcUser1);
 				project.Participants.Add(pcUser1);
 
-				var pcUser2 = new ProjectParticipantModel { User = context.User2, Project = project };
+				var pcUser2 = new ProjectParticipantModel { User = context.User2, Project = project, UserPriority = 0};
 				_CrudDao.Store(pcUser2);
 				project.Participants.Add(pcUser2);
 
-				var pcUser3 = new ProjectParticipantModel { User = context.User3, Project = project };
+				var pcUser3 = new ProjectParticipantModel { User = context.User3, Project = project, UserPriority = 0 };
 				_CrudDao.Store(pcUser3);
 				project.Participants.Add(pcUser3);
 

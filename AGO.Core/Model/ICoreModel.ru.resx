@@ -258,4 +258,7 @@
   <data name="ProjectToTagModel.Tag" xml:space="preserve">
     <value>Тег</value>
   </data>
+  <data name="ProjectParticipantModel.UserPriority" xml:space="preserve">
+    <value>Приоритет выполнения задач пользователя</value>
+  </data>
 </root>

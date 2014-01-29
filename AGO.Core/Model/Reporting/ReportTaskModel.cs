@@ -24,11 +24,6 @@ namespace AGO.Core.Model.Reporting
 		[ReadOnlyProperty]
 		public virtual Guid? ReportSettingId { get; set; }
 
-		[NotNull]
-		public virtual ReportingServiceDescriptorModel ReportingService { get; set; }
-		[ReadOnlyProperty]
-		public virtual Guid? ReportingServiceId { get; set; }
-
 		public virtual string Parameters { get; set; }
 		
 		[NotMapped, MetadataExclude]
@@ -73,12 +68,6 @@ namespace AGO.Core.Model.Reporting
 		public virtual IReportSetting Setting
 		{
 			get { return ReportSetting; }
-		}
-
-		[NotMapped]
-		public virtual IReportingServiceDescriptor Service
-		{
-			get { return ReportingService; }
 		}
 	}
 }

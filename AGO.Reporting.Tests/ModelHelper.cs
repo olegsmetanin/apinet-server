@@ -59,15 +59,13 @@ namespace AGO.Reporting.Tests
 			return setting;
 		}
 
-		public ReportTaskModel Task(string name, string service, Guid settingId, string param = null)
+		public ReportTaskModel Task(string name, Guid settingId, string param = null)
 		{
 			var setting = session().Get<ReportSettingModel>(settingId);
-			var svc = session().QueryOver<ReportingServiceDescriptorModel>().Where(m => m.Name == "NUnit " + service).SingleOrDefault();
 			var task = new ReportTaskModel
 			           	{
 			           		Name = "NUnit " + name,
 			           		ReportSetting = setting,
-			           		ReportingService = svc,
 			           		Parameters = param,
 			           		State = ReportTaskState.NotStarted,
 							Creator = currentUser(),
