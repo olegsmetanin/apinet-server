@@ -11,7 +11,7 @@ namespace AGO.WorkQueue.Tests
 	public abstract class AbstractQueueParallelUsageTest
 	{
 		private IWorkQueue queue;
-		private Guid userId;
+		private string user;
 		private ConcurrentQueue<QueueItem> completed;
 
 		protected abstract IWorkQueue CreateQueue();
@@ -20,13 +20,13 @@ namespace AGO.WorkQueue.Tests
 		public void SetUp()
 		{
 			queue = CreateQueue();
-			userId = Guid.NewGuid();
+			user = Guid.NewGuid().ToString();
 			completed = new ConcurrentQueue<QueueItem>();
 		}
 
 		private void AddTask(Guid taskId, string project = "proj", int up = 0)
 		{
-			var task = new QueueItem("report", taskId, project, userId)
+			var task = new QueueItem("report", taskId, project, user)
 			{
 				PriorityType = up > 0 ? 1 : 0,
 				UserPriority = up

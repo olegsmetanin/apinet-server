@@ -57,8 +57,8 @@ namespace AGO.WorkQueue
 
 				var puid = cmd.CreateParameter();
 				puid.ParameterName = "uid";
-				puid.DbType = DbType.Guid;
-				puid.Value = item.UserId;
+				puid.DbType = DbType.String;
+				puid.Value = item.User;
 
 				var pcdate = cmd.CreateParameter();
 				pcdate.ParameterName = "cdate";
@@ -126,7 +126,7 @@ namespace AGO.WorkQueue
 
 		private static QueueItem Map(DbDataReader r)
 		{
-			return new QueueItem(r.GetString(0), r.GetGuid(1), r.GetString(2), r.GetGuid(3), r.GetDateTime(4))
+			return new QueueItem(r.GetString(0), r.GetGuid(1), r.GetString(2), r.GetString(3), r.GetDateTime(4))
 			{
 				PriorityType = r.GetInt32(5),
 				UserPriority = r.GetInt32(6)
@@ -171,7 +171,7 @@ namespace AGO.WorkQueue
 			});
 		}
 
-		public IDictionary<Guid, IDictionary<string, QueueItem[]>> Snapshot()
+		public IDictionary<string, IDictionary<string, QueueItem[]>> Snapshot()
 		{
 			//farst dump from db
 			var queue = Dump().ToList();
@@ -198,11 +198,11 @@ namespace AGO.WorkQueue
 
 			//then split by user and for each reduce project map only for this user tasks
 			return queue
-				.Select(i => i.UserId).Distinct()
-				.ToDictionary<Guid, Guid, IDictionary<string, QueueItem[]>>(uid => uid,
+				.Select(i => i.User).Distinct()
+				.ToDictionary<string, string, IDictionary<string, QueueItem[]>>(uid => uid,
 					uid => mapByProject
-							.Where(kvp => kvp.Value.Any(i => i.UserId == uid))
-							.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Where(i => i.UserId == uid).ToArray()));
+							.Where(kvp => kvp.Value.Any(i => i.User == uid))
+							.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Where(i => i.User == uid).ToArray()));
 		}
 
 		public void Clear()

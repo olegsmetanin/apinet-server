@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace AGO.WorkQueue
 {
@@ -35,10 +34,10 @@ namespace AGO.WorkQueue
 		IEnumerable<QueueItem> Dump();
 
 		/// <summary>
-		/// Возвращает словарь вида UserId -> User work items с сортировкой по приоритету согласно алгоритма приоритизации
+		/// Возвращает словарь вида User -> {project -> User work items с сортировкой по приоритету согласно алгоритма приоритизации в рамках проекта}
 		/// </summary>
-		/// <returns>Словарь задач в очереди с разбиением по пользователям и сортировкой по приоритету</returns>
-		IDictionary<Guid, IDictionary<string, QueueItem[]>> Snapshot();
+		/// <returns>Словарь задач в очереди с разбиением по пользователям и проектам и сортировкой по приоритету</returns>
+		IDictionary<string, IDictionary<string, QueueItem[]>> Snapshot();
 
 		/// <summary>
 		/// Очищает очередь задач

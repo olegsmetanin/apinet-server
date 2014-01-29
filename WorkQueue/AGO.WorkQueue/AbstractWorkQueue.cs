@@ -12,7 +12,7 @@ namespace AGO.WorkQueue
 		public abstract QueueItem Get(string project);
 		public abstract IEnumerable<string> UniqueProjects();
 		public abstract IEnumerable<QueueItem> Dump();
-		public abstract IDictionary<Guid, IDictionary<string, QueueItem[]>> Snapshot();
+		public abstract IDictionary<string, IDictionary<string, QueueItem[]>> Snapshot();
 		public abstract void Clear();
 	}
 }

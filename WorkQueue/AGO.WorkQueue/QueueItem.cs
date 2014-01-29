@@ -7,12 +7,12 @@ namespace AGO.WorkQueue
 	/// </summary>
     public class QueueItem
     {
-		public QueueItem(string type, Guid taskId, string project, Guid userId)
-			:this(type, taskId, project, userId, DateTime.UtcNow)
+		public QueueItem(string type, Guid taskId, string project, string user)
+			:this(type, taskId, project, user, DateTime.UtcNow)
 		{
 		}
 
-		public QueueItem(string type, Guid taskId, string project, Guid userId, DateTime cdate)
+		public QueueItem(string type, Guid taskId, string project, string user, DateTime cdate)
 		{
 			if (string.IsNullOrWhiteSpace(type))
 				throw new ArgumentNullException("type");
@@ -20,15 +20,15 @@ namespace AGO.WorkQueue
 				throw new ArgumentNullException("taskId");
 			if (string.IsNullOrWhiteSpace(project))
 				throw new ArgumentNullException("project");
-			if (default(Guid).Equals(userId))
-				throw new ArgumentNullException("userId");
+			if (string.IsNullOrWhiteSpace(user))
+				throw new ArgumentNullException("user");
 			if (DateTime.MinValue.Equals(cdate))
 				throw new ArgumentNullException("cdate");
 
 			TaskType = type;
 			TaskId = taskId;
 			Project = project;
-			UserId = userId;
+			User = user;
 			CreateDate = cdate;
 		}
 
@@ -51,7 +51,7 @@ namespace AGO.WorkQueue
 		/// <summary>
 		/// Идентификатор пользователя, поставившего задачу
 		/// </summary>
-		public Guid UserId { get; private set; }
+		public string User { get; private set; }
 
 		/// <summary>
 		/// Дата постановки задачи (UTC)
@@ -76,7 +76,7 @@ namespace AGO.WorkQueue
 
 		public QueueItem Copy()
 		{
-			return new QueueItem(TaskType, TaskId, Project, UserId, CreateDate)
+			return new QueueItem(TaskType, TaskId, Project, User, CreateDate)
 			{
 				PriorityType = PriorityType,
 				UserPriority = UserPriority

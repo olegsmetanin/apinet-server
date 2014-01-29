@@ -24,7 +24,7 @@ create table work_queue(
 	task_type character varying(128) not null, 
 	task_id uuid not null, 
 	project character varying(64) not null,
-	user_id uuid not null,
+	user_id character varying(64) not null,
 	cdate timestamp without time zone not null,
 	priority_type integer not null,
 	user_priority integer not null,

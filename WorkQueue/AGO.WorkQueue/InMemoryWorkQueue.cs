@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -95,7 +94,7 @@ namespace AGO.WorkQueue
 			}
 		}
 
-		public override IDictionary<Guid, IDictionary<string, QueueItem[]>> Snapshot()
+		public override IDictionary<string, IDictionary<string, QueueItem[]>> Snapshot()
 		{
 			rwlock.EnterReadLock();
 			try
@@ -121,11 +120,11 @@ namespace AGO.WorkQueue
 					});
 
 				return queue
-					.Select(i => i.UserId).Distinct()
-					.ToDictionary<Guid, Guid, IDictionary<string, QueueItem[]>>(uid => uid, 
+					.Select(i => i.User).Distinct()
+					.ToDictionary<string, string, IDictionary<string, QueueItem[]>>(uid => uid, 
 						uid => mapByProject
-								.Where(kvp => kvp.Value.Any(i => i.UserId == uid))
-								.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Where(i => i.UserId == uid).ToArray()));
+								.Where(kvp => kvp.Value.Any(i => i.User == uid))
+								.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Where(i => i.User == uid).ToArray()));
 			}
 			finally
 			{

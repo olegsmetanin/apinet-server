@@ -10,19 +10,19 @@ namespace AGO.WorkQueue.Tests
 		public void ItemMustContainsRequiredFields()
 		{
 			var taskId = Guid.NewGuid();
-			var userId = Guid.NewGuid();
-			var item = new QueueItem("test", taskId, "proj", userId);
+			const string user = "user1";
+			var item = new QueueItem("test", taskId, "proj", user);
 
 			Assert.AreEqual("test", item.TaskType);
 			Assert.AreEqual(taskId, item.TaskId);
 			Assert.AreEqual("proj", item.Project);
-			Assert.AreEqual(userId, item.UserId);
+			Assert.AreEqual(user, item.User);
 		}
 
 		[Test]
 		public void WhenNotSetPropsHasDefaultValue()
 		{
-			var item = new QueueItem("test", Guid.NewGuid(), "proj", Guid.NewGuid());
+			var item = new QueueItem("test", Guid.NewGuid(), "proj", "user");
 
 			Assert.AreEqual(0, item.PriorityType);
 			Assert.AreEqual(0, item.UserPriority);
@@ -32,56 +32,56 @@ namespace AGO.WorkQueue.Tests
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "type", MatchType = MessageMatch.Contains)]
 		public void ThrowIfTaskTypeIsNull()
 		{
-			new QueueItem(null, Guid.Empty, string.Empty, Guid.Empty);
+			new QueueItem(null, Guid.Empty, string.Empty, string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "type", MatchType = MessageMatch.Contains)]
 		public void ThrowIfTaskTypeEmpty()
 		{
-			new QueueItem(string.Empty, Guid.Empty, string.Empty, Guid.Empty);
+			new QueueItem(string.Empty, Guid.Empty, string.Empty, string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "type", MatchType = MessageMatch.Contains)]
 		public void ThrowIfTaskTypeWhitespace()
 		{
-			new QueueItem("   ", Guid.Empty, string.Empty, Guid.Empty);
+			new QueueItem("   ", Guid.Empty, string.Empty, string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "taskId", MatchType = MessageMatch.Contains)]
 		public void ThrowIfTaskIdEmpty()
 		{
-			new QueueItem("test", default(Guid), string.Empty, Guid.Empty);
+			new QueueItem("test", default(Guid), string.Empty, string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "project", MatchType = MessageMatch.Contains)]
 		public void ThrowIfProjectIsNull()
 		{
-			new QueueItem("test", Guid.NewGuid(), null, Guid.Empty);
+			new QueueItem("test", Guid.NewGuid(), null, string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "project", MatchType = MessageMatch.Contains)]
 		public void ThrowIfProjectEmpty()
 		{
-			new QueueItem("test", Guid.NewGuid(), string.Empty, Guid.Empty);
+			new QueueItem("test", Guid.NewGuid(), string.Empty, string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
 		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "project", MatchType = MessageMatch.Contains)]
 		public void ThrowIfProjectWhitespace()
 		{
-			new QueueItem("test", Guid.NewGuid(), "   ", Guid.Empty);
+			new QueueItem("test", Guid.NewGuid(), "   ", string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
 
-		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "userId", MatchType = MessageMatch.Contains)]
+		[Test, ExpectedException(typeof(ArgumentNullException), ExpectedMessage = "user", MatchType = MessageMatch.Contains)]
 		public void ThrowIfUserIdEmpty()
 		{
-			new QueueItem("test", Guid.NewGuid(), "proj", Guid.Empty);
+			new QueueItem("test", Guid.NewGuid(), "proj", string.Empty);
 			Assert.Fail("Exception not throwed");
 		}
     }

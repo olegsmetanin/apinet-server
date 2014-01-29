@@ -28,8 +28,8 @@ namespace AGO.WorkQueue.Tests
 		{
 			const string proj1 = "proj1";
 			const string proj2 = "proj2";
-			var p1Item = new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid());
-			var p2Item = new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid());
+			var p1Item = new QueueItem("a", Guid.NewGuid(), proj1, "u1");
+			var p2Item = new QueueItem("a", Guid.NewGuid(), proj2, "u2");
 			Queue.Add(p2Item);
 			Queue.Add(p1Item);
 
@@ -44,7 +44,7 @@ namespace AGO.WorkQueue.Tests
 		public void QueueReturnNullForNonExistingProject()
 		{
 			const string proj1 = "proj1";
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, "u"));
 
 			var item = Queue.Get("non existing project");
 
@@ -55,8 +55,8 @@ namespace AGO.WorkQueue.Tests
 		public void QueueReturnTaskForUserWithHigherPriority()
 		{
 			const string proj = "proj1";
-			var user1 = Guid.NewGuid();
-			var user2 = Guid.NewGuid();
+			const string user1 = "u1";
+			const string user2 = "u2";
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, user1) { PriorityType = 1, UserPriority = 10 };
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, user2) { PriorityType = 1, UserPriority = 20 };
 			Queue.Add(i1);
@@ -71,7 +71,7 @@ namespace AGO.WorkQueue.Tests
 		public void QueueReturnOldestTaskForUserWhenPrioritiesEquals()
 		{
 			const string proj = "proj1";
-			var uid = Guid.NewGuid();
+			const string uid = "u";
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, uid) { PriorityType = 1, UserPriority = 10 };
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, uid) { PriorityType = 1, UserPriority = 10 };
 			Queue.Add(i1);
@@ -86,7 +86,7 @@ namespace AGO.WorkQueue.Tests
 		public void QueueReturnOldestTaskWhenPriorityNotUsed()
 		{
 			const string proj = "proj1";
-			var uid = Guid.NewGuid();
+			const string uid = "u";
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, uid); //PriorityType = 0 by default, so, not used
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, uid);
 			Queue.Add(i1);
@@ -101,7 +101,7 @@ namespace AGO.WorkQueue.Tests
 		public void QueueReturnOldestTaskWhenPriorityNotUsed2()
 		{
 			const string proj = "proj1";
-			var uid = Guid.NewGuid();
+			const string uid = "u";
 			var i1 = new QueueItem("a", Guid.NewGuid(), proj, uid);
 			var i2 = new QueueItem("a", Guid.NewGuid(), proj, uid) { UserPriority = 10};
 			Queue.Add(i1);
@@ -115,9 +115,9 @@ namespace AGO.WorkQueue.Tests
 		[Test]
 		public void QueueDumpDataAsRawShallowCopyList()
 		{
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p1", Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p2", Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p3", Guid.NewGuid()));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p1", "u1"));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p2", "u2"));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), "p3", "u3"));
 
 			// ReSharper disable PossibleMultipleEnumeration
 			var dump = Queue.Dump(); //special not materialize - test dump is copy, not reference to underlying data
@@ -141,8 +141,8 @@ namespace AGO.WorkQueue.Tests
 		[Test]
 		public void QueueCalculateOrderForEachUserTaskInProjectWithPriority()
 		{
-			var u1 = Guid.NewGuid();
-			var u2 = Guid.NewGuid();
+			const string u1 = "u1";
+			const string u2 = "u2";
 			const string p1 = "proj1";
 			const string p2 = "proj2";
 			const string p3 = "proj3";
@@ -223,12 +223,13 @@ namespace AGO.WorkQueue.Tests
 			const string proj1 = "proj1";
 			const string proj2 = "proj2";
 			const string proj3 = "proj3";
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj3, Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, Guid.NewGuid()));
-			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, Guid.NewGuid()));
+			const string user = "user";
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, user));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, user));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, user));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj3, user));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj2, user));
+			Queue.Add(new QueueItem("a", Guid.NewGuid(), proj1, user));
 
 			var projects = Queue.UniqueProjects().ToArray();
 
