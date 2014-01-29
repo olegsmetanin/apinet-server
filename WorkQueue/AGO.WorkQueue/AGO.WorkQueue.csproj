@@ -48,7 +48,7 @@
     <Compile Include="AbstractWorkQueue.cs" />
     <Compile Include="InMemoryWorkQueue.cs" />
     <Compile Include="IWorkQueue.cs" />
-    <Compile Include="PostgeSqlWorkQueue.cs" />
+    <Compile Include="PostgreSqlWorkQueue.cs" />
     <Compile Include="QueueItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -25,7 +25,7 @@ namespace AGO.WorkQueue.Tests
 
 		protected override IWorkQueue CreateQueue()
 		{
-			return new PostgeSqlWorkQueue(PostgreSqlHelper.ConnStr);
+			return new PostgreSqlWorkQueue(PostgreSqlHelper.ConnStr);
 		}
 	}
 }

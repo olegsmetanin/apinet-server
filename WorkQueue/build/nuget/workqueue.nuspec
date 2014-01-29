@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AGO.WorkQueue</id>
-    <version>0.0.1</version>
+    <version>1.0.0.0</version>
     <authors>artem1</authors>
     <owners>artem1</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

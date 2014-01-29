@@ -7,12 +7,12 @@ using Npgsql;
 
 namespace AGO.WorkQueue
 {
-	public class PostgeSqlWorkQueue: IWorkQueue
+	public class PostgreSqlWorkQueue: IWorkQueue
 	{
 		private readonly string connectionString;
 		private readonly Schema schema;
 
-		public PostgeSqlWorkQueue(string connStr, Schema schema = null)
+		public PostgreSqlWorkQueue(string connStr, Schema schema = null)
 		{
 			if (string.IsNullOrWhiteSpace(connStr))
 				throw new ArgumentNullException("connStr");
