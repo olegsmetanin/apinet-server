@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -21,6 +22,19 @@ namespace AGO.WorkQueue
 			try
 			{
 				queue.Add(item);
+			}
+			finally
+			{
+				rwlock.ExitWriteLock();
+			}
+		}
+
+		public override void Remove(Guid taskId)
+		{
+			rwlock.EnterWriteLock();
+			try
+			{
+				queue.RemoveAll(qi => qi.TaskId == taskId);
 			}
 			finally
 			{

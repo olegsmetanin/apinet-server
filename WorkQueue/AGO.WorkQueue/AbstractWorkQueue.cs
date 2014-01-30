@@ -9,6 +9,7 @@ namespace AGO.WorkQueue
 	public abstract class AbstractWorkQueue: IWorkQueue
 	{
 		public abstract void Add(QueueItem item);
+		public abstract void Remove(Guid taskId);
 		public abstract QueueItem Get(string project);
 		public abstract IEnumerable<string> UniqueProjects();
 		public abstract IEnumerable<QueueItem> Dump();

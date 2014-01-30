@@ -89,6 +89,25 @@ namespace AGO.WorkQueue
 			});
 		}
 
+		public void Remove(Guid taskId)
+		{
+			Exec<object>(connection =>
+			{
+				var cmd = connection.CreateCommand();
+				cmd.CommandText = BuildQuery(RemoveSql);
+
+				var ptid = cmd.CreateParameter();
+				ptid.ParameterName = "taskId";
+				ptid.DbType = DbType.Guid;
+				ptid.Value = taskId;
+				cmd.Parameters.Add(ptid);
+
+				cmd.ExecuteNonQuery();
+
+				return null;
+			});
+		}
+
 		public QueueItem Get(string project)
 		{
 			return Exec(connection =>
@@ -262,6 +281,7 @@ namespace AGO.WorkQueue
 		                                 PhCreateDate + ", " + PhPriorityType + ", " + PhUserPriority;
 		private const string ClearSql = "truncate " + PhTable;
 		private const string AddSql = "insert into " + PhTable + "(" + PhColumns + ") values(:tt, :tid, :proj, :uid, :cdate, :ptype, :priority)";
+		private const string RemoveSql = "delete from " + PhTable + " where " + PhTaskId + "=:taskId";
 		private const string ListProjectsSql = "select distinct " + PhProject + " from " + PhTable;
 		private const string GetByUserPriority = "delete from " + PhTable + " where " + PhTaskId +
 		                                         "=(select " + PhTaskId + " from " + PhTable + " where " +

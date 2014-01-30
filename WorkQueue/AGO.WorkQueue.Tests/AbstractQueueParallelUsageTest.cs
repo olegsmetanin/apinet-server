@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,24 +129,31 @@ namespace AGO.WorkQueue.Tests
 			Task.WaitAll(tasks);
 
 			Assert.AreEqual(300, completed.Count);
+			var p10 = 0;
+			var p5 = 0;
+			var p0 = 0;
 			for (var i = 0; i < 100; i++)
 			{
 				QueueItem qi;
 				completed.TryDequeue(out qi);
-				Assert.AreEqual(10, qi.UserPriority);
+				if (10 == qi.UserPriority) p10++;
 			}
 			for (var i = 0; i < 100; i++)
 			{
 				QueueItem qi;
 				completed.TryDequeue(out qi);
-				Assert.AreEqual(5, qi.UserPriority);
+				if (5 == qi.UserPriority) p5++;
 			}
 			for (var i = 0; i < 100; i++)
 			{
 				QueueItem qi;
 				completed.TryDequeue(out qi);
-				Assert.AreEqual(0, qi.UserPriority);
+				if (0 == qi.UserPriority) p0++;
 			}
+			Debug.WriteLine("p10: " + p10 + ", p5: " + p5 + ", p0: " + p0);
+			Assert.That(p10, Is.EqualTo(100).Within(5).Percent);
+			Assert.That(p5, Is.EqualTo(100).Within(5).Percent);
+			Assert.That(p0, Is.EqualTo(100).Within(5).Percent);
 		}
 	}
 }

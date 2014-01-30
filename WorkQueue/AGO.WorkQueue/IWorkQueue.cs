@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace AGO.WorkQueue
 {
@@ -12,6 +13,12 @@ namespace AGO.WorkQueue
 		/// </summary>
 		/// <param name="item">Запись для очереди задач</param>
 		void Add(QueueItem item);
+
+		/// <summary>
+		/// Удаляет запись с заданным идентификатором из очереди задач
+		/// </summary>
+		/// <param name="taskId">Идентификатор задачи</param>
+		void Remove(Guid taskId);
 
 		/// <summary>
 		/// Возвращает следующий наиболее приоритетный элемент из очереди задач

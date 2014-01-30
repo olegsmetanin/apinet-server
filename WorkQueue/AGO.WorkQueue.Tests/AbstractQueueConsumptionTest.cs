@@ -238,5 +238,23 @@ namespace AGO.WorkQueue.Tests
 			Assert.IsTrue(projects.Contains(proj2));
 			Assert.IsTrue(projects.Contains(proj3));
 		}
+
+		[Test]
+		public void QueueRemoveTaskById()
+		{
+			var taskId = Guid.NewGuid();
+			Queue.Add(new QueueItem("a", taskId, "p", "u"));
+
+			Queue.Remove(taskId);
+
+			Assert.IsFalse(Queue.Dump().Any(qi => qi.TaskId == taskId));
+		}
+
+		[Test]
+		public void QueueRemoveNotExistingTask()
+		{
+			//Don't thow exceptions
+			Queue.Remove(Guid.NewGuid());
+		}
 	}
 }
