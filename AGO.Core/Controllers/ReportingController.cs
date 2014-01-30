@@ -304,12 +304,24 @@ namespace AGO.Core.Controllers
 			};
 		}
 
+		private ReportTaskModel PrepareForCancelReport(Guid taskId)
+		{
+			var task = _CrudDao.Get<ReportTaskModel>(taskId);
+			//emit event for reporting service (interrupt task if running)
+			bus.EmitCancelReport(task.Id);
+
+			if (task.State == ReportTaskState.NotStarted)
+			{
+				//task may be in work queue, if not started yet, remove
+				workQueue.Remove(task.Id);
+			}
+			return task;
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public void CancelReport([NotEmpty] Guid id)
 		{
-			var task = _CrudDao.Get<ReportTaskModel>(id);
-			//emit event for reporting service (interrupt task if running or waiting)
-			bus.EmitCancelReport(task.Id);
+			var task = PrepareForCancelReport(id);
 
 			task.State = ReportTaskState.Canceled;
 			task.CompletedAt = DateTime.Now;
@@ -328,13 +340,12 @@ namespace AGO.Core.Controllers
 			_SessionProvider.FlushCurrentSession();
 		}
 
+
 		[JsonEndpoint, RequireAuthorization]
 		public void DeleteReport([NotEmpty] Guid id)
 		{
-			var task = _CrudDao.Get<ReportTaskModel>(id);
-			//May be this task is running
-			bus.EmitCancelReport(task.Id);
-
+			var task = PrepareForCancelReport(id);
+			
 			var dto = ReportTaskToDTO(task);
 			_CrudDao.Delete(task);
 

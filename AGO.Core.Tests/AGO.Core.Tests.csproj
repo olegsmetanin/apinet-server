@@ -37,7 +37,7 @@
   <ItemGroup>
     <Reference Include="AGO.WorkQueue, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\AGO.WorkQueue.1.0.0.1\lib\AGO.WorkQueue.dll</HintPath>
+      <HintPath>..\packages\AGO.WorkQueue.1.0.1.0\lib\AGO.WorkQueue.dll</HintPath>
     </Reference>
     <Reference Include="Iesi.Collections, Version=1.0.1.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <HintPath>..\packages\Iesi.Collections.3.2.0.4000\lib\Net35\Iesi.Collections.dll</HintPath>
