@@ -273,11 +273,21 @@ namespace AGO.Core.Controllers
 				IList<ReportTaskModel> reports = null;
 				doInSessionContext(s =>
 				{
-					reports = buildQuery(s, null)
+					reports = buildQuery(s, m => m.State == ReportTaskState.NotStarted || m.State == ReportTaskState.Running)
 						.Fetch(m => m.Creator).Eager //beause after doInSessionContext session will be closed and then the user proxy will not be loaded
 						.OrderBy(m => m.CreationTime).Desc
 						.UnderlyingCriteria.SetMaxResults(TOP_REPORTS)
 						.List<ReportTaskModel>();
+					if (reports.Count < TOP_REPORTS)
+					{
+						reports = reports.Concat(
+								buildQuery(s, m => m.State != ReportTaskState.NotStarted && m.State != ReportTaskState.Running)
+									.Fetch(m => m.Creator).Eager
+									.OrderBy(m => m.CreationTime).Desc
+									.UnderlyingCriteria.SetMaxResults(TOP_REPORTS - reports.Count)
+									.List<ReportTaskModel>())
+								.ToList();
+					}
 				});
 				return reports;
 			});
