@@ -24,6 +24,11 @@ namespace AGO.Reporting.Common.Model
 		/// </summary>
 		string AuthorLogin { get; }
 
+		/// <summary>
+		/// Идентификатор языковых настроек, используемых при генерации отчета (названия enum-ов, числа, даты и т.п.)
+		/// </summary>
+		string Culture { get; }
+
 		#endregion
 
 		#region State

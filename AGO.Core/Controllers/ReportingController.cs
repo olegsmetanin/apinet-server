@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -197,7 +198,8 @@ namespace AGO.Core.Controllers
 								Name = name, 
 								Parameters = parameters.ToStringSafe(),
 								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null,
-								ResultUnread = true
+								ResultUnread = true,
+								Culture = CultureInfo.CurrentUICulture.Name
 				           	};
 				_CrudDao.Store(task);
 				_SessionProvider.FlushCurrentSession();

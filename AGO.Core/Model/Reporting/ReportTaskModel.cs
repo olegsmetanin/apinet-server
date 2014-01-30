@@ -30,8 +30,8 @@ namespace AGO.Core.Model.Reporting
 
 		public virtual string Parameters { get; set; }
 		
-		[NotMapped, MetadataExclude]
-		public virtual string AuthorLogin { get { return Creator != null ? Creator.Login : null; } }
+		[MetadataExclude]
+		public virtual string Culture { get; set; }
 
 		[JsonProperty]
 		public virtual ReportTaskState State { get; set; }
@@ -73,5 +73,8 @@ namespace AGO.Core.Model.Reporting
 		{
 			get { return ReportSetting; }
 		}
+
+		[NotMapped, MetadataExclude]
+		public virtual string AuthorLogin { get { return Creator != null ? Creator.Login : null; } }
 	}
 }

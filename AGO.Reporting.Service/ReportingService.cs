@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -286,6 +287,7 @@ namespace AGO.Reporting.Service
 				var paramType = Type.GetType(task.Setting.ReportParameterType, true);
 				worker.Parameters = JsonService.CreateSerializer().Deserialize(tokenReader, paramType);
 			}
+			worker.UserCulture = CultureInfo.GetCultureInfo(task.Culture);
 			worker.Timeout = ConcurrentWorkersTimeout * 1000;
 			worker.TrackProgressInterval = TrackProgressInterval;
 			

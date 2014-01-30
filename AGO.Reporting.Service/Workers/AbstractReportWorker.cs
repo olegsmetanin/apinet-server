@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using AGO.Core;
@@ -44,6 +45,8 @@ namespace AGO.Reporting.Service.Workers
 		protected INotificationService Bus { get; private set; }
 
 		public object Parameters { get; set; }
+
+		public CultureInfo UserCulture { get; set; }
 
 		public bool Finished { get; protected set; }
 
@@ -161,7 +164,19 @@ namespace AGO.Reporting.Service.Workers
 		private IReportGeneratorResult IntrenalWrappedStart()
 		{
 			var innerTask = Task<IReportGeneratorResult>.Factory.StartNew(
-				() => DALHelper.Do(SessionProvider, s => InternalStart()), TokenSource.Token);
+				() =>
+				{
+					var backupCulture = Thread.CurrentThread.CurrentUICulture;
+					Thread.CurrentThread.CurrentUICulture = UserCulture;
+					try
+					{
+						return DALHelper.Do(SessionProvider, s => InternalStart());
+					}
+					finally
+					{
+						Thread.CurrentThread.CurrentUICulture = backupCulture;
+					}
+				}, TokenSource.Token);
 			try
 			{
 				if (innerTask.Wait(Timeout, TokenSource.Token))
@@ -223,13 +238,22 @@ namespace AGO.Reporting.Service.Workers
 			{
 				DALHelper.Do(SessionProvider, session =>
 				{
-					var reportTask = Repository.GetTask(TaskId);
-				    action(reportTask);
-					session.SaveOrUpdate(reportTask);
-					var login = reportTask.AuthorLogin;//cache login, because after flush user proxy can't be loaded
-				    SessionProvider.FlushCurrentSession();
-					//Not wait for the task complete - no care if some of messages was lost
-					Bus.EmitReportChanged(type, login, Repository.GetTaskAsDTO(reportTask.Id));
+					var backupCulture = Thread.CurrentThread.CurrentUICulture;
+					Thread.CurrentThread.CurrentUICulture = UserCulture;
+					try
+					{
+						var reportTask = Repository.GetTask(TaskId);
+						action(reportTask);
+						session.SaveOrUpdate(reportTask);
+						var login = reportTask.AuthorLogin;//cache login, because after flush user proxy can't be loaded
+						SessionProvider.FlushCurrentSession();
+						//Not wait for the task complete - no care if some of messages was lost
+						Bus.EmitReportChanged(type, login, Repository.GetTaskAsDTO(reportTask.Id));
+					}
+					finally
+					{
+						Thread.CurrentThread.CurrentUICulture = backupCulture;
+					}
 				});
 
 			}
