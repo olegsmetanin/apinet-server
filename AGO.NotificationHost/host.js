@@ -88,11 +88,6 @@ client.on('message', function(channel, message) {
 		console.log(login2socket);
 		return;
 	}
-	//TODO remove debug code
-	if (channel !== 'reports_changed') {
-		console.log('Arrived message: ' + channel);
-		console.log(parsedMsg);
-	}
 	
 	var socks = login2socket[parsedMsg.login].sockets;
 	delete parsedMsg['login'];//sensitive information, not needed on client, remove
