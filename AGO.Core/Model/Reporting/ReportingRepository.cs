@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AGO.Core.Localization;
+using AGO.Core.Model.Projects;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 
@@ -51,7 +52,8 @@ namespace AGO.Core.Model.Reporting
 		public object GetTaskAsDTO(Guid taskId)
 		{
 			var task = CurrentSession.Load<ReportTaskModel>(taskId);
-			return ReportTaskDTO.FromTask(task, ls);
+			var proj = CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == task.Project).SingleOrDefault();
+			return ReportTaskDTO.FromTask(task, ls, proj != null ? proj.Name : null);
 		}
 	}
 }

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using AGO.Core.Localization;
 using AGO.Core.Model;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Notification;
@@ -73,8 +74,9 @@ namespace AGO.Core.Controllers
 
 							var lc = diContainer.GetInstance<ILocalizationService>();
 							var user = diContainer.GetInstance<AuthController>().CurrentUser();
+							var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == report.Project).SingleOrDefault();
 							//User must be logged in to download report, so, we don't check user to null
-							var dto = ReportTaskDTO.FromTask(report, lc, user.SystemRole != SystemRole.Administrator);
+							var dto = ReportTaskDTO.FromTask(report, lc, p != null ? p.Name : null, user.SystemRole != SystemRole.Administrator);
 							diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Login, dto);
 
 							sp.FlushCurrentSession();

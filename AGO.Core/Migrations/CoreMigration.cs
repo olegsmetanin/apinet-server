@@ -119,6 +119,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportSettingModel>(m => m.ReportParameterType)
 				.WithRefColumn<ReportSettingModel>(m => m.ReportTemplate);
 			Create.SecureModelTable<ReportTaskModel>()
+				.WithValueColumn<ReportTaskModel>(m => m.Project)
 				.WithValueColumn<ReportTaskModel>(m => m.Name)
 				.WithRefColumn<ReportTaskModel>(m => m.ReportSetting)
 				.WithValueColumn<ReportTaskModel>(m => m.Parameters)

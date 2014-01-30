@@ -4,6 +4,7 @@ using System.Threading;
 using AGO.Core.Notification;
 using AGO.Reporting.Common;
 using AGO.WorkQueue;
+using Common.Logging;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Watchers
@@ -48,7 +49,7 @@ namespace AGO.Core.Watchers
 		private void OnReportChange(string type, string login, object dto)
 		{
 			//Only interesting in events, that change position in work queue
-			if (type != ReportEvents.CREATED && type != ReportEvents.RUNNED) return;
+			if (type != ReportEvents.CREATED && type != ReportEvents.RUNNED && type != ReportEvents.CANCELED) return;
 			if (1 == Interlocked.Increment(ref changes))
 			{
 				//changes was 0 before increment - run notification
@@ -65,25 +66,31 @@ namespace AGO.Core.Watchers
 		{
 			//cache changes count at start of processing
 			var prevChanges = Interlocked.CompareExchange(ref changes, 0, 0); //simple noop read operation, not needed to volatile changes
-			
 
-			var snapshot = queue.Snapshot();
-			foreach (var key in snapshot.Keys)
+
+			try
 			{
-				var user = key;
-				var userTasks = snapshot[key];
-				var positions = userTasks
-					.Keys.SelectMany(project => 
-						userTasks[project].Select(projqi => 
-							new ReportQueuePosition
-							{
-								Project = project,
-								TaskId = projqi.TaskId,
-								Position = projqi.OrderInQueue.GetValueOrDefault()
-							}))
-					.ToArray();
-				var msgjson = JsonConvert.SerializeObject(positions);
-				notifications.EmitWorkQueueChanged(user, msgjson);
+				var snapshot = queue.Snapshot();
+				foreach (var key in snapshot.Keys)
+				{
+					var user = key;
+					var userTasks = snapshot[key];
+					var positions = userTasks
+						.Keys.SelectMany(project => 
+							userTasks[project].Select(projqi => 
+								new ReportQueuePosition
+								{
+									Project = project,
+									TaskId = projqi.TaskId,
+									Position = projqi.OrderInQueue.GetValueOrDefault()
+								}))
+						.ToArray();
+					notifications.EmitWorkQueueChanged(user, positions);
+				}
+			}
+			catch (Exception ex)
+			{
+				LogManager.GetLogger(GetType()).Error("Error when process work queue snapshot", ex);
 			}
 
 

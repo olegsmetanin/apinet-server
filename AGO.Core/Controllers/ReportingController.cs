@@ -193,6 +193,7 @@ namespace AGO.Core.Controllers
 				           		Creator = user,
 				           		State = ReportTaskState.NotStarted,
 				           		ReportSetting = settings,
+								Project = project,
 								Name = name, 
 								Parameters = parameters.ToStringSafe(),
 								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null,
@@ -374,7 +375,10 @@ namespace AGO.Core.Controllers
 
 		private ReportTaskDTO ReportTaskToDTO(ReportTaskModel task)
 		{
-			return ReportTaskDTO.FromTask(task, _LocalizationService, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);
+			var p = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
+				.Where(m => m.ProjectCode == task.Project).SingleOrDefault();
+			var project = p != null ? p.Name : null;
+			return ReportTaskDTO.FromTask(task, _LocalizationService, project, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);
 		}
 
 		public class UploadResult

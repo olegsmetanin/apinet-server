@@ -2,6 +2,7 @@
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
@@ -15,6 +16,9 @@ namespace AGO.Core.Model.Reporting
 	public class ReportTaskModel: SecureModel<Guid>, IReportTask
 	{
 		#region Persistent
+
+		[NotEmpty, NotLonger(ProjectModel.PROJECT_CODE_SIZE), JsonProperty]
+		public virtual string Project { get; set; }
 
 		[NotEmpty, NotLonger(250), JsonProperty]
 		public virtual string Name { get; set; }

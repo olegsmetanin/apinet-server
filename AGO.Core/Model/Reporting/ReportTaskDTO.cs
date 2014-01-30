@@ -7,7 +7,7 @@ namespace AGO.Core.Model.Reporting
 {
 	public class ReportTaskDTO
 	{
-		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, bool? hideErrorDetails = null)
+		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, string project = null, bool? hideErrorDetails = null)
 		{
 			if (m == null)
 				throw new ArgumentNullException("m");
@@ -17,6 +17,7 @@ namespace AGO.Core.Model.Reporting
 			return new ReportTaskDTO
 			{
 				Id = m.Id,
+				Project = project ?? m.Project,
 				Name = m.Name,
 				State = m.State.ToString(),
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
@@ -33,6 +34,8 @@ namespace AGO.Core.Model.Reporting
 		}
 
 		public Guid Id { get; set; }
+
+		public string Project { get; set; }
 
 		public string Name { get; set; }
 
