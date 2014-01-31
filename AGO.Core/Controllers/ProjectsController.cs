@@ -258,7 +258,11 @@ namespace AGO.Core.Controllers
 			if (projectModel == null || projectModel.Type == null)
 				throw new NoSuchProjectException();
 
-			return new { projectModel.Type.Module };
+			return new
+			{
+				projectModel.Type.Module,
+				projectModel.Name
+			};
 		}
 
 		#endregion
