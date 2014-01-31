@@ -19,6 +19,7 @@ using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Notification;
+using AGO.Core.Watchers;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.WorkQueue;
@@ -394,6 +395,14 @@ namespace AGO.Core.Controllers
 		public IEnumerable<IModelMetadata> ReportTaskMetadata()
 		{
 			return MetadataForModelAndRelations<ReportTaskModel>();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<WorkQueueWatchService.ReportQueuePosition> GetReportQueuePositions()
+		{
+			var login = _AuthController.CurrentUser().Login;
+			var snapshot = workQueue.Snapshot();
+			return WorkQueueWatchService.GetPositionsForUser(login, snapshot).ToArray();
 		}
 
 		private ReportTaskDTO ReportTaskToDTO(ReportTaskModel task)

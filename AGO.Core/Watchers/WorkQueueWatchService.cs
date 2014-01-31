@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using AGO.Core.Notification;
@@ -6,6 +7,7 @@ using AGO.Reporting.Common;
 using AGO.WorkQueue;
 using Common.Logging;
 using Newtonsoft.Json;
+using Snapshot = System.Collections.Generic.IDictionary<string, System.Collections.Generic.IDictionary<string, AGO.WorkQueue.QueueItem[]>>;
 
 namespace AGO.Core.Watchers
 {
@@ -71,20 +73,9 @@ namespace AGO.Core.Watchers
 			try
 			{
 				var snapshot = queue.Snapshot();
-				foreach (var key in snapshot.Keys)
+				foreach (var user in snapshot.Keys)
 				{
-					var user = key;
-					var userTasks = snapshot[key];
-					var positions = userTasks
-						.Keys.SelectMany(project => 
-							userTasks[project].Select(projqi => 
-								new ReportQueuePosition
-								{
-									Project = project,
-									TaskId = projqi.TaskId,
-									Position = projqi.OrderInQueue.GetValueOrDefault()
-								}))
-						.ToArray();
+					var positions = GetPositionsForUser(user, snapshot).ToArray();
 					notifications.EmitWorkQueueChanged(user, positions);
 				}
 			}
@@ -107,6 +98,22 @@ namespace AGO.Core.Watchers
 				lastRun = DateTime.Now;
 				Interlocked.Exchange(ref changes, 0);
 			}
+		}
+
+		public static IEnumerable<ReportQueuePosition> GetPositionsForUser(string login, Snapshot snapshot)
+		{
+			if (login.IsNullOrWhiteSpace() || !snapshot.ContainsKey(login))
+				return Enumerable.Empty<ReportQueuePosition>();
+
+			var userTasks = snapshot[login];
+			return userTasks.Keys.SelectMany(project =>
+				userTasks[project].Select(projqi =>
+					new ReportQueuePosition
+					{
+						Project = project,
+						TaskId = projqi.TaskId,
+						Position = projqi.OrderInQueue.GetValueOrDefault()
+					}));
 		}
 
 		public void Dispose()
