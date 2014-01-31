@@ -109,9 +109,10 @@ namespace AGO.Reporting.Service
 		protected override void DoInitializeApplication()
 		{
 			base.DoInitializeApplication();
-			//last step
-			runTaskTimer.Run();
+			
 			cleanFinishedTaskTimer.Run();
+			//run with 0, so, immediate query work queue and start work, if any
+			runTaskTimer.Run(0);
 		}
 
 		/// <summary>
