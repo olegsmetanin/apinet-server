@@ -170,6 +170,7 @@
     <Compile Include="Controllers\HttpSessionStateStorage.cs" />
     <Compile Include="Application\TestDataApplication.cs" />
     <Compile Include="Application\WebApplication.cs" />
+    <Compile Include="Controllers\OAuthController.cs" />
     <Compile Include="Execution\FormOrQueryParameterResolver.cs" />
     <Compile Include="Execution\HttpRuntimeParameterResolver.cs" />
     <Compile Include="Execution\JsonBodyParameterResolver.cs" />

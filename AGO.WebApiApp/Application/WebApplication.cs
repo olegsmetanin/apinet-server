@@ -180,6 +180,7 @@ namespace AGO.WebApiApp.Application
 			routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
 			RegisterDownloadRoutes(routes);
+			RegisterOAuthRoutes(routes);
 		}
 
 		protected void RegisterDownloadRoutes(RouteCollection routes)
@@ -193,6 +194,12 @@ namespace AGO.WebApiApp.Application
 			routes.MapRoute(Downloader.FILE_TYPE,
 							"download/" + Downloader.FILE_TYPE + "/{id}",
 							new { controller = "Download", action = "DownloadFile" });
+		}
+
+		protected void RegisterOAuthRoutes(RouteCollection routes)
+		{
+			routes.MapRoute("BeginFb", "oauth/begin/fb", new {controller = "OAuth", action = "BeginFacebookLoginFlow"});
+			routes.MapRoute("EndFb", "oauth/fb", new { controller = "OAuth", action = "EndFacebookLoginFlow" });
 		}
 		
 		#endregion

@@ -42,7 +42,10 @@ namespace AGO.Core.Controllers.Security.OAuth
 			sp.CurrentSession.SaveOrUpdate(fbData);
 			sp.FlushCurrentSession();
 
-			return Task.FromResult(url + "?response_type=code&client_id=" + appId + "&state=fb:" + fbData.Id.ToString().ToLowerInvariant());
+			var fbUrl = string.Concat(url, "?response_type=code&client_id=", appId, 
+				"&state=", fbData.Id.ToString().ToLowerInvariant(),
+				"&redirect_uri=", redirectUrl);
+			return Task.FromResult(fbUrl);
 		}
 
 		/// <summary>
@@ -68,7 +71,7 @@ namespace AGO.Core.Controllers.Security.OAuth
 		{
 			var fbData = (FacebookOAuthDataModel) data;
 			var exchangeUrl = "https://graph.facebook.com/oauth/access_token?client_id=" + appId +
-			                  "&redirect_uri=" + Uri.EscapeDataString(fbData.RedirectUrl) +
+			                  "&redirect_uri=" + redirectUrl +
 			                  "&client_secret=" + appSecret +
 			                  "&code=" + code;
 			try
@@ -90,7 +93,7 @@ namespace AGO.Core.Controllers.Security.OAuth
 			}
 			catch (Exception ex)
 			{
-				Log.ErrorFormat("Error when retrieving userId from facebook: {0}", ex);
+				Log.ErrorFormat("Error when retrieving userId from facebook: {0}", ex.ToString());
 				throw new OAuthLoginException(ex);
 			}
 		}
@@ -100,10 +103,12 @@ namespace AGO.Core.Controllers.Security.OAuth
 		private string url;
 		private string appId;
 		private string appSecret;
+		private string redirectUrl;
 
 		private const string UrlConfigKey = "Url";
 		private const string AppIdConfigKey = "AppId";
 		private const string AppSecretConfigKey = "AppSecret";
+		private const string RedirectUrlConfigKey = "RedirectUrl";
 
 		protected override string DoGetConfigProperty(string key)
 		{
@@ -118,6 +123,10 @@ namespace AGO.Core.Controllers.Security.OAuth
 			if (AppSecretConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return appSecret;
+			}
+			if (RedirectUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			{
+				return redirectUrl;
 			}
 			return base.DoGetConfigProperty(key);
 		}
@@ -135,6 +144,10 @@ namespace AGO.Core.Controllers.Security.OAuth
 			else if (AppSecretConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
 				appSecret = value;
+			}
+			else if (RedirectUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			{
+				redirectUrl = value;
 			}
 			else
 				base.DoSetConfigProperty(key, value);

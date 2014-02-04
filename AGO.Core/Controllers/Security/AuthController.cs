@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
-using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
@@ -33,8 +32,6 @@ namespace AGO.Core.Controllers.Security
 
 		protected readonly ILocalizationService _LocalizationService;
 
-		protected IOAuthProviderFactory OAuthFactory { get; private set; }
-
 		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
@@ -42,8 +39,7 @@ namespace AGO.Core.Controllers.Security
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			IStateStorage<object> stateStorage,
-			ILocalizationService localizationService,
-			IOAuthProviderFactory oauthFactory)
+			ILocalizationService localizationService)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -72,10 +68,6 @@ namespace AGO.Core.Controllers.Security
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
 			_LocalizationService = localizationService;
-
-			if (oauthFactory == null)
-				throw new ArgumentNullException("oauthFactory");
-			OAuthFactory = oauthFactory;
 		}
 
 		#endregion
@@ -109,7 +101,7 @@ namespace AGO.Core.Controllers.Security
 			return user;
 		}
 
-		private void LoginInternal(UserModel user)
+		public void LoginInternal(UserModel user)
 		{
 			//TODO избавиться от сессии (stateless)
 			user.Token = RegisterToken(user.Login);
@@ -139,36 +131,6 @@ namespace AGO.Core.Controllers.Security
 		public bool IsAdmin()
 		{
 			return CurrentUser().SystemRole == SystemRole.Administrator;
-		}
-
-		[JsonEndpoint]
-		public string PrepareOAuthLogin([NotEmpty] OAuthProvider providerType, string sourceUrl)
-		{
-			var provider = OAuthFactory.Get(providerType);
-
-			var data = provider.CreateData();
-			_CrudDao.Store(data);
-			_SessionProvider.FlushCurrentSession();
-
-			return provider.PrepareForLogin(data, sourceUrl).Result;
-		}
-
-		[JsonEndpoint]
-		public string ProceedOAuthLogin(OAuthProvider providerType, string code, Guid state)
-		{
-			var provider = OAuthFactory.Get(providerType);
-
-			var data = _CrudDao.Get<OAuthDataModel>(state);
-			var oauthUserId = provider.QueryUserId(data, code).Result;
-
-			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.OAuthProvider == providerType && m.OAuthUserId == oauthUserId).SingleOrDefault();
-			if (user == null)
-				throw new NoSuchUserException();
-
-			LoginInternal(user);
-
-			return ((FacebookOAuthDataModel) data).RedirectUrl;
 		}
 
 		#endregion
