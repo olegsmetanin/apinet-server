@@ -9,11 +9,12 @@ using System.Web.WebPages.Scope;
 using AGO.Core;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Execution;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using Common.Logging;
-using UsersController = AGO.Core.Controllers.UsersController;
+using UsersController = AGO.Core.Controllers.Security.UsersController;
 
 namespace AGO.WebApiApp.Controllers
 {

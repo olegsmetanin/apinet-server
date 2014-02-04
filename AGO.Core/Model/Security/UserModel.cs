@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
+using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Model.Dictionary;
 using Newtonsoft.Json;
 
@@ -88,6 +89,12 @@ namespace AGO.Core.Model.Security
 		[PersistentCollection(Inverse = false)]
 		public virtual ISet<DepartmentModel> Departments { get { return _Departments; } set { _Departments = value; } }
 		private ISet<DepartmentModel> _Departments = new HashSet<DepartmentModel>();
+
+		[MetadataExclude]
+		public virtual OAuthProvider? OAuthProvider { get; set; }
+
+		[MetadataExclude, NotLonger(LOGIN_SIZE_CONST)]
+		public virtual string OAuthUserId { get; set; }
 
 		#endregion
 

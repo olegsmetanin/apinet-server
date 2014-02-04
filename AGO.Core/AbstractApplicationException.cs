@@ -124,4 +124,11 @@ namespace AGO.Core
 	public class NoSuchProjectException : AbstractApplicationException
 	{
 	}
+
+	public class OAuthLoginException : AbstractApplicationException
+	{
+		public OAuthLoginException(Exception innerException): base(null, innerException)
+		{
+		}
+	}
 }

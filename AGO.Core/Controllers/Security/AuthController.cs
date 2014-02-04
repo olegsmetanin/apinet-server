@@ -1,17 +1,19 @@
-п»їusing System;
+using System;
 using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 
-namespace AGO.Core.Controllers
+
+namespace AGO.Core.Controllers.Security
 {
 	public class AuthController : AbstractService
 	{
@@ -31,6 +33,8 @@ namespace AGO.Core.Controllers
 
 		protected readonly ILocalizationService _LocalizationService;
 
+		protected IOAuthProviderFactory OAuthFactory { get; private set; }
+
 		public AuthController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
@@ -38,7 +42,8 @@ namespace AGO.Core.Controllers
 			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			IStateStorage<object> stateStorage,
-			ILocalizationService localizationService)
+			ILocalizationService localizationService,
+			IOAuthProviderFactory oauthFactory)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -67,6 +72,10 @@ namespace AGO.Core.Controllers
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
 			_LocalizationService = localizationService;
+
+			if (oauthFactory == null)
+				throw new ArgumentNullException("oauthFactory");
+			OAuthFactory = oauthFactory;
 		}
 
 		#endregion
@@ -94,11 +103,17 @@ namespace AGO.Core.Controllers
 				validation.AddFieldErrors("password", _LocalizationService.MessageForException(new InvalidPwdException()));
 				return validation;
 			}
-			//TODO РёР·Р±Р°РІРёС‚СЊСЃСЏ РѕС‚ СЃРµСЃСЃРёРё (stateless)
-			user.Token = RegisterToken(user.Login);
-			_StateStorage["CurrentUser"] = user;
+			
+			LoginInternal(user);
 			
 			return user;
+		}
+
+		private void LoginInternal(UserModel user)
+		{
+			//TODO избавиться от сессии (stateless)
+			user.Token = RegisterToken(user.Login);
+			_StateStorage["CurrentUser"] = user;
 		}
 
 		[JsonEndpoint]
@@ -124,6 +139,36 @@ namespace AGO.Core.Controllers
 		public bool IsAdmin()
 		{
 			return CurrentUser().SystemRole == SystemRole.Administrator;
+		}
+
+		[JsonEndpoint]
+		public string PrepareOAuthLogin([NotEmpty] OAuthProvider providerType, string sourceUrl)
+		{
+			var provider = OAuthFactory.Get(providerType);
+
+			var data = provider.CreateData();
+			_CrudDao.Store(data);
+			_SessionProvider.FlushCurrentSession();
+
+			return provider.PrepareForLogin(data, sourceUrl).Result;
+		}
+
+		[JsonEndpoint]
+		public string ProceedOAuthLogin(OAuthProvider providerType, string code, Guid state)
+		{
+			var provider = OAuthFactory.Get(providerType);
+
+			var data = _CrudDao.Get<OAuthDataModel>(state);
+			var oauthUserId = provider.QueryUserId(data, code).Result;
+
+			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
+				.Where(m => m.OAuthProvider == providerType && m.OAuthUserId == oauthUserId).SingleOrDefault();
+			if (user == null)
+				throw new NoSuchUserException();
+
+			LoginInternal(user);
+
+			return ((FacebookOAuthDataModel) data).RedirectUrl;
 		}
 
 		#endregion
@@ -173,7 +218,7 @@ insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") valu
 
 		#endregion
 
-		//РњРѕР¶РµС‚ РїРѕРЅР°РґРѕР±РёС‚СЊСЃСЏ, РєРѕРіРґР° РёР· UserModel Р±СѓРґРµРј СѓРґР°Р»СЏС‚СЊ Token Рё РїРµСЂРµРґРµР»С‹РІР°С‚СЊ РїРѕ РЅРѕСЂРјР°Р»СЊРЅРѕРјСѓ
+		//Может понадобиться, когда из UserModel будем удалять Token и переделывать по нормальному
 //		#region Helper methods
 //
 //		protected object UserToJsonUser(UserModel user, string token)

@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
@@ -78,6 +79,35 @@ namespace AGO.Core
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user3);
+			var artem1 = new UserModel
+			{
+				Creator = admin,
+				Login = "artem1@apinet-test.com",
+				PwdHash = pwdHash,
+				Active = true,
+				LastName = "Naumov",
+				Name = "Artem",
+				MiddleName = "",
+				SystemRole = SystemRole.Administrator,
+				OAuthProvider = OAuthProvider.Facebook,
+				OAuthUserId = "100007697794498"
+			};
+			_CrudDao.Store(artem1);
+			var olegsmith = new UserModel
+			{
+				Creator = admin,
+				Login = "olegsmith@apinet-test.com",
+				PwdHash = pwdHash,
+				Active = true,
+				LastName = "Smith",
+				Name = "Oleg",
+				MiddleName = "",
+				SystemRole = SystemRole.Administrator,
+				OAuthProvider = OAuthProvider.Facebook,
+				OAuthUserId = "1640647496"
+			};
+			_CrudDao.Store(olegsmith);
+
 
 			_CrudDao.Store(new ProjectTagModel
 			{

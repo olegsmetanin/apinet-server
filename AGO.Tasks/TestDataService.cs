@@ -36,15 +36,19 @@ namespace AGO.Tasks
 			{
 				Admin = admin,
 				User1 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "user1@apinet-test.com").Take(1).List().FirstOrDefault(),
+					.Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault(),
 				User2 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "user2@apinet-test.com").Take(1).List().FirstOrDefault(),
+					.Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault(),
 				User3 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "user3@apinet-test.com").Take(1).List().FirstOrDefault(),
+					.Where(m => m.Login == "user3@apinet-test.com").SingleOrDefault(),
+				Artem1 = CurrentSession.QueryOver<UserModel>()
+					.Where(m => m.Login == "artem1@apinet-test.com").SingleOrDefault(),
+				OlegSmith = CurrentSession.QueryOver<UserModel>()
+					.Where(m => m.Login == "olegsmith@apinet-test.com").SingleOrDefault(),
 				UrgentTag = CurrentSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Name == "Urgent").SingleOrDefault(),
 				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
-					.Where(m => m.Creator == admin).List(),
+					.Where(m => m.Creator.Id == admin.Id).List(),
 				ProjectType = new ProjectTypeModel
 				{
 					Creator = admin,
@@ -54,7 +58,7 @@ namespace AGO.Tasks
 			};
 
 			if (context.Admin == null || context.User1 == null || context.User2 == null ||
-					context.User3 == null || context.UrgentTag == null)
+					context.User3 == null || context.Artem1 == null || context.OlegSmith == null || context.UrgentTag == null)
 				throw new Exception("Test data inconsistency");
 
 			_CrudDao.Store(context.ProjectType);
@@ -110,6 +114,14 @@ namespace AGO.Tasks
 				var pcUser3 = new ProjectParticipantModel { User = context.User3, Project = project, UserPriority = 0 };
 				_CrudDao.Store(pcUser3);
 				project.Participants.Add(pcUser3);
+
+				var pcArtem1 = new ProjectParticipantModel { User = context.Artem1, Project = project, UserPriority = 10 };
+				_CrudDao.Store(pcArtem1);
+				project.Participants.Add(pcArtem1);
+
+				var pcOlegSmith = new ProjectParticipantModel { User = context.OlegSmith, Project = project, UserPriority = 15 };
+				_CrudDao.Store(pcOlegSmith);
+				project.Participants.Add(pcOlegSmith);
 
 				_CrudDao.Store(new ProjectToTagModel
 				{

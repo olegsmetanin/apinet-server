@@ -174,4 +174,7 @@
   <data name="NoSuchProjectException" xml:space="preserve">
     <value>Requested project not found</value>
   </data>
+  <data name="OAuthLoginException" xml:space="preserve">
+    <value>Error while load user info from oauth provider</value>
+  </data>
 </root>

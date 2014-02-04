@@ -1,6 +1,7 @@
 using System;
 using AGO.Core.Application;
 using AGO.Core.Controllers;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;

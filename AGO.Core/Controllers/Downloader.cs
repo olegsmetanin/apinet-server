@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Projects;

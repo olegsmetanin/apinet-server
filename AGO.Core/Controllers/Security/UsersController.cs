@@ -1,4 +1,4 @@
-п»їusing System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -14,7 +14,7 @@ using AGO.Core.Modules.Attributes;
 using Newtonsoft.Json.Linq;
 using NHibernate.Criterion;
 
-namespace AGO.Core.Controllers
+namespace AGO.Core.Controllers.Security
 {
 	public class UsersController : AbstractController
 	{
@@ -73,7 +73,7 @@ namespace AGO.Core.Controllers
 
 			try
 			{
-				//TODO: Р’Р°Р»РёРґР°С†РёРё РґР»РёРЅС‹
+				//TODO: Валидации длины
 				var currentUser = _AuthController.CurrentUser();
 
 				var persistentModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()

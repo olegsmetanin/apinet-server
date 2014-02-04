@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;

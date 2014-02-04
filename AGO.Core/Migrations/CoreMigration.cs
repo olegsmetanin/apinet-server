@@ -33,8 +33,13 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.WhomFIO)
 				.AddValueColumn<UserModel>(m => m.JobName)
 				.AddValueColumn<UserModel>(m => m.WhomJobName)
-				.AddValueColumn<UserModel>(m => m.SystemRole);
+				.AddValueColumn<UserModel>(m => m.SystemRole)
+				.AddValueColumn<UserModel>(m => m.OAuthProvider)
+				.AddValueColumn<UserModel>(m => m.OAuthUserId);
 
+			Create.CoreModelTable<OAuthDataModel>()
+				.WithValueColumn<FacebookOAuthDataModel>(m => m.RedirectUrl);
+			
 			Create.CoreModelTable<UserFilterModel>()
 				.WithValueColumn<UserFilterModel>(m => m.Name)
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)

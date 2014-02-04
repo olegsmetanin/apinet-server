@@ -4,6 +4,7 @@ using System.Web;
 using System.Web.Mvc;
 using AGO.Core;
 using AGO.Core.Controllers;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Localization;
 using Common.Logging;
 

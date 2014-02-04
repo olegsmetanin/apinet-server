@@ -85,7 +85,6 @@
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractTagsAwareController.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
-    <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
     <Compile Include="Controllers\Downloader.cs" />
     <Compile Include="Controllers\Extensions.cs" />
@@ -98,9 +97,16 @@
     <Compile Include="Controllers\ProjectsController.cs" />
     <Compile Include="Controllers\Projects\ProjectViewModel.cs" />
     <Compile Include="Controllers\ReportingController.cs" />
+    <Compile Include="Controllers\Security\AuthController.cs" />
+    <Compile Include="Controllers\Security\OAuth\FacebookProvider.cs" />
+    <Compile Include="Controllers\Security\OAuth\IOAuthProvider.cs" />
+    <Compile Include="Controllers\Security\OAuth\IOAuthProviderFactory.cs" />
+    <Compile Include="Controllers\Security\OAuth\OAuthProvider.cs" />
+    <Compile Include="Controllers\Security\OAuth\OAuthProviderFactory.cs" />
+    <Compile Include="Controllers\Security\OAuth\TwitterProvider.cs" />
+    <Compile Include="Controllers\Security\UsersController.cs" />
     <Compile Include="Controllers\UpdateResult.cs" />
     <Compile Include="Controllers\Uploader.cs" />
-    <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
@@ -134,6 +140,7 @@
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskDTO.cs" />
     <Compile Include="Model\Reporting\ReportTemplateModel.cs" />
+    <Compile Include="Model\Security\OAuthDataModel.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Model\Security\UserFilterModel.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
@@ -306,6 +313,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
     <Reference Include="System.XML" />

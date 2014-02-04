@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Filters;

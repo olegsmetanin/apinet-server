@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using AGO.Core.Application;
+using AGO.Core.Config;
+using AGO.Core.Controllers.Security;
+using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Localization;
 using AGO.Core.Modules;
 using AGO.Core.Controllers;
@@ -19,6 +22,21 @@ namespace AGO.Core
 
 		public void Register(IApplication app)
 		{
+			var di = app.IocContainer;
+
+			di.RegisterSingle<FacebookProvider>();
+			di.RegisterInitializer<FacebookProvider>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^OAuth_Facebook_(.*)", app.KeyValueProvider)).ApplyTo(service));
+
+			di.RegisterSingle<TwitterProvider>();
+			di.RegisterInitializer<TwitterProvider>(service =>
+				new KeyValueConfigProvider(new RegexKeyValueProvider("^OAuth_Twitter_(.*)", app.KeyValueProvider)).ApplyTo(service));
+
+			di.RegisterSingle<IOAuthProviderFactory>(new OAuthProviderFactory
+			{
+				{OAuthProvider.Facebook, di.GetInstance<FacebookProvider>},
+				{OAuthProvider.Twitter, di.GetInstance<TwitterProvider>}
+			});
 		}
 
 		public void Initialize(IApplication app)

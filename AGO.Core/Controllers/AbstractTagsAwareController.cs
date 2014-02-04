@@ -1,4 +1,5 @@
-﻿using AGO.Core.Json;
+﻿using AGO.Core.Controllers.Security;
+using AGO.Core.Json;
 using AGO.Core.Filters;
 using AGO.Core.Localization;
 using AGO.Core.Model.Processing;

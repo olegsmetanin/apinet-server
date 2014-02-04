@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Web;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.Controllers.Security;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
