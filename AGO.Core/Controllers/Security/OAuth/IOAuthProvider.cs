@@ -28,7 +28,7 @@ namespace AGO.Core.Controllers.Security.OAuth
 		/// to provider login form
 		/// </summary>
 		/// <returns>Url to provider login form</returns>
-		Task<string> PrepareForLogin(OAuthDataModel data, string sourceUrl);
+		Task<string> PrepareForLogin(OAuthDataModel data);
 
 		/// <summary>
 		/// Query provider and return provider user identifier

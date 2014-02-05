@@ -8,78 +8,70 @@ using AGO.Core.Model.Security;
 
 namespace AGO.WebApiApp.Controllers
 {
-	public class OAuthController: Controller
+	public class OAuthController: BaseMvcController
 	{
-		private IDependencyResolver Resover
+		private IDependencyResolver Resolver
 		{
 			get { return DependencyResolver.Current; }
 		}
 
-		public async Task<ActionResult> BeginFacebookLoginFlow()
+		public Task<ActionResult> BeginLoginFlow(OAuthProvider providerType)
 		{
-			var sourceUrl = Request.QueryString["url"];
-			//TODO check args
-			var provider = Resover.GetService<IOAuthProviderFactory>().Get(OAuthProvider.Facebook);
-			var data = provider.CreateData();
-			data.RedirectUrl = sourceUrl;
-			Resover.GetService<ICrudDao>().Store(data);
-			Resover.GetService<ISessionProvider>().FlushCurrentSession();
+			return DoSafeAsync(async () =>
+			{
+				var sourceUrl = Request.QueryString["url"];
+				if (sourceUrl.IsNullOrWhiteSpace())
+					throw new ArgumentException("No return url in query string");
+				
+				var provider = Resolver.GetService<IOAuthProviderFactory>().Get(providerType);
+				var data = provider.CreateData();
+				data.RedirectUrl = sourceUrl;
+				Resolver.GetService<ICrudDao>().Store(data);
+				Resolver.GetService<ISessionProvider>().FlushCurrentSession();
 
-			var redirectUrl = await provider.PrepareForLogin(data, sourceUrl);
-			return Redirect(redirectUrl);
+				var redirectUrl = await provider.PrepareForLogin(data);
+				return Redirect(redirectUrl);
+			});
 		}
 
 		//Not use async, because our StateStorage implementation relies on HttpContext.Current, that is null
 		//in async method
-		public ActionResult EndFacebookLoginFlow()
+		public ActionResult EndLoginFlow(OAuthProvider providerType)
 		{
-			var state = Request.QueryString["state"];
+			return DoSafe(() =>
+			{
+				OAuthDataModel data = null;
+				try
+				{
+					var state = Request.QueryString["state"];
+					if (state.IsNullOrWhiteSpace())
+						throw new ArgumentException("No state parameter in query string");
+					Guid dataId;
+					if (!Guid.TryParse(state, out dataId))
+						throw new ArgumentException("Provided state parameter is not convertible to guid");
 
-			var provider = Resover.GetService<IOAuthProviderFactory>().Get(OAuthProvider.Facebook);
-			var data = Resover.GetService<ICrudDao>().Get<OAuthDataModel>(new Guid(state));
-			var oauthUserId = provider.QueryUserId(data, Request.QueryString).Result;
+					var provider = Resolver.GetService<IOAuthProviderFactory>().Get(providerType);
+					data = Resolver.GetService<ICrudDao>().Get<OAuthDataModel>(dataId);
+					var oauthUserId = provider.QueryUserId(data, Request.QueryString).Result;
 
-			var user = Resover.GetService<ISessionProvider>().CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.OAuthProvider == OAuthProvider.Facebook && m.OAuthUserId == oauthUserId).SingleOrDefault();
-			if (user == null)
-				throw new NoSuchUserException();
+					var user = Resolver.GetService<ISessionProvider>().CurrentSession.QueryOver<UserModel>()
+						.Where(m => m.OAuthProvider == providerType && m.OAuthUserId == oauthUserId).SingleOrDefault();
+					if (user == null)
+						throw new NoSuchUserException();
 
-			Resover.GetService<AuthController>().LoginInternal(user);
+					Resolver.GetService<AuthController>().LoginInternal(user);
 
-			return Redirect(data.RedirectUrl);
-		}
-
-		public async Task<ActionResult> BeginTwitterLoginFlow()
-		{
-			var sourceUrl = Request.QueryString["url"];
-			//TODO check args
-			var provider = Resover.GetService<IOAuthProviderFactory>().Get(OAuthProvider.Twitter);
-			var data = provider.CreateData();
-			data.RedirectUrl = sourceUrl;
-			Resover.GetService<ICrudDao>().Store(data);
-			Resover.GetService<ISessionProvider>().FlushCurrentSession();
-
-			var redirectUrl = await provider.PrepareForLogin(data, sourceUrl);
-			return Redirect(redirectUrl);
-		}
-
-		//See comment for facebook version
-		public ActionResult EndTwitterLoginFlow()
-		{
-			var state = Request.QueryString["state"];
-
-			var provider = Resover.GetService<IOAuthProviderFactory>().Get(OAuthProvider.Twitter);
-			var data = Resover.GetService<ICrudDao>().Get<OAuthDataModel>(new Guid(state));
-			var oauthUserId = provider.QueryUserId(data, Request.QueryString).Result;
-
-			var user = Resover.GetService<ISessionProvider>().CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.OAuthProvider == OAuthProvider.Twitter && m.OAuthUserId == oauthUserId).SingleOrDefault();
-			if (user == null)
-				throw new NoSuchUserException();
-
-			Resover.GetService<AuthController>().LoginInternal(user);
-
-			return Redirect(data.RedirectUrl);
+					return Redirect(data.RedirectUrl);
+				}
+				finally
+				{
+					if (data != null)
+					{
+						Resolver.GetService<ICrudDao>().Delete(data);
+						Resolver.GetService<ISessionProvider>().CloseCurrentSession();
+					}
+				}
+			});
 		}
 	}
 }

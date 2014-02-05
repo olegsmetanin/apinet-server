@@ -9,16 +9,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 {
 	public class FacebookProvider: AbstractService, IOAuthProvider
 	{
-		private readonly ISessionProvider sp;
-
-		public FacebookProvider(ISessionProvider sessionProvider)
-		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-
-			sp = sessionProvider;
-		}
-
 		public OAuthProvider Type { get { return OAuthProvider.Facebook; } }
 
 		public OAuthDataModel CreateData()
@@ -26,15 +16,10 @@ namespace AGO.Core.Controllers.Security.OAuth
 			return new OAuthDataModel();
 		}
 
-		public Task<string> PrepareForLogin(OAuthDataModel data, string sourceUrl)
+		public Task<string> PrepareForLogin(OAuthDataModel data)
 		{
 			if (data == null)
 				throw new ArgumentNullException("data");
-			if (string.IsNullOrWhiteSpace(sourceUrl))
-				throw new ArgumentNullException("sourceUrl");
-
-			sp.CurrentSession.SaveOrUpdate(data);
-			sp.FlushCurrentSession();
 
 			var fbUrl = string.Concat(loginUrl, "?response_type=code&client_id=", appId, 
 				"&state=", data.Id.ToString().ToLowerInvariant(),

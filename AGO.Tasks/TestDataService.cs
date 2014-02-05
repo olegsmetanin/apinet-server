@@ -42,7 +42,7 @@ namespace AGO.Tasks
 				User3 = CurrentSession.QueryOver<UserModel>()
 					.Where(m => m.Login == "user3@apinet-test.com").SingleOrDefault(),
 				Artem1 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "artem1@facebook.com").SingleOrDefault(),
+					.Where(m => m.Login == "artem1@apinet-test.com").SingleOrDefault(),
 				OlegSmith = CurrentSession.QueryOver<UserModel>()
 					.Where(m => m.Login == "olegsmith@apinet-test.com").SingleOrDefault(),
 				UrgentTag = CurrentSession.QueryOver<ProjectTagModel>()

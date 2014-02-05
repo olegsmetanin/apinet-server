@@ -8,7 +8,6 @@ using System.Web.Mvc;
 using System.Web.WebPages.Scope;
 using AGO.Core;
 using AGO.Core.Attributes.Controllers;
-using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Execution;
 using AGO.Core.Json;
@@ -18,6 +17,7 @@ using UsersController = AGO.Core.Controllers.Security.UsersController;
 
 namespace AGO.WebApiApp.Controllers
 {
+	//TODO use BaseMvcController
 	public class ApiController : Controller
 	{
 		private const string OptionsHttpMethod = "OPTIONS";

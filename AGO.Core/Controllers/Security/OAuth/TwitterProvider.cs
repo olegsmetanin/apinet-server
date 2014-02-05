@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AGO.Core.Model.Security;
+using Kvp = System.Tuple<string, string>;
 
 
 namespace AGO.Core.Controllers.Security.OAuth
@@ -25,49 +27,62 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 		public OAuthProvider Type { get { return OAuthProvider.Twitter; }
 		}
+
 		public OAuthDataModel CreateData()
 		{
 			return new TwitterOAuthDataModel();
 		}
 
-		public async Task<string> PrepareForLogin(OAuthDataModel data, string sourceUrl)
+		private string MakeAuthHeader(string state = null, string token = null, string verifier = null)
+		{
+			//kvp for each possible parameter, participating in header or signing
+			var oauthNonce = new Kvp("oauth_nonce", Convert.ToBase64String(Guid.NewGuid().ToByteArray()));
+			var oauthCallbackUrl = state != null ? new Kvp("oauth_callback", redirectUrl + "?state=" + state) : null;
+			var oauthConsumerKey = new Kvp("oauth_consumer_key", consumerKey);
+			var oauthTimestamp = new Kvp("oauth_timestamp", UnixTimestampUTC().ToString(CultureInfo.InvariantCulture));
+			var oauthSignatureMethod = new Kvp("oauth_signature_method", "HMAC-SHA1");
+			var oauthVersion = new Kvp("oauth_version", "1.0");
+			var oauthToken = token != null ? new Kvp("oauth_token", token) : null;
+			var oauthVerifier = verifier != null ? new Kvp("oauth_verifier", verifier) : null;
+
+			//sign-only parameters (kvp not needed)
+			var requestUrl = apiUrl + (state != null ? "oauth/request_token" : "oauth/access_token");
+			const string method = "POST";
+			var signKey = Uri.EscapeDataString(consumerSecret) + "&" /*+ no token_secret*/;
+
+			//signing
+			var parametersForSigning = string.Join("&", new []
+				{
+					oauthNonce, oauthCallbackUrl, oauthConsumerKey, oauthTimestamp,
+					oauthSignatureMethod, oauthVersion, oauthToken, oauthVerifier
+				}
+				.Where(kvp => kvp != null)
+				.OrderBy(kvp => kvp.Item1)
+				.Select(kvp => Uri.EscapeDataString(kvp.Item1) + "=" + Uri.EscapeDataString(kvp.Item2)));
+			var signString = string.Concat(method, "&", Uri.EscapeDataString(requestUrl), "&",
+				Uri.EscapeDataString(parametersForSigning)); //parameters double percent encoded
+			var signature = Sign(signKey, signString);
+
+			var oauthSignature = new Kvp("oauth_signature", signature);
+
+			var headerValue = "OAuth " + string.Join(", ", new[]
+				{
+					oauthNonce, oauthCallbackUrl, oauthConsumerKey, oauthTimestamp,
+					oauthSignatureMethod, oauthSignature, oauthVersion, oauthToken
+				}
+				.Where(kvp => kvp != null)
+				.Select(kvp => Uri.EscapeDataString(kvp.Item1) + "=\"" + Uri.EscapeDataString(kvp.Item2) + "\""));
+			return headerValue;
+		}
+
+		public async Task<string> PrepareForLogin(OAuthDataModel data)
 		{
 			var twiData = (TwitterOAuthDataModel) data;
-			var nonce = Uri.EscapeDataString(Convert.ToBase64String(Guid.NewGuid().ToByteArray()));
-			var oauthCallbackUrl = Uri.EscapeDataString(redirectUrl + "?state=" + data.Id.ToString().ToLowerInvariant());
-			var requestTokenUrl = apiUrl + "oauth/request_token";
-			var timestamp = UnixTimeStampUTC().ToString(CultureInfo.InvariantCulture);
-
-			//in signing order (alphabet)
-// ReSharper disable InconsistentNaming
-			var oauth_callback = "oauth_callback=\"" + oauthCallbackUrl + "\"";
-			var oauth_consumer_key = "oauth_consumer_key=\"" + consumerKey + "\"";
-			var oauth_nonce = "oauth_nonce=\"" + nonce + "\"";
-			const string oauth_signature_method = "oauth_signature_method=\"HMAC-SHA1\"";
-			var oauth_timestamp = "oauth_timestamp=\"" + timestamp + "\"";
-			const string oauth_version = "oauth_version=\"1.0\"";
-
-			var parametersString = string.Concat(
-				"oauth_callback=", oauthCallbackUrl,
-				"&oauth_consumer_key=", consumerKey,
-				"&oauth_nonce=", nonce,
-				"&oauth_signature_method=HMAC-SHA1", 
-				"&oauth_timestamp=", timestamp,
-				"&oauth_version=1.0");
-			var signString = string.Concat("POST", "&", Uri.EscapeDataString(requestTokenUrl), "&",
-				Uri.EscapeDataString(parametersString));
-			var signKey = Uri.EscapeDataString(consumerSecret) + "&" /*no token_secret yet*/;
-			var sign = Sign(signKey, signString);
-			var oauth_signature = "oauth_signature=\"" + Uri.EscapeDataString(sign) + "\"";
-// ReSharper restore InconsistentNaming
-			
-
-			var authHeaderValue = string.Concat("OAuth ", string.Join(", ", 
-				oauth_callback, oauth_consumer_key, oauth_nonce, oauth_signature_method, oauth_timestamp, oauth_signature, oauth_version));
+			var authHeaderValue = MakeAuthHeader(data.Id.ToString().ToLowerInvariant());
 
 			using (var http = new HttpClient())
 			{
-				string body = string.Empty;
+				var body = string.Empty;
 				try
 				{
 					http.BaseAddress = new Uri(apiUrl);
@@ -111,23 +126,12 @@ namespace AGO.Core.Controllers.Security.OAuth
 			}
 		}
 
-		private string Sign(string key, string signString)
-		{
-			var keyBytes = Encoding.ASCII.GetBytes(key);
-			using (var hmac = new HMACSHA1(keyBytes))
-			{
-				var hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(signString));
-				return Convert.ToBase64String(hash);
-			}
-		}
-
 		public async Task<string> QueryUserId(OAuthDataModel data, NameValueCollection parameters)
 		{
 			var body = string.Empty;
 			try
 			{
 				var twiData = (TwitterOAuthDataModel) data;
-// ReSharper disable InconsistentNaming
 				var oauth_token_value = parameters["oauth_token"];
 				var oauth_verifier_value = parameters["oauth_verifier"];
 
@@ -136,35 +140,7 @@ namespace AGO.Core.Controllers.Security.OAuth
 						string.Format("Request token and recived token does not match. Request token '{0}', recieved token '{1}'", 
 						twiData.Token, oauth_token_value));
 
-				//Exchange request token to access token and get user id in one request
-				var nonce = Uri.EscapeDataString(Convert.ToBase64String(Guid.NewGuid().ToByteArray()));
-				var accessTokenUrl = apiUrl + "oauth/access_token";
-				var timestamp = UnixTimeStampUTC().ToString(CultureInfo.InvariantCulture);
-
-				//in signing order (alphabet)
-				var oauth_consumer_key = "oauth_consumer_key=\"" + consumerKey + "\"";
-				var oauth_nonce = "oauth_nonce=\"" + nonce + "\"";
-				const string oauth_signature_method = "oauth_signature_method=\"HMAC-SHA1\"";
-				var oauth_timestamp = "oauth_timestamp=\"" + timestamp + "\"";
-				var oauth_token = "oauth_token=\"" + oauth_token_value + "\"";
-				const string oauth_version = "oauth_version=\"1.0\"";
-
-				var parametersString = string.Concat(
-					"&oauth_consumer_key=", consumerKey,
-					"&oauth_nonce=", nonce,
-					"&oauth_signature_method=HMAC-SHA1",
-					"&oauth_timestamp=", timestamp,
-					"&oauth_token=", oauth_token_value,
-					"&oauth_verifier=", oauth_verifier_value,
-					"&oauth_version=1.0");
-				var signString = string.Concat("POST", "&", Uri.EscapeDataString(accessTokenUrl), "&",
-					Uri.EscapeDataString(parametersString));
-				var signKey = Uri.EscapeDataString(consumerSecret) + "&" /*no token_secret yet*/;
-				var sign = Sign(signKey, signString);
-				var oauth_signature = "oauth_signature=\"" + Uri.EscapeDataString(sign) + "\"";
-
-				var authHeaderValue = string.Concat("OAuth ", string.Join(", ",
-					 oauth_consumer_key, oauth_nonce, oauth_signature_method, oauth_signature, oauth_timestamp, oauth_token, oauth_version));
+				var authHeaderValue = MakeAuthHeader(token: oauth_token_value, verifier: oauth_verifier_value);
 
 				using (var http = new HttpClient())
 				{
@@ -185,15 +161,13 @@ namespace AGO.Core.Controllers.Security.OAuth
 					var parsedBody = body.Split('&', '=');
 					if (parsedBody.Length < 8)
 						throw new InvalidOperationException(string.Format("Response from twitter api contains less parts than required: {0}", body));
-					var token = parsedBody[1];
-					var secret = parsedBody[3];
+//					var token = parsedBody[1]; may be need later
+//					var secret = parsedBody[3];
 					var userId = parsedBody[5];
-					var screenName = parsedBody[7];
+//					var screenName = parsedBody[7];
 
 					return userId;
 				}
-
-// ReSharper enable InconsistentNaming
 			}
 			catch (Exception ex)
 			{
@@ -202,12 +176,22 @@ namespace AGO.Core.Controllers.Security.OAuth
 			}
 		}
 
-		private static int UnixTimeStampUTC()
+		private static string Sign(string key, string signString)
+		{
+			var keyBytes = Encoding.ASCII.GetBytes(key);
+			using (var hmac = new HMACSHA1(keyBytes))
+			{
+				var hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(signString));
+				return Convert.ToBase64String(hash);
+			}
+		}
+
+		private static int UnixTimestampUTC()
 		{
 			var utcNow = DateTime.UtcNow;
 			var unixEpoch = new DateTime(1970, 1, 1);
-			var unixTimeStamp = (int)(utcNow.Subtract(unixEpoch)).TotalSeconds;
-			return unixTimeStamp;
+			var unixTimestamp = (int)(utcNow.Subtract(unixEpoch)).TotalSeconds;
+			return unixTimestamp;
 		}
 
 		#region Configuration

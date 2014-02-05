@@ -9,6 +9,7 @@ using AGO.Core;
 using AGO.Core.Application;
 using AGO.Core.Config;
 using AGO.Core.Controllers;
+using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Modules;
 using AGO.WebApiApp.Controllers;
 using AGO.WebApiApp.Execution;
@@ -198,10 +199,12 @@ namespace AGO.WebApiApp.Application
 
 		protected void RegisterOAuthRoutes(RouteCollection routes)
 		{
-			routes.MapRoute("BeginFb", "oauth/begin/fb", new {controller = "OAuth", action = "BeginFacebookLoginFlow"});
-			routes.MapRoute("EndFb", "oauth/fb", new { controller = "OAuth", action = "EndFacebookLoginFlow" });
-			routes.MapRoute("BeginTwi", "oauth/begin/twi", new { controller = "OAuth", action = "BeginTwitterLoginFlow" });
-			routes.MapRoute("EndTwi", "oauth/twi", new { controller = "OAuth", action = "EndTwitterLoginFlow" });
+			Func<string, OAuthProvider, object> mkdef = (action, providerType) => new {controller = "OAuth", action, providerType};
+
+			routes.MapRoute("BeginFb", "oauth/begin/fb", mkdef("BeginLoginFlow", OAuthProvider.Facebook));
+			routes.MapRoute("EndFb", "oauth/fb", mkdef("EndLoginFlow", OAuthProvider.Facebook));
+			routes.MapRoute("BeginTwi", "oauth/begin/twi", mkdef("BeginLoginFlow", OAuthProvider.Twitter));
+			routes.MapRoute("EndTwi", "oauth/twi", mkdef("EndLoginFlow", OAuthProvider.Twitter));
 		}
 		
 		#endregion
