@@ -200,6 +200,8 @@ namespace AGO.WebApiApp.Application
 		{
 			routes.MapRoute("BeginFb", "oauth/begin/fb", new {controller = "OAuth", action = "BeginFacebookLoginFlow"});
 			routes.MapRoute("EndFb", "oauth/fb", new { controller = "OAuth", action = "EndFacebookLoginFlow" });
+			routes.MapRoute("BeginTwi", "oauth/begin/twi", new { controller = "OAuth", action = "BeginTwitterLoginFlow" });
+			routes.MapRoute("EndTwi", "oauth/twi", new { controller = "OAuth", action = "EndTwitterLoginFlow" });
 		}
 		
 		#endregion

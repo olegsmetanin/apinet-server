@@ -38,8 +38,9 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.OAuthUserId);
 
 			Create.CoreModelTable<OAuthDataModel>()
-				.WithValueColumn<FacebookOAuthDataModel>(m => m.RedirectUrl);
-			
+				.WithValueColumn<OAuthDataModel>(m => m.RedirectUrl)
+				.WithValueColumn<TwitterOAuthDataModel>(m => m.Token)
+				.WithValueColumn<TwitterOAuthDataModel>(m => m.TokenSecret);
 			Create.CoreModelTable<UserFilterModel>()
 				.WithValueColumn<UserFilterModel>(m => m.Name)
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)

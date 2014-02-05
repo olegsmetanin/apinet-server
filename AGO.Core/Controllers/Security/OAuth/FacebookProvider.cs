@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Net;
+using System.Collections.Specialized;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AGO.Core.Model.Security;
-using FluentNHibernate.Utils;
 using Newtonsoft.Json.Linq;
 
 namespace AGO.Core.Controllers.Security.OAuth
@@ -25,25 +23,21 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 		public OAuthDataModel CreateData()
 		{
-			return new FacebookOAuthDataModel();
+			return new OAuthDataModel();
 		}
 
 		public Task<string> PrepareForLogin(OAuthDataModel data, string sourceUrl)
 		{
 			if (data == null)
 				throw new ArgumentNullException("data");
-			if (!(data is FacebookOAuthDataModel))
-				throw new ArgumentException("Invalid type of provider oauth data", "data");
 			if (string.IsNullOrWhiteSpace(sourceUrl))
 				throw new ArgumentNullException("sourceUrl");
 
-			var fbData = (FacebookOAuthDataModel) data;
-			fbData.RedirectUrl = sourceUrl;
-			sp.CurrentSession.SaveOrUpdate(fbData);
+			sp.CurrentSession.SaveOrUpdate(data);
 			sp.FlushCurrentSession();
 
-			var fbUrl = string.Concat(url, "?response_type=code&client_id=", appId, 
-				"&state=", fbData.Id.ToString().ToLowerInvariant(),
+			var fbUrl = string.Concat(loginUrl, "?response_type=code&client_id=", appId, 
+				"&state=", data.Id.ToString().ToLowerInvariant(),
 				"&redirect_uri=", redirectUrl);
 			return Task.FromResult(fbUrl);
 		}
@@ -67,15 +61,14 @@ namespace AGO.Core.Controllers.Security.OAuth
 		/// And this article provide great explanation for deadlock scenario too
 		/// http://msdn.microsoft.com/en-us/magazine/jj991977.aspx Figure 3
 		/// </summary>
-		public async Task<string> QueryUserId(OAuthDataModel data, string code)
+		public async Task<string> QueryUserId(OAuthDataModel data, NameValueCollection parameters)
 		{
-			var fbData = (FacebookOAuthDataModel) data;
-			var exchangeUrl = "https://graph.facebook.com/oauth/access_token?client_id=" + appId +
-			                  "&redirect_uri=" + redirectUrl +
-			                  "&client_secret=" + appSecret +
-			                  "&code=" + code;
 			try
 			{
+				var code = parameters["code"];
+				var exchangeUrl = string.Concat(graphUrl, "/oauth/access_token?client_id=", appId,
+					"&redirect_uri=", redirectUrl, "&client_secret=", appSecret, "&code=", code);
+
 				using (var http = new HttpClient())
 				{
 					var response = await http.GetStringAsync(exchangeUrl).ConfigureAwait(false);
@@ -100,21 +93,27 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 		#region Configuration
 
-		private string url;
+		private string loginUrl;
+		private string graphUrl;
 		private string appId;
 		private string appSecret;
 		private string redirectUrl;
 
-		private const string UrlConfigKey = "Url";
+		private const string LoginUrlConfigKey = "LoginUrl";
+		private const string GraphUrlConfigKey = "GraphUrl";
 		private const string AppIdConfigKey = "AppId";
 		private const string AppSecretConfigKey = "AppSecret";
 		private const string RedirectUrlConfigKey = "RedirectUrl";
 
 		protected override string DoGetConfigProperty(string key)
 		{
-			if (UrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			if (LoginUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
-				return url;
+				return loginUrl;
+			}
+			if (GraphUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			{
+				return graphUrl;
 			}
 			if (AppIdConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
@@ -133,10 +132,14 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 		protected override void DoSetConfigProperty(string key, string value)
 		{
-			if (UrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			if (LoginUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
-				url = value;
-			} 
+				loginUrl = value;
+			}
+			else if (GraphUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
+			{
+				graphUrl = value;
+			}
 			else if (AppIdConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
 				appId = value;

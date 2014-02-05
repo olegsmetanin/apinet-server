@@ -79,20 +79,34 @@ namespace AGO.Core
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user3);
-			var artem1 = new UserModel
+			var artem1_fb = new UserModel
 			{
 				Creator = admin,
-				Login = "artem1@apinet-test.com",
+				Login = "artem1@facebook.com",
 				PwdHash = pwdHash,
 				Active = true,
-				LastName = "Naumov",
+				LastName = "Naumov (fb)",
 				Name = "Artem",
 				MiddleName = "",
 				SystemRole = SystemRole.Administrator,
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "100007697794498"
 			};
-			_CrudDao.Store(artem1);
+			var artem1_twi = new UserModel
+			{
+				Creator = admin,
+				Login = "artem1@twitter.com",
+				PwdHash = pwdHash,
+				Active = true,
+				LastName = "Naumov (twi)",
+				Name = "Artem",
+				MiddleName = "",
+				SystemRole = SystemRole.Administrator,
+				OAuthProvider = OAuthProvider.Twitter,
+				OAuthUserId = "1632745315"
+			};
+			_CrudDao.Store(artem1_fb);
+			_CrudDao.Store(artem1_twi);
 			var olegsmith = new UserModel
 			{
 				Creator = admin,

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Specialized;
+using System.Threading.Tasks;
 using AGO.Core.Model.Security;
 
 namespace AGO.Core.Controllers.Security.OAuth
@@ -33,6 +34,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 		/// Query provider and return provider user identifier
 		/// </summary>
 		/// <returns>Provider-specific user identifier</returns>
-		Task<string> QueryUserId(OAuthDataModel data, string code);
+		Task<string> QueryUserId(OAuthDataModel data, NameValueCollection parameters);
 	}
 }
