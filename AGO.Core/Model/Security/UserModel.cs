@@ -122,14 +122,5 @@ namespace AGO.Core.Model.Security
 				FullName = string.Join(" ", LastName, Name, MiddleName);
 			}
 		}
-
-		/// <summary>
-		/// Временное хранилище для токена залогиненного пользователя.
-		/// Используется только из-за того, что метод AuthController.CurrentUser() много где используется
-		/// и менять его сигнатуру долго.
-		/// TODO: хак, надо будет переделать по нормальному
-		/// </summary>
-		[NotMapped, MetadataExclude, JsonProperty]
-		public virtual Guid Token { get; set; }
 	}
 }

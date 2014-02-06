@@ -1,6 +1,5 @@
 using System;
 using AGO.Core.Application;
-using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
@@ -107,14 +106,16 @@ namespace AGO.Tasks.Test
 			_SessionProvider.CloseCurrentSession();
 		}
 
-		protected UserModel Login(string email, string pwd)
+		protected UserModel Login(string email)
 		{
-			return IocContainer.GetInstance<AuthController>().Login(email, pwd) as UserModel;
+			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>().Where(m => m.Login == email).SingleOrDefault();
+			IocContainer.GetInstance<AuthController>().LoginInternal(user);
+			return user;
 		}
 
 		protected UserModel LoginAdmin()
 		{
-			return Login("admin@apinet-test.com", "1");
+			return Login("admin@apinet-test.com");
 		}
 
 		protected void Logout()

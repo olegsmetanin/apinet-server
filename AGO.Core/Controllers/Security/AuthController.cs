@@ -5,8 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
-using AGO.Core.Filters;
-using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
@@ -14,60 +12,32 @@ using AGO.Core.Modules.Attributes;
 
 namespace AGO.Core.Controllers.Security
 {
-	public class AuthController : AbstractService
+	public sealed class AuthController : AbstractService
 	{
 		#region Properties, fields, constructors
 
-		protected readonly IJsonService _JsonService;
+		private readonly ISessionProvider sessionProvider;
 
-		protected readonly IFilteringService _FilteringService;
+		private readonly IStateStorage<object> stateStorage;
 
-		protected readonly ICrudDao _CrudDao;
-
-		protected readonly IFilteringDao _FilteringDao;
-
-		protected readonly ISessionProvider _SessionProvider;
-
-		protected readonly IStateStorage<object> _StateStorage;
-
-		protected readonly ILocalizationService _LocalizationService;
+		private readonly ILocalizationService localizationService;
 
 		public AuthController(
-			IJsonService jsonService,
-			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
 			ISessionProvider sessionProvider,
 			IStateStorage<object> stateStorage,
 			ILocalizationService localizationService)
 		{
-			if (jsonService == null)
-				throw new ArgumentNullException("jsonService");
-			_JsonService = jsonService;
-
-			if (filteringService == null)
-				throw new ArgumentNullException("filteringService");
-			_FilteringService = filteringService;
-
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
-
-			if (filteringDao == null)
-				throw new ArgumentNullException("filteringDao");
-			_FilteringDao = filteringDao;
-
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
+			this.sessionProvider = sessionProvider;
 
 			if (stateStorage == null)
 				throw new ArgumentNullException("stateStorage");
-			_StateStorage = stateStorage;
+			this.stateStorage = stateStorage;
 
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
-			_LocalizationService = localizationService;
+			this.localizationService = localizationService;
 		}
 
 		#endregion
@@ -79,11 +49,11 @@ namespace AGO.Core.Controllers.Security
 		{
 			var validation = new ValidationResult();
 
-			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>()
+			var user = sessionProvider.CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.Login == email.TrimSafe()).Take(1).List().FirstOrDefault();
 			if (user == null)
 			{
-				validation.AddFieldErrors("email", _LocalizationService.MessageForException(new NoSuchUserException()));
+				validation.AddFieldErrors("email", localizationService.MessageForException(new NoSuchUserException()));
 				return validation;
 			}
 
@@ -92,26 +62,28 @@ namespace AGO.Core.Controllers.Security
 				cryptoProvider.ComputeHash(Encoding.Default.GetBytes(password.TrimSafe())));
 			if (!string.Equals(user.PwdHash, pwdHash))
 			{
-				validation.AddFieldErrors("password", _LocalizationService.MessageForException(new InvalidPwdException()));
+				validation.AddFieldErrors("password", localizationService.MessageForException(new InvalidPwdException()));
 				return validation;
 			}
 			
 			LoginInternal(user);
 			
-			return user;
+			return CurrentUserDto();
 		}
 
 		public void LoginInternal(UserModel user)
 		{
 			//TODO избавиться от сессии (stateless)
-			user.Token = RegisterToken(user.Login);
-			_StateStorage["CurrentUser"] = user;
+			stateStorage["CurrentUser"] = user;
+			stateStorage["CurrentUserToken"] = RegisterToken(user.Login).ToString();
 		}
 
 		[JsonEndpoint]
 		public bool Logout()
 		{
-			_StateStorage.Remove("CurrentUser");
+			//TODO избавиться от сессии (stateless)
+			stateStorage.Remove("CurrentUser");
+			stateStorage.Remove("CurrentUserToken");
 			return true;
 		}
 
@@ -121,10 +93,18 @@ namespace AGO.Core.Controllers.Security
 			return CurrentUser() != null;
 		}
 
-		[JsonEndpoint, RequireAuthorization]
 		public UserModel CurrentUser()
 		{
-			return  _StateStorage["CurrentUser"] as UserModel;
+			//TODO избавиться от сессии (stateless)
+			return  stateStorage["CurrentUser"] as UserModel;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public object CurrentUserDto()
+		{
+			//TODO избавиться от сессии (stateless)
+			var user = stateStorage["CurrentUser"] as UserModel;
+			return user == null ? null : UserToJsonUser(user, stateStorage["CurrentUserToken"] as string);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -147,7 +127,7 @@ insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") valu
 				throw new ArgumentNullException("login");
 
 			var token = Guid.NewGuid();
-			var conn = _SessionProvider.CurrentSession.Connection;
+			var conn = sessionProvider.CurrentSession.Connection;
 			var cmd = conn.CreateCommand();
 			cmd.CommandText = RegisterTokenCmd;
 
@@ -180,22 +160,25 @@ insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") valu
 
 		#endregion
 
-		//Может понадобиться, когда из UserModel будем удалять Token и переделывать по нормальному
-//		#region Helper methods
-//
-//		protected object UserToJsonUser(UserModel user, string token)
-//		{
-//			return new
-//			{
-//				id = user.Id,
-//				firstName = user.Name,
-//				lastName = user.LastName,
-//				email = user.Login,
-//				admin = user.SystemRole == SystemRole.Administrator,
-//				token
-//			};
-//		}
-//
-//		#endregion
+		#region Helper methods
+
+		private object UserToJsonUser(UserModel user, string token)
+		{
+			return new
+			{
+				user.Id,
+				user.Login,
+				user.Name,
+				user.LastName,
+				user.MiddleName,
+				user.FullName,
+				user.FIO,
+				user.SystemRole,
+				user.AvatarUrl,
+				Token = token
+			};
+		}
+
+		#endregion
 	}
 }

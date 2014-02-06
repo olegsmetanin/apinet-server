@@ -185,7 +185,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
-			Login(pIvanov.User.Login, "1");
+			Login(pIvanov.User.Login);
 			controller.AgreeTask(task.Id, "good job, bro");
 			_SessionProvider.FlushCurrentSession();
 
@@ -214,7 +214,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
-			Login(pPetrov.User.Login, "1");
+			Login(pPetrov.User.Login);
 			try
 			{
 				controller.AgreeTask(task.Id, "good job, bro");
@@ -244,7 +244,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
-			Login(pIvanov.User.Login, "1");
+			Login(pIvanov.User.Login);
 			try
 			{
 				controller.AgreeTask(task.Id, "good job, bro");
@@ -276,7 +276,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
-			Login(pIvanov.User.Login, "1");
+			Login(pIvanov.User.Login);
 			controller.RevokeAgreement(task.Id);
 			_SessionProvider.FlushCurrentSession();
 			
@@ -308,7 +308,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
-			Login(pPetrov.User.Login, "1");
+			Login(pPetrov.User.Login);
 			try
 			{
 				controller.RevokeAgreement(task.Id);
@@ -341,7 +341,7 @@ namespace AGO.Tasks.Test
 			_SessionProvider.FlushCurrentSession();
 
 			Logout();
-			Login(pIvanov.User.Login, "1");
+			Login(pIvanov.User.Login);
 			try
 			{
 				controller.RevokeAgreement(task.Id);
