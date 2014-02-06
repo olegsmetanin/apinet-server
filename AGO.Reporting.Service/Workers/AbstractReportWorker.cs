@@ -91,7 +91,12 @@ namespace AGO.Reporting.Service.Workers
 		public void Stop()
 		{
 			if (Finished) return;
-			TokenSource.Cancel();
+			
+			//May be stop called early than token will be created in start method
+			if (TokenSource != null)
+				TokenSource.Cancel();
+			else
+				Finished = true;
 		}
 
 		private void RegisterStart()
@@ -163,6 +168,13 @@ namespace AGO.Reporting.Service.Workers
 		/// </summary>
 		private IReportGeneratorResult IntrenalWrappedStart()
 		{
+			//Stopped early than really started
+			if (Finished)
+			{
+				TokenSource.Cancel();
+				TokenSource.Token.ThrowIfCancellationRequested();
+			}
+
 			var innerTask = Task<IReportGeneratorResult>.Factory.StartNew(
 				() =>
 				{

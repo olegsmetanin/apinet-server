@@ -113,22 +113,35 @@ namespace AGO.Core.Tests
 			};
 			wq.Snapshot().Returns(testSnapshot);
 			var ns = Substitute.For<INotificationService>();
+			WorkQueueWatchService.ReportQueuePosition[] catched1 = null;
+			WorkQueueWatchService.ReportQueuePosition[] catched2 = null;
+			ns.When(x => x.EmitWorkQueueChanged(user1, Arg.Any<object>())).Do(call =>
+			{
+				catched1 = call.Arg<WorkQueueWatchService.ReportQueuePosition[]>();
+			});
+			ns.When(x => x.EmitWorkQueueChanged(user2, Arg.Any<object>())).Do(call =>
+			{
+				catched2 = call.Arg<WorkQueueWatchService.ReportQueuePosition[]>();
+			});
 
 			var watcher = new WorkQueueWatchService(ns, wq);
 
 			wq.Received().Snapshot();
-			ns.Received().EmitWorkQueueChanged(user1, Arg.Is<object>(x =>
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Length == 3 &&
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Any(rqp => rqp.Project == proj1 && rqp.Position == 3) &&
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Any(rqp => rqp.Project == proj1 && rqp.Position == 5) &&
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Any(rqp => rqp.Project == proj2 && rqp.Position == 1)
-				));
-			ns.Received().EmitWorkQueueChanged(user2, Arg.Is<object>(x =>
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Length == 3 &&
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Any(rqp => rqp.Project == proj1 && rqp.Position == 2) &&
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Any(rqp => rqp.Project == proj2 && rqp.Position == 4) &&
-				JsonConvert.DeserializeObject<WorkQueueWatchService.ReportQueuePosition[]>(x as string).Any(rqp => rqp.Project == proj2 && rqp.Position == 7)
-				));
+			
+			ns.Received(1).EmitWorkQueueChanged(user1, Arg.Any<object>());
+			Assert.IsNotNull(catched1);
+			Assert.That(catched1.Length, Is.EqualTo(3));
+			Assert.That(catched1, Has.Exactly(1).Matches<WorkQueueWatchService.ReportQueuePosition>(rqp => rqp.Project == proj1 && rqp.Position == 3));
+			Assert.That(catched1, Has.Exactly(1).Matches<WorkQueueWatchService.ReportQueuePosition>(rqp => rqp.Project == proj1 && rqp.Position == 5));
+			Assert.That(catched1, Has.Exactly(1).Matches<WorkQueueWatchService.ReportQueuePosition>(rqp => rqp.Project == proj2 && rqp.Position == 1));
+			
+			ns.Received(1).EmitWorkQueueChanged(user2, Arg.Any<object>());
+			Assert.IsNotNull(catched2);
+			Assert.That(catched2, Has.Exactly(1).Matches<WorkQueueWatchService.ReportQueuePosition>(rqp => rqp.Project == proj1 && rqp.Position == 2));
+			Assert.That(catched2, Has.Exactly(1).Matches<WorkQueueWatchService.ReportQueuePosition>(rqp => rqp.Project == proj2 && rqp.Position == 4));
+			Assert.That(catched2, Has.Exactly(1).Matches<WorkQueueWatchService.ReportQueuePosition>(rqp => rqp.Project == proj2 && rqp.Position == 7));
+
+			watcher.Dispose();
 		}
 	}
 }

@@ -64,6 +64,8 @@ namespace AGO.Reporting.Tests
 			var setting = session().Get<ReportSettingModel>(settingId);
 			var task = new ReportTaskModel
 			           	{
+							Project = "Nunit proj",
+							Culture = "en",
 			           		Name = "NUnit " + name,
 			           		ReportSetting = setting,
 			           		Parameters = param,
