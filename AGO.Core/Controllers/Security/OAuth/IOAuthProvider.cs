@@ -34,6 +34,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 		/// Query provider and return provider user identifier
 		/// </summary>
 		/// <returns>Provider-specific user identifier</returns>
-		Task<string> QueryUserId(OAuthDataModel data, NameValueCollection parameters);
+		Task<UserModel> QueryUserId(OAuthDataModel data, NameValueCollection parameters);
 	}
 }

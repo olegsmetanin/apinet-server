@@ -90,6 +90,9 @@ namespace AGO.Core.Model.Security
 		public virtual ISet<DepartmentModel> Departments { get { return _Departments; } set { _Departments = value; } }
 		private ISet<DepartmentModel> _Departments = new HashSet<DepartmentModel>();
 
+		[NotLonger(1024), JsonProperty]
+		public virtual string AvatarUrl { get; set; }
+
 		[MetadataExclude]
 		public virtual OAuthProvider? OAuthProvider { get; set; }
 

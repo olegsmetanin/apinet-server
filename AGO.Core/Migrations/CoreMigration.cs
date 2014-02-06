@@ -34,6 +34,7 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.JobName)
 				.AddValueColumn<UserModel>(m => m.WhomJobName)
 				.AddValueColumn<UserModel>(m => m.SystemRole)
+				.AddValueColumn<UserModel>(m => m.AvatarUrl)
 				.AddValueColumn<UserModel>(m => m.OAuthProvider)
 				.AddValueColumn<UserModel>(m => m.OAuthUserId);
 

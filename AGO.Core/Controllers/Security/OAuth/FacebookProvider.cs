@@ -7,23 +7,22 @@ using Newtonsoft.Json.Linq;
 
 namespace AGO.Core.Controllers.Security.OAuth
 {
-	public class FacebookProvider: AbstractService, IOAuthProvider
+	public class FacebookProvider: AbstractOAuthProvider
 	{
-		public OAuthProvider Type { get { return OAuthProvider.Facebook; } }
-
-		public OAuthDataModel CreateData()
+		public FacebookProvider(ISessionProvider sessionProvider) : base(sessionProvider)
 		{
-			return new OAuthDataModel();
 		}
 
-		public Task<string> PrepareForLogin(OAuthDataModel data)
+		public override OAuthProvider Type { get { return OAuthProvider.Facebook; } }
+
+		public override Task<string> PrepareForLogin(OAuthDataModel data)
 		{
 			if (data == null)
 				throw new ArgumentNullException("data");
 
 			var fbUrl = string.Concat(loginUrl, "?response_type=code&client_id=", appId, 
 				"&state=", data.Id.ToString().ToLowerInvariant(),
-				"&redirect_uri=", redirectUrl);
+				"&redirect_uri=", RedirectUrl);
 			return Task.FromResult(fbUrl);
 		}
 
@@ -46,13 +45,13 @@ namespace AGO.Core.Controllers.Security.OAuth
 		/// And this article provide great explanation for deadlock scenario too
 		/// http://msdn.microsoft.com/en-us/magazine/jj991977.aspx Figure 3
 		/// </summary>
-		public async Task<string> QueryUserId(OAuthDataModel data, NameValueCollection parameters)
+		public override async Task<UserModel> QueryUserId(OAuthDataModel data, NameValueCollection parameters)
 		{
 			try
 			{
 				var code = parameters["code"];
 				var exchangeUrl = string.Concat(graphUrl, "/oauth/access_token?client_id=", appId,
-					"&redirect_uri=", redirectUrl, "&client_secret=", appSecret, "&code=", code);
+					"&redirect_uri=", RedirectUrl, "&client_secret=", appSecret, "&code=", code);
 
 				using (var http = new HttpClient())
 				{
@@ -65,8 +64,14 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 					var jobj = JObject.Parse(response);
 					var userId = jobj.TokenValue("id");
-					
-					return userId;
+
+					var user = FindUserById(userId);
+					if (user.AvatarUrl.IsNullOrWhiteSpace())
+					{
+						UpdateAvatar(user, "https://graph.facebook.com/" + userId + "/picture?width=23&height=23");
+					}
+
+					return user;
 				}
 			}
 			catch (Exception ex)
@@ -82,13 +87,11 @@ namespace AGO.Core.Controllers.Security.OAuth
 		private string graphUrl;
 		private string appId;
 		private string appSecret;
-		private string redirectUrl;
 
 		private const string LoginUrlConfigKey = "LoginUrl";
 		private const string GraphUrlConfigKey = "GraphUrl";
 		private const string AppIdConfigKey = "AppId";
 		private const string AppSecretConfigKey = "AppSecret";
-		private const string RedirectUrlConfigKey = "RedirectUrl";
 
 		protected override string DoGetConfigProperty(string key)
 		{
@@ -107,10 +110,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 			if (AppSecretConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return appSecret;
-			}
-			if (RedirectUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
-			{
-				return redirectUrl;
 			}
 			return base.DoGetConfigProperty(key);
 		}
@@ -132,10 +131,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 			else if (AppSecretConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
 			{
 				appSecret = value;
-			}
-			else if (RedirectUrlConfigKey.Equals(key, StringComparison.InvariantCultureIgnoreCase))
-			{
-				redirectUrl = value;
 			}
 			else
 				base.DoSetConfigProperty(key, value);
