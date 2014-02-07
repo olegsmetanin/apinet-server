@@ -118,6 +118,7 @@ namespace AGO.Core.Controllers
 					Type = model.TypeId != null && !default(Guid).Equals(model.TypeId)
 						? _CrudDao.Get<ProjectTypeModel>(model.TypeId)
 						: null,
+					VisibleForAll = model.VisibleForAll,
 					Status = ProjectStatus.New,
 				};
 
@@ -144,6 +145,15 @@ namespace AGO.Core.Controllers
 						Project = newProject
 					});
 				}
+
+				_CrudDao.Store(new ProjectParticipantModel
+				{
+					Project = newProject,
+					User = newProject.Creator,
+					//TODO will be replaced by groups collection
+					GroupName = "Administrator",
+					IsDefaultGroup = true
+				});
 
 				return newProject;
 			}

@@ -42,6 +42,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<OAuthDataModel>(m => m.RedirectUrl)
 				.WithValueColumn<TwitterOAuthDataModel>(m => m.Token)
 				.WithValueColumn<TwitterOAuthDataModel>(m => m.TokenSecret);
+
 			Create.CoreModelTable<UserFilterModel>()
 				.WithValueColumn<UserFilterModel>(m => m.Name)
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)
@@ -91,6 +92,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectModel>(m => m.Name)
 				.WithValueColumn<ProjectModel>(m => m.Description)
 				.WithRefColumn<ProjectModel>(m => m.Type)
+				.WithValueColumn<ProjectModel>(m => m.VisibleForAll)
 				.WithValueColumn<ProjectModel>(m => m.Status);
 
 			Create.SecureModelTable<ProjectStatusHistoryModel>()

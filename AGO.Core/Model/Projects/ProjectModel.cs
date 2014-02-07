@@ -29,20 +29,26 @@ namespace AGO.Core.Model.Projects
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? TypeId { get; set; }
 
+		/// <summary>
+		/// Project is visible in projects list for all authenticated users
+		/// </summary>
+		[JsonProperty]
+		public virtual bool VisibleForAll { get; set; }
+
 		[JsonProperty]
 		public virtual ProjectStatus Status { get; set; }
 
 		[PersistentCollection(CascadeType = CascadeType.Delete)]
-		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return _StatusHistory; } set { _StatusHistory = value; } }
-		private ISet<ProjectStatusHistoryModel> _StatusHistory = new HashSet<ProjectStatusHistoryModel>();
+		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return statusHistory; } set { statusHistory = value; } }
+		private ISet<ProjectStatusHistoryModel> statusHistory = new HashSet<ProjectStatusHistoryModel>();
 
 		[PersistentCollection(CascadeType = CascadeType.Delete)]
-		public virtual ISet<ProjectParticipantModel> Participants { get { return _Participants; } set { _Participants = value; } }
-		private ISet<ProjectParticipantModel> _Participants = new HashSet<ProjectParticipantModel>();
+		public virtual ISet<ProjectParticipantModel> Participants { get { return participants; } set { participants = value; } }
+		private ISet<ProjectParticipantModel> participants = new HashSet<ProjectParticipantModel>();
 
 		[PersistentCollection(CascadeType = CascadeType.Delete)]
-		public virtual ISet<ProjectToTagModel> Tags { get { return _Tags; } set { _Tags = value; } }
-		private ISet<ProjectToTagModel> _Tags = new HashSet<ProjectToTagModel>();
+		public virtual ISet<ProjectToTagModel> Tags { get { return tags; } set { tags = value; } }
+		private ISet<ProjectToTagModel> tags = new HashSet<ProjectToTagModel>();
 
 		#endregion
 
