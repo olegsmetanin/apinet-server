@@ -150,6 +150,19 @@ namespace AGO.Core.Controllers.Security
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupUsers(string term, [InRange(0, null)] int page)
+		{
+			var query = _SessionProvider.CurrentSession.QueryOver<UserModel>()
+				.Where(m => m.Active)
+				.OrderBy(m => m.FullName).Asc;
+
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
+
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
+		}
+			
+		[JsonEndpoint, RequireAuthorization]
 		public string GetRole()
 		{
 			return string.Empty;
