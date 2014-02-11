@@ -73,11 +73,14 @@
     <Compile Include="Controllers\DTO\DictionaryAdapters.cs" />
     <Compile Include="Controllers\DTO\ModelAdapter.cs" />
     <Compile Include="Controllers\DTO\ModelDTO.cs" />
+    <Compile Include="Controllers\DTO\ProjectAdapter.cs" />
+    <Compile Include="Controllers\DTO\ProjectDTO.cs" />
     <Compile Include="Controllers\DTO\StatusHistoryDTO.cs" />
     <Compile Include="Controllers\DTO\TaskAdapter.cs" />
     <Compile Include="Controllers\DTO\TaskDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTagDTO.cs" />
     <Compile Include="Controllers\DTO\TaskTypeDTO.cs" />
+    <Compile Include="Controllers\ProjectController.cs" />
     <Compile Include="Controllers\TaskPredefinedFilter.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Migrations\TasksBootstrapMigration.cs" />
@@ -85,8 +88,6 @@
     <Compile Include="Model\Dictionary\TaskTagModel.cs" />
     <Compile Include="Model\Dictionary\TaskTypeModel.cs" />
     <Compile Include="Model\ITasksModel.cs" />
-    <Compile Include="Model\IStatusHistoryRecordModel.cs" />
-    <Compile Include="Model\StatusChangeHelper.cs" />
     <Compile Include="Model\Task\TaskAgreementModel.cs" />
     <Compile Include="Model\Task\TaskCustomPropertyModel.cs" />
     <Compile Include="Model\Task\TaskExecutorModel.cs" />

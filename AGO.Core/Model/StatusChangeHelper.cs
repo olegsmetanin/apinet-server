@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using AGO.Core;
 using System.Linq;
+using System.Linq.Expressions;
 using AGO.Core.Model.Security;
 
-
-namespace AGO.Tasks.Model
+namespace AGO.Core.Model
 {
 
 	/// <summary>
 	/// Вспомогательный класс для синхронного изменения статуса объекта и его истории статусов
-	/// TODO: should be in the Core
 	/// </summary>
 	public static class StatusChangeHelper
 	{
@@ -59,7 +56,7 @@ namespace AGO.Tasks.Model
 			return currentRecord;
 		}
 
-		private static bool ChangeNeeded<TModel, TStatus, THistory>(TStatus current, TStatus newStatus, ICollection<THistory> history)
+		private static bool ChangeNeeded<TModel, TStatus, THistory>(TStatus current, TStatus newStatus, IEnumerable<THistory> history)
 			where THistory : class, IStatusHistoryRecordModel<TModel, TStatus>, new()
 		{
 			Func<TStatus, TStatus, bool> equals = (curr, next) => typeof(TStatus).IsValueType 

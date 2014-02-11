@@ -20,4 +20,23 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public DateTime? CreationTime { get; set; }
 	}
+
+	public class PropChangeDTO : ModelDTO
+	{
+		public PropChangeDTO()
+		{
+		}
+
+		public PropChangeDTO(Guid id, int? version, string prop, object value = null)
+		{
+			Id = id;
+			ModelVersion = version;
+			Prop = prop;
+			Value = value;
+		}
+
+		public string Prop { get; set; }
+
+		public object Value { get; set; }
+	}
 }

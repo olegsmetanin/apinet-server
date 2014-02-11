@@ -93,23 +93,4 @@ namespace AGO.Tasks.Controllers.DTO
 		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public string Comment;
 	}
-
-	public class TaskPropChangeDTO: ModelDTO
-	{
-		public TaskPropChangeDTO()
-		{
-		}
-
-		public TaskPropChangeDTO(Guid id, int? version, string prop, object value = null)
-		{
-			Id = id;
-			ModelVersion = version;
-			Prop = prop;
-			Value = value;
-		}
-
-		public string Prop { get; set; }
-
-		public object Value { get; set; }
-	}
 }

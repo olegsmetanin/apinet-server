@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Controllers;
 using AGO.Core.Localization;
+using AGO.Core.Model;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
-using AGO.Tasks.Model;
 using AGO.Tasks.Model.Task;
 
 namespace AGO.Tasks.Controllers.DTO

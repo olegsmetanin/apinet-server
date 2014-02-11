@@ -286,7 +286,7 @@ namespace AGO.Tasks.Test
 			var t = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			var inf = new TaskPropChangeDTO(t.Id, t.ModelVersion, "Content", "bla bla");
+			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", "bla bla");
 			controller.UpdateTask("not existing proj", inf);
 		}
 
@@ -296,7 +296,7 @@ namespace AGO.Tasks.Test
 			var t = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			var inf = new TaskPropChangeDTO(Guid.NewGuid(), t.ModelVersion, "Content", "bla bla");
+			var inf = new PropChangeDTO(Guid.NewGuid(), t.ModelVersion, "Content", "bla bla");
 			var ur = controller.UpdateTask(TestProject, inf);
 			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
 
@@ -310,7 +310,7 @@ namespace AGO.Tasks.Test
 			var t = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			var inf = new TaskPropChangeDTO(t.Id, t.ModelVersion, "Content", new {a = 1});
+			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", new {a = 1});
 			var ur = controller.UpdateTask(TestProject, inf);
 			_SessionProvider.FlushCurrentSession();
 
@@ -324,7 +324,7 @@ namespace AGO.Tasks.Test
 			var t = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			var inf = new TaskPropChangeDTO(t.Id, t.ModelVersion, "Content", "some test string");
+			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", "some test string");
 			var ur = controller.UpdateTask(TestProject, inf);
 			_SessionProvider.FlushCurrentSession();
 

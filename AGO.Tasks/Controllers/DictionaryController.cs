@@ -11,6 +11,7 @@ using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
 using AGO.Core.Modules.Attributes;
@@ -41,7 +42,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		private static IDictionary<string, LookupEntry[]> taskStatuses;
-		private static IDictionary<string, LookupEntry[]> taskPriorities;		
+		private static IDictionary<string, LookupEntry[]> taskPriorities;
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupTaskStatuses(string term, [InRange(0, null)] int page)
@@ -101,7 +102,7 @@ namespace AGO.Tasks.Controllers
     	{
     		var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
 
-    		if (_CrudDao.Exists<TaskModel>(q => q.Where(m => m.TaskType == taskType)))
+    		if (_CrudDao.Exists<TaskModel>(q => q.Where(m => m.TaskType.Id == taskType.Id)))
     			throw new CannotDeleteReferencedItemException();
 
     		_CrudDao.Delete(taskType);

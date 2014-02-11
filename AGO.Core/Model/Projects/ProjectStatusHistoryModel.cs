@@ -7,15 +7,15 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Projects
 {
-	public class ProjectStatusHistoryModel : SecureModel<Guid>
+	public class ProjectStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus>
 	{
 		#region Persistent
 
 		[JsonProperty, NotNull]
-		public virtual DateTime? StartDate { get; set; }
+		public virtual DateTime Start { get; set; }
 
 		[JsonProperty]
-		public virtual DateTime? EndDate { get; set; }
+		public virtual DateTime? Finish { get; set; }
 
 		[JsonProperty, NotNull]
 		public virtual ProjectModel Project { get; set; }
@@ -26,5 +26,21 @@ namespace AGO.Core.Model.Projects
 		public virtual ProjectStatus Status { get; set; }
 
 		#endregion
+
+		[NotMapped]
+		ProjectModel IStatusHistoryRecordModel<ProjectModel, ProjectStatus>.Holder
+		{
+			get { return Project; }
+			set { Project = value; }
+		}
+
+		/// <summary>
+		/// Открытая запись - запись о текущем статусе объекта
+		/// </summary>
+		[NotMapped]
+		public virtual bool IsOpen
+		{
+			get { return !Finish.HasValue; }
+		}
 	}
 }

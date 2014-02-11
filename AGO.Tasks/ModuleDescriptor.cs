@@ -42,7 +42,8 @@ namespace AGO.Tasks
             Services = new List<IServiceDescriptor>
             {
                 new AttributedWebServiceDescriptor<DictionaryController>(this),
-                new AttributedWebServiceDescriptor<TasksController>(this)
+                new AttributedWebServiceDescriptor<TasksController>(this),
+				new AttributedWebServiceDescriptor<ProjectController>(this)
             };
         }
     }

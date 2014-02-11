@@ -30,18 +30,18 @@ namespace AGO.Tasks.Controllers
     {
 		[JsonEndpoint, RequireAuthorization]
 		public bool TagTask(
-			[NotEmpty] Guid taskId,
+			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
 			var currentUser = _AuthController.CurrentUser();
 
 			var taskToTag = _SessionProvider.CurrentSession.QueryOver<TaskToTagModel>()
-				.Where(m => m.Task.Id == taskId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+				.Where(m => m.Task.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
 
 			if (taskToTag != null)
 				return false;
 
-			var task = _CrudDao.Get<TaskModel>(taskId, true);
+			var task = _CrudDao.Get<TaskModel>(modelId, true);
 			if ((task.Creator == null || !currentUser.Equals(task.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
 				throw new AccessForbiddenException();
 
@@ -61,13 +61,13 @@ namespace AGO.Tasks.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public bool DetagTask(
-			[NotEmpty] Guid taskId,
+			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
 			var currentUser = _AuthController.CurrentUser();
 
 			var taskToTag = _SessionProvider.CurrentSession.QueryOver<TaskToTagModel>()
-				.Where(m => m.Task.Id == taskId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+				.Where(m => m.Task.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
 
 			if (taskToTag == null)
 				return false;
@@ -224,7 +224,7 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UpdateResult<TaskViewDTO> UpdateTask([NotEmpty] string project, [NotNull] TaskPropChangeDTO data)
+		public UpdateResult<TaskViewDTO> UpdateTask([NotEmpty] string project, [NotNull] PropChangeDTO data)
 		{
 			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();

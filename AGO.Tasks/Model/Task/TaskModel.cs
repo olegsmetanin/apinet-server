@@ -4,6 +4,7 @@ using System.Linq;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
+using AGO.Core.Model;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Dictionary;

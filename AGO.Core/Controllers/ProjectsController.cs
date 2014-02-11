@@ -47,18 +47,18 @@ namespace AGO.Core.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public bool TagProject(
-			[NotEmpty] Guid projectId,
+			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
 			var currentUser = _AuthController.CurrentUser();
 
 			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-				.Where(m => m.Project.Id == projectId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+				.Where(m => m.Project.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
 
 			if (projectToTag != null)
 				return false;
 
-			var project = _CrudDao.Get<ProjectModel>(projectId, true);
+			var project = _CrudDao.Get<ProjectModel>(modelId, true);
 			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
 				throw new AccessForbiddenException();
 
@@ -78,13 +78,13 @@ namespace AGO.Core.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public bool DetagProject(
-			[NotEmpty] Guid projectId, 
+			[NotEmpty] Guid modelId, 
 			[NotEmpty] Guid tagId)
 		{
 			var currentUser = _AuthController.CurrentUser();
 
 			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-				.Where(m => m.Project.Id == projectId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
+				.Where(m => m.Project.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
 
 			if (projectToTag == null)
 				return false;
@@ -127,13 +127,8 @@ namespace AGO.Core.Controllers
 					return validation;
 
 				_CrudDao.Store(newProject);
-				
-				var statusHistoryRow = new ProjectStatusHistoryModel
-				{
-					StartDate = DateTime.Now,
-					Project = newProject,
-					Status = ProjectStatus.New
-				};
+
+				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, _AuthController.CurrentUser());
 				_CrudDao.Store(statusHistoryRow);
 
 				foreach (var tag in tagIds.Select(id => _CrudDao.Get<ProjectTagModel>(id)))

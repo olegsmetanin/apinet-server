@@ -96,8 +96,8 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectModel>(m => m.Status);
 
 			Create.SecureModelTable<ProjectStatusHistoryModel>()
-				.WithValueColumn<ProjectStatusHistoryModel>(m => m.StartDate)
-				.WithValueColumn<ProjectStatusHistoryModel>(m => m.EndDate)
+				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Start)
+				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Finish)
 				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Project)
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Status);
 

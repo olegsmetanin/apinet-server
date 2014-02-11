@@ -8,6 +8,9 @@ namespace AGO.Core.Controllers.Projects
 	public class ProjectViewModel
 	{
 		[JsonProperty]
+		public Guid Id { get; set; }
+
+		[JsonProperty]
 		public ProjectModel Model { get; private set; }
 
 		[JsonProperty]
@@ -18,6 +21,7 @@ namespace AGO.Core.Controllers.Projects
 		{
 			if (model == null)
 				throw new ArgumentNullException("model");
+			Id = model.Id;
 			Model = model;
 		}
 	}

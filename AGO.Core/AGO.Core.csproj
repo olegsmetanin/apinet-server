@@ -126,6 +126,7 @@
     <Compile Include="Model\ICoreModel.cs" />
     <Compile Include="Model\IFileResource.cs" />
     <Compile Include="Model\IProjectBoundModel.cs" />
+    <Compile Include="Model\IStatusHistoryRecordModel.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="Model\Security\OAuthDataModel.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Model\Security\UserFilterModel.cs" />
+    <Compile Include="Model\StatusChangeHelper.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
     <Compile Include="Notification\INotificationService.cs" />
     <Compile Include="Notification\NotificationService.cs" />

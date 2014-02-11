@@ -30,8 +30,7 @@ namespace AGO.Tasks
 
 		public void Populate()
 		{
-			var admin = CurrentSession.QueryOver<UserModel>()
-			    .Where(m => m.SystemRole == SystemRole.Administrator).Take(1).List().FirstOrDefault();
+			var admin = _CrudDao.Find<UserModel>(q => q.Where(m => m.Login == "admin@apinet-test.com"));
 			var context = new
 			{
 				Admin = admin,
@@ -45,8 +44,6 @@ namespace AGO.Tasks
 					.Where(m => m.Login == "artem1@apinet-test.com").SingleOrDefault(),
 				OlegSmith = CurrentSession.QueryOver<UserModel>()
 					.Where(m => m.Login == "olegsmith@apinet-test.com").SingleOrDefault(),
-				UrgentTag = CurrentSession.QueryOver<ProjectTagModel>()
-					.Where(m => m.Name == "Urgent").SingleOrDefault(),
 				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Creator.Id == admin.Id).List(),
 				ProjectType = new ProjectTypeModel
@@ -58,7 +55,7 @@ namespace AGO.Tasks
 			};
 
 			if (context.Admin == null || context.User1 == null || context.User2 == null ||
-					context.User3 == null || context.Artem1 == null || context.OlegSmith == null || context.UrgentTag == null)
+					context.User3 == null || context.Artem1 == null || context.OlegSmith == null)
 				throw new Exception("Test data inconsistency");
 
 			_CrudDao.Store(context.ProjectType);
@@ -86,18 +83,11 @@ namespace AGO.Tasks
 					ProjectCode = code ?? "tasks",
 					Name = name ?? "Task management project",
 					Description = description ?? "Description of task management project ",
-					Type = context.ProjectType,
-					Status = ProjectStatus.New,
+					Type = context.ProjectType
 				};
 				_CrudDao.Store(project);
 
-				_CrudDao.Store(new ProjectStatusHistoryModel
-				{
-					Creator = context.Admin,
-					StartDate = DateTime.Now,
-					Project = project,
-					Status = ProjectStatus.New
-				});
+				_CrudDao.Store(project.ChangeStatus(ProjectStatus.New, context.Admin));
 
 				var pcAdmin = new ProjectParticipantModel { User = context.Admin, Project = project, UserPriority = 50};
 				_CrudDao.Store(pcAdmin);
@@ -122,13 +112,6 @@ namespace AGO.Tasks
 				var pcOlegSmith = new ProjectParticipantModel { User = context.OlegSmith, Project = project, UserPriority = 15 };
 				_CrudDao.Store(pcOlegSmith);
 				project.Participants.Add(pcOlegSmith);
-
-				_CrudDao.Store(new ProjectToTagModel
-				{
-					Creator = context.Admin,
-					Project = project,
-					Tag = context.UrgentTag
-				});
 
 				foreach (var tag in context.AdminTags)
 				{

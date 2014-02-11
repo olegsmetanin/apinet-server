@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Attributes.Constraints;
@@ -38,7 +39,7 @@ namespace AGO.Core.Model.Projects
 		[JsonProperty]
 		public virtual ProjectStatus Status { get; set; }
 
-		[PersistentCollection(CascadeType = CascadeType.Delete)]
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
 		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return statusHistory; } set { statusHistory = value; } }
 		private ISet<ProjectStatusHistoryModel> statusHistory = new HashSet<ProjectStatusHistoryModel>();
 
@@ -46,7 +47,7 @@ namespace AGO.Core.Model.Projects
 		public virtual ISet<ProjectParticipantModel> Participants { get { return participants; } set { participants = value; } }
 		private ISet<ProjectParticipantModel> participants = new HashSet<ProjectParticipantModel>();
 
-		[PersistentCollection(CascadeType = CascadeType.Delete)]
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
 		public virtual ISet<ProjectToTagModel> Tags { get { return tags; } set { tags = value; } }
 		private ISet<ProjectToTagModel> tags = new HashSet<ProjectToTagModel>();
 
@@ -60,5 +61,15 @@ namespace AGO.Core.Model.Projects
 		}
 
 		#endregion
+
+		public virtual ProjectStatusHistoryModel ChangeStatus(ProjectStatus newStatus, UserModel changer)
+		{
+			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
+		}
+
+		public virtual bool IsAdmin(UserModel user)
+		{
+			return user != null && Participants.Any(p => user.Equals(p.User) && p.GroupName == "Administrator");
+		}
 	}
 }
