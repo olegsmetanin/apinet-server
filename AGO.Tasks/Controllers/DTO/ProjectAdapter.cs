@@ -57,4 +57,26 @@ namespace AGO.Tasks.Controllers.DTO
 			return dto;
 		}
 	}
+
+	public class ProjectMemberAdapter : ModelAdapter<ProjectMemberModel, ProjectMemberDTO>
+	{
+		private readonly ILocalizationService localization;
+		public ProjectMemberAdapter(ILocalizationService localizationService)
+		{
+			if (localizationService == null)
+				throw new ArgumentNullException("localizationService");
+
+			localization = localizationService;
+		}
+
+		public override ProjectMemberDTO Fill(ProjectMemberModel model)
+		{
+			var dto = base.Fill(model);
+			dto.FullName = model.FullName;
+			dto.Roles = TaskProjectRoles.Roles(localization, model.Roles);
+			dto.Current = TaskProjectRoles.RoleToLookupEntry(model.CurrentRole, localization);
+
+			return dto;
+		}
+	}
 }

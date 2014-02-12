@@ -102,6 +102,7 @@
     <Compile Include="Reports\FakeLongRunningDataGenerator.cs" />
     <Compile Include="Reports\SimpleTaskListDataGenerator.cs" />
     <Compile Include="Reports\TaskListReportParameters.cs" />
+    <Compile Include="TaskProjectRoles.cs" />
     <Compile Include="TasksException.cs" />
     <Compile Include="TestDataService.cs" />
   </ItemGroup>
@@ -128,6 +129,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Task\TaskStatus.ru.resx">
       <DependentUpon>TaskStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TaskProjectRoles.resx">
+      <DependentUpon>TaskProjectRoles.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TaskProjectRoles.ru.resx">
+      <DependentUpon>TaskProjectRoles.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TasksException.resx">
       <DependentUpon>TasksException.cs</DependentUpon>

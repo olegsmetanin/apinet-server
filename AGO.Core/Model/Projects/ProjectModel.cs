@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Attributes.Constraints;
@@ -13,7 +12,6 @@ namespace AGO.Core.Model.Projects
 	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel
 	{
 		public const int PROJECT_CODE_SIZE = 32;
-		public static readonly string ADMIN_GROUP = "Administrator";
 
 		#region Persistent
 

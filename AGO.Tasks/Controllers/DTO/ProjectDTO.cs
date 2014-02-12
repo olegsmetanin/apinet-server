@@ -26,4 +26,13 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public LookupEntry[] Tags { get; set; }
 	}
+
+	public class ProjectMemberDTO: ModelDTO
+	{
+		public string FullName { get; set; }
+
+		public LookupEntry[] Roles { get; set; }
+
+		public LookupEntry Current { get; set; }
+	}
 }

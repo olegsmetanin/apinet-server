@@ -141,7 +141,7 @@ namespace AGO.Core.Controllers
 					});
 				}
 
-				_CrudDao.Store(ProjectMemberModel.FromParameters(newProject.Creator, newProject, ProjectModel.ADMIN_GROUP));
+				_CrudDao.Store(ProjectMemberModel.FromParameters(newProject.Creator, newProject, BaseProjectRoles.Administrator));
 
 				return newProject;
 			}

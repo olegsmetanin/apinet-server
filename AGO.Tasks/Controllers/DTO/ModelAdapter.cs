@@ -11,7 +11,7 @@ namespace AGO.Tasks.Controllers.DTO
 	/// <typeparam name="TModel">Тип модели</typeparam>
 	/// <typeparam name="TDTO">Тип DTO</typeparam>
 	public abstract class ModelAdapter<TModel, TDTO> 
-		where TModel: CoreModel<Guid>, ISecureModel
+		where TModel: CoreModel<Guid>
 		where TDTO: ModelDTO, new()
 	{
 		public virtual TDTO Fill(TModel model)
@@ -19,9 +19,14 @@ namespace AGO.Tasks.Controllers.DTO
 			return new TDTO {Id = model.Id, ModelVersion = model.ModelVersion};
 		}
 
+		public string ToAuthor(TModel model)
+		{
+			return ToAuthor(model as ISecureModel);
+		}
+
 		public string ToAuthor(ISecureModel model)
 		{
-			return model.Creator != null ? model.Creator.FullName : null;
+			return model != null && model.Creator != null ? model.Creator.FullName : null;
 		}
 	}
 

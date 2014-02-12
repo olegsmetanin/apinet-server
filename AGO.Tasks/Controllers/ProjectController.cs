@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -14,6 +16,9 @@ using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Tasks.Controllers.DTO;
+using AGO.Tasks.Model.Task;
+using NHibernate;
+using NHibernate.Criterion;
 
 
 namespace AGO.Tasks.Controllers
@@ -32,8 +37,6 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		private static IDictionary<string, LookupEntry[]> projectStatuses;
-
 		[JsonEndpoint, RequireAuthorization]
 		public ProjectDTO GetProject([NotEmpty] string project)
 		{
@@ -44,12 +47,6 @@ namespace AGO.Tasks.Controllers
 
 			var adapter = new ProjectAdapter(_LocalizationService, _AuthController.CurrentUser());
 			return adapter.Fill(p);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectStatuses(string term, [InRange(0, null)] int page)
-		{
-			return LookupEnum<ProjectStatus>(term, page, ref projectStatuses);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -80,7 +77,7 @@ namespace AGO.Tasks.Controllers
 								break;
 							case "VisibleForAll":
 								var isAdmin = _CrudDao.Exists<ProjectMemberModel>(q => q.Where(
-									m => m.ProjectCode == project && m.UserId == user.Id && m.CurrentRole == ProjectModel.ADMIN_GROUP));
+									m => m.ProjectCode == project && m.UserId == user.Id && m.CurrentRole == BaseProjectRoles.Administrator));
 								if (!isAdmin)
 									throw new AccessForbiddenException();
 
@@ -165,6 +162,143 @@ namespace AGO.Tasks.Controllers
 			_CrudDao.Delete(projectToTag);
 
 			return true;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<ProjectMemberDTO> GetMembers([NotEmpty] string project, string term, [InRange(0, null)] int page)
+		{
+			var q = MakeMembersPredicate(project, term);
+			var adapter = new ProjectMemberAdapter(_LocalizationService);
+			return _CrudDao.PagedQuery(q, page).List().Select(adapter.Fill).ToList();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetMembersCount([NotEmpty] string project, string term)
+		{
+			var q = MakeMembersPredicate(project, term);
+			return q.RowCount();
+		}
+
+		private IQueryOver<ProjectMemberModel> MakeMembersPredicate(string project, string term)
+		{
+			var q = Session.QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.FullName).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				q = q.WhereRestrictionOn(m => m.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
+
+			return q;
+		}
+			
+		[JsonEndpoint, RequireAuthorization]
+		public ProjectMemberDTO AddMember([NotEmpty] string project, [NotEmpty] Guid userId, [NotEmpty] string[] roles)
+		{
+			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
+			if (p == null)
+				throw new NoSuchProjectException();
+			var u = _CrudDao.Get<UserModel>(userId, true);
+
+			if (!TaskProjectRoles.IsValid(roles))
+				throw new ArgumentException("Not valid role(s)", "roles");
+
+			var member = ProjectMemberModel.FromParameters(u, p, roles);
+			_CrudDao.Store(member);
+			return new ProjectMemberAdapter(_LocalizationService).Fill(member);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void RemoveMember([NotEmpty] Guid memberId)
+		{
+			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
+			//TODO security checks
+			
+			if (_CrudDao.Exists<TaskExecutorModel>(q => q.Where(m => m.Executor.Id == member.Id)) ||
+				_CrudDao.Exists<TaskAgreementModel>(q => q.Where(m => m.Agreemer.Id == member.Id)))
+				throw new CannotDeleteReferencedItemException();
+
+			_CrudDao.Delete(member);
+		}
+
+		private static IDictionary<string, LookupEntry[]> cache;
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupRoles(string term, int page)
+		{
+			if (page > 0) return Enumerable.Empty<LookupEntry>(); //while size of roles less than defaul page size (10)
+
+			var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+			if (cache == null)
+			{
+				//no need to locking - replace with same value from another thread has no negative effect
+				cache = new Dictionary<string, LookupEntry[]>();
+			}
+			if (!cache.ContainsKey(lang))
+			{
+				//no need to locking - replace with same value from another thread has no negative effect
+				cache[lang] = TaskProjectRoles.Roles(_LocalizationService);
+			}
+
+			if (term.IsNullOrWhiteSpace())
+				return cache[lang];
+
+			return cache[lang]
+				.Where(l => l.Text.IndexOf(term, StringComparison.InvariantCultureIgnoreCase) >= 0)
+				.ToArray();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public UpdateResult<ProjectMemberDTO> ChangeMemberRoles([NotEmpty] Guid memberId, [NotEmpty] string[] roles)
+		{
+			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
+			
+
+			//TODO only project admins may change this
+
+			return Edit<ProjectMemberModel, ProjectMemberDTO>(member.Id, member.ProjectCode,
+			(model, validation) =>
+			{
+				if (!TaskProjectRoles.IsValid(roles))
+				{
+					validation.AddFieldErrors("Roles", "Roles contains incorrect values");
+					return;
+				}
+				if (!roles.Contains(model.CurrentRole))
+				{
+					validation.AddFieldErrors("Roles", "Can not change roles. Current member role not exist in provided roles.");
+					return;
+				}
+
+				model.Roles = roles;
+			},
+			pmm => new ProjectMemberAdapter(_LocalizationService).Fill(pmm),
+			() => { throw new ProjectMemberCreationNotSupportedException(); });
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public UpdateResult<ProjectMemberDTO> ChangeMemberCurrentRole([NotEmpty] Guid memberId, [NotEmpty] string current)
+		{
+			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
+
+
+			//TODO only project admins or user themself may change this
+
+			return Edit<ProjectMemberModel, ProjectMemberDTO>(member.Id, member.ProjectCode,
+			(model, validation) =>
+			{
+				if (!TaskProjectRoles.IsValid(current))
+				{
+					validation.AddFieldErrors("CurrentRole", "Incorrect role");
+					return;
+				}
+				if (!model.HasRole(current))
+				{
+					validation.AddFieldErrors("CurrentRole", "Can not change current role. Member does not have this role assigned.");
+					return;
+				}
+
+				model.CurrentRole = current;
+			},
+			pmm => new ProjectMemberAdapter(_LocalizationService).Fill(pmm),
+			() => { throw new ProjectMemberCreationNotSupportedException(); });
 		}
 	}
 }

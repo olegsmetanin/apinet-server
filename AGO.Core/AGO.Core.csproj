@@ -142,6 +142,7 @@
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskDTO.cs" />
     <Compile Include="Model\Reporting\ReportTemplateModel.cs" />
+    <Compile Include="Model\Security\BaseProjectRoles.cs" />
     <Compile Include="Model\Security\OAuthDataModel.cs" />
     <Compile Include="Model\Security\SecureProjectBoundModel.cs" />
     <Compile Include="Model\Security\UserFilterModel.cs" />
@@ -352,6 +353,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Projects\ProjectStatus.ru.resx">
       <DependentUpon>ProjectStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Security\BaseProjectRoles.resx">
+      <DependentUpon>BaseProjectRoles.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Security\BaseProjectRoles.ru.resx">
+      <DependentUpon>BaseProjectRoles.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Security\SystemRole.resx">
       <DependentUpon>SystemRole.cs</DependentUpon>

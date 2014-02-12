@@ -15,6 +15,10 @@ namespace AGO.Tasks
 	{
 	}
 
+	public class ProjectMemberCreationNotSupportedException : TasksException
+	{
+	}
+
 	public class TaskCreationNotSupportedException: TasksException
 	{
 	}

@@ -95,27 +95,27 @@ namespace AGO.Tasks
 
 				_CrudDao.Store(project.ChangeStatus(ProjectStatus.New, context.Admin));
 
-				var pcAdmin = ProjectMemberModel.FromParameters(context.Admin, project, ProjectModel.ADMIN_GROUP);
+				var pcAdmin = ProjectMemberModel.FromParameters(context.Admin, project, BaseProjectRoles.Administrator);
 				pcAdmin.UserPriority = 50;
 				_CrudDao.Store(pcAdmin);
 
-				var pcUser1 = ProjectMemberModel.FromParameters(context.User1, project, ProjectModel.ADMIN_GROUP);
+				var pcUser1 = ProjectMemberModel.FromParameters(context.User1, project, BaseProjectRoles.Administrator);
 				pcUser1.UserPriority = 25;
 				_CrudDao.Store(pcUser1);
 
-				var pcUser2 = ProjectMemberModel.FromParameters(context.User2, project, ProjectModel.ADMIN_GROUP);
+				var pcUser2 = ProjectMemberModel.FromParameters(context.User2, project, BaseProjectRoles.Administrator);
 				pcUser2.UserPriority = 0;
 				_CrudDao.Store(pcUser2);
 
-				var pcUser3 = ProjectMemberModel.FromParameters(context.User3, project, ProjectModel.ADMIN_GROUP);
+				var pcUser3 = ProjectMemberModel.FromParameters(context.User3, project, BaseProjectRoles.Administrator);
 				pcUser3.UserPriority = 0;
 				_CrudDao.Store(pcUser3);
 
-				var pcArtem1 = ProjectMemberModel.FromParameters(context.Artem1, project, ProjectModel.ADMIN_GROUP);
+				var pcArtem1 = ProjectMemberModel.FromParameters(context.Artem1, project, BaseProjectRoles.Administrator);
 				pcArtem1.UserPriority = 10;
 				_CrudDao.Store(pcArtem1);
 
-				var pcOlegSmith = ProjectMemberModel.FromParameters(context.OlegSmith, project, ProjectModel.ADMIN_GROUP);
+				var pcOlegSmith = ProjectMemberModel.FromParameters(context.OlegSmith, project, BaseProjectRoles.Administrator);
 				pcOlegSmith.UserPriority = 15;
 				_CrudDao.Store(pcOlegSmith);
 

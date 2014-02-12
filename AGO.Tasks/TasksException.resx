@@ -138,6 +138,9 @@
   <data name="ProjectCreationNotSupportedException" xml:space="preserve">
     <value>Can not create project in this method</value>
   </data>
+  <data name="ProjectMemberCreationNotSupportedException" xml:space="preserve">
+    <value>Can not create project member in this method</value>
+  </data>
   <data name="TagCreationNotSupportedException" xml:space="preserve">
     <value>Can not create task tag in this method</value>
   </data>
