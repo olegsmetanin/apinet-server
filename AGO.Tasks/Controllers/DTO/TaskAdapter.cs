@@ -40,14 +40,14 @@ namespace AGO.Tasks.Controllers.DTO
 
 		protected static Executor ToExecutor(TaskExecutorModel executor)
 		{
-			var u = executor.Executor.User;
 			return new Executor
 			       	{
 			       		Id = executor.Executor.Id.ToString(), //use participants instead of technical entity - TaskExecutorModel
-			       		Name = u.FullName,
-			       		Description = u.FullName + (u.Departments.Count > 0
+			       		Name = executor.Executor.FIO,
+						Description = executor.Executor.FullName //use departments from local project, remove from user
+						/*+ (u.Departments.Count > 0
 			       		                            	? " (" + string.Join("; ", u.Departments.Select(d => d.FullName)) + ")"
-			       		                            	: string.Empty)
+			       		                            	: string.Empty)*/
 			       	};
 		}
 
@@ -67,7 +67,7 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.SeqNumber = model.SeqNumber;
 			dto.TaskType = (model.TaskType != null ? model.TaskType.Name : string.Empty);
 			dto.Content = model.Content;
-			dto.Executors = model.Executors.OrderBy(e => e.Executor.User.FullName).Select(ToExecutor).ToArray();
+			dto.Executors = model.Executors.OrderBy(e => e.Executor.FullName).Select(ToExecutor).ToArray();
 			dto.DueDate = model.DueDate;
 			dto.Status = EnumLocalizedValue(model.Status);
 
@@ -115,7 +115,7 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			return new AgreementView
 			       	{
-			       		Agreemer = agreement.Agreemer.User.FIO,
+			       		Agreemer = agreement.Agreemer.FIO,
 			       		Done = agreement.Done
 			       	};
 		}
@@ -213,7 +213,7 @@ namespace AGO.Tasks.Controllers.DTO
 			{
 				Id = agreement.Id,
 				ModelVersion = agreement.ModelVersion,
-				Agreemer = agreement.Agreemer.User.FIO,
+				Agreemer = agreement.Agreemer.FIO,
 				DueDate = agreement.DueDate,
 				Done = agreement.Done,
 				AgreedAt = agreement.AgreedAt,

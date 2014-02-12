@@ -141,14 +141,7 @@ namespace AGO.Core.Controllers
 					});
 				}
 
-				_CrudDao.Store(new ProjectParticipantModel
-				{
-					Project = newProject,
-					User = newProject.Creator,
-					//TODO will be replaced by groups collection
-					GroupName = "Administrator",
-					IsDefaultGroup = true
-				});
+				_CrudDao.Store(ProjectMemberModel.FromParameters(newProject.Creator, newProject, ProjectModel.ADMIN_GROUP));
 
 				return newProject;
 			}
@@ -223,30 +216,13 @@ namespace AGO.Core.Controllers
 			string term,
 			[InRange(0, null)] int page)
 		{
-//			var filter = _FilteringService.Filter<ProjectParticipantModel>()
-//				.And()
-//				.Where(m => m.Project.ProjectCode == project);
-//			if (!term.IsNullOrWhiteSpace())
-//				filter = filter.WhereString(m => m.User.FullName).Like("%" + term.TrimSafe() + "%");
-//
-//			var criteria = _FilteringService
-//				.CompileFilter(filter, typeof (ProjectParticipantModel))
-//				.AddOrder(Order.Asc(Projections.Property<ProjectParticipantModel>(m => m.User.FullName)))
-//				.SetResultTransformer(Transformers.AliasToBean(typeof (LookupEntry)));
-
-			ProjectParticipantModel ppm = null;
-			ProjectModel pm = null;
-			UserModel um = null;
-			var query = _SessionProvider.CurrentSession.QueryOver(() => ppm)
-				.JoinAlias(() => ppm.Project, () => pm)
-				.JoinAlias(() => ppm.User, () => um)
-				.Where(() => pm.ProjectCode == project)
-				.OrderBy(() =>  um.FullName).Asc;
+			var query = _SessionProvider.CurrentSession.QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.FullName).Asc;
 			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(() => um.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
+				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
-			return _CrudDao.PagedQuery(query, page)
-				.LookupList<ProjectParticipantModel, UserModel>(m => m.Id, "um", u => u.FullName).ToArray();
+			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
 		}
 			
 		[JsonEndpoint, RequireAuthorization]

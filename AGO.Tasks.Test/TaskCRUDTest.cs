@@ -217,8 +217,7 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithValidParamsReturnSuccess()
 		{
 			var tt = M.TaskType();
-			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
-			var participant = project.Participants.First();
+			var participant = Session.QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == TestProject).List().First();
 			_SessionProvider.FlushCurrentSession();
 
 			var model = new CreateTaskDTO

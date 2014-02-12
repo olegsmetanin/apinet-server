@@ -132,7 +132,7 @@
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
     <Compile Include="Model\Projects\ProjectModel.cs" />
-    <Compile Include="Model\Projects\ProjectParticipantModel.cs" />
+    <Compile Include="Model\Projects\ProjectMemberModel.cs" />
     <Compile Include="Model\Projects\ProjectStatus.cs" />
     <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
     <Compile Include="Model\Projects\ProjectToTagModel.cs" />

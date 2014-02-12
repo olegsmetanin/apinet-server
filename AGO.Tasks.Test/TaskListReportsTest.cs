@@ -130,15 +130,18 @@ namespace AGO.Tasks.Test
 			t1 = Session.Load<TaskModel>(t1.Id);
 			t2 = Session.Load<TaskModel>(t2.Id);
 
+// ReSharper disable PossibleNullReferenceException
 			Assert.AreEqual(t2.SeqNumber, items[0].SelectSingleNode("value[@name=\"num\"]").FirstChild.Value);
+
 			Assert.AreEqual(t2.TaskType.Name, items[0].SelectSingleNode("value[@name=\"type\"]").FirstChild.Value);
-			Assert.AreEqual(t2.Executors.First().Executor.User.FullName, 
+			Assert.AreEqual(t2.Executors.First().Executor.FullName, 
 				items[0].SelectSingleNode("value[@name=\"executors\"]").FirstChild.Value);
 
 			Assert.AreEqual(t1.SeqNumber, items[1].SelectSingleNode("value[@name=\"num\"]").FirstChild.Value);
 			Assert.AreEqual(t1.TaskType.Name, items[1].SelectSingleNode("value[@name=\"type\"]").FirstChild.Value);
-			Assert.AreEqual(t1.Executors.First().Executor.User.FullName, 
+			Assert.AreEqual(t1.Executors.First().Executor.FullName, 
 				items[1].SelectSingleNode("value[@name=\"executors\"]").FirstChild.Value);
+// ReSharper restore PossibleNullReferenceException
 		}
 	}
 }

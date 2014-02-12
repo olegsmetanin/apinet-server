@@ -79,7 +79,9 @@ namespace AGO.Tasks.Controllers
 								p.Description = data.Value.ConvertSafe<string>().TrimSafe();
 								break;
 							case "VisibleForAll":
-								if (!p.IsAdmin(user))
+								var isAdmin = _CrudDao.Exists<ProjectMemberModel>(q => q.Where(
+									m => m.ProjectCode == project && m.UserId == user.Id && m.CurrentRole == ProjectModel.ADMIN_GROUP));
+								if (!isAdmin)
 									throw new AccessForbiddenException();
 
 								p.VisibleForAll = data.Value.ConvertSafe<bool>();

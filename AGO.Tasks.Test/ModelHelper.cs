@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Projects;
@@ -22,6 +21,12 @@ namespace AGO.Tasks.Test
 			this.currentUser = currentUser;
 		}
 
+		public ProjectMemberModel UserToMember(Guid userId)
+		{
+			return session().QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project && m.UserId == userId).SingleOrDefault();
+		}
+
 		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New)
 		{
 			var task = new TaskModel
@@ -34,13 +39,7 @@ namespace AGO.Tasks.Test
 				Content = content
 			};
 			task.ChangeStatus(status, currentUser());
-			ProjectParticipantModel ppm = null;
-			ProjectModel pm = null;
-			var participant = session().QueryOver(() => ppm)
-				.JoinAlias(() => ppm.Project, () => pm)
-				.Where(() => pm.ProjectCode == project)
-				.List<ProjectParticipantModel>().FirstOrDefault();
-			var executor = new TaskExecutorModel {Creator = currentUser(), Task = task, Executor = participant};
+			var executor = new TaskExecutorModel {Creator = currentUser(), Task = task, Executor = UserToMember(currentUser().Id)};
 			task.Executors.Add(executor);
 			
 			session().Save(task);

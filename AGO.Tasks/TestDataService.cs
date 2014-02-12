@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using AGO.Core;
@@ -61,6 +60,7 @@ namespace AGO.Tasks
 			_CrudDao.Store(context.ProjectType);
 
 			var projects = DoPopulateProjects(context);
+			CurrentSession.Flush();
 
 			var types = DoPopulateTaskTypes(context, projects);
 			var paramTypes = DoPopulatePropertyTypes(context, projects);
@@ -72,6 +72,12 @@ namespace AGO.Tasks
 		#endregion
 
 		#region Helper methods
+
+		private ProjectMemberModel UserToMember(ProjectModel project, UserModel user)
+		{
+			return CurrentSession.QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project.ProjectCode && m.UserId == user.Id).SingleOrDefault();
+		}
 
 		protected dynamic DoPopulateProjects(dynamic context)
 		{
@@ -89,29 +95,29 @@ namespace AGO.Tasks
 
 				_CrudDao.Store(project.ChangeStatus(ProjectStatus.New, context.Admin));
 
-				var pcAdmin = new ProjectParticipantModel { User = context.Admin, Project = project, UserPriority = 50};
+				var pcAdmin = ProjectMemberModel.FromParameters(context.Admin, project, ProjectModel.ADMIN_GROUP);
+				pcAdmin.UserPriority = 50;
 				_CrudDao.Store(pcAdmin);
-				project.Participants.Add(pcAdmin);
 
-				var pcUser1 = new ProjectParticipantModel { User = context.User1, Project = project, UserPriority = 25};
+				var pcUser1 = ProjectMemberModel.FromParameters(context.User1, project, ProjectModel.ADMIN_GROUP);
+				pcUser1.UserPriority = 25;
 				_CrudDao.Store(pcUser1);
-				project.Participants.Add(pcUser1);
 
-				var pcUser2 = new ProjectParticipantModel { User = context.User2, Project = project, UserPriority = 0};
+				var pcUser2 = ProjectMemberModel.FromParameters(context.User2, project, ProjectModel.ADMIN_GROUP);
+				pcUser2.UserPriority = 0;
 				_CrudDao.Store(pcUser2);
-				project.Participants.Add(pcUser2);
 
-				var pcUser3 = new ProjectParticipantModel { User = context.User3, Project = project, UserPriority = 0 };
+				var pcUser3 = ProjectMemberModel.FromParameters(context.User3, project, ProjectModel.ADMIN_GROUP);
+				pcUser3.UserPriority = 0;
 				_CrudDao.Store(pcUser3);
-				project.Participants.Add(pcUser3);
 
-				var pcArtem1 = new ProjectParticipantModel { User = context.Artem1, Project = project, UserPriority = 10 };
+				var pcArtem1 = ProjectMemberModel.FromParameters(context.Artem1, project, ProjectModel.ADMIN_GROUP);
+				pcArtem1.UserPriority = 10;
 				_CrudDao.Store(pcArtem1);
-				project.Participants.Add(pcArtem1);
 
-				var pcOlegSmith = new ProjectParticipantModel { User = context.OlegSmith, Project = project, UserPriority = 15 };
+				var pcOlegSmith = ProjectMemberModel.FromParameters(context.OlegSmith, project, ProjectModel.ADMIN_GROUP);
+				pcOlegSmith.UserPriority = 15;
 				_CrudDao.Store(pcOlegSmith);
-				project.Participants.Add(pcOlegSmith);
 
 				foreach (var tag in context.AdminTags)
 				{
@@ -289,13 +295,12 @@ namespace AGO.Tasks
 				foreach (var user in users)
 				{
 					var executor = new TaskExecutorModel
-					               	{
-					               		Creator = context.Admin,
-					               		Task = task,
-					               		Executor = proj.Participants.First(p => p.User == user)
-					               	};
+					{
+					    Creator = context.Admin,
+					    Task = task,
+					    Executor = UserToMember(proj, user)
+					};
 					task.Executors.Add(executor);
-
 				}
 				_CrudDao.Store(task);
 				return task;

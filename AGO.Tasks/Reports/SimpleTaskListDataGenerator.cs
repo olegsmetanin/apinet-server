@@ -65,7 +65,7 @@ namespace AGO.Tasks.Reports
 		{
 			MakeValue(item, "num", task.SeqNumber);
 			MakeValue(item, "type", task.TaskType != null ? task.TaskType.Name : string.Empty);
-			MakeValue(item, "executors", string.Join(", ", task.Executors.Select(e => e.Executor.User.FullName)));
+			MakeValue(item, "executors", string.Join(", ", task.Executors.Select(e => e.Executor.FullName)));
 		}
 	}
 }

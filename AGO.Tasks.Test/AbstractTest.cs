@@ -46,13 +46,7 @@ namespace AGO.Tasks.Test
 			};
 			_CrudDao.Store(p);
 
-			var projAdmin = new ProjectParticipantModel
-			{
-			    Project = p,
-			    User = admin,
-			    GroupName = "Managers",
-			    IsDefaultGroup = true
-			};
+			var projAdmin = ProjectMemberModel.FromParameters(admin, p, "Managers");
 			_CrudDao.Store(projAdmin);
 
 			_SessionProvider.CloseCurrentSession();
@@ -65,8 +59,7 @@ namespace AGO.Tasks.Test
 					delete from ""Core"".""ProjectStatusHistoryModel"" where
 						""ProjectId"" in (select ""Id"" from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}')
 					go
-					delete from ""Core"".""ProjectParticipantModel"" where
-						""ProjectId"" in (select ""Id"" from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}')
+					delete from ""Core"".""ProjectMemberModel"" where ""ProjectCode"" = '{0}'
 					go
 					delete from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}'
 					go
@@ -108,6 +101,7 @@ namespace AGO.Tasks.Test
 
 		protected UserModel Login(string email)
 		{
+			Logout();
 			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>().Where(m => m.Login == email).SingleOrDefault();
 			IocContainer.GetInstance<AuthController>().LoginInternal(user);
 			return user;

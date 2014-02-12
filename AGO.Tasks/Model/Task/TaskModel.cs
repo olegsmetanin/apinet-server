@@ -131,9 +131,9 @@ namespace AGO.Tasks.Model.Task
 			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
 		}
 
-		public virtual bool IsAgreemer(ProjectParticipantModel participant)
+		public virtual bool IsAgreemer(ProjectMemberModel member)
 		{
-			return participant != null && Agreements.Any(a => participant.Equals(a.Agreemer));
+			return member != null && Agreements.Any(a => member.Equals(a.Agreemer));
 		}
     }
 }

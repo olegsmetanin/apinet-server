@@ -13,6 +13,7 @@ namespace AGO.Core.Model.Projects
 	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel
 	{
 		public const int PROJECT_CODE_SIZE = 32;
+		public static readonly string ADMIN_GROUP = "Administrator";
 
 		#region Persistent
 
@@ -43,10 +44,6 @@ namespace AGO.Core.Model.Projects
 		public virtual ISet<ProjectStatusHistoryModel> StatusHistory { get { return statusHistory; } set { statusHistory = value; } }
 		private ISet<ProjectStatusHistoryModel> statusHistory = new HashSet<ProjectStatusHistoryModel>();
 
-		[PersistentCollection(CascadeType = CascadeType.Delete)]
-		public virtual ISet<ProjectParticipantModel> Participants { get { return participants; } set { participants = value; } }
-		private ISet<ProjectParticipantModel> participants = new HashSet<ProjectParticipantModel>();
-
 		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
 		public virtual ISet<ProjectToTagModel> Tags { get { return tags; } set { tags = value; } }
 		private ISet<ProjectToTagModel> tags = new HashSet<ProjectToTagModel>();
@@ -65,11 +62,6 @@ namespace AGO.Core.Model.Projects
 		public virtual ProjectStatusHistoryModel ChangeStatus(ProjectStatus newStatus, UserModel changer)
 		{
 			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
-		}
-
-		public virtual bool IsAdmin(UserModel user)
-		{
-			return user != null && Participants.Any(p => user.Equals(p.User) && p.GroupName == "Administrator");
 		}
 	}
 }

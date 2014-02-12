@@ -199,14 +199,14 @@ namespace AGO.Tasks.Controllers
 
 			            foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
 			            {
-			                var participant = _CrudDao.Get<ProjectParticipantModel>(id);
+			                var participant = _CrudDao.Get<ProjectMemberModel>(id);
 			                if (participant == null)
 			                {
 			                    vr.AddFieldErrors("Executors", "Участник проекта по заданному идентификатору не найден");
 			                    continue;
 			                }
 			                //TODO это лучше бы делать через _CrudDao.Get<>(project, id), а не так проверять
-			                if (participant.Project.ProjectCode != task.ProjectCode)
+			                if (participant.ProjectCode != task.ProjectCode)
 			                {
 			                    vr.AddFieldErrors("Executors", "Не учавствует в проекте задачи");
 			                    continue;
@@ -273,7 +273,7 @@ namespace AGO.Tasks.Controllers
 										.Select(id => id.ConvertSafe<Guid>()).ToArray();
 									var toRemove = task.Executors.Where(e => !ids.Contains(e.Executor.Id)).ToArray();
 									var toAdd = ids.Where(id => task.Executors.All(e => !e.Executor.Id.Equals(id)))
-										.Select(id => _CrudDao.Get<ProjectParticipantModel>(id, true));
+										.Select(id => _CrudDao.Get<ProjectMemberModel>(id, true));
 
 									foreach (var removed in toRemove)
 									{
@@ -314,13 +314,13 @@ namespace AGO.Tasks.Controllers
 		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId, DateTime? dueDate = null)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			var participant = _CrudDao.Get<ProjectParticipantModel>(participantId, true);
+			var participant = _CrudDao.Get<ProjectMemberModel>(participantId, true);
 
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotAddAgreemerToClosedTaskException();
 
 			if (task.IsAgreemer(participant))
-				throw new AgreemerAlreadyAssignedToTaskException(participant.User.FIO, task.SeqNumber);
+				throw new AgreemerAlreadyAssignedToTaskException(participant.FIO, task.SeqNumber);
 
 			var agreement = new TaskAgreementModel
 				                {
@@ -361,7 +361,7 @@ namespace AGO.Tasks.Controllers
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
 			var cu = _AuthController.CurrentUser();
-			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.User.Id == cu.Id);
+			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == cu.Id);
 
 			if (agreement == null)
 				throw new CurrentUserIsNotAgreemerInTaskException();
@@ -383,7 +383,7 @@ namespace AGO.Tasks.Controllers
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
 			var cu = _AuthController.CurrentUser();
-			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.User.Id == cu.Id);
+			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == cu.Id);
 
 			if (agreement == null)
 				throw new CurrentUserIsNotAgreemerInTaskException();

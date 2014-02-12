@@ -254,7 +254,7 @@ namespace AGO.Reporting.Tests
 
 			//Must be aborted in reasonable time
 			Thread.Sleep(2000);
-			Assert.IsTrue(!realsvc.IsRunning(task.Id));
+			Assert.IsFalse(realsvc.IsRunning(task.Id));
 
 			//See CancelLongReport for comment about asserting
 		}

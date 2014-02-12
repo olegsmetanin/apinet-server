@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
-using AGO.Core.Attributes.Model;
 using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Model.Dictionary;
 using Newtonsoft.Json;
@@ -13,6 +12,7 @@ namespace AGO.Core.Model.Security
 	{
 		private const int LOGIN_SIZE_CONST = 64;
 		public static readonly int LOGIN_SIZE = LOGIN_SIZE_CONST;//because const will be inlined in using classes, but not const is not compile time value
+		public const int FULLNAME_SIZE = 256;
 
 		#region Persistent
 
@@ -68,10 +68,10 @@ namespace AGO.Core.Model.Security
 			}
 		}
 
-		[JsonProperty, NotLonger(256)]
+		[JsonProperty, NotLonger(FULLNAME_SIZE)]
 		public virtual string FullName { get; protected internal set; }
 
-		[JsonProperty, NotLonger(256)]
+		[JsonProperty, NotLonger(FULLNAME_SIZE)]
 		public virtual string FIO { get; protected internal set; }
 
 		[JsonProperty, NotLonger(256)]

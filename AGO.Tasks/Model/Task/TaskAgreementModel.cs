@@ -27,7 +27,7 @@ namespace AGO.Tasks.Model.Task
 		/// Согласующий (участник проекта)
 		/// </summary>
 		[JsonProperty, NotNull]
-		public virtual ProjectParticipantModel Agreemer { get; set; }
+		public virtual ProjectMemberModel Agreemer { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? AgreemerId { get; set; }
 

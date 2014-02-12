@@ -184,8 +184,8 @@ namespace AGO.Core.Controllers
 			{
 				var settings = _CrudDao.Get<ReportSettingModel>(settingsId);
 				var user = _AuthController.CurrentUser();
-				var participant = _FilteringService.Filter<ProjectParticipantModel>()
-					.Where(m => m.User.Id == user.Id && m.Project.ProjectCode == project)
+				var participant = _FilteringService.Filter<ProjectMemberModel>()
+					.Where(m => m.UserId == user.Id && m.ProjectCode == project)
 					.List(_FilteringDao).FirstOrDefault();
 
 				var name = (!resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : settings.Name)

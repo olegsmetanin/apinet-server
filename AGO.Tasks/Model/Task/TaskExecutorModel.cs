@@ -24,7 +24,7 @@ namespace AGO.Tasks.Model.Task
 		/// Исполнитель (участник проекта)
 		/// </summary>
 		[NotNull]
-		public virtual ProjectParticipantModel Executor { get; set; }
+		public virtual ProjectMemberModel Executor { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ExecutorId { get; set; }
 	}

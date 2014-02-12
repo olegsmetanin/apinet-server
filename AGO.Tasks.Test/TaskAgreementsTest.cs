@@ -16,8 +16,10 @@ namespace AGO.Tasks.Test
 	{
 		private TasksController controller;
 		private TaskModel task;
-		private ProjectParticipantModel pIvanov;
-		private ProjectParticipantModel pPetrov;
+		private UserModel ivanov;
+		private UserModel petrov;
+		private ProjectMemberModel pIvanov;
+		private ProjectMemberModel pPetrov;
 
 		[TestFixtureSetUp]
 		public new void Init()
@@ -28,29 +30,15 @@ namespace AGO.Tasks.Test
 
 			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
 			Assert.IsNotNull(project);
-			var ivanov = Session.QueryOver<UserModel>().Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault();
+			ivanov = Session.QueryOver<UserModel>().Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault();
 			Assert.IsNotNull(ivanov);
-			var petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault();
+			petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault();
 			Assert.IsNotNull(petrov);
 
-			pIvanov = new ProjectParticipantModel
-			          	{
-			          		Project = project,
-			          		User = ivanov,
-			          		GroupName = "Executors",
-			          		IsDefaultGroup = true
-			          	};
+			pIvanov = ProjectMemberModel.FromParameters(ivanov, project, "Executors");
 			_CrudDao.Store(pIvanov);
-			pPetrov = new ProjectParticipantModel
-			          	{
-			          		Project = project,
-			          		User = petrov,
-			          		GroupName = "Executors",
-			          		IsDefaultGroup = true
-			          	};
+			pPetrov = ProjectMemberModel.FromParameters(petrov, project, "Executors");
 			_CrudDao.Store(pPetrov);
-			project.Participants.Add(pIvanov);
-			project.Participants.Add(pPetrov);
 
 			_SessionProvider.FlushCurrentSession();
 		}
@@ -184,12 +172,10 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
-			Login(pIvanov.User.Login);
+			Login(ivanov.Login);
 			controller.AgreeTask(task.Id, "good job, bro");
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
 			LoginAdmin();
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
 			Assert.IsTrue(agr.Done);
@@ -213,8 +199,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
-			Login(pPetrov.User.Login);
+			Login(petrov.Login);
 			try
 			{
 				controller.AgreeTask(task.Id, "good job, bro");
@@ -222,7 +207,6 @@ namespace AGO.Tasks.Test
 			}
 			finally
 			{
-				Logout();
 				LoginAdmin();
 			}
 		}
@@ -243,8 +227,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
-			Login(pIvanov.User.Login);
+			Login(ivanov.Login);
 			try
 			{
 				controller.AgreeTask(task.Id, "good job, bro");
@@ -252,7 +235,6 @@ namespace AGO.Tasks.Test
 			}
 			finally
 			{
-				Logout();
 				LoginAdmin();
 			}
 		}
@@ -275,14 +257,11 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
-			Login(pIvanov.User.Login);
+			Login(ivanov.Login);
 			controller.RevokeAgreement(task.Id);
 			_SessionProvider.FlushCurrentSession();
 			
-			Logout();
 			LoginAdmin();
-
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
 			Assert.IsFalse(agr.Done);
 			Assert.IsNull(agr.AgreedAt);
@@ -307,8 +286,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
-			Login(pPetrov.User.Login);
+			Login(petrov.Login);
 			try
 			{
 				controller.RevokeAgreement(task.Id);
@@ -316,7 +294,6 @@ namespace AGO.Tasks.Test
 			}
 			finally
 			{
-				Logout();
 				LoginAdmin();
 			}
 		}
@@ -340,8 +317,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Logout();
-			Login(pIvanov.User.Login);
+			Login(ivanov.Login);
 			try
 			{
 				controller.RevokeAgreement(task.Id);
@@ -349,7 +325,6 @@ namespace AGO.Tasks.Test
 			}
 			finally
 			{
-				Logout();
 				LoginAdmin();
 			}
 		}

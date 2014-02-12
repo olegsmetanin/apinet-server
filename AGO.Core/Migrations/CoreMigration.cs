@@ -101,12 +101,14 @@ namespace AGO.Core.Migrations
 				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Project)
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Status);
 
-			Create.CoreModelTable<ProjectParticipantModel>()
-				.WithValueColumn<ProjectParticipantModel>(m => m.GroupName)
-				.WithValueColumn<ProjectParticipantModel>(m => m.IsDefaultGroup)
-				.WithRefColumn<ProjectParticipantModel>(m => m.Project)
-				.WithRefColumn<ProjectParticipantModel>(m => m.User)
-				.WithValueColumn<ProjectParticipantModel>(m => m.UserPriority);
+			Create.CoreModelTable<ProjectMemberModel>()
+				.WithValueColumn<ProjectMemberModel>(m => m.ProjectCode)
+				.WithValueColumn<ProjectMemberModel>(m => m.UserId)
+				.WithValueColumn<ProjectMemberModel>(m => m.FullName)
+				.WithValueColumn<ProjectMemberModel>(m => m.FIO)
+				.WithValueColumn<ProjectMemberModel>(m => m.RolesString)
+				.WithValueColumn<ProjectMemberModel>(m => m.CurrentRole)
+				.WithValueColumn<ProjectMemberModel>(m => m.UserPriority);
 
 			Create.SecureModelTable<ProjectToTagModel>()
 				.WithRefColumn<ProjectToTagModel>(m => m.Project)
