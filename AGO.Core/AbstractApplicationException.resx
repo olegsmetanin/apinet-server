@@ -177,4 +177,7 @@
   <data name="OAuthLoginException" xml:space="preserve">
     <value>Error while load user info from oauth provider</value>
   </data>
+  <data name="NoSuchProjectMemberException" xml:space="preserve">
+    <value>No such project member found</value>
+  </data>
 </root>

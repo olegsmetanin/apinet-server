@@ -177,4 +177,7 @@
   <data name="OAuthLoginException" xml:space="preserve">
     <value>Ошибка при получении данных пользователя от oauth провайдера</value>
   </data>
+  <data name="NoSuchProjectMemberException" xml:space="preserve">
+    <value>Пользователь не является участником проекта</value>
+  </data>
 </root>

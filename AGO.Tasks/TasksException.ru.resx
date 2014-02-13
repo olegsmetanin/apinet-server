@@ -147,4 +147,7 @@
   <data name="TaskCreationNotSupportedException" xml:space="preserve">
     <value>Создание задачи в этом методе не поддерживается</value>
   </data>
+  <data name="UserAlreadyProjectMemberException" xml:space="preserve">
+    <value>Заданный пользователь уже является участником этого проекта</value>
+  </data>
 </root>

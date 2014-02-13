@@ -117,6 +117,10 @@ namespace AGO.Core
 	{
 	}
 
+	public class NoSuchProjectMemberException : AbstractApplicationException
+	{
+	}
+
 	public class InvalidPwdException : AbstractApplicationException
 	{
 	}

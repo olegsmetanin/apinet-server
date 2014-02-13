@@ -201,6 +201,9 @@ namespace AGO.Tasks.Controllers
 			if (!TaskProjectRoles.IsValid(roles))
 				throw new ArgumentException("Not valid role(s)", "roles");
 
+			if (_CrudDao.Exists<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == u.Id)))
+				throw new UserAlreadyProjectMemberException();
+
 			var member = ProjectMemberModel.FromParameters(u, p, roles);
 			_CrudDao.Store(member);
 			return new ProjectMemberAdapter(_LocalizationService).Fill(member);
@@ -299,6 +302,22 @@ namespace AGO.Tasks.Controllers
 			},
 			pmm => new ProjectMemberAdapter(_LocalizationService).Fill(pmm),
 			() => { throw new ProjectMemberCreationNotSupportedException(); });
+		}
+
+
+		//TODO needs abstraction in core, that require this method (optional, some modules may does not support role switching)
+		[JsonEndpoint, RequireAuthorization]
+		public bool SwitchRole([NotEmpty] string project, [NotEmpty] string current)
+		{
+			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
+			if (p == null)
+				throw new NoSuchProjectException();
+			var user = _AuthController.CurrentUser();
+			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == user.Id));
+			if (member == null)
+				throw new NoSuchProjectMemberException();
+
+			return ChangeMemberCurrentRole(member.Id, current).Validation.Success;
 		}
 	}
 }
