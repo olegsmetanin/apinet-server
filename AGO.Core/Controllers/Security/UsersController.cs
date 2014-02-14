@@ -149,6 +149,12 @@ namespace AGO.Core.Controllers.Security
 			return new { currentLocale = result };
 		}
 
+		[JsonEndpoint]
+		public string GetLocale()
+		{
+			return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupUsers(string term, [InRange(0, null)] int page)
 		{
