@@ -151,6 +151,9 @@
     <Compile Include="Notification\INotificationService.cs" />
     <Compile Include="Notification\NotificationService.cs" />
     <Compile Include="QueryOverExtensions.cs" />
+    <Compile Include="Security\ISecurityConstraintsProvider.cs" />
+    <Compile Include="Security\ISecurityService.cs" />
+    <Compile Include="Security\SecurityService.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
     <Compile Include="TestDataService.cs" />
@@ -380,6 +383,7 @@
       <Name>AGO.Reporting.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

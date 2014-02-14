@@ -17,7 +17,7 @@ namespace AGO.Core
 
 			//Solution without havy count(*) operation, only
 			//select top (1) 1 from xxx where...
-			//May be more elegant way to write this in nhibernate
+			//May be more elegant way to write this in nhibernate exists
 			return query.UnderlyingCriteria
 				.SetProjection(Projections.Constant(1, NHibernateUtil.Int32))
 				.SetMaxResults(1)

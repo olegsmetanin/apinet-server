@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -16,6 +17,13 @@ namespace AGO.Core
 			{
 				memberExpr = unaryExpr.Operand as MemberExpression;
 				constExpr = unaryExpr.Operand as ConstantExpression;
+				var methodCallExpr = unaryExpr.Operand as MethodCallExpression;
+				if (methodCallExpr != null)
+				{
+					var compiled = Expression.Lambda(methodCallExpr).Compile();
+					var value = compiled.DynamicInvoke();
+					constExpr = Expression.Constant(value);
+				}
 			}
 
 			if (constExpr != null)
