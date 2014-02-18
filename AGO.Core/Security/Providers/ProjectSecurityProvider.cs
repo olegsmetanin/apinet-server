@@ -14,8 +14,12 @@ namespace AGO.Core.Security.Providers
 
 		public override IModelFilterNode ReadConstraint(string project, UserModel user, ISession session)
 		{
-			return FilteringService.Filter<ProjectModel>().Where(m =>
-				m.VisibleForAll).Or().WhereCollection(m => m.Members).Where(m => m.User.Id == user.Id);
+			//admins view all projects
+			if (user.IsAdmin) return null;
+			//members view public (visible for all) or projects where participated
+			return FilteringService.Filter<ProjectModel>().Or()
+				.Where(m => m.VisibleForAll)
+				.WhereCollection(m => m.Members).Where(m => m.User.Id == user.Id).End();
 		}
 
 		public override bool CanCreate(ProjectModel model, string project, UserModel user, ISession session)

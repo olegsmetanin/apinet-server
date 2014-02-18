@@ -1,0 +1,107 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Projects;
+using AGO.Core.Model.Security;
+using NHibernate;
+
+namespace AGO.Core.Tests
+{
+	public class ModelHelper: AbstractModelHelper
+	{
+		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser):base(session, currentUser)
+		{
+		}
+
+		public ProjectModel ProjectFromCode(string code)
+		{
+			return Session().QueryOver<ProjectModel>().Where(m => m.ProjectCode == code).SingleOrDefault();
+		}
+
+		public IEnumerable<ProjectMemberModel> ProjectMembers(string code)
+		{
+			return Session().QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
+		}
+
+		protected override void InternalDelete(object model)
+		{
+			var project = model as ProjectModel;
+			if (project != null)
+			{
+				foreach (var member in ProjectMembers(project.ProjectCode))
+				{
+					Session().Delete(member);
+				}
+			}
+			base.InternalDelete(model);
+		}
+
+		public ProjectTypeModel MakeProjectType(string name = null)
+		{
+			return Track(() =>
+			{
+				var pt = new ProjectTypeModel
+				{
+					CreationTime = DateTime.UtcNow,
+					Creator = CurrentUser(),
+					Module = "NUnit",
+					Name = name ?? "NUnit test project type"
+				};
+				Session().Save(pt);
+				Session().Flush();
+				return pt;
+			});
+		}
+
+		public ProjectModel MakeProject(string code, string type = null, string name = null, UserModel creator = null, bool pub = false)
+		{
+			if (code.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("code");
+
+			return Track(() =>
+			{
+				var pt = !type.IsNullOrWhiteSpace()
+					? Session().QueryOver<ProjectTypeModel>().Where(m => m.Name == type).SingleOrDefault()
+					: Session().QueryOver<ProjectTypeModel>().List().Take(1).First();
+				var p = new ProjectModel
+				{
+					Creator = creator ?? CurrentUser(),
+					CreationTime = DateTime.UtcNow,
+					ProjectCode = code,
+					Name = name ?? "NUnit project " + code,
+					Type = pt,
+					VisibleForAll = pub
+				};
+				Session().Save(p);
+				Session().Flush();
+				return p;
+			});
+		}
+
+		public ProjectMemberModel MakeMember(string project, UserModel user, params string[] roles)
+		{
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("project");
+			if (user == null)
+				throw new ArgumentNullException("user");
+
+			return Track(() =>
+			{
+				var p = ProjectFromCode(project);
+				var membership = new ProjectMembershipModel
+				{
+					Project = p,
+					User = user
+				};
+				p.Members.Add(membership);
+				Session().Update(p);
+				roles = roles != null && roles.Length > 0 ? roles : new[] {BaseProjectRoles.Administrator};
+				var member = ProjectMemberModel.FromParameters(user, p, roles);
+				Session().Save(member);
+				Session().Flush();
+				return member;
+			});
+		}
+	}
+}

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using AGO.Core.Application;
 using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
@@ -10,39 +9,39 @@ using NUnit.Framework;
 
 namespace AGO.Core.Tests.Security
 {
-	[TestFixture]
-	public class SecurityServiceTests: AbstractPersistenceApplication
+	public class SecurityServiceTests: AbstractPersistenceTest<ModelHelper>
 	{
-		private string project;
+		private ProjectModel testProject;
 		private UserModel admin;
 
-		[TestFixtureSetUp]
-		public void TestSetUp()
+		public override void FixtureSetUp()
 		{
-			Initialize();
-			project = "crm"; //from core test data service
+			base.FixtureSetUp();
+
+			testProject = FM.MakeProject(Guid.NewGuid().ToString().Replace("-", string.Empty));
+			admin = LoginAdmin();
 		}
 
 		private ISecurityService ss;
-		private ISessionProvider sp;
 		private IFilteringService fs;
 
-		[SetUp]
-		public void SetUp()
+		public override void SetUp()
 		{
-			sp = IocContainer.GetInstance<ISessionProvider>();
+			base.SetUp();
+
 			fs = IocContainer.GetInstance<IFilteringService>();
-			ss = new SecurityService(fs);
-			admin = sp.CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.Login == "admin@apinet-test.com").SingleOrDefault();
+			ss = new SecurityService(fs);			
 		}
 
-		[TearDown]
-		public void TearDown()
+		public override void TearDown()
 		{
-			sp.CloseCurrentSession();
 			ss = null;
-			admin = null;
+		}
+
+		protected override void CreateModelHelpers()
+		{
+			FM = new ModelHelper(() => Session, () => CurrentUser);
+			//M = ... not used
 		}
 
 		[Test]
@@ -64,7 +63,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void ServiceReturnEmptyRestrictionsWithoutProviders()
 		{
-			var filter = ss.ApplyReadConstraint<ProjectModel>(null, admin.Id, sp.CurrentSession);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(null, admin.Id, Session);
 
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items, Is.Empty);
@@ -80,7 +79,7 @@ namespace AGO.Core.Tests.Security
 			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
 			ss.RegisterProvider(mock);
 			//act
-			var filter = ss.ApplyReadConstraint<ProjectModel>(project, admin.Id, sp.CurrentSession);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, Session);
 			//assert
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items.Count(), Is.EqualTo(1));
@@ -99,9 +98,9 @@ namespace AGO.Core.Tests.Security
 			mock.AcceptRead(null).ReturnsForAnyArgs(true);
 			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
 			ss.RegisterProvider(mock);
-			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == project);
+			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == testProject.ProjectCode);
 			//act
-			var filter = ss.ApplyReadConstraint<ProjectModel>(project, admin.Id, sp.CurrentSession, criteria);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, Session, criteria);
 			//assert
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items.Count(), Is.EqualTo(2));
@@ -129,10 +128,10 @@ namespace AGO.Core.Tests.Security
 			mock2.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(filter2);
 			ss.RegisterProvider(mock1);
 			ss.RegisterProvider(mock2);
-			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == project);
+			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == testProject.ProjectCode);
 
 			//act
-			var filter = ss.ApplyReadConstraint<ProjectModel>(project, admin.Id, sp.CurrentSession, criteria);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, Session, criteria);
 
 			//assert
 			Assert.That(filter, Is.Not.Null);
@@ -150,10 +149,8 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void ServiceDemandDoesNotThrowWithoutProviders()
 		{
-			var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == project).SingleOrDefault();
-
-			Assert.That(() => ss.DemandUpdate(p, project, admin.Id, sp.CurrentSession), Throws.Nothing);
-			Assert.That(() => ss.DemandDelete(p, project, admin.Id, sp.CurrentSession), Throws.Nothing);
+			Assert.That(() => ss.DemandUpdate(testProject, testProject.ProjectCode, admin.Id, Session), Throws.Nothing);
+			Assert.That(() => ss.DemandDelete(testProject, testProject.ProjectCode, admin.Id, Session), Throws.Nothing);
 		}
 
 		[Test]
@@ -176,11 +173,9 @@ namespace AGO.Core.Tests.Security
 			var p = new ProjectModel {ProjectCode = "test"};
 			Assert.That(() => ss.DemandUpdate(p, null, Guid.Empty, null), 
 				Throws.Exception.TypeOf<CreationDeniedException>());
+
 			//existing model
-			p.Id = Guid.NewGuid();
-			p.ModelVersion = 1;
-			Assert.That(p.IsNew(), Is.False);
-			Assert.That(() => ss.DemandUpdate(p, null, Guid.Empty, null),
+			Assert.That(() => ss.DemandUpdate(testProject, null, Guid.Empty, null),
 				Throws.Exception.TypeOf<ChangeDeniedException>());
 			Assert.That(() => ss.DemandDelete(p, null, Guid.Empty, null),
 				Throws.Exception.TypeOf<DeleteDeniedException>());

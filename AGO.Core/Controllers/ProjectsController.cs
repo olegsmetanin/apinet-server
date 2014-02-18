@@ -112,9 +112,10 @@ namespace AGO.Core.Controllers
 
 			try
 			{
+				var currentUser = _AuthController.CurrentUser();
 				var newProject = new ProjectModel
 				{
-					Creator = _AuthController.CurrentUser(),
+					Creator = currentUser,
 					ProjectCode = model.ProjectCode.TrimSafe(),
 					Name = model.Name.TrimSafe(),
 					Description = model.Description.TrimSafe(),
@@ -129,22 +130,27 @@ namespace AGO.Core.Controllers
 				if (!validation.Success)
 					return validation;
 
+				//need to call before first Store called, because after this IsNew return false
+				SecurityService.DemandUpdate(newProject, newProject.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
+
 				_CrudDao.Store(newProject);
 
-				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, _AuthController.CurrentUser());
+				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, currentUser);
 				_CrudDao.Store(statusHistoryRow);
 
 				foreach (var tag in tagIds.Select(id => _CrudDao.Get<ProjectTagModel>(id)))
 				{
 					_CrudDao.Store(new ProjectToTagModel
 					{
-						Creator = _AuthController.CurrentUser(),
+						Creator = currentUser,
 						Tag = tag,
 						Project = newProject
 					});
 				}
 
-				_CrudDao.Store(new ProjectMembershipModel{ Project = newProject, User = newProject.Creator});
+				var membership = new ProjectMembershipModel {Project = newProject, User = newProject.Creator};
+				newProject.Members.Add(membership);
+				_CrudDao.Store(newProject);
 				_CrudDao.Store(ProjectMemberModel.FromParameters(newProject.Creator, newProject, BaseProjectRoles.Administrator));
 
 				return newProject;

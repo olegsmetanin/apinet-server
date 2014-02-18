@@ -130,7 +130,7 @@ namespace AGO.Core
 				LastName = "Smith",
 				Name = "Oleg",
 				MiddleName = "",
-				SystemRole = SystemRole.Administrator,
+				SystemRole = SystemRole.Member,
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "1640647496"
 			};
