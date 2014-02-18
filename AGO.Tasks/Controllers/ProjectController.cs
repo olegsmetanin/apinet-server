@@ -15,6 +15,7 @@ using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Security;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Task;
 using NHibernate;
@@ -33,14 +34,20 @@ namespace AGO.Tasks.Controllers
 			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
-			AuthController authController) : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
+			AuthController authController,
+			ISecurityService securityService) 
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
 		{
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public ProjectDTO GetProject([NotEmpty] string project)
 		{
-			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
+			var currentUser = _AuthController.CurrentUser();
+			IModelFilterNode codePredicate = _FilteringService.Filter<ProjectModel>().Where(m => m.ProjectCode == project);
+			codePredicate = SecurityService.ApplyReadConstraint<ProjectModel>(project, currentUser.Id,
+				_SessionProvider.CurrentSession, codePredicate);
+			var p = _FilteringDao.List<ProjectModel>(new[] {codePredicate}).SingleOrDefault();
 
 			if (p == null)
 				throw new NoSuchProjectException();
@@ -205,6 +212,7 @@ namespace AGO.Tasks.Controllers
 				throw new UserAlreadyProjectMemberException();
 
 			var member = ProjectMemberModel.FromParameters(u, p, roles);
+			SecurityService.DemandUpdate(member, project, u.Id, Session);
 			_CrudDao.Store(member);
 			return new ProjectMemberAdapter(_LocalizationService).Fill(member);
 		}
@@ -213,13 +221,20 @@ namespace AGO.Tasks.Controllers
 		public void RemoveMember([NotEmpty] Guid memberId)
 		{
 			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
-			//TODO security checks
 			
+			SecurityService.DemandDelete(member, member.ProjectCode, _AuthController.CurrentUser().Id, Session);
+
 			if (_CrudDao.Exists<TaskExecutorModel>(q => q.Where(m => m.Executor.Id == member.Id)) ||
 				_CrudDao.Exists<TaskAgreementModel>(q => q.Where(m => m.Agreemer.Id == member.Id)))
 				throw new CannotDeleteReferencedItemException();
 
+			var project = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == member.ProjectCode));
+			var membership = _CrudDao.Find<ProjectMembershipModel>(q =>
+				q.Where(m => m.ProjectId == project.Id && m.User.Id == member.UserId));
 			_CrudDao.Delete(member);
+			//Remove from central database, other sess factory will be used and separate flush/commit needed
+			if (membership != null)
+				_CrudDao.Delete(membership);
 		}
 
 		private static IDictionary<string, LookupEntry[]> cache;

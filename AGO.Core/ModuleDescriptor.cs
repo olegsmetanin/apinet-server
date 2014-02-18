@@ -6,6 +6,7 @@ using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Localization;
 using AGO.Core.Modules;
 using AGO.Core.Controllers;
+using AGO.Core.Security;
 using AGO.Reporting.Common.Model;
 
 namespace AGO.Core
@@ -24,6 +25,8 @@ namespace AGO.Core
 		{
 			var di = app.IocContainer;
 
+			app.RegisterModuleSecurityProviders(GetType().Assembly);
+
 			di.RegisterSingle<FacebookProvider>();
 			di.RegisterInitializer<FacebookProvider>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^OAuth_Facebook_(.*)", app.KeyValueProvider)).ApplyTo(service));
@@ -41,6 +44,8 @@ namespace AGO.Core
 
 		public void Initialize(IApplication app)
 		{
+			app.SecurityService.InitializeModuleSecurityProviders(app.IocContainer);
+
 			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
 			app.LocalizationService.RegisterModuleLocalizers(typeof(ReportTaskState).Assembly);
 		}

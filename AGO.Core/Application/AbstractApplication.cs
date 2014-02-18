@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AGO.Core.Security;
 using Common.Logging;
 using AGO.Core.Config;
 using AGO.Core.Json;
@@ -45,6 +46,8 @@ namespace AGO.Core.Application
 		}
 
 		private IList<IModuleDescriptor> _ModuleDescriptors;
+		public ISecurityService SecurityService { get; private set; }
+
 		public virtual IList<IModuleDescriptor> ModuleDescriptors
 		{
 			get
@@ -126,6 +129,8 @@ namespace AGO.Core.Application
 			IocContainer.RegisterSingle<ILocalizationService, LocalizationService>();
 			IocContainer.RegisterInitializer<LocalizationService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Localization_(.*)", KeyValueProvider)).ApplyTo(service));
+
+			IocContainer.RegisterSingle<ISecurityService, SecurityService>();
 		}
 
 		protected virtual void DoInitializeApplication()
@@ -151,6 +156,7 @@ namespace AGO.Core.Application
 
 			LocalizationService = IocContainer.GetInstance<ILocalizationService>();
 			JsonService = IocContainer.GetInstance<IJsonService>();
+			SecurityService = IocContainer.GetInstance<ISecurityService>();
 		}
 
 		protected virtual void DoInitializeSingletons()

@@ -18,9 +18,8 @@ namespace AGO.Core.Model.Security
 		public virtual string RedirectUrl { get; set; }
 	}
 
-	//TODO move to separate file
 	/// <summary>
-	/// Facebook-specific oauth data
+	/// Twitter-specific oauth data
 	/// </summary>
 	public class TwitterOAuthDataModel : OAuthDataModel
 	{

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
+using AGO.Core.Attributes.Model;
 using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Model.Dictionary;
 using Newtonsoft.Json;
@@ -121,6 +122,12 @@ namespace AGO.Core.Model.Security
 
 				FullName = string.Join(" ", LastName, Name, MiddleName);
 			}
+		}
+
+		[NotMapped, MetadataExclude]
+		public virtual bool IsAdmin
+		{
+			get { return SystemRole == SystemRole.Administrator; }
 		}
 	}
 }

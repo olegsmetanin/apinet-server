@@ -88,12 +88,16 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectTypeModel>(m => m.Module);
 
 			Create.SecureModelTable<ProjectModel>()
-				.WithValueColumn<ProjectModel>(m => m.ProjectCode)
+				.WithValueColumn<ProjectModel>(m => m.ProjectCode).Unique("IX_ProjectModel_ProjectCode")
 				.WithValueColumn<ProjectModel>(m => m.Name)
 				.WithValueColumn<ProjectModel>(m => m.Description)
 				.WithRefColumn<ProjectModel>(m => m.Type)
 				.WithValueColumn<ProjectModel>(m => m.VisibleForAll)
 				.WithValueColumn<ProjectModel>(m => m.Status);
+
+			Create.CoreModelTable<ProjectMembershipModel>()
+				.WithRefColumn<ProjectMembershipModel>(pm => pm.Project)
+				.WithRefColumn<ProjectMembershipModel>(m => m.User);
 
 			Create.SecureModelTable<ProjectStatusHistoryModel>()
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Start)

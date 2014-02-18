@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using AGO.Core.Security;
 using SimpleInjector;
 using AGO.Core.Config;
 using AGO.Core.Json;
@@ -18,6 +19,8 @@ namespace AGO.Core.Application
 		IJsonService JsonService { get; }
 
 		ILocalizationService LocalizationService { get; }
+
+		ISecurityService SecurityService { get; }
 
 		IList<IModuleDescriptor> ModuleDescriptors { get; }
 

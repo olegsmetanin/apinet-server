@@ -14,7 +14,9 @@ using AGO.Core.Model.Projects;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Security;
 using NHibernate.Criterion;
+
 
 namespace AGO.Core.Controllers
 {
@@ -36,8 +38,9 @@ namespace AGO.Core.Controllers
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
-			AuthController authController)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
+			AuthController authController,
+			ISecurityService securityService)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
 		{
 		}
 
@@ -141,6 +144,7 @@ namespace AGO.Core.Controllers
 					});
 				}
 
+				_CrudDao.Store(new ProjectMembershipModel{ Project = newProject, User = newProject.Creator});
 				_CrudDao.Store(ProjectMemberModel.FromParameters(newProject.Creator, newProject, BaseProjectRoles.Administrator));
 
 				return newProject;
@@ -152,6 +156,21 @@ namespace AGO.Core.Controllers
 			}
 		}
 
+		private IEnumerable<IModelFilterNode> MakeProjectsPredicate(
+			ICollection<IModelFilterNode> filter,
+			ProjectsRequestMode mode)
+		{
+			var currentUser = _AuthController.CurrentUser();
+			if (mode == ProjectsRequestMode.Participated)
+			{
+				var membershipFilter = _FilteringService.Filter<ProjectModel>()
+					.WhereCollection(m => m.Members).Where(m => m.User.Id == currentUser.Id);
+
+				filter.Add(membershipFilter);
+			}
+			return new [] { SecurityService.ApplyReadConstraint<ProjectModel>(null, currentUser.Id, _SessionProvider.CurrentSession, filter.ToArray())};
+		}
+			
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectViewModel> GetProjects(
 			[InRange(0, null)] int page,
@@ -159,19 +178,7 @@ namespace AGO.Core.Controllers
 			[NotNull] ICollection<SortInfo> sorters,
 			ProjectsRequestMode mode)
 		{
-			if (mode == ProjectsRequestMode.Participated)
-			{
-				var modeFilter = new ModelFilterNode { Path = "Participants" };
-				modeFilter.AddItem(new ValueFilterNode
-				{
-					Path = "User",
-					Operator = ValueFilterOperators.Eq,
-					Operand = _AuthController.CurrentUser().Id.ToString()
-				});
-				filter.Add(modeFilter);
-			}
-			
-			var projects = _FilteringDao.List<ProjectModel>(filter, new FilteringOptions
+			var projects = _FilteringDao.List<ProjectModel>(MakeProjectsPredicate(filter, mode), new FilteringOptions
 			{
 				Page = page,
 				Sorters = sorters
@@ -181,7 +188,11 @@ namespace AGO.Core.Controllers
 			{
 				var viewModel = new ProjectViewModel(project);
 
-				var allowed = project.Tags.Where(m => m.Tag.CreatorId != null && m.Tag.CreatorId == _AuthController.CurrentUser().Id);
+				var allowed = project.Tags.Where(m =>
+				{
+
+					return m.Tag.CreatorId != null && m.Tag.CreatorId == _AuthController.CurrentUser().Id;
+				});
 				viewModel.Tags.UnionWith(allowed.OrderBy(tl => tl.Tag.Creator).ThenBy(tl => tl.Tag.FullName).Select(m => new LookupEntry
 				{
 					Id = m.Tag.Id.ToString(),
@@ -195,19 +206,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public int GetProjectsCount([NotNull] ICollection<IModelFilterNode> filter, ProjectsRequestMode mode)
 		{
-			if (mode == ProjectsRequestMode.Participated)
-			{
-				var modeFilter = new ModelFilterNode { Path = "Participants" };
-				modeFilter.AddItem(new ValueFilterNode
-				{
-					Path = "User",
-					Operator = ValueFilterOperators.Eq,
-					Operand = _AuthController.CurrentUser().Id.ToString()
-				});
-				filter.Add(modeFilter);
-			}
-
-			return _FilteringDao.RowCount<ProjectModel>(filter);
+			return _FilteringDao.RowCount<ProjectModel>(MakeProjectsPredicate(filter, mode));
 		}
 
 		[JsonEndpoint, RequireAuthorization]

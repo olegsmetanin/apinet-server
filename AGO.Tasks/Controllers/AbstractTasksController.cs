@@ -11,6 +11,7 @@ using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
+using AGO.Core.Security;
 using Common.Logging;
 using NHibernate;
 using NHibernate.Criterion;
@@ -27,8 +28,9 @@ namespace AGO.Tasks.Controllers
 			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
-			AuthController authController) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
+			AuthController authController,
+			ISecurityService securityService) 
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
 		{
 		}
 
@@ -92,12 +94,15 @@ namespace AGO.Tasks.Controllers
 					throw new NoSuchEntityException();
 
 				update(persistentModel, result.Validation);
-
+				//validate model
 				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation);
 				if (!result.Validation.Success)
 					return result;
-
+				//test permissions
+				SecurityService.DemandUpdate(persistentModel, project, _AuthController.CurrentUser().Id, Session);
+				//persist
 				_CrudDao.Store(persistentModel);
+
 				result.Model = convert(persistentModel);
 			}
 			catch (Exception e)

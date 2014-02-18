@@ -33,5 +33,25 @@ namespace AGO.Core.Security
 		/// <param name="session">NHibernate session for work</param>
 		/// <returns>Criteria for read constraint of entity or null, if no restrictions</returns>
 		IModelFilterNode ReadConstraint(string project, Guid userId, ISession session);
+
+		/// <summary>
+		/// Test, that provided user has permissions to create this model
+		/// </summary>
+		/// <param name="model">Model to create</param>
+		/// <param name="project">Project (may be null for system providers)</param>
+		/// <param name="userId">User identifier</param>
+		/// <param name="session">NHibernate session for work</param>
+		/// <returns>true, if user can create this model (store in db)</returns>
+		bool CanCreate(IIdentifiedModel model, string project, Guid userId, ISession session);
+
+		/// <summary>
+		/// <see cref="CanCreate"/>
+		/// </summary>
+		bool CanUpdate(IIdentifiedModel model, string project, Guid userId, ISession session);
+
+		/// <summary>
+		/// <see cref="CanCreate"/>
+		/// </summary>
+		bool CanDelete(IIdentifiedModel model, string project, Guid userId, ISession session);
 	}
 }

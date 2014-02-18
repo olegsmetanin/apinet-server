@@ -83,7 +83,6 @@
     <Compile Include="Config\KeyValueConfigurableDictionary.cs" />
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
-    <Compile Include="Controllers\AbstractTagsAwareController.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
     <Compile Include="Controllers\Downloader.cs" />
@@ -131,6 +130,7 @@
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
+    <Compile Include="Model\Projects\ProjectMembershipModel.cs" />
     <Compile Include="Model\Projects\ProjectModel.cs" />
     <Compile Include="Model\Projects\ProjectMemberModel.cs" />
     <Compile Include="Model\Projects\ProjectStatus.cs" />
@@ -151,8 +151,13 @@
     <Compile Include="Notification\INotificationService.cs" />
     <Compile Include="Notification\NotificationService.cs" />
     <Compile Include="QueryOverExtensions.cs" />
+    <Compile Include="Security\AbstractModuleSecurityConstraintsProvider.cs" />
+    <Compile Include="Security\AbstractSecurityConstraintsProvider.cs" />
     <Compile Include="Security\ISecurityConstraintsProvider.cs" />
     <Compile Include="Security\ISecurityService.cs" />
+    <Compile Include="Security\OperationDeniedException.cs" />
+    <Compile Include="Security\Providers\ProjectSecurityProvider.cs" />
+    <Compile Include="Security\Providers\ProjectTagSecurityProvider.cs" />
     <Compile Include="Security\SecurityService.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
@@ -369,6 +374,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Security\SystemRole.ru.resx">
       <DependentUpon>SystemRole.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Security\OperationDeniedException.resx">
+      <DependentUpon>OperationDeniedException.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Security\OperationDeniedException.ru.resx">
+      <DependentUpon>OperationDeniedException.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

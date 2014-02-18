@@ -20,6 +20,7 @@ using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Notification;
+using AGO.Core.Security;
 using AGO.Core.Watchers;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
@@ -47,8 +48,9 @@ namespace AGO.Core.Controllers
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
 			INotificationService notificationService,
+			ISecurityService securityService,
 			IWorkQueue workQueue) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
 		{
 			if (notificationService == null)
 				throw new ArgumentNullException("notificationService");

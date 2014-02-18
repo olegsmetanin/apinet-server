@@ -9,6 +9,7 @@ using AGO.Core.Filters;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
+using AGO.Core.Security;
 
 namespace AGO.Core.Controllers
 {
@@ -32,6 +33,8 @@ namespace AGO.Core.Controllers
 
 		protected readonly AuthController _AuthController;
 
+		protected readonly ISecurityService SecurityService;
+
 		protected AbstractController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
@@ -40,7 +43,8 @@ namespace AGO.Core.Controllers
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
-			AuthController authController)
+			AuthController authController,
+			ISecurityService securityService)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -73,6 +77,10 @@ namespace AGO.Core.Controllers
 			if (authController == null)
 				throw new ArgumentNullException("authController");
 			_AuthController = authController;
+
+			if (securityService == null)
+				throw new ArgumentNullException("securityService");
+			SecurityService = securityService;
 		}
 
 		#endregion

@@ -26,13 +26,13 @@ namespace AGO.Core
 
 		public static bool Exists<TModel>(
 			this QueryOver<TModel> query,
-			ISessionProvider sessionProvider) 
+			ISession session) 
 			where TModel : class
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
+			if (session == null)
+				throw new ArgumentNullException("session");
 
-			return query.GetExecutableQueryOver(sessionProvider.CurrentSession).Exists();
+			return query.GetExecutableQueryOver(session).Exists();
 		}
 
 		#endregion

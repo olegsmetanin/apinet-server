@@ -11,6 +11,7 @@ using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Security;
 using Newtonsoft.Json.Linq;
 using NHibernate.Criterion;
 
@@ -37,8 +38,9 @@ namespace AGO.Core.Controllers.Security
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
+			ISecurityService securityService,
 			IStateStorage<string> clientStateStorage)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
 		{
 			if (clientStateStorage == null)
 				throw new ArgumentNullException("clientStateStorage");

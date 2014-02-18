@@ -46,6 +46,10 @@ namespace AGO.Core.Model.Projects
 		public virtual ISet<ProjectToTagModel> Tags { get { return tags; } set { tags = value; } }
 		private ISet<ProjectToTagModel> tags = new HashSet<ProjectToTagModel>();
 
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+		public virtual ISet<ProjectMembershipModel> Members { get { return members; } set { members = value; } }
+		private ISet<ProjectMembershipModel> members = new HashSet<ProjectMembershipModel>();
+
 		#endregion
 
 		#region Non-persistent

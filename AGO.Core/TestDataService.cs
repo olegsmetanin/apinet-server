@@ -89,7 +89,7 @@ namespace AGO.Core
 				LastName = "Naumov",
 				Name = "Artem",
 				MiddleName = "",
-				SystemRole = SystemRole.Administrator
+				SystemRole = SystemRole.Member
 			};
 			var artem1Fb = new UserModel
 			{
@@ -100,7 +100,7 @@ namespace AGO.Core
 				LastName = "Facebook",
 				Name = "Artem",
 				MiddleName = "",
-				SystemRole = SystemRole.Administrator,
+				SystemRole = SystemRole.Member,
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "100007697794498"
 			};
@@ -114,7 +114,7 @@ namespace AGO.Core
 				LastName = "Twitter",
 				Name = "Artem",
 				MiddleName = "",
-				SystemRole = SystemRole.Administrator,
+				SystemRole = SystemRole.Member,
 				OAuthProvider = OAuthProvider.Twitter,
 				OAuthUserId = "1632745315"
 			};

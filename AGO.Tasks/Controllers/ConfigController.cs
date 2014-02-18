@@ -9,6 +9,7 @@ using AGO.Core.Localization;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
 using AGO.Core.Modules.Attributes;
+using AGO.Core.Security;
 
 namespace AGO.Tasks.Controllers
 {
@@ -23,8 +24,9 @@ namespace AGO.Tasks.Controllers
 			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
-			AuthController authController) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController)
+			AuthController authController,
+			ISecurityService securityService) 
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
 		{
 		}
 

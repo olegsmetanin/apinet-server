@@ -81,6 +81,15 @@ namespace AGO.Tasks
 
 		protected dynamic DoPopulateProjects(dynamic context)
 		{
+			Func<ProjectModel, UserModel, string, ProjectMemberModel> addMember = (p, u, r) =>
+			{
+				var member = ProjectMemberModel.FromParameters(u, p, r);
+				_CrudDao.Store(member);
+				var membership = new ProjectMembershipModel {Project = p, User = u};
+				p.Members.Add(membership);
+				return member;
+			};
+
 			Func<string, string, string, ProjectModel> createProject = (code, name, description) =>
 			{
 				var project = new ProjectModel
@@ -95,27 +104,25 @@ namespace AGO.Tasks
 
 				_CrudDao.Store(project.ChangeStatus(ProjectStatus.New, context.Admin));
 
-				var pcAdmin = ProjectMemberModel.FromParameters(context.Admin, project, BaseProjectRoles.Administrator);
+				var pcAdmin = addMember(project, context.Admin, BaseProjectRoles.Administrator);
 				pcAdmin.UserPriority = 50;
 				_CrudDao.Store(pcAdmin);
 
-				var pcUser1 = ProjectMemberModel.FromParameters(context.User1, project, BaseProjectRoles.Administrator);
+				var pcUser1 = addMember(project, context.User1, BaseProjectRoles.Administrator);
 				pcUser1.UserPriority = 25;
 				_CrudDao.Store(pcUser1);
 
-				var pcUser2 = ProjectMemberModel.FromParameters(context.User2, project, BaseProjectRoles.Administrator);
-				pcUser2.UserPriority = 0;
+				var pcUser2 = addMember(project, context.User2, TaskProjectRoles.Manager);
 				_CrudDao.Store(pcUser2);
 
-				var pcUser3 = ProjectMemberModel.FromParameters(context.User3, project, BaseProjectRoles.Administrator);
-				pcUser3.UserPriority = 0;
+				var pcUser3 = addMember(project, context.User3, TaskProjectRoles.Executor);
 				_CrudDao.Store(pcUser3);
 
-				var pcArtem1 = ProjectMemberModel.FromParameters(context.Artem1, project, BaseProjectRoles.Administrator);
+				var pcArtem1 = addMember(project, context.Artem1, BaseProjectRoles.Administrator);
 				pcArtem1.UserPriority = 10;
 				_CrudDao.Store(pcArtem1);
 
-				var pcOlegSmith = ProjectMemberModel.FromParameters(context.OlegSmith, project, BaseProjectRoles.Administrator);
+				var pcOlegSmith = addMember(project, context.OlegSmith, BaseProjectRoles.Administrator);
 				pcOlegSmith.UserPriority = 15;
 				_CrudDao.Store(pcOlegSmith);
 

@@ -2,6 +2,7 @@
 using AGO.Core.Application;
 using AGO.Core.Modules;
 using AGO.Core.Localization;
+using AGO.Core.Security;
 using AGO.Tasks.Controllers;
 
 namespace AGO.Tasks
@@ -28,6 +29,7 @@ namespace AGO.Tasks
 
 		public void Register(IApplication app)
 		{
+			app.RegisterModuleSecurityProviders(GetType().Assembly);
 		}
 
 		public void Initialize(IApplication app)

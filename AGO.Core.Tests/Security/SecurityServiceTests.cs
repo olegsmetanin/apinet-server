@@ -2,11 +2,10 @@
 using System.Linq;
 using AGO.Core.Application;
 using AGO.Core.Filters;
-using AGO.Core.Model;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Security;
-using NHibernate;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace AGO.Core.Tests.Security
@@ -74,8 +73,12 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void ServiceApplyRestrictionFromRegisteredProvider()
 		{
+			var testFilter = new ModelFilterNode {Path = "testpath"};
 			//arrange
-			ss.RegisterProvider(new ByTagsProjectSecurityProvider(fs, "Urgent"));
+			var mock = Substitute.For<ISecurityConstraintsProvider>();
+			mock.AcceptRead(null).ReturnsForAnyArgs(true);
+			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
+			ss.RegisterProvider(mock);
 			//act
 			var filter = ss.ApplyReadConstraint<ProjectModel>(project, admin.Id, sp.CurrentSession);
 			//assert
@@ -83,24 +86,19 @@ namespace AGO.Core.Tests.Security
 			Assert.That(filter.Items.Count(), Is.EqualTo(1));
 			var tagsPath = filter.Items.First() as IModelFilterNode;
 			Assert.That(tagsPath, Is.Not.Null);
-			Assert.That(tagsPath.Path, Is.EqualTo("Tags"));
-			Assert.That(tagsPath.Items.Count(), Is.EqualTo(1));
-			var tagPath = tagsPath.Items.First() as IModelFilterNode;
-			Assert.That(tagPath, Is.Not.Null);
-			Assert.That(tagPath.Path, Is.EqualTo("Tag"));
-			Assert.That(tagPath.Items.Count(), Is.EqualTo(1));
-			var fullNameRestriction = tagPath.Items.First() as IValueFilterNode;
-			Assert.That(fullNameRestriction, Is.Not.Null);
-			Assert.That(fullNameRestriction.Path, Is.EqualTo("FullName"));
-			Assert.That(fullNameRestriction.Operand, Is.EqualTo("%Urgent%"));
-			Assert.That(fullNameRestriction.Operator, Is.EqualTo(ValueFilterOperators.Like));
+// ReSharper disable once PossibleNullReferenceException
+			Assert.That(tagsPath.Path, Is.EqualTo(testFilter.Path));
 		}
 
 		[Test]
-		public void ServiceConcatcriteriaWithRestrictionFromRegisteredProvider()
+		public void ServiceConcatCriteriaWithRestrictionFromRegisteredProvider()
 		{
+			var testFilter = new ModelFilterNode { Path = "testpath" };
 			//arrange
-			ss.RegisterProvider(new ByTagsProjectSecurityProvider(fs, "Urgent"));
+			var mock = Substitute.For<ISecurityConstraintsProvider>();
+			mock.AcceptRead(null).ReturnsForAnyArgs(true);
+			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
+			ss.RegisterProvider(mock);
 			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == project);
 			//act
 			var filter = ss.ApplyReadConstraint<ProjectModel>(project, admin.Id, sp.CurrentSession, criteria);
@@ -112,12 +110,86 @@ namespace AGO.Core.Tests.Security
 
 			var innerFilters = filter.Items.Cast<IModelFilterNode>();
 			//Strange, but after where criteria placed in inner items collection
-			Assert.That(innerFilters, Has.Exactly(1).Matches<IModelFilterNode>(f => f.Path == "Tags"));
-			Assert.That(innerFilters, Has.Exactly(1).Matches<IModelFilterNode>(
-				f => f.Items.First().Path == "ProjectCode"));
+			Assert.That(innerFilters, Has.Exactly(1).Matches<IModelFilterNode>(f => f.Path == testFilter.Path));
+			Assert.That(innerFilters, Has.Exactly(1).Matches<IModelFilterNode>(f => 
+				f.Items.Count() == 1 && f.Items.First().Path == "ProjectCode"));
 		}
 
-//		[Test]
+		[Test]
+		public void ServiceConcatCriteriaOnlyFromAcceptableProviders()
+		{
+			//arrange
+			var filter1 = new ModelFilterNode {Path = "f1"};
+			var filter2 = new ModelFilterNode { Path = "f2" };
+			var mock1 = Substitute.For<ISecurityConstraintsProvider>();
+			var mock2 = Substitute.For<ISecurityConstraintsProvider>();
+			mock1.AcceptRead(null).ReturnsForAnyArgs(true);
+			mock2.AcceptRead(null).ReturnsForAnyArgs(false);
+			mock1.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(filter1);
+			mock2.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(filter2);
+			ss.RegisterProvider(mock1);
+			ss.RegisterProvider(mock2);
+			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == project);
+
+			//act
+			var filter = ss.ApplyReadConstraint<ProjectModel>(project, admin.Id, sp.CurrentSession, criteria);
+
+			//assert
+			Assert.That(filter, Is.Not.Null);
+			Assert.That(filter.Items.Count(), Is.EqualTo(2));
+
+			Assert.That(filter.Items, Has.All.Matches(Is.InstanceOf<IModelFilterNode>()));
+
+			var innerFilters = filter.Items.Cast<IModelFilterNode>();
+			Assert.That(innerFilters, Has.Exactly(1).Matches<IModelFilterNode>(f => f.Path == filter1.Path));
+			Assert.That(innerFilters, Has.None.Matches<IModelFilterNode>(f => f.Path == filter2.Path));
+			Assert.That(innerFilters, Has.Exactly(1).Matches<IModelFilterNode>(f =>
+				f.Items.Count() == 1 && f.Items.First().Path == "ProjectCode"));
+		}
+
+		[Test]
+		public void ServiceDemandDoesNotThrowWithoutProviders()
+		{
+			var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == project).SingleOrDefault();
+
+			Assert.That(() => ss.DemandUpdate(p, project, admin.Id, sp.CurrentSession), Throws.Nothing);
+			Assert.That(() => ss.DemandDelete(p, project, admin.Id, sp.CurrentSession), Throws.Nothing);
+		}
+
+		[Test]
+		public void ServiceThrowIfOneOfProvidersDenyChange()
+		{
+			var denyMock = Substitute.For<ISecurityConstraintsProvider>();
+			var grantMock = Substitute.For<ISecurityConstraintsProvider>();
+			denyMock.AcceptChange(null).ReturnsForAnyArgs(true);
+			grantMock.AcceptChange(null).ReturnsForAnyArgs(true);
+			denyMock.CanCreate(null, null, Guid.Empty, null).ReturnsForAnyArgs(false);
+			denyMock.CanUpdate(null, null, Guid.Empty, null).ReturnsForAnyArgs(false);
+			denyMock.CanDelete(null, null, Guid.Empty, null).ReturnsForAnyArgs(false);
+			grantMock.CanCreate(null, null, Guid.Empty, null).ReturnsForAnyArgs(true);
+			grantMock.CanUpdate(null, null, Guid.Empty, null).ReturnsForAnyArgs(true);
+			grantMock.CanDelete(null, null, Guid.Empty, null).ReturnsForAnyArgs(true);
+			ss.RegisterProvider(denyMock);
+			ss.RegisterProvider(grantMock);
+
+			//new model
+			var p = new ProjectModel {ProjectCode = "test"};
+			Assert.That(() => ss.DemandUpdate(p, null, Guid.Empty, null), 
+				Throws.Exception.TypeOf<CreationDeniedException>());
+			//existing model
+			p.Id = Guid.NewGuid();
+			p.ModelVersion = 1;
+			Assert.That(p.IsNew(), Is.False);
+			Assert.That(() => ss.DemandUpdate(p, null, Guid.Empty, null),
+				Throws.Exception.TypeOf<ChangeDeniedException>());
+			Assert.That(() => ss.DemandDelete(p, null, Guid.Empty, null),
+				Throws.Exception.TypeOf<DeleteDeniedException>());
+		}
+
+		#region First attempts for concat security and provided criterias. 
+		//save this code as our query builder will not covered by tests and used everywhere
+
+		//		[Test]
 //		public void CombineSimpleWithDeepPath()
 //		{
 //			//app
@@ -228,37 +300,7 @@ namespace AGO.Core.Tests.Security
 //			criteria.CreateCriteria("Tags").CreateCriteria("Tag").Add(byTag);
 //
 //			return criteria;
-//		}
-
-		private class ByTagsProjectSecurityProvider : ISecurityConstraintsProvider
-		{
-			public string RequiredTag;
-			private IFilteringService fs;
-
-			public ByTagsProjectSecurityProvider(IFilteringService fs, string tag = null)
-			{
-				this.fs = fs;
-				RequiredTag = tag;
-			}
-
-			public bool AcceptRead(Type modelType)
-			{
-				return typeof (ProjectModel).IsAssignableFrom(modelType);
-			}
-
-			public bool AcceptChange(IIdentifiedModel model)
-			{
-				return model is ProjectModel;
-			}
-
-			public IModelFilterNode ReadConstraint(string project, Guid userId, ISession session)
-			{
-				var builder = fs.Filter<ProjectModel>();
-				return builder
-					.WhereCollection(m => m.Tags)
-					.WhereString(m => m.Tag.FullName)
-					.Like(RequiredTag, true, true);
-			}
-		}
+		//		}
+		#endregion
 	}
 }

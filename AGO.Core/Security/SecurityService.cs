@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Filters;
+using AGO.Core.Model;
 using NHibernate;
 
 
@@ -49,30 +50,35 @@ namespace AGO.Core.Security
 				.Select(p => p.ReadConstraint(project, userId, session));
 		}
 
-//		public IModelFilterNode ApplyReadConstraint<T>(string project, Guid userId, ISession session)
-//		{
-//			throw new NotImplementedException();
-//			return providers
-//				.Where(p => p.AcceptRead(typeof (T)))
-//				.Aggregate(criteria, (current, provider) =>
-//				{
-//					var restriction = provider.ReadConstraint(project, userId, session);
-//					return restriction != null ? criteria.And(restriction) : criteria;
-//				});
+		public void DemandUpdate(IIdentifiedModel model, string project, Guid userId, ISession session)
+		{
+			if (model == null)
+				throw new ArgumentNullException("model");
 
-//			return ApplyReadConstraint(typeof (T), criteria, project, userId, session) as IQueryOver<T>;
-//		}
+			var isNew = model.IsNew();
+			var allowed = providers
+				.Where(p => p.AcceptChange(model))
+				.All(p => isNew 
+					? p.CanCreate(model, project, userId, session) 
+					: p.CanUpdate(model, project, userId, session));
+			if (allowed) return;
 
-//		public IQueryOver ApplyReadConstraint(Type modelType, IQueryOver criteria, string project, Guid userId, ISession session)
-//		{
-//			criteria.w
-//
-//			providers.Where(p => p.AcceptRead(modelType))
-//				.Aggregate(criteria, (current, provider) =>
-//				{
-//					var restriction = provider.ReadConstraint(project, userId, session);
-//					return restriction != null ? current.
-//				} )
-//		}
+			if (isNew)
+				throw new CreationDeniedException(model);
+
+			throw new ChangeDeniedException(model);
+		}
+
+		public void DemandDelete(IIdentifiedModel model, string project, Guid userId, ISession session)
+		{
+			if (model == null)
+				throw new ArgumentNullException("model");
+
+			var allowed = providers
+				.Where(p => p.AcceptChange(model))
+				.All(p => p.CanDelete(model, project, userId, session));
+			if (!allowed)
+				throw new DeleteDeniedException(model);
+		}
 	}
 }
