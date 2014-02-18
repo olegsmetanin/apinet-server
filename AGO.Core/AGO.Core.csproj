@@ -157,6 +157,7 @@
     <Compile Include="Security\ISecurityService.cs" />
     <Compile Include="Security\OperationDeniedException.cs" />
     <Compile Include="Security\Providers\ProjectSecurityProvider.cs" />
+    <Compile Include="Security\Providers\ProjectTagLinkSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagSecurityProvider.cs" />
     <Compile Include="Security\SecurityService.cs" />
     <Compile Include="ValidationResult.cs" />

@@ -6,8 +6,10 @@ using System.Threading;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Projects;
 using AGO.Core.Filters;
+using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
+using AGO.Core.Security;
 using NUnit.Framework;
 
 namespace AGO.Core.Tests.Security
@@ -177,6 +179,93 @@ namespace AGO.Core.Tests.Security
 			var validation = (ValidationResult) response;
 			Assert.That(validation.Success, Is.False);
 			Assert.That(validation.Errors, Has.Exactly(1).Matches("Not enough permissions for create model"));
+		}
+
+		private void DoTagProjectTest(UserModel user, bool addAsMember = false)
+		{
+			var ptype = M.MakeProjectType();
+			var project = M.MakeProject("NUnit_admin_proj", ptype.Name);
+			if (addAsMember)
+			{
+				M.MakeMember(project.ProjectCode, user);
+			}
+			var tag = Session.QueryOver<ProjectTagModel>().List().Take(1).First();
+
+			Login(user.Login);
+			var response = controller.TagProject(project.Id, tag.Id);
+			Session.Flush();
+
+			Assert.That(response, Is.True);
+			Session.Refresh(project);
+			Assert.That(project.Tags, Has.Exactly(1).Matches<ProjectToTagModel>(l => l.Tag.Id == tag.Id));
+		}
+
+		[Test]
+		public void AdminCanTagProject()
+		{
+			DoTagProjectTest(admin);
+		}
+
+		[Test]
+		public void MemberCanTagProject()
+		{
+			DoTagProjectTest(member, true);
+		}
+
+		[Test]
+		public void NotMemberCanNotTagProject()
+		{
+			Assert.That(() => DoTagProjectTest(member),
+				Throws.Exception.TypeOf<CreationDeniedException>());
+		}
+
+		private void DoDetagProjectTest(UserModel user, bool addAsMember = false)
+		{
+			var ptype = M.MakeProjectType();
+			var project = M.MakeProject("NUnit_admin_proj", ptype.Name);
+			if (addAsMember)
+			{
+				M.MakeMember(project.ProjectCode, user);
+			}
+			var tag = Session.QueryOver<ProjectTagModel>().List().Take(1).First();
+			var link = new ProjectToTagModel
+			{
+				Creator = user,
+				Project = project,
+				Tag = tag
+			};
+			project.Tags.Add(link);
+			Session.Save(link);
+			Session.Save(project);
+			Session.Flush();
+			Session.Clear();//if omit this, will be exception "object will be re-saved on cascade", can't fix other way
+
+			Login(user.Login);
+			var response = controller.DetagProject(project.Id, tag.Id);
+			Session.Flush();
+
+			Assert.That(response, Is.True);
+			project = Session.Get<ProjectModel>(project.Id);
+			Assert.That(project.Tags, Is.Empty);
+		}
+
+		[Test]
+		public void AdminCanDetagProject()
+		{
+			DoDetagProjectTest(admin);
+		}
+
+		[Test]
+		public void MemberCanDetagProject()
+		{
+			DoDetagProjectTest(admin, true);
+		}
+
+		[Test]
+		public void NotMemberCanNotDetagProject()
+		{
+			Assert.That(() => DoDetagProjectTest(notMember),
+				Throws.Exception.TypeOf<DeleteDeniedException>());
 		}
 	}
 }

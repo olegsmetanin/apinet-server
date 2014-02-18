@@ -62,19 +62,15 @@ namespace AGO.Core.Controllers
 				return false;
 
 			var project = _CrudDao.Get<ProjectModel>(modelId, true);
-			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
 			var tag = _CrudDao.Get<ProjectTagModel>(tagId, true);
-			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			_CrudDao.Store(new ProjectToTagModel
+			var link = new ProjectToTagModel
 			{
 				Creator = currentUser,
 				Project = project,
 				Tag = tag
-			});
+			};
+			SecurityService.DemandUpdate(link, project.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
+			_CrudDao.Store(link);
 
 			return true;
 		}
@@ -92,14 +88,7 @@ namespace AGO.Core.Controllers
 			if (projectToTag == null)
 				return false;
 
-			var project = projectToTag.Project;
-			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			var tag = projectToTag.Tag;
-			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
+			SecurityService.DemandDelete(projectToTag, projectToTag.Project.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
 			_CrudDao.Delete(projectToTag);
 
 			return true;
