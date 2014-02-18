@@ -103,5 +103,22 @@ namespace AGO.Core.Tests
 				return member;
 			});
 		}
+
+		public ProjectTagModel MakeTag(string name = null, UserModel user = null)
+		{
+			return Track(() =>
+			{
+				var tag = new ProjectTagModel
+				{
+					Creator = user ?? CurrentUser(),
+					CreationTime = DateTime.UtcNow,
+					Name = name ?? "NUnit test tag"
+				};
+				tag.FullName = tag.Name;
+				Session().Save(tag);
+				Session().Flush();
+				return tag;
+			});
+		}
 	}
 }

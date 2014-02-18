@@ -83,6 +83,7 @@
     <Compile Include="EnumLocalizationTests.cs" />
     <Compile Include="ModelHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Security\DictionaryControllerSecurityTests.cs" />
     <Compile Include="Security\ProjectsControllerSecurityTests.cs" />
     <Compile Include="Security\ProjectSecurityProviderTests.cs" />
     <Compile Include="Security\SecurityServiceTests.cs" />

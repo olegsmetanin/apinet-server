@@ -43,6 +43,22 @@ namespace AGO.Core.Filters
 			});
 		}
 
+		public static IList<TModel> List<TModel>(
+			this IFilteringDao filteringDao,
+			IModelFilterNode filter,
+			int page = 0,
+			ICollection<SortInfo> sorters = null) where TModel : class, IIdentifiedModel
+		{
+			if (filteringDao == null)
+				throw new ArgumentNullException("filteringDao");
+
+			return filteringDao.List<TModel>(new [] {filter}, new FilteringOptions
+			{
+				Page = page,
+				Sorters = sorters ?? Enumerable.Empty<SortInfo>().ToArray()
+			});
+		}
+
 		public static IEnumerable<TModel> Future<TModel>(
 			this IFilteringDao filteringDao,
 			IEnumerable<IModelFilterNode> filters,
@@ -57,6 +73,16 @@ namespace AGO.Core.Filters
 				Page = page,
 				Sorters = sorters ?? Enumerable.Empty<SortInfo>().ToArray()
 			});
+		}
+
+		public static int RowCount<TModel>(
+			this IFilteringDao filteringDao,
+			IModelFilterNode filters) where TModel : class, IIdentifiedModel
+		{
+			if (filteringDao == null)
+				throw new ArgumentNullException("filteringDao");
+
+			return filteringDao.RowCount<TModel>(new [] {filters});
 		}
 	}
 }

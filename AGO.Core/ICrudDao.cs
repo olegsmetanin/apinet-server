@@ -29,6 +29,8 @@ namespace AGO.Core
 		TModel Merge<TModel>(TModel model)
 			where TModel : class, IIdentifiedModel;
 
+		ICriteria PagedCriteria(ICriteria criteria, int page, int pageSize = 0);
+
 		IQueryOver<TModel> PagedQuery<TModel>(IQueryOver<TModel> query, int page, int pageSize = 0)
 			where TModel : class, IIdentifiedModel;
 

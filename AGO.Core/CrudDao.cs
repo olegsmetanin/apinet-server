@@ -104,6 +104,22 @@ namespace AGO.Core
 			return model;
 		}
 
+		public ICriteria PagedCriteria(ICriteria criteria, int page, int pageSize = 0)
+		{
+			if (criteria == null)
+				throw new ArgumentNullException("criteria");
+
+			if (page < 0)
+				page = 0;
+
+			if (pageSize <= 0)
+				pageSize = _DefaultPageSize;
+			if (pageSize > _MaxPageSize)
+				pageSize = _MaxPageSize;
+
+			return criteria.SetFirstResult(page * pageSize).SetMaxResults(pageSize);
+		}
+
 		public IQueryOver<TModel> PagedQuery<TModel>(IQueryOver<TModel> query, int page, int pageSize = 0)
 			where TModel : class, IIdentifiedModel
 		{

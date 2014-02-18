@@ -13,22 +13,29 @@ namespace AGO.Core.Security.Providers
 
 		public override IModelFilterNode ReadConstraint(string project, UserModel user, ISession session)
 		{
-			throw new System.NotImplementedException();
+			//all can see only own project tags
+			return FilteringService.Filter<ProjectTagModel>().Where(m => m.Creator.Id == user.Id);
+		}
+
+		private bool CanManage(ProjectTagModel tag, UserModel u)
+		{
+			//all manage only own tags (create, update or delete - no restrictions)
+			return u.Equals(tag.Creator);
 		}
 
 		public override bool CanCreate(ProjectTagModel model, string project, UserModel user, ISession session)
 		{
-			throw new System.NotImplementedException();
+			return CanManage(model, user) && (model.Parent == null || user.Equals(model.Parent.Creator));
 		}
 
 		public override bool CanUpdate(ProjectTagModel model, string project, UserModel user, ISession session)
 		{
-			throw new System.NotImplementedException();
+			return CanManage(model, user);
 		}
 
 		public override bool CanDelete(ProjectTagModel model, string project, UserModel user, ISession session)
 		{
-			throw new System.NotImplementedException();
+			return CanManage(model, user);
 		}
 	}
 }
