@@ -135,22 +135,33 @@ namespace AGO.Tasks.Controllers
     		return _FilteringDao.RowCount<TaskModel>(predicate);
     	}
 
-		private IEnumerable<IModelFilterNode> MakeTasksPredicate(string project, IEnumerable<IModelFilterNode> filter, TaskPredefinedFilter predefined)
+		private IModelFilterNode MakeTasksPredicate(string project, IEnumerable<IModelFilterNode> filter, TaskPredefinedFilter predefined)
 		{
-			IModelFilterNode projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
-			IModelFilterNode predefinedPredicate = predefined.ToFilter(_FilteringService.Filter<TaskModel>());
-			var predicate = filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray();
+			var projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
+			var predefinedPredicate = predefined.ToFilter(_FilteringService.Filter<TaskModel>());
+			var predicate = SecurityService.ApplyReadConstraint<TaskModel>(project, CurrentUser.Id, Session, 
+				filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray());
 			return predicate;
 		}
 
-		[JsonEndpoint, RequireAuthorization]
-		public TaskListItemDetailsDTO GetTaskDetails([NotEmpty] string project, [NotEmpty] string numpp)
-		{
-			var task = _CrudDao.Find<TaskModel>(q => q.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
+	    private TaskModel FindTaskByProjectAndNumber(string project, string numpp)
+	    {
+			var fb = _FilteringService.Filter<TaskModel>();
+			var predicate = SecurityService.ApplyReadConstraint<TaskModel>(project, CurrentUser.Id, Session,
+				fb.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
+
+			var task = _FilteringDao.Find<TaskModel>(predicate);
 
 			if (task == null)
 				throw new NoSuchEntityException();
 
+		    return task;
+	    }
+
+		[JsonEndpoint, RequireAuthorization]
+		public TaskListItemDetailsDTO GetTaskDetails([NotEmpty] string project, [NotEmpty] string numpp)
+		{
+			var task = FindTaskByProjectAndNumber(project, numpp);
 			var adapter = new TaskListItemDetailsAdapter(_LocalizationService);
 			return adapter.Fill(task);
 		}
@@ -158,11 +169,7 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public TaskViewDTO GetTask([NotEmpty] string project, [NotEmpty] string numpp)
 		{
-			var task = _CrudDao.Find<TaskModel>(q => q.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
-			
-			if (task == null)
-				throw new NoSuchEntityException();
-
+			var task = FindTaskByProjectAndNumber(project, numpp);			
 			var adapter = new TaskViewAdapter(_LocalizationService);
 			return adapter.Fill(task);
 		}
@@ -201,14 +208,14 @@ namespace AGO.Tasks.Controllers
 
 			            foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
 			            {
-			                var participant = _CrudDao.Get<ProjectMemberModel>(id);
-			                if (participant == null)
+			                var member = _CrudDao.Get<ProjectMemberModel>(id);
+			                if (member == null)
 			                {
 			                    vr.AddFieldErrors("Executors", "Участник проекта по заданному идентификатору не найден");
 			                    continue;
 			                }
 			                //TODO это лучше бы делать через _CrudDao.Get<>(project, id), а не так проверять
-			                if (participant.ProjectCode != task.ProjectCode)
+			                if (member.ProjectCode != task.ProjectCode)
 			                {
 			                    vr.AddFieldErrors("Executors", "Не учавствует в проекте задачи");
 			                    continue;
@@ -218,7 +225,7 @@ namespace AGO.Tasks.Controllers
 			                       			{
 			                       			    Creator = task.Creator,
 			                       			    Task = task,
-			                       			    Executor = participant
+			                       			    Executor = member
 			                       			};
 			                task.Executors.Add(executor);
 			            }
@@ -316,21 +323,23 @@ namespace AGO.Tasks.Controllers
 		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId, DateTime? dueDate = null)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			var participant = _CrudDao.Get<ProjectMemberModel>(participantId, true);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var member = _CrudDao.Get<ProjectMemberModel>(participantId, true);
 
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotAddAgreemerToClosedTaskException();
 
-			if (task.IsAgreemer(participant))
-				throw new AgreemerAlreadyAssignedToTaskException(participant.FIO, task.SeqNumber);
+			if (task.IsAgreemer(member))
+				throw new AgreemerAlreadyAssignedToTaskException(member.FIO, task.SeqNumber);
 
 			var agreement = new TaskAgreementModel
-				                {
-				                	Creator = _AuthController.CurrentUser(),
-				                	Task = task,
-				                	Agreemer = participant,
-									DueDate = dueDate
-				                };
+			{
+				Creator = _AuthController.CurrentUser(),
+				Task = task,
+				Agreemer = member,
+				DueDate = dueDate
+			};
+			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, Session);
 			task.Agreements.Add(agreement);
 
 			_CrudDao.Store(agreement);
@@ -343,14 +352,15 @@ namespace AGO.Tasks.Controllers
 		public bool RemoveAgreement([NotEmpty] Guid taskId, [NotEmpty] Guid agreementId)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			
 			var agreement = task.Agreements.FirstOrDefault(a => a.Id == agreementId);
-
 			if (agreement == null) return false;
+			SecurityService.DemandDelete(agreement, task.ProjectCode, CurrentUser.Id, Session);
+			
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotRemoveAgreemerFromClosedTaskException();
 					
-			//TODO check security rules, task status etc.
-
 			task.Agreements.Remove(agreement);
 
 			_CrudDao.Store(task);
@@ -362,17 +372,18 @@ namespace AGO.Tasks.Controllers
 		public Agreement AgreeTask([NotEmpty] Guid taskId, string comment)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			var cu = _AuthController.CurrentUser();
-			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == cu.Id);
-
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			
+			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == CurrentUser.Id);
 			if (agreement == null)
 				throw new CurrentUserIsNotAgreemerInTaskException();
+			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, Session);
+			
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotAgreeClosedTaskException();
 
-			//TODO check security rules, task status etc.
 			agreement.Done = true;
-			agreement.AgreedAt = DateTime.Now;
+			agreement.AgreedAt = DateTime.UtcNow;
 			agreement.Comment = comment;
 
 			_CrudDao.Store(agreement);
@@ -384,15 +395,16 @@ namespace AGO.Tasks.Controllers
 		public Agreement RevokeAgreement([NotEmpty] Guid taskId)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			var cu = _AuthController.CurrentUser();
-			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == cu.Id);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
 
+			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == CurrentUser.Id);
 			if (agreement == null)
 				throw new CurrentUserIsNotAgreemerInTaskException();
+			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, Session);
+
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotRevokeAgreementFromClosedTaskException();
 
-			//TODO check security rules, task status etc.
 			agreement.Done = false;
 			agreement.AgreedAt = null;
 			agreement.Comment = null;
@@ -404,9 +416,11 @@ namespace AGO.Tasks.Controllers
 
 		private void InternalDeleteTask(Guid id)
 		{
+			//TODO use project for security
+			//may be get(project, id) in filteringdao where T: IProjectBoundModel
 			var task = _CrudDao.Get<TaskModel>(id, true);
 
-			//TODO: security and other checks
+			SecurityService.DemandDelete(task, task.ProjectCode, CurrentUser.Id, Session);
 
 			_CrudDao.Delete(task);
 		}

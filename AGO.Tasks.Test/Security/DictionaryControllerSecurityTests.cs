@@ -177,6 +177,8 @@ namespace AGO.Tasks.Test.Security
 
 		#endregion
 
+		#region Task tag
+
 		[Test]
 		public void OnlyMembersCanLookupOwnTags()
 		{
@@ -298,5 +300,7 @@ namespace AGO.Tasks.Test.Security
 			Assert.That(action(projManager, mgrTag.Id), granted(mgrTag.Id));
 			Assert.That(action(projExecutor, execTag.Id), granted(execTag.Id));
 		}
+
+		#endregion
 	}
 }

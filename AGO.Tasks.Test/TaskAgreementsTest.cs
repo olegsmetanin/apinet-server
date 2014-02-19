@@ -26,19 +26,10 @@ namespace AGO.Tasks.Test
 			
 			controller = IocContainer.GetInstance<TasksController>();
 
-			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
-			Assert.IsNotNull(project);
-			ivanov = Session.QueryOver<UserModel>().Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault();
-			Assert.IsNotNull(ivanov);
-			petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault();
-			Assert.IsNotNull(petrov);
-
-			pIvanov = ProjectMemberModel.FromParameters(ivanov, project, TaskProjectRoles.Executor);
-			_CrudDao.Store(pIvanov);
-			pPetrov = ProjectMemberModel.FromParameters(petrov, project, TaskProjectRoles.Executor);
-			_CrudDao.Store(pPetrov);
-
-			_SessionProvider.FlushCurrentSession();
+			ivanov = LoginToUser("user1@apinet-test.com");
+			petrov = LoginToUser("user2@apinet-test.com");
+			pIvanov = FM.Member(TestProject, ivanov, TaskProjectRoles.Manager);
+			pPetrov = FM.Member(TestProject, petrov, TaskProjectRoles.Manager);
 		}
 
 		public override void SetUp()
@@ -106,6 +97,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
+			Login(ivanov.Login);
 			var res = controller.RemoveAgreement(task.Id, agr.Id);
 			_SessionProvider.FlushCurrentSession();
 
@@ -139,6 +131,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
+			Login(ivanov.Login);
 			controller.RemoveAgreement(task.Id, agr.Id);
 			_SessionProvider.FlushCurrentSession();
 		}

@@ -2,7 +2,6 @@
 using System.Linq;
 using AGO.Core;
 using AGO.Core.Filters;
-using AGO.Core.Model.Projects;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Task;
@@ -21,6 +20,13 @@ namespace AGO.Tasks.Test
 		{
 			base.FixtureSetUp();
 			controller = IocContainer.GetInstance<TasksController>();
+		}
+
+		public override void SetUp()
+		{
+			base.SetUp();
+
+			LoginAdmin();
 		}
 
 		[Test]
@@ -90,11 +96,12 @@ namespace AGO.Tasks.Test
 			controller.GetTask(TestProject, "not existing number");
 		}
 
-		[Test, ExpectedException(typeof(NoSuchEntityException))]
+		//nosuchentity overrided with nosuchprojectmember, because project code is invalid
+		//and member not found. sad, but true
+		[Test, ExpectedException(typeof(NoSuchProjectMemberException))]
 		public void GetTaskByInvalidProjectThrow()
 		{
 			M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			controller.GetTask("not existing project", "t0-1");
 		}
@@ -116,7 +123,10 @@ namespace AGO.Tasks.Test
 			controller.GetTaskDetails(TestProject, "not existing number");
 		}
 
-		[Test, ExpectedException(typeof(NoSuchEntityException))]
+		/// <summary>
+		/// <see cref="GetTaskByInvalidProjectThrow"/> comment
+		/// </summary>
+		[Test, ExpectedException(typeof(NoSuchProjectMemberException))]
 		public void GetTaskDetailsByInvalidProjectThrow()
 		{
 			M.Task(1);

@@ -9,6 +9,8 @@ namespace AGO.Core.Filters
 	{
 		IFilteringService FilteringService { get; }
 
+		TModel Find<TModel>(IEnumerable<IModelFilterNode> filters);
+
 		IList<TModel> List<TModel>(
 			IEnumerable<IModelFilterNode> filters,
 			FilteringOptions options = null)
@@ -83,6 +85,16 @@ namespace AGO.Core.Filters
 				throw new ArgumentNullException("filteringDao");
 
 			return filteringDao.RowCount<TModel>(new [] {filters});
+		}
+
+		public static TModel Find<TModel>(
+			this IFilteringDao filteringDao,
+			IModelFilterNode filter) where TModel : class, IIdentifiedModel
+		{
+			if (filteringDao == null)
+				throw new ArgumentNullException("filteringDao");
+
+			return filteringDao.Find<TModel>(new[] { filter });
 		}
 	}
 }

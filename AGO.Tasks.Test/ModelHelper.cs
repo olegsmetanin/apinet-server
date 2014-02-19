@@ -4,6 +4,7 @@ using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NHibernate;
+using TaskStatus = AGO.Tasks.Model.Task.TaskStatus;
 
 namespace AGO.Tasks.Test
 {
@@ -17,7 +18,7 @@ namespace AGO.Tasks.Test
 			this.project = project;
 		}
 
-		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New)
+		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New, UserModel executor = null)
 		{
 			return Track(() =>
 			{
@@ -31,13 +32,13 @@ namespace AGO.Tasks.Test
 					Content = content
 				};
 				task.ChangeStatus(status, CurrentUser());
-				var executor = new TaskExecutorModel
+				var e = new TaskExecutorModel
 				{
 					Creator = CurrentUser(),
 					Task = task,
-					Executor = MemberFromUser(project)
+					Executor = MemberFromUser(project, executor)
 				};
-				task.Executors.Add(executor);
+				task.Executors.Add(e);
 
 				Session().Save(task);
 				Session().Flush();
@@ -46,12 +47,28 @@ namespace AGO.Tasks.Test
 			});
 		}
 
-		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New)
+		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New, UserModel executor = null)
 		{
 			var typeModel = Session().QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault() ?? TaskType(type);
 
-			return Task(num, typeModel, content, status);
+			return Task(num, typeModel, content, status, executor);
+		}
+
+		public TaskAgreementModel Agreement(TaskModel task, UserModel agreemer = null, UserModel creator = null, bool done = false)
+		{
+			var agr = new TaskAgreementModel
+			{
+				Creator = creator ?? agreemer ?? CurrentUser(),
+				Task = task,
+				Agreemer = MemberFromUser(project, agreemer ?? CurrentUser()),
+				Done = done,
+				AgreedAt = done ? DateTime.UtcNow : (DateTime?) null
+			};
+			task.Agreements.Add(agr);
+			Session().Update(task);
+			Session().Flush();
+			return agr;
 		}
 
 		public TaskTypeModel TaskType(string name = "TestTaskType")

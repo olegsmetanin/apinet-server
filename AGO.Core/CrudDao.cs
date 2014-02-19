@@ -195,6 +195,13 @@ namespace AGO.Core
 			CurrentSession.FlushMode = FlushMode.Auto;
 		}
 
+		public TModel Find<TModel>(IEnumerable<IModelFilterNode> filters)
+		{
+			var compiled = _FilteringService.CompileFilter(_FilteringService.ConcatFilters(filters), typeof(TModel));
+			var criteria = compiled.GetExecutableCriteria(CurrentSession);
+			return criteria.UniqueResult<TModel>();
+		}
+
 		public IList<TModel> List<TModel>(
 			IEnumerable<IModelFilterNode> filters,
 			FilteringOptions options = null)
