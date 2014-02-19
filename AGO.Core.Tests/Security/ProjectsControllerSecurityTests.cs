@@ -40,11 +40,11 @@ namespace AGO.Core.Tests.Security
 
 		private dynamic MakeProjectsForTest()
 		{
-			var ptype = M.MakeProjectType();
-			var pub = M.MakeProject("public", ptype.Name, pub: true);
-			M.MakeMember(pub.ProjectCode, member);
-			var priv = M.MakeProject("private", ptype.Name);
-			M.MakeMember(priv.ProjectCode, member);
+			var ptype = M.ProjectType();
+			var pub = M.Project("public", ptype.Name, pub: true);
+			M.Member(pub.ProjectCode, member);
+			var priv = M.Project("private", ptype.Name);
+			M.Member(priv.ProjectCode, member);
 
 			return new {pub, priv};
 		}
@@ -140,7 +140,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void AdminCanCreateProject()
 		{
-			var ptype = M.MakeProjectType();
+			var ptype = M.ProjectType();
 			var project = M.Track(() =>
 			{
 				var data = new ProjectModel
@@ -162,7 +162,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void NotAdminCanNotCreateProject()
 		{
-			var ptype = M.MakeProjectType();
+			var ptype = M.ProjectType();
 			var data = new ProjectModel
 			{
 				ProjectCode = "NUnit_member_create",
@@ -183,11 +183,11 @@ namespace AGO.Core.Tests.Security
 
 		private void DoTagProjectTest(UserModel user, bool addAsMember = false)
 		{
-			var ptype = M.MakeProjectType();
-			var project = M.MakeProject("NUnit_admin_proj", ptype.Name);
+			var ptype = M.ProjectType();
+			var project = M.Project("NUnit_admin_proj", ptype.Name);
 			if (addAsMember)
 			{
-				M.MakeMember(project.ProjectCode, user);
+				M.Member(project.ProjectCode, user);
 			}
 			var tag = Session.QueryOver<ProjectTagModel>().List().Take(1).First();
 
@@ -221,11 +221,11 @@ namespace AGO.Core.Tests.Security
 
 		private void DoDetagProjectTest(UserModel user, bool addAsMember = false)
 		{
-			var ptype = M.MakeProjectType();
-			var project = M.MakeProject("NUnit_admin_proj", ptype.Name);
+			var ptype = M.ProjectType();
+			var project = M.Project("NUnit_admin_proj", ptype.Name);
 			if (addAsMember)
 			{
-				M.MakeMember(project.ProjectCode, user);
+				M.Member(project.ProjectCode, user);
 			}
 			var tag = Session.QueryOver<ProjectTagModel>().List().Take(1).First();
 			var link = new ProjectToTagModel

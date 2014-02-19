@@ -11,7 +11,6 @@ namespace AGO.Tasks.Test
 	/// <summary>
 	/// Тесты управления согласованием задачи
 	/// </summary>
-	[TestFixture]
 	public class TaskAgreementsTest: AbstractTest
 	{
 		private TasksController controller;
@@ -21,10 +20,9 @@ namespace AGO.Tasks.Test
 		private ProjectMemberModel pIvanov;
 		private ProjectMemberModel pPetrov;
 
-		[TestFixtureSetUp]
-		public new void Init()
+		public override void FixtureSetUp()
 		{
-			base.Init();
+			base.FixtureSetUp();
 			
 			controller = IocContainer.GetInstance<TasksController>();
 
@@ -35,31 +33,19 @@ namespace AGO.Tasks.Test
 			petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault();
 			Assert.IsNotNull(petrov);
 
-			pIvanov = ProjectMemberModel.FromParameters(ivanov, project, "Executors");
+			pIvanov = ProjectMemberModel.FromParameters(ivanov, project, TaskProjectRoles.Executor);
 			_CrudDao.Store(pIvanov);
-			pPetrov = ProjectMemberModel.FromParameters(petrov, project, "Executors");
+			pPetrov = ProjectMemberModel.FromParameters(petrov, project, TaskProjectRoles.Executor);
 			_CrudDao.Store(pPetrov);
 
 			_SessionProvider.FlushCurrentSession();
 		}
 
-		[TestFixtureTearDown]
-		public new void Cleanup()
+		public override void SetUp()
 		{
-			base.Cleanup();
-		}
+			base.SetUp();
 
-		[SetUp]
-		public void SetUp()
-		{
 			task = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
-		}
-
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
 		}
 
 		//add
@@ -180,6 +166,7 @@ namespace AGO.Tasks.Test
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
 			Assert.IsTrue(agr.Done);
 			Assert.IsNotNull(agr.AgreedAt);
+// ReSharper disable once PossibleInvalidOperationException
 			Assert.AreEqual(DateTime.Today, agr.AgreedAt.Value.ToLocalTime().Date);
 			Assert.AreEqual("good job, bro", agr.Comment);
 		}

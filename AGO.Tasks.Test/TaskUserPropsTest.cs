@@ -14,46 +14,31 @@ namespace AGO.Tasks.Test
 	/// <summary>
 	/// Тесты работы с пользовательскими свойствами задачи
 	/// </summary>
-	[TestFixture]
 	public class TaskUserPropsTest: AbstractTest
 	{
 		private TasksController controller;
 		private TaskModel task;
 
-		[TestFixtureSetUp]
-		public new void Init()
+		public override void FixtureSetUp()
 		{
-			base.Init();
+			base.FixtureSetUp();
 			controller = IocContainer.GetInstance<TasksController>();
 		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
+	
+		public override void SetUp()
 		{
-			base.Cleanup();
-		}
+			base.SetUp();
 
-		[SetUp]
-		public void SetUp()
-		{
 			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
 			task = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 		}
 
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
-		}
-		
 		[Test]
 		public void LookupParamTypesReturnAll()
 		{
 			var sp = M.ParamType("1sp");
 			var np = M.ParamType("2np", CustomPropertyValueType.Number);
 			var dp = M.ParamType("3dp", CustomPropertyValueType.Date);
-			_SessionProvider.FlushCurrentSession();
 
 			var result = controller.LookupParamTypes(TestProject, null, 0).ToArray();
 
@@ -77,7 +62,6 @@ namespace AGO.Tasks.Test
 		public void CreateValidParamReturnSuccess()
 		{
 			var sp = M.ParamType();
-			_SessionProvider.FlushCurrentSession();
 			var model = new CustomParameterDTO
 			            	{
 			            		Type = new CustomParameterTypeDTO {Id = sp.Id},
@@ -95,13 +79,13 @@ namespace AGO.Tasks.Test
 			Session.Refresh(task);
 			Assert.AreEqual(1, task.CustomProperties.Count);
 			Assert.AreEqual(ur.Model.Id, task.CustomProperties.First().Id);
+			M.Track(task.CustomProperties.First());
 		}
 
 		[Test]
 		public void UpdateStrParamReturnSuccess()
 		{
 			var p = M.Param(task, "s1", "123");
-			_SessionProvider.FlushCurrentSession();
 			var model = new CustomParameterDTO
 			{
 				Id = p.Id,
@@ -125,7 +109,6 @@ namespace AGO.Tasks.Test
 		public void UpdateNumParamReturnSuccess()
 		{
 			var p = M.Param(task, "n1", 1m);
-			_SessionProvider.FlushCurrentSession();
 			var model = new CustomParameterDTO
 			{
 				Id = p.Id,
@@ -150,7 +133,6 @@ namespace AGO.Tasks.Test
 		{
 			var d = new DateTime(2013, 10, 10, 12, 12, 00, DateTimeKind.Utc);
 			var p = M.Param(task, "d1", d);
-			_SessionProvider.FlushCurrentSession();
 			var model = new CustomParameterDTO
 			{
 				Id = p.Id,
@@ -174,7 +156,6 @@ namespace AGO.Tasks.Test
 		public void DeleteParamReturnSuccess()
 		{
 			var p = M.Param(task, "s1", "spv");
-			_SessionProvider.FlushCurrentSession();
 
 			var res = controller.DeleteParam(p.Id);
 			_SessionProvider.FlushCurrentSession(!res);

@@ -1,56 +1,54 @@
 ﻿using System;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
-using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NHibernate;
 
 namespace AGO.Tasks.Test
 {
-	public class ModelHelper
+	public class ModelHelper: Core.Tests.ModelHelper
 	{
-		private readonly Func<ISession> session;
 		private readonly string project;
-		private readonly Func<UserModel> currentUser;
 
-		public ModelHelper(Func<ISession> session, string project, Func<UserModel> currentUser)
+		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser, string project)
+			:base(session, currentUser)
 		{
-			this.session = session;
 			this.project = project;
-			this.currentUser = currentUser;
-		}
-
-		public ProjectMemberModel UserToMember(Guid userId)
-		{
-			return session().QueryOver<ProjectMemberModel>()
-				.Where(m => m.ProjectCode == project && m.UserId == userId).SingleOrDefault();
 		}
 
 		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New)
 		{
-			var task = new TaskModel
+			return Track(() =>
 			{
-				Creator = currentUser(),
-				ProjectCode = project,
-				InternalSeqNumber = num,
-				SeqNumber = "t0-" + num,
-				TaskType = type,
-				Content = content
-			};
-			task.ChangeStatus(status, currentUser());
-			var executor = new TaskExecutorModel {Creator = currentUser(), Task = task, Executor = UserToMember(currentUser().Id)};
-			task.Executors.Add(executor);
-			
-			session().Save(task);
-			session().FlushMode = FlushMode.Auto;
+				var task = new TaskModel
+				{
+					Creator = CurrentUser(),
+					ProjectCode = project,
+					InternalSeqNumber = num,
+					SeqNumber = "t0-" + num,
+					TaskType = type,
+					Content = content
+				};
+				task.ChangeStatus(status, CurrentUser());
+				var executor = new TaskExecutorModel
+				{
+					Creator = CurrentUser(),
+					Task = task,
+					Executor = MemberFromUser(project)
+				};
+				task.Executors.Add(executor);
 
-			return task;
+				Session().Save(task);
+				Session().Flush();
+
+				return task;
+			});
 		}
 
 		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New)
 		{
-			var typeModel = session().QueryOver<TaskTypeModel>()
+			var typeModel = Session().QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault() ?? TaskType(type);
 
 			return Task(num, typeModel, content, status);
@@ -58,17 +56,20 @@ namespace AGO.Tasks.Test
 
 		public TaskTypeModel TaskType(string name = "TestTaskType")
 		{
-			var m = new TaskTypeModel
-			       	{
-						Creator = currentUser(),
-			       		ProjectCode = project, 
-						Name = name
-			       	};
+			return Track(() =>
+			{
+				var m = new TaskTypeModel
+				{
+					Creator = CurrentUser(),
+					ProjectCode = project,
+					Name = name
+				};
 
-			session().Save(m);
-			session().FlushMode = FlushMode.Auto;
+				Session().Save(m);
+				Session().Flush();
 
-			return m;
+				return m;
+			});
 		}
 
 		public TaskCustomPropertyModel Param(TaskModel task, string name, object value)
@@ -78,7 +79,7 @@ namespace AGO.Tasks.Test
 			          	: value is decimal
 			          	  	? CustomPropertyValueType.Number
 			          	  	: CustomPropertyValueType.String;
-			var paramType = session().QueryOver<CustomPropertyTypeModel>()
+			var paramType = Session().QueryOver<CustomPropertyTypeModel>()
 				.Where(m => m.ProjectCode == project && m.FullName == name).SingleOrDefault() ?? ParamType(name, pvt);
 
 			return Param(task, paramType, value);
@@ -86,49 +87,59 @@ namespace AGO.Tasks.Test
 
 		public TaskCustomPropertyModel Param(TaskModel task, CustomPropertyTypeModel paramType, object value)
 		{
-			var p = new TaskCustomPropertyModel
-			        	{
-			        		Task = task,
-			        		Creator = currentUser(),
-			        		PropertyType = paramType,
-			        		Value = value
-			        	};
-			session().Save(p);
-			session().FlushMode = FlushMode.Auto;
+			return Track(() =>
+			{
+				var p = new TaskCustomPropertyModel
+				{
+					Task = task,
+					Creator = CurrentUser(),
+					PropertyType = paramType,
+					Value = value
+				};
+				Session().Save(p);
+				Session().Flush();
 
-			return p;
+				return p;
+			});
 		}
 
 		public CustomPropertyTypeModel ParamType(string name = "strParam", CustomPropertyValueType type = CustomPropertyValueType.String)
 		{
-			var pt = new CustomPropertyTypeModel
-			         	{
-			         		ProjectCode = project,
-			         		Creator = currentUser(),
-			         		Name = name,
-							FullName = name,
-			         		ValueType = type
-			         	};
-			session().Save(pt);
-			session().FlushMode = FlushMode.Auto;
+			return Track(() =>
+			{
+				var pt = new CustomPropertyTypeModel
+				{
+					ProjectCode = project,
+					Creator = CurrentUser(),
+					Name = name,
+					FullName = name,
+					ValueType = type
+				};
+				Session().Save(pt);
+				Session().Flush();
 
-			return pt;
+				return pt;
+			});
 		}
 
 		public TaskTagModel Tag(string name = "testTag", TaskTagModel parent = null, UserModel owner = null)
 		{
-			var tag = new TaskTagModel
-			          	{
-			          		ProjectCode = project,
-							Creator = owner ?? currentUser(),
-			          		Name = name,
-							FullName = parent != null ? parent.FullName + " \\ " + name : name,
-			          		Parent = parent
-			          	};
-			session().Save(tag);
-			session().FlushMode = FlushMode.Auto;
+			return Track(() =>
+			{
+				var tag = new TaskTagModel
+				{
+					ProjectCode = project,
+					Creator = owner ?? CurrentUser(),
+					Name = name,
+					FullName = parent != null ? parent.FullName + " \\ " + name : name,
+					Parent = parent
+				};
+				if (parent != null) parent.Children.Add(tag);
+				Session().Save(tag);
+				Session().Flush();
 
-			return tag;
+				return tag;
+			});
 		}
 	}
 }

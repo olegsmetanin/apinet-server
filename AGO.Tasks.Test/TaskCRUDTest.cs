@@ -13,37 +13,21 @@ namespace AGO.Tasks.Test
 	/// <summary>
 	/// Тесты CRUD реестра задач
 	/// </summary>
-	[TestFixture]
 	public class TaskCRUDTest: AbstractTest
 	{
 		private TasksController controller;
 
-		[TestFixtureSetUp]
-		public new void Init()
+		public override void FixtureSetUp()
 		{
-			base.Init();
+			base.FixtureSetUp();
 			controller = IocContainer.GetInstance<TasksController>();
 		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
-		{
-			base.Cleanup();
-		}
-
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
-		}
-
 
 		[Test]
 		public void GetTasksReturnAllRecords()
 		{
 			var t1 = M.Task(1);
 			var t2 = M.Task(2);
-			_SessionProvider.CloseCurrentSession();
 
 			var result = controller.GetTasks(
 				TestProject,
@@ -61,7 +45,6 @@ namespace AGO.Tasks.Test
 		{
 			M.Task(1);
 			M.Task(2);
-			_SessionProvider.CloseCurrentSession();
 
 			var result = controller.GetTasksCount(
 				TestProject,
@@ -75,7 +58,6 @@ namespace AGO.Tasks.Test
 		{
 			var t1 = M.Task(1);
 			var t2 = M.Task(2);
-			_SessionProvider.CloseCurrentSession();
 
 			var result = controller.LookupTasks(
 				TestProject,
@@ -94,7 +76,6 @@ namespace AGO.Tasks.Test
 		public void GetTaskByNumberReturnModel()
 		{
 			var task = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			var result = controller.GetTask(TestProject, "t0-1");
 
@@ -122,7 +103,6 @@ namespace AGO.Tasks.Test
 		public void GetTaskDetailsByNumberReturnModel()
 		{
 			var task = M.Task(1, content: "some content");
-			_SessionProvider.FlushCurrentSession();
 
 			var result = controller.GetTaskDetails(TestProject, "t0-1");
 
@@ -140,7 +120,6 @@ namespace AGO.Tasks.Test
 		public void GetTaskDetailsByInvalidProjectThrow()
 		{
 			M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			controller.GetTaskDetails("not existing project", "t0-1");
 		}
@@ -181,7 +160,6 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithoutExecutorsReturnError()
 		{
 			var tt = M.TaskType();
-			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO {TaskType = tt.Id};
 
 			var vr = controller.CreateTask(TestProject, model).Validation;
@@ -203,7 +181,6 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithWrongExecutorsReturnError()
 		{
 			var tt = M.TaskType();
-			_SessionProvider.FlushCurrentSession();
 			var model = new CreateTaskDTO { TaskType = tt.Id, Executors = new [] { Guid.NewGuid() } };
 
 			var vr = controller.CreateTask(TestProject, model).Validation;
@@ -217,13 +194,12 @@ namespace AGO.Tasks.Test
 		public void CreateTaskWithValidParamsReturnSuccess()
 		{
 			var tt = M.TaskType();
-			var participant = Session.QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == TestProject).List().First();
-			_SessionProvider.FlushCurrentSession();
+			var member = M.ProjectMembers(TestProject).First();
 
 			var model = new CreateTaskDTO
 			            	{
 			            		TaskType = tt.Id,
-			            		Executors = new[] {participant.Id},
+			            		Executors = new[] {member.Id},
 			            		DueDate = new DateTime(2013, 01, 01),
 			            		Content = "test task",
 			            		Priority = TaskPriority.Low
@@ -234,11 +210,12 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(vr.Success);
 			var task = Session.QueryOver<TaskModel>().Where(m => m.ProjectCode == TestProject).Take(1).SingleOrDefault();
 			Assert.IsNotNull(task);
+			M.Track(task);
 			Assert.AreEqual(TestProject, task.ProjectCode);
 			Assert.AreEqual("t0-1", task.SeqNumber);
 			Assert.AreEqual(1, task.InternalSeqNumber);
 			Assert.AreEqual(tt.Id, task.TaskType.Id);
-			Assert.IsTrue(task.Executors.Any(e => e.Executor.Id == participant.Id));
+			Assert.IsTrue(task.Executors.Any(e => e.Executor.Id == member.Id));
 			Assert.AreEqual(new DateTime(2013, 01, 01).ToUniversalTime(), task.DueDate);
 			Assert.AreEqual("test task", task.Content);
 			Assert.AreEqual(TaskPriority.Low, task.Priority);
@@ -248,7 +225,6 @@ namespace AGO.Tasks.Test
 		public void DeleteTaskReturnSuccess()
 		{
 			var t = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			var res = controller.DeleteTask(t.Id);
 			_SessionProvider.FlushCurrentSession(!res);
@@ -264,7 +240,6 @@ namespace AGO.Tasks.Test
 			var t1 = M.Task(1);
 			var t2 = M.Task(2);
 			var t3 = M.Task(3);
-			_SessionProvider.FlushCurrentSession();
 
 			var res = controller.DeleteTasks(TestProject, new [] { t1.Id, t3.Id});
 			_SessionProvider.FlushCurrentSession(!res);
@@ -283,7 +258,6 @@ namespace AGO.Tasks.Test
 		public void UpdateWithInvalidProjectReturnError()
 		{
 			var t = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", "bla bla");
 			controller.UpdateTask("not existing proj", inf);
@@ -293,7 +267,6 @@ namespace AGO.Tasks.Test
 		public void UpdateWithInvalidIdReturnError()
 		{
 			var t = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			var inf = new PropChangeDTO(Guid.NewGuid(), t.ModelVersion, "Content", "bla bla");
 			var ur = controller.UpdateTask(TestProject, inf);
@@ -307,7 +280,6 @@ namespace AGO.Tasks.Test
 		public void UpdateContentWithInvalidTypeReturnError()
 		{
 			var t = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", new {a = 1});
 			var ur = controller.UpdateTask(TestProject, inf);
@@ -321,7 +293,6 @@ namespace AGO.Tasks.Test
 		public void UpdateContentReturnSuccess()
 		{
 			var t = M.Task(1);
-			_SessionProvider.FlushCurrentSession();
 
 			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", "some test string");
 			var ur = controller.UpdateTask(TestProject, inf);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AGO.Core.Model;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using NHibernate;
 
@@ -12,22 +13,28 @@ namespace AGO.Core.Tests
 		protected readonly Func<UserModel> CurrentUser;
 		private readonly Stack<Tuple<Type, Guid>> createdModels;
 
-		public AbstractModelHelper(Func<ISession> session, Func<UserModel> currentUser)
+		protected AbstractModelHelper(Func<ISession> session, Func<UserModel> currentUser)
 		{
 			Session = session;
 			CurrentUser = currentUser;
 			createdModels = new Stack<Tuple<Type, Guid>>();
 		}
 
-		public T Track<T>(Func<T> factory) where T : IIdentifiedModel<Guid>
+		public T Track<T>(T model) where T : IIdentifiedModel<Guid>
 		{
-			var model = factory();
 			createdModels.Push(new Tuple<Type, Guid>(model.GetType(), model.Id));
 			return model;
 		}
 
+		public T Track<T>(Func<T> factory) where T : IIdentifiedModel<Guid>
+		{
+			return Track(factory());
+		}
+
 		public void DropCreated()
 		{
+			Session().Clear();
+
 			while (createdModels.Count > 0)
 			{
 				var info = createdModels.Pop();
@@ -41,6 +48,23 @@ namespace AGO.Core.Tests
 		protected virtual void InternalDelete(object model)
 		{
 			Session().Delete(model);
+		}
+
+		public ProjectModel ProjectFromCode(string code)
+		{
+			return Session().QueryOver<ProjectModel>().Where(m => m.ProjectCode == code).SingleOrDefault();
+		}
+
+		public IEnumerable<ProjectMemberModel> ProjectMembers(string code)
+		{
+			return Session().QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
+		}
+
+		public ProjectMemberModel MemberFromUser(string project, UserModel user = null)
+		{
+			return Session().QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project && m.UserId == (user ?? CurrentUser()).Id)
+				.SingleOrDefault();
 		}
 	}
 }

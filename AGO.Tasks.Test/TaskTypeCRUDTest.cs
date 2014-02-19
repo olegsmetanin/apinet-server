@@ -12,33 +12,13 @@ namespace AGO.Tasks.Test
 	/// <summary>
 	/// Тесты CRUD справочника типов задач
 	/// </summary>
-	[TestFixture]
 	public class TaskTypeCRUDTest: AbstractDictionaryTest
 	{
-		[TestFixtureSetUp]
-		public new void Init()
-		{
-			base.Init();
-		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
-		{
-			base.Cleanup();
-		}
-
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
-		}
-
 		[Test]
 		public void LookupTaskTypesWithoutTermReturnAll()
 		{
 			M.TaskType("tt1");
 			M.TaskType("tt2");
-			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.LookupTaskTypes(TestProject, null, 0).ToArray();
 
@@ -62,7 +42,6 @@ namespace AGO.Tasks.Test
 		{
 			M.TaskType("tt1");
 			M.TaskType("tt2");
-			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.GetTaskTypes(
 				TestProject,
@@ -81,7 +60,6 @@ namespace AGO.Tasks.Test
 		{
 			M.TaskType("tt1");
 			M.TaskType("tt2");
-			_SessionProvider.FlushCurrentSession();
 
 			var result = Controller.GetTaskTypesCount(
 				TestProject,
@@ -101,6 +79,8 @@ namespace AGO.Tasks.Test
 			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == TestProject && m.Name == "TestTaskType")
 				.SingleOrDefault();
+			Assert.IsNotNull(tt);
+			M.Track(tt);
 			Assert.AreNotEqual(default(Guid), tt.Id);
 			Assert.AreEqual("TestTaskType", tt.Name);
 			Assert.IsTrue(vr.Success);
@@ -127,7 +107,6 @@ namespace AGO.Tasks.Test
 		public void UpdateTaskType()
 		{
 			var testTaskType = M.TaskType();
-			_SessionProvider.FlushCurrentSession();
 
 			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
 			var vr = Controller.EditTaskType(TestProject, model).Validation;
@@ -142,7 +121,6 @@ namespace AGO.Tasks.Test
 		public void UpdateTaskTypeWithEmptyNameReturnError()
 		{
 			var tt = M.TaskType("aaa");
-			_SessionProvider.FlushCurrentSession();
 
 			var model = new TaskTypeDTO { Id = tt.Id, Name = string.Empty };
 			var vr = Controller.EditTaskType(TestProject, model).Validation;
@@ -158,7 +136,6 @@ namespace AGO.Tasks.Test
 		public void DeleteTaskType()
 		{
 			var testTaskType = M.TaskType();
-			_SessionProvider.FlushCurrentSession();
 
 			Controller.DeleteTaskType(testTaskType.Id);
 			_SessionProvider.FlushCurrentSession();
@@ -171,15 +148,7 @@ namespace AGO.Tasks.Test
 		public void CantDeleteReferencedTaskType()
 		{
 			var testTaskType = M.TaskType();
-			var testTask = new TaskModel
-			               	{
-			               		ProjectCode = TestProject, 
-								SeqNumber = "t0-1",
-								InternalSeqNumber = 1,
-								TaskType = testTaskType
-			               	};
-			_CrudDao.Store(testTask);
-			_SessionProvider.FlushCurrentSession();
+			M.Task(1, testTaskType);
 			
 			Controller.DeleteTaskType(testTaskType.Id);
 		}

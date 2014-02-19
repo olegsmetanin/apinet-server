@@ -6,9 +6,10 @@ namespace AGO.Tasks.Test
 	{
 		protected DictionaryController Controller { get; private set; }
 
-		protected override void Init()
+		public override void FixtureSetUp()
 		{
-			base.Init();
+			base.FixtureSetUp();
+		
 			Controller = IocContainer.GetInstance<DictionaryController>();
 		}
 	}

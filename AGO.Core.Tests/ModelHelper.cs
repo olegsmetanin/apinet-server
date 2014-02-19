@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
@@ -12,16 +11,6 @@ namespace AGO.Core.Tests
 	{
 		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser):base(session, currentUser)
 		{
-		}
-
-		public ProjectModel ProjectFromCode(string code)
-		{
-			return Session().QueryOver<ProjectModel>().Where(m => m.ProjectCode == code).SingleOrDefault();
-		}
-
-		public IEnumerable<ProjectMemberModel> ProjectMembers(string code)
-		{
-			return Session().QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
 		}
 
 		protected override void InternalDelete(object model)
@@ -37,7 +26,7 @@ namespace AGO.Core.Tests
 			base.InternalDelete(model);
 		}
 
-		public ProjectTypeModel MakeProjectType(string name = null)
+		public ProjectTypeModel ProjectType(string name = null)
 		{
 			return Track(() =>
 			{
@@ -54,7 +43,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectModel MakeProject(string code, string type = null, string name = null, UserModel creator = null, bool pub = false)
+		public ProjectModel Project(string code, string type = null, string name = null, UserModel creator = null, bool pub = false)
 		{
 			if (code.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("code");
@@ -79,7 +68,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectMemberModel MakeMember(string project, UserModel user, params string[] roles)
+		public ProjectMemberModel Member(string project, UserModel user, params string[] roles)
 		{
 			if (project.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("project");
@@ -104,7 +93,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectTagModel MakeTag(string name = null, UserModel user = null)
+		public ProjectTagModel Tag(string name = null, UserModel user = null)
 		{
 			return Track(() =>
 			{

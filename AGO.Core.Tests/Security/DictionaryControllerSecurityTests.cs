@@ -7,7 +7,6 @@ using AGO.Core.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Security;
-using Newtonsoft.Json.Bson;
 using NUnit.Framework;
 
 namespace AGO.Core.Tests.Security
@@ -35,8 +34,8 @@ namespace AGO.Core.Tests.Security
 
 		private dynamic MakeTestTags()
 		{
-			var adminTag = M.MakeTag("nunit", admin);
-			var memberTag = M.MakeTag("nunit", member);
+			var adminTag = M.Tag("nunit", admin);
+			var memberTag = M.Tag("nunit", member);
 			return new {adm = adminTag, mbr = memberTag};
 		}
 
@@ -93,7 +92,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void AdminGetOwnTagsCount()
 		{
-			var d = MakeTestTags();
+			MakeTestTags();
 			LoginAdmin();
 			var termFilter = _FilteringService.Filter<ProjectTagModel>()
 				.WhereString(m => m.FullName).Like("nunit", true, true);
@@ -105,7 +104,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void MemberGetOwnTagsCount()
 		{
-			var d = MakeTestTags();
+			MakeTestTags();
 			Login(member.Login);
 			var termFilter = _FilteringService.Filter<ProjectTagModel>()
 				.WhereString(m => m.FullName).Like("nunit", true, true);
@@ -143,7 +142,7 @@ namespace AGO.Core.Tests.Security
 
 		private void DoCreateSubTagTest(UserModel parent, UserModel current, bool expectSuccess)
 		{
-			var ptag = M.MakeTag("nunit parent", parent);
+			var ptag = M.Tag("nunit parent", parent);
 			M.Track(() => ptag);
 			
 			Login(current.Login);
@@ -198,7 +197,7 @@ namespace AGO.Core.Tests.Security
 		//update
 		private void DoUpdateTagTest(UserModel creator, UserModel updater, bool expectSuccess)
 		{
-			var tag = M.MakeTag("nunit", creator);
+			var tag = M.Tag("nunit", creator);
 			M.Track(() => tag);
 
 			Login(updater.Login);
@@ -251,7 +250,7 @@ namespace AGO.Core.Tests.Security
 		//delete
 		private void DoDeleteTagTest(UserModel creator, UserModel current, bool expectSuccess)
 		{
-			var tag = M.MakeTag("nunit", creator);
+			var tag = M.Tag("nunit", creator);
 			M.Track(() => tag);
 
 			Login(current.Login);

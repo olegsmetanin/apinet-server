@@ -27,8 +27,8 @@ namespace AGO.Core.Tests.Security
 			member = LoginToUser("user1@apinet-test.com");
 			notMember = LoginToUser("user2@apinet-test.com");
 
-			testProject = FM.MakeProject("proj");
-			FM.MakeMember(testProject.ProjectCode, member);
+			testProject = FM.Project("proj");
+			FM.Member(testProject.ProjectCode, member);
 		}
 
 		protected override void CreateModelHelpers()

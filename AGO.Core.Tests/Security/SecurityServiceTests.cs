@@ -18,7 +18,7 @@ namespace AGO.Core.Tests.Security
 		{
 			base.FixtureSetUp();
 
-			testProject = FM.MakeProject(Guid.NewGuid().ToString().Replace("-", string.Empty));
+			testProject = FM.Project(Guid.NewGuid().ToString().Replace("-", string.Empty));
 			admin = LoginAdmin();
 		}
 

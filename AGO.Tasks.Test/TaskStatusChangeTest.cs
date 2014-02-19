@@ -8,31 +8,8 @@ namespace AGO.Tasks.Test
 	/// <summary>
 	/// Тесты работы со статусами задачи
 	/// </summary>
-	[TestFixture]
 	public class TaskStatusChangeTest: AbstractTest
 	{
-		//private TasksController controller; will be need later, when test workflow
-
-		[TestFixtureSetUp]
-		public new void Init()
-		{
-			base.Init();
-			//controller = IocContainer.GetInstance<TasksController>();
-		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
-		{
-			base.Cleanup();
-		}
-
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
-		}
-
-
 		[Test]
 		public void TaskCreationSetInitialStatusAndAddRecordToHistory()
 		{

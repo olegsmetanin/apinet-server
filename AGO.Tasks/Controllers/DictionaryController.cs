@@ -11,7 +11,6 @@ using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
-using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
 using AGO.Core.Modules.Attributes;

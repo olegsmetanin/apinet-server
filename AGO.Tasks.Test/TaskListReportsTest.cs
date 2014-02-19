@@ -10,67 +10,17 @@ using NUnit.Framework;
 namespace AGO.Tasks.Test
 {
 	/// <summary>
-	/// Тесты генераторово данных для отчетов-списков задач
+	/// Тесты генераторов данных для отчетов-списков задач
 	/// </summary>
-	[TestFixture]
 	public class TaskListReportsTest: AbstractTest
 	{
-//		private ProjectParticipantModel pIvanov;
-//		private ProjectParticipantModel pPetrov;
 		private System.Threading.CancellationToken token;
-
-		[TestFixtureSetUp]
-		public new void Init()
+		public override void FixtureSetUp()
 		{
-			base.Init();
-
-//			var project = Session.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
-//			Assert.IsNotNull(project);
-//			var ivanov = Session.QueryOver<UserModel>().Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault();
-//			Assert.IsNotNull(ivanov);
-//			var petrov = Session.QueryOver<UserModel>().Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault();
-//			Assert.IsNotNull(petrov);
-//
-//			pIvanov = new ProjectParticipantModel
-//			{
-//				Project = project,
-//				User = ivanov,
-//				GroupName = "Executors",
-//				IsDefaultGroup = true
-//			};
-//			_CrudDao.Store(pIvanov);
-//			pPetrov = new ProjectParticipantModel
-//			{
-//				Project = project,
-//				User = petrov,
-//				GroupName = "Executors",
-//				IsDefaultGroup = true
-//			};
-//			_CrudDao.Store(pPetrov);
-//			project.Participants.Add(pIvanov);
-//			project.Participants.Add(pPetrov);
-//
-//			_SessionProvider.FlushCurrentSession();
-
+			base.FixtureSetUp();
+	
 			var cts = new System.Threading.CancellationTokenSource();
 			token = cts.Token;
-		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
-		{
-			base.Cleanup();
-		}
-
-		[SetUp]
-		public void SetUp()
-		{
-		}
-
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
 		}
 
 		private TaskListReportParameters MakeParameters(

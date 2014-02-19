@@ -11,24 +11,6 @@ namespace AGO.Tasks.Test
 	/// </summary>
 	public class TaskStatusesTest: AbstractDictionaryTest
 	{
-		[TestFixtureSetUp]
-		public new void Init()
-		{
-			base.Init();
-		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
-		{
-			base.Cleanup();
-		}
-
-		[TearDown]
-		public new void TearDown()
-		{
-			base.TearDown();
-		}
-
 		[Test]
 		public void LookupTaskStatusesWithoutTermReturnAll()
 		{

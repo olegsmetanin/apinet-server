@@ -1,125 +1,32 @@
 using System;
-using AGO.Core.Application;
-using AGO.Core.Controllers.Security;
-using AGO.Core.Model.Security;
-using AGO.Core.Model.Dictionary.Projects;
-using AGO.Core.Model.Projects;
-using NHibernate;
+using AGO.Core.Tests;
 
 namespace AGO.Tasks.Test
 {
-	public class AbstractTest : AbstractControllersApplication
+	public class AbstractTest : AbstractPersistenceTest<ModelHelper>
 	{
 		protected string TestProject { get; private set; }
 
-		protected ISession Session
+		public override void FixtureSetUp()
 		{
-			get { return _SessionProvider.CurrentSession; }
-		}
-
-		protected ModelHelper M { get; private set; }
-
-		protected virtual void Init()
-		{
-			Initialize();
-			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);
-			M = new ModelHelper(() => _SessionProvider.CurrentSession, TestProject, () => CurrentUser);
-
-			var admin = LoginAdmin();
+			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);//user in creating model helpers
 			
-			var type = new ProjectTypeModel
-			{
-			    Creator = admin,
-				ProjectCode = TestProject,
-			    Name = "Управление задачами",
-			    Module = typeof (ModuleDescriptor).Assembly.FullName
-			};
-			_CrudDao.Store(type);
+			base.FixtureSetUp();
 
-			var p = new ProjectModel
-			{
-				Creator = admin,
-			    ProjectCode = TestProject,
-			    Name = "Unit test project: " + TestProject,
-				Type = type,
-				Status = ProjectStatus.Doing
-			};
-			_CrudDao.Store(p);
-
-			var projAdmin = ProjectMemberModel.FromParameters(admin, p, "Managers");
-			_CrudDao.Store(projAdmin);
-
-			_SessionProvider.CloseCurrentSession();
+			SetupTestProject();
 		}
 
-		protected virtual void Cleanup()
+		private void SetupTestProject()
 		{
-			var conn = _SessionProvider.CurrentSession.Connection;
-			ExecuteNonQuery(string.Format(@"
-					delete from ""Core"".""ProjectStatusHistoryModel"" where
-						""ProjectId"" in (select ""Id"" from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}')
-					go
-					delete from ""Core"".""ProjectMemberModel"" where ""ProjectCode"" = '{0}'
-					go
-					delete from ""Core"".""ProjectModel"" where ""ProjectCode"" = '{0}'
-					go
-					delete from ""Core"".""ProjectTypeModel"" where ""ProjectCode"" = '{0}'", 
-					TestProject), conn);
-			_SessionProvider.CloseCurrentSession();
-			Logout();
+			var admin = LoginAdmin();
+			FM.Project(TestProject);
+			FM.Member(TestProject, admin, TaskProjectRoles.Manager);
 		}
 
-		protected virtual void TearDown()
+		protected override void CreateModelHelpers()
 		{
-			var conn = _SessionProvider.CurrentSession.Connection;
-			ExecuteNonQuery(string.Format(@"
-					delete from ""Tasks"".""TaskStatusHistoryModel"" where 
-						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
-					go
-					delete from ""Tasks"".""TaskExecutorModel"" where
-						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
-					go
-					delete from ""Tasks"".""TaskAgreementModel"" where
-						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
-					go
-					delete from ""Tasks"".""TaskToTagModel"" where
-						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
-					go
-					delete from ""Core"".""TagModel"" where ""ProjectCode"" = '{0}'
-					go
-					delete from ""Core"".""CustomPropertyInstanceModel"" where
-						""TaskId"" in (select ""Id"" from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}')
-					go
-					delete from ""Core"".""CustomPropertyTypeModel"" where ""ProjectCode"" = '{0}'
-					go
-					delete from ""Tasks"".""TaskModel"" where ""ProjectCode"" = '{0}'
-					go
-					delete from ""Tasks"".""TaskTypeModel"" where ""ProjectCode"" = '{0}'", 
-					TestProject), conn);
-			_SessionProvider.CloseCurrentSession();
-		}
-
-		protected UserModel Login(string email)
-		{
-			Logout();
-			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>().Where(m => m.Login == email).SingleOrDefault();
-			IocContainer.GetInstance<AuthController>().LoginInternal(user);
-			return user;
-		}
-
-		protected UserModel LoginAdmin()
-		{
-			return Login("admin@apinet-test.com");
-		}
-
-		protected void Logout()
-		{
-			IocContainer.GetInstance<AuthController>().Logout();
-		}
-
-		protected UserModel CurrentUser
-		{
-			get { return IocContainer.GetInstance<AuthController>().CurrentUser(); }
+			FM = new ModelHelper(() => Session, () => CurrentUser, TestProject);
+			M = new ModelHelper(() => Session, () => CurrentUser, TestProject);
 		}
 	}
 }
