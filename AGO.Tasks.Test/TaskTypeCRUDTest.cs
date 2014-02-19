@@ -4,7 +4,6 @@ using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
-using AGO.Tasks.Model.Task;
 using NUnit.Framework;
 
 namespace AGO.Tasks.Test
@@ -23,6 +22,17 @@ namespace AGO.Tasks.Test
 			var result = Controller.LookupTaskTypes(TestProject, null, 0).ToArray();
 
 			Assert.AreEqual(2, result.Length);
+		}
+
+		[Test]
+		public void LookupTaskTypesWithTermReturnMatched()
+		{
+			M.TaskType("tt1");
+			M.TaskType("tt2");
+
+			var result = Controller.LookupTaskTypes(TestProject, "1", 0).ToArray();
+
+			Assert.AreEqual(1, result.Length);
 		}
 
 		[Test]

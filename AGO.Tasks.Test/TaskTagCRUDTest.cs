@@ -43,7 +43,7 @@ namespace AGO.Tasks.Test
 			Assert.AreEqual(t3.FullName, result[1].Text);
 		}
 
-		[Test]
+		[Test, Ignore("Was reimplemented without hierarchy search, may be will be restored later")]
 		public void LookupTagWithHierarchyTermReturnMatched()
 		{
 			var t1 = M.Tag("abc");

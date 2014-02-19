@@ -33,6 +33,8 @@ namespace AGO.Tasks.Test.Security
 			FM.Member(TestProject, projExecutor, TaskProjectRoles.Executor);
 		}
 
+		#region Task type
+
 		[Test]
 		public void OnlyMembersCanLookupTaskTypes()
 		{
@@ -139,10 +141,9 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, UpdateResult<TaskTypeDTO>> action = u =>
 			{
 				Login(u.Login);
-				var ur = Controller.EditTaskType(
+				return Controller.EditTaskType(
 					TestProject,
 					new TaskTypeDTO { Id = tt.Id, Name = u.Id.ToString() });
-				return ur;
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint denied = Is.False;
@@ -173,6 +174,129 @@ namespace AGO.Tasks.Test.Security
 			Assert.That(() => action(projExecutor), restricted);
 			Assert.That(() => action(notMember), denied);
 		}
-		 
+
+		#endregion
+
+		[Test]
+		public void OnlyMembersCanLookupOwnTags()
+		{
+			var admintTag = M.Tag(projAdmin.Login, owner: projAdmin);
+			var mgrTag = M.Tag(projManager.Login, owner: projManager);
+			var execTag = M.Tag(projExecutor.Login, owner: projExecutor);
+
+			Func<UserModel, LookupEntry[]> action = u =>
+			{
+				Login(u.Login);
+				return Controller.LookupTags(TestProject, null, 0).ToArray();
+			};
+			Func<TaskTagModel, ReusableConstraint> granted = tag => Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == tag.FullName);
+			ReusableConstraint denied = Is.Empty;
+
+			Assert.That(action(admin), denied);
+			Assert.That(action(projAdmin), granted(admintTag));
+			Assert.That(action(projManager), granted(mgrTag));
+			Assert.That(action(projExecutor), granted(execTag));
+			Assert.That(action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanGetOwnTags()
+		{
+			var admintTag = M.Tag(projAdmin.Login, owner: projAdmin);
+			var mgrTag = M.Tag(projManager.Login, owner: projManager);
+			var execTag = M.Tag(projExecutor.Login, owner: projExecutor);
+
+			Func<UserModel, TaskTagDTO[]> action = u =>
+			{
+				Login(u.Login);
+				return Controller.GetTags(TestProject,
+					Enumerable.Empty<IModelFilterNode>().ToList(),
+					Enumerable.Empty<SortInfo>().ToList(),
+					0).ToArray();
+			};
+			Func<TaskTagModel, ReusableConstraint> granted = tag => Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<TaskTagDTO>(e => e.Name == tag.FullName);
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(action(projAdmin), granted(admintTag));
+			Assert.That(action(projManager), granted(mgrTag));
+			Assert.That(action(projExecutor), granted(execTag));
+			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanCreateOwnTags()
+		{
+			Func<UserModel, bool> action = u =>
+			{
+				Login(u.Login);
+				var ur = Controller.CreateTag(TestProject, new TaskTagDTO { Name = u.Id.ToString() });
+				if (ur.Validation.Success)
+				{
+					M.Track(Session.Get<TaskTagModel>(ur.Model[0].Id));
+				}
+				return ur.Validation.Success;
+			};
+			ReusableConstraint granted = Is.True;
+			ReusableConstraint denied = Is.False;
+
+			Assert.That(action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanEditOwnTags()
+		{
+			Func<UserModel, bool> action = u =>
+			{
+				var utag = M.Tag(u.Id.ToString(), owner: u);
+				Login(u.Login);
+				return Controller.EditTag(TestProject, new TaskTagDTO { Id = utag.Id, Name = "aaa" })
+					.Validation.Success;
+			};
+			ReusableConstraint granted = Is.True;
+			ReusableConstraint denied = Is.False;
+
+			Assert.That(action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanDeleteOwnTags()
+		{
+			var admintTag = M.Tag(projAdmin.Login, owner: projAdmin);
+			var mgrTag = M.Tag(projManager.Login, owner: projManager);
+			var execTag = M.Tag(projExecutor.Login, owner: projExecutor);
+
+			Func<UserModel, Guid, Guid[]> action = (u, id) =>
+			{				
+				Login(u.Login);
+				return Controller.DeleteTags(TestProject, new []{ id }).ToArray();
+			};
+			Func<Guid, ReusableConstraint> granted = id => Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<Guid>(i => i == id);
+			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			//not project members
+			Assert.That(() => action(admin, mgrTag.Id), denied);
+			Assert.That(() => action(notMember, execTag.Id), denied);
+			//not own tags
+			Assert.That(() => action(projAdmin, mgrTag.Id), restricted);
+			Assert.That(() => action(projManager, execTag.Id), restricted);
+			Assert.That(() => action(projExecutor, admintTag.Id), restricted);
+			//own tags
+			Assert.That(action(projAdmin, admintTag.Id), granted(admintTag.Id));
+			Assert.That(action(projManager, mgrTag.Id), granted(mgrTag.Id));
+			Assert.That(action(projExecutor, execTag.Id), granted(execTag.Id));
+		}
 	}
 }

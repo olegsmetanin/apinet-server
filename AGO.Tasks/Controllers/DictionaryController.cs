@@ -121,7 +121,6 @@ namespace AGO.Tasks.Controllers
 			return true;
 		}
 
-		//TODO transaction management???
     	[JsonEndpoint, RequireAuthorization]
 		public bool DeleteTaskTypes([NotEmpty] string project, [NotNull] ICollection<Guid> ids, Guid? replacementTypeId)
     	{
@@ -172,19 +171,7 @@ namespace AGO.Tasks.Controllers
 			string term,
 			[InRange(0, null)] int page)
 		{
-			//доступны только персональные теги текущего пользователя
-			var query = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project && m.Creator.Id == _AuthController.CurrentUser().Id);
-			if (!term.IsNullOrWhiteSpace())
-			{
-				foreach (var termPart in term.Split(new []{',', ' ', '\\'}, StringSplitOptions.RemoveEmptyEntries))
-				{
-					query = query.WhereRestrictionOn(m => m.FullName).IsLike(termPart, MatchMode.Anywhere);
-				}
-			}
-			query = query.OrderBy(m => m.FullName).Asc;
-
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
+			return Lookup<TaskTagModel>(project, term, page, m => m.FullName);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -195,7 +182,8 @@ namespace AGO.Tasks.Controllers
 			[InRange(0, null)] int page)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTagModel>().Where(m => m.ProjectCode == project);
-			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+			var predicate = SecurityService.ApplyReadConstraint<TaskTagModel>(project, CurrentUser.Id, Session,
+				filter.Concat(new[] { projectPredicate }).ToArray());
 			var adapter = new TaskTagAdapter();
 
 			return _FilteringDao.List<TaskTagModel>(predicate, page, sorters)
@@ -206,7 +194,7 @@ namespace AGO.Tasks.Controllers
 		private TaskTagModel FindOrCreate(string project, string[] path, ref List<TaskTagModel> created)
 		{
 			var parent = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project && m.Creator.Id == _AuthController.CurrentUser().Id && 
+				.Where(m => m.ProjectCode == project && m.Creator.Id == CurrentUser.Id && 
 					m.FullName == string.Join("\\", path))
 				.SingleOrDefault();
 			if (parent != null) return parent; //already exists
@@ -218,7 +206,8 @@ namespace AGO.Tasks.Controllers
 				currentPath = i == 0 ? path[i].TrimSafe() : currentPath + "\\" + path[i].TrimSafe();
 				var cpath = currentPath;
 				parent = Session.QueryOver<TaskTagModel>()
-					.Where(m => m.ProjectCode == project && m.Creator.Id == _AuthController.CurrentUser().Id).Where(m => m.FullName == cpath).SingleOrDefault();
+					.Where(m => m.ProjectCode == project && m.Creator.Id == CurrentUser.Id)
+					.Where(m => m.FullName == cpath).SingleOrDefault();
 				
 				if (parent == null)
 				{
@@ -341,6 +330,12 @@ namespace AGO.Tasks.Controllers
 			//Check project existing
 			if (!_CrudDao.Exists<ProjectModel>(query => query.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
+
+			foreach (var tagId in ids)
+			{
+				var tag = _CrudDao.Get<TaskTagModel>(tagId);
+				SecurityService.DemandDelete(tag, project, CurrentUser.Id, Session);
+			}
 
 			//collect all tags with childs
 			var forDelete = new List<TagModel>();

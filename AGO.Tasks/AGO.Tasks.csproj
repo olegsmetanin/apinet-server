@@ -110,6 +110,7 @@
     <Compile Include="Reports\FakeLongRunningDataGenerator.cs" />
     <Compile Include="Reports\SimpleTaskListDataGenerator.cs" />
     <Compile Include="Reports\TaskListReportParameters.cs" />
+    <Compile Include="SecurityProviders\TaskTagSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskTypeSecurityProvider.cs" />
     <Compile Include="TaskProjectRoles.cs" />
     <Compile Include="TasksException.cs" />

@@ -45,8 +45,8 @@ namespace AGO.Tasks.Controllers
 		}
 
 		protected IEnumerable<LookupEntry> Lookup<TModel>(string project, string term, int page,
-			Expression<Func<TModel, object>> textProperty,
-			Expression<Func<TModel, object>> searchProperty = null,
+			Expression<Func<TModel, string>> textProperty,
+			Expression<Func<TModel, string>> searchProperty = null,
 			params Expression<Func<TModel, object>>[] sorters)
 			where TModel: class, IProjectBoundModel, IIdentifiedModel<Guid>
 		{
@@ -58,17 +58,18 @@ namespace AGO.Tasks.Controllers
 				IModelFilterNode termFilter = null;
 				if (!term.IsNullOrWhiteSpace())
 				{
-					var search = (searchProperty ?? textProperty).Cast<TModel, object, string>();
-					termFilter = _FilteringService.Filter<TModel>().WhereString(search).Like(term.TrimSafe(), true, true);
+					termFilter = _FilteringService.Filter<TModel>()
+						.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
 				}
 				//concat with security predicates
 				var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
 				//get executable criteria
 				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
 				//add needed sorting
+				var objTextProp = textProperty.Cast<TModel, string, object>();
 				if (sorters == null || !sorters.Any())
 				{
-					criteria.AddOrder(Order.Asc(Projections.Property(textProperty).PropertyName));
+					criteria.AddOrder(Order.Asc(Projections.Property(objTextProp).PropertyName));
 				}
 				else
 				{
@@ -78,7 +79,7 @@ namespace AGO.Tasks.Controllers
 					}
 				}
 
-				return _CrudDao.PagedCriteria(criteria, page).LookupModelsList(textProperty);
+				return _CrudDao.PagedCriteria(criteria, page).LookupModelsList(objTextProp);
 			}
 			catch (NoSuchProjectMemberException)
 			{
