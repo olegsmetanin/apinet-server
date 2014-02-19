@@ -44,6 +44,41 @@ namespace AGO.Tasks.Controllers
 			get { return _AuthController.CurrentUser(); }
 		}
 
+		protected ICriteria PrepareLookup<TModel>(string project, string term, int page,
+			Expression<Func<TModel, string>> textProperty,
+			Expression<Func<TModel, string>> searchProperty = null,
+			params Expression<Func<TModel, object>>[] sorters)
+			where TModel : class, IProjectBoundModel, IIdentifiedModel<Guid>
+		{
+			var projectFilter = _FilteringService.Filter<TModel>().Where(m => m.ProjectCode == project);
+			//term search predicate
+			IModelFilterNode termFilter = null;
+			if (!term.IsNullOrWhiteSpace())
+			{
+				termFilter = _FilteringService.Filter<TModel>()
+					.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
+			}
+			//concat with security predicates
+			var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
+			//get executable criteria
+			var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
+			//add needed sorting
+			var objTextProp = textProperty.Cast<TModel, string, object>();
+			if (sorters == null || !sorters.Any())
+			{
+				criteria.AddOrder(Order.Asc(Projections.Property(objTextProp).PropertyName));
+			}
+			else
+			{
+				foreach (var s in sorters)
+				{
+					criteria.AddOrder(Order.Asc(Projections.Property(s).PropertyName));
+				}
+			}
+
+			return _CrudDao.PagedCriteria(criteria, page);
+		}
+
 		protected IEnumerable<LookupEntry> Lookup<TModel>(string project, string term, int page,
 			Expression<Func<TModel, string>> textProperty,
 			Expression<Func<TModel, string>> searchProperty = null,
@@ -79,7 +114,8 @@ namespace AGO.Tasks.Controllers
 					}
 				}
 
-				return _CrudDao.PagedCriteria(criteria, page).LookupModelsList(objTextProp);
+				return PrepareLookup(project, term, page, textProperty, searchProperty, sorters)
+					.LookupModelsList(objTextProp);
 			}
 			catch (NoSuchProjectMemberException)
 			{

@@ -156,6 +156,7 @@
     <Compile Include="Security\ISecurityConstraintsProvider.cs" />
     <Compile Include="Security\ISecurityService.cs" />
     <Compile Include="Security\OperationDeniedException.cs" />
+    <Compile Include="Security\Providers\CustomPropertyTypeSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagLinkSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagSecurityProvider.cs" />

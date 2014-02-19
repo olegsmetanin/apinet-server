@@ -34,28 +34,24 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var currentUser = _AuthController.CurrentUser();
-
-			var taskToTag = _SessionProvider.CurrentSession.QueryOver<TaskToTagModel>()
-				.Where(m => m.Task.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
-
-			if (taskToTag != null)
-				return false;
-
 			var task = _CrudDao.Get<TaskModel>(modelId, true);
-			if ((task.Creator == null || !currentUser.Equals(task.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
 
+			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+
+			if (link != null)
+				return false;
+			
 			var tag = _CrudDao.Get<TaskTagModel>(tagId, true);
-			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			_CrudDao.Store(new TaskToTagModel
+			link = new TaskToTagModel
 			{
-				Creator = currentUser,
+				Creator = CurrentUser,
 				Task = task,
 				Tag = tag
-			});
+			};
+			SecurityService.DemandUpdate(link, task.ProjectCode, CurrentUser.Id, Session);
+			task.Tags.Add(link);
+			_CrudDao.Store(link);
 
 			return true;
 		}
@@ -65,23 +61,16 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var currentUser = _AuthController.CurrentUser();
+			var task = _CrudDao.Get<TaskModel>(modelId, true);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
 
-			var taskToTag = _SessionProvider.CurrentSession.QueryOver<TaskToTagModel>()
-				.Where(m => m.Task.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
-
-			if (taskToTag == null)
+			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			if (link == null)
 				return false;
 
-			var task = taskToTag.Task;
-			if ((task.Creator == null || !currentUser.Equals(task.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			var tag = taskToTag.Tag;
-			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			_CrudDao.Delete(taskToTag);
+			SecurityService.DemandDelete(link, task.ProjectCode, CurrentUser.Id, Session);
+			task.Tags.Remove(link);
+			_CrudDao.Delete(link);
 
 			return true;
 		}
@@ -466,42 +455,49 @@ namespace AGO.Tasks.Controllers
 			string term, 
 			[InRange(0, null)] int page)
 		{
-			var query = Session.QueryOver<CustomPropertyTypeModel>()
-				.Where(m => m.ProjectCode == project);
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
-			query = query.OrderBy(m => m.FullName).Asc;
-
-			return _CrudDao.PagedQuery(query, page)
-				.List<CustomPropertyTypeModel>()
-				.Select(TaskViewAdapter.ParamTypeToDTO);
+			try
+			{
+				return PrepareLookup<CustomPropertyTypeModel>(project, term, page, m => m.FullName)
+					.List<CustomPropertyTypeModel>().Select(TaskViewAdapter.ParamTypeToDTO);
+			}
+			catch (NoSuchProjectMemberException)
+			{
+				//same as in lookup method from base class
+				Log.WarnFormat("Lookup from not project member catched. User '{0}' for type '{1}'", 
+					CurrentUser.Login, typeof(CustomPropertyTypeModel).AssemblyQualifiedName);
+				return Enumerable.Empty<CustomParameterTypeDTO>();
+			}
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public UpdateResult<CustomParameterDTO> EditParam([NotEmpty] Guid taskId, [NotNull] CustomParameterDTO model)
 		{
 			var task = _CrudDao.Get<TaskModel>(taskId);
-			return Edit(model.Id, task.ProjectCode,
-			    (param, vr) =>
-			    {
-			    	param.Value = model.Value;
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
 
-			    }, TaskViewAdapter.ParamToDTO, 
+			return Edit(model.Id, task.ProjectCode,
+				(param, vr) => { param.Value = model.Value; },
+				TaskViewAdapter.ParamToDTO,
 				() => new TaskCustomPropertyModel
-				      	{
-				      		Creator = _AuthController.CurrentUser(),
-							Task = task,
-							PropertyType = _CrudDao.Get<CustomPropertyTypeModel>(model.Type.Id, true)
-				      	});
+				{
+					Creator = CurrentUser,
+					Task = task,
+					PropertyType = _CrudDao.Get<CustomPropertyTypeModel>(model.Type.Id, true)
+				});
 		}
 			
 			
 		[JsonEndpoint, RequireAuthorization]
 		public bool DeleteParam([NotEmpty] Guid paramId)
 		{
-			//TODO security by task
 			var param = _CrudDao.Get<TaskCustomPropertyModel>(paramId, true);
-			param.Task.CustomProperties.Remove(param);
+			if (param == null)
+				throw new NoSuchEntityException();
+
+			var task = param.Task;
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+
+			task.CustomProperties.Remove(param);
 			_CrudDao.Delete(param);
 			return true;
 		}

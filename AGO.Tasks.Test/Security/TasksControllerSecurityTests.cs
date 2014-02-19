@@ -7,6 +7,7 @@ using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.DTO;
+using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
@@ -329,6 +330,141 @@ namespace AGO.Tasks.Test.Security
 			Assert.That(action(projManager), granted);
 			Assert.That(() => action(projExecutor), restricted);
 			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanLookupParamTypes()
+		{
+			M.ParamType("p1");
+			M.ParamType("p2");
+
+			Func<UserModel, CustomParameterTypeDTO[]> action = u =>
+			{
+				Login(u.Login);
+				return controller.LookupParamTypes(TestProject, null, 0).ToArray();
+			};
+			ReusableConstraint granted = Has.Length.EqualTo(2)
+				.And.Exactly(1).Matches<CustomParameterTypeDTO>(e => e.Text == "p1")
+				.And.Exactly(1).Matches<CustomParameterTypeDTO>(e => e.Text == "p2");
+			ReusableConstraint denied = Is.Empty;
+
+			Assert.That(action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanManageParams()
+		{
+			var task = M.Task(1, executor: projExecutor);
+			var pt = M.ParamType();
+			Func<UserModel, bool> action = u =>
+			{
+				Login(u.Login);
+				var ur1 = controller.EditParam(task.Id,
+					new CustomParameterDTO
+					{
+						Type = new CustomParameterTypeDTO {Id = pt.Id},
+						Value = "nunit"
+					});
+				Session.Flush();
+				var dto = ur1.Model;
+				dto.Value = "nunit changed";
+				var ur2 = controller.EditParam(task.Id, dto);
+				Session.Flush();
+				var r3 = controller.DeleteParam(ur2.Model.Id);
+				Session.Flush();
+				return ur1.Validation.Success && ur2.Validation.Success && r3;
+			};
+			ReusableConstraint granted = Is.True;
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanTagTask()
+		{
+			var adminTag = M.Tag("adminTag", owner: projAdmin);
+			var mgrTag = M.Tag("mgrTag", owner: projManager);
+			var execTag = M.Tag("execTag", owner: projExecutor);
+			Func<UserModel, TaskTagModel, bool> action = (u, t) =>
+			{
+				var task = M.Task(1, executor: projExecutor);
+				
+				Login(u.Login);
+				var result = controller.TagTask(task.Id, t.Id);
+				Session.Flush();
+				return result;
+			};
+			
+			ReusableConstraint granted = Is.True;
+			ReusableConstraint restricted = Throws.Exception.TypeOf<CreationDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin, mgrTag), denied);
+
+			Assert.That(action(projAdmin, adminTag), granted);
+			Assert.That(() => action(projAdmin, mgrTag), restricted);
+
+			Assert.That(action(projManager, mgrTag), granted);
+			Assert.That(() => action(projManager, adminTag), restricted);
+
+			Assert.That(action(projExecutor, execTag), granted);
+			Assert.That(() => action(projExecutor, adminTag), restricted);
+			
+			Assert.That(() => action(notMember, adminTag), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanDetagTask()
+		{
+
+			var adminTag = M.Tag("adminTag", owner: projAdmin);
+			var mgrTag = M.Tag("mgrTag", owner: projManager);
+			var execTag = M.Tag("execTag", owner: projExecutor);
+			Func<UserModel, TaskTagModel, bool> action = (u, t) =>
+			{
+				var task = M.Task(1, executor: projExecutor);
+				var link = new TaskToTagModel
+				{
+					Creator = u,
+					Task = task,
+					Tag = t
+				};
+				task.Tags.Add(link);
+				Session.Save(link);
+				Session.Flush();
+				Session.Clear();//needs for cascade operation
+
+				Login(u.Login);
+				var result = controller.DetagTask(task.Id, t.Id);
+				Session.Flush();
+				return result;
+			};
+
+			ReusableConstraint granted = Is.True;
+			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin, execTag), denied);
+
+			Assert.That(action(projAdmin, adminTag), granted);
+			Assert.That(() => action(projAdmin, execTag), restricted);
+
+			Assert.That(action(projManager, mgrTag), granted);
+			Assert.That(() => action(projManager, adminTag), restricted);
+
+			Assert.That(action(projExecutor, execTag), granted);
+			Assert.That(() => action(projExecutor, mgrTag), restricted);
+
+			Assert.That(() => action(notMember, execTag), denied);
 		}
 	}
 }
