@@ -74,7 +74,8 @@ namespace AGO.Tasks.Controllers
 			[InRange(0, null)] int page)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
-			var predicate = filter.Concat(new[] {projectPredicate}).ToArray();
+			var predicate = SecurityService.ApplyReadConstraint<TaskTypeModel>(project, CurrentUser.Id, Session,
+				filter.Concat(new[] {projectPredicate}).ToArray());
 			var adapter = new TaskTypeAdapter();
 
 			return _FilteringDao.List<TaskTypeModel>(predicate, page, sorters)
@@ -86,7 +87,8 @@ namespace AGO.Tasks.Controllers
 		public int GetTaskTypesCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
-			var predicate = filter.Concat(new[] { projectPredicate }).ToArray();
+			var predicate = SecurityService.ApplyReadConstraint<TaskTypeModel>(project, CurrentUser.Id, Session,
+				filter.Concat(new[] { projectPredicate }).ToArray());
 
 			return _FilteringDao.RowCount<TaskTypeModel>(predicate);
 		}
@@ -102,6 +104,8 @@ namespace AGO.Tasks.Controllers
     	private void InternalDeleteTaskType(Guid id)
     	{
     		var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
+
+			SecurityService.DemandDelete(taskType, taskType.ProjectCode, CurrentUser.Id, Session);
 
     		if (_CrudDao.Exists<TaskModel>(q => q.Where(m => m.TaskType.Id == taskType.Id)))
     			throw new CannotDeleteReferencedItemException();

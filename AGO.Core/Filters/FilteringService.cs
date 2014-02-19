@@ -395,7 +395,7 @@ namespace AGO.Core.Filters
 
 			try
 			{
-				var result = new ModelFilterNode { Operator = op };
+				var result = new ModelFilterNode {Operator = op};
 
 				foreach (var node in nodes)
 				{
@@ -404,7 +404,12 @@ namespace AGO.Core.Filters
 					result.AddItem((IFilterNode) node.Clone());
 				}
 
-				return result;			
+				return result;
+			}
+			catch (AbstractApplicationException)
+			{
+				//don't eat our exceptions
+				throw;
 			}
 			catch (Exception e)
 			{

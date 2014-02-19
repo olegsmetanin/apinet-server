@@ -39,31 +39,52 @@ namespace AGO.Tasks.Controllers
 			get { return _SessionProvider.CurrentSession; }
 		}
 
+		protected virtual UserModel CurrentUser
+		{
+			get { return _AuthController.CurrentUser(); }
+		}
+
 		protected IEnumerable<LookupEntry> Lookup<TModel>(string project, string term, int page,
 			Expression<Func<TModel, object>> textProperty,
 			Expression<Func<TModel, object>> searchProperty = null,
 			params Expression<Func<TModel, object>>[] sorters)
 			where TModel: class, IProjectBoundModel, IIdentifiedModel<Guid>
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<TModel>()
-				.Where(m => m.ProjectCode == project);
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(searchProperty ?? textProperty).IsLike(term, MatchMode.Anywhere);
-
-			if (sorters == null || !sorters.Any())
+			try
 			{
-				query = query.OrderBy(textProperty).Asc;
-			}
-			else
-			{
-				query = query.OrderBy(sorters[0]).Asc;
-				for (var i = 1; i < sorters.Length; i++)
+				//project predicate
+				var projectFilter = _FilteringService.Filter<TModel>().Where(m => m.ProjectCode == project);
+				//term search predicate
+				IModelFilterNode termFilter = null;
+				if (!term.IsNullOrWhiteSpace())
 				{
-					query = query.ThenBy(sorters[i]).Asc;
+					var search = (searchProperty ?? textProperty).Cast<TModel, object, string>();
+					termFilter = _FilteringService.Filter<TModel>().WhereString(search).Like(term.TrimSafe(), true, true);
 				}
-			}
+				//concat with security predicates
+				var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
+				//get executable criteria
+				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
+				//add needed sorting
+				if (sorters == null || !sorters.Any())
+				{
+					criteria.AddOrder(Order.Asc(Projections.Property(textProperty).PropertyName));
+				}
+				else
+				{
+					foreach (var s in sorters)
+					{
+						criteria.AddOrder(Order.Asc(Projections.Property(s).PropertyName));
+					}
+				}
 
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(textProperty).ToArray();
+				return _CrudDao.PagedCriteria(criteria, page).LookupModelsList(textProperty);
+			}
+			catch (NoSuchProjectMemberException)
+			{
+				Log.WarnFormat("Lookup from not project member catched. User '{0}' for type '{1}'", CurrentUser.Login, typeof(TModel).AssemblyQualifiedName);
+				return Enumerable.Empty<LookupEntry>();
+			}
 		}
 
 		protected UpdateResult<TDTO> Edit<TModel, TDTO>(Guid id, string project, 

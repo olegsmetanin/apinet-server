@@ -57,5 +57,13 @@ namespace AGO.Core
 
 			return result;
 		}
+
+		//http://stackoverflow.com/questions/729295/how-to-cast-expressionfunct-datetime-to-expressionfunct-object
+		public static Expression<Func<TModel, TToProperty>> Cast<TModel, TFromProperty, TToProperty>(this Expression<Func<TModel, TFromProperty>> expression)
+		{
+			Expression converted = Expression.Convert(expression.Body, typeof(TToProperty));
+
+			return Expression.Lambda<Func<TModel, TToProperty>>(converted, expression.Parameters);
+		}
 	}
 }

@@ -75,6 +75,7 @@
     <Compile Include="AbstractTest.cs" />
     <Compile Include="DbCreator.cs" />
     <Compile Include="ModelHelper.cs" />
+    <Compile Include="Security\DictionaryControllerSecurityTests.cs" />
     <Compile Include="TaskAgreementsTest.cs" />
     <Compile Include="TaskCRUDTest.cs" />
     <Compile Include="TaskListReportsTest.cs" />
@@ -113,9 +114,7 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Security\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

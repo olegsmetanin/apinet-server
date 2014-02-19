@@ -16,7 +16,7 @@ namespace AGO.Tasks.Test
 			SetupTestProject();
 		}
 
-		private void SetupTestProject()
+		protected virtual void SetupTestProject()
 		{
 			var admin = LoginAdmin();
 			FM.Project(TestProject);
