@@ -22,7 +22,8 @@ namespace AGO.Tasks.SecurityProviders
 
 		public override bool AcceptChange(IIdentifiedModel model, string project, ISession session)
 		{
-			return base.AcceptChange(model, project, session) && p2m.IsProjectInHandledModule(project, session);
+			return base.AcceptChange(model, project, session) && 
+				(model.IsNew() || p2m.IsProjectInHandledModule(project, session));
 		}
 
 		private bool IsProjectAdmin(ProjectModel p, UserModel u, ISession session)
