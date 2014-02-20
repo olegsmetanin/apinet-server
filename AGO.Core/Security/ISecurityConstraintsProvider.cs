@@ -15,15 +15,19 @@ namespace AGO.Core.Security
 		/// Test that this provider support read (cRud) constraints for models of provided type
 		/// </summary>
 		/// <param name="modelType">Model type to check</param>
+		/// <param name="project">Project (may be null for system providers)</param>
+		/// <param name="session">NHibernate session for work</param>
 		/// <returns>true, if read access to models can be restricted by this provider</returns>
-		bool AcceptRead(Type modelType);
+		bool AcceptRead(Type modelType, string project, ISession session);
 
 		/// <summary>
-		/// Test that this provider support change (CrUD) constraints provided model instance
+		/// Test that this provider support change (CrUD) constraints for provided model instance
 		/// </summary>
 		/// <param name="model">Model to check</param>
+		/// <param name="project">Project (may be null for system providers)</param>
+		/// <param name="session">NHibernate session for work</param>
 		/// <returns>true, if changes to models state can be restricted by this provider</returns>
-		bool AcceptChange(IIdentifiedModel model);
+		bool AcceptChange(IIdentifiedModel model, string project, ISession session);
 
 		/// <summary>
 		/// Implements read constraint

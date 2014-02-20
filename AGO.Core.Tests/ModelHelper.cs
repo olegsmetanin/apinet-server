@@ -93,7 +93,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectTagModel Tag(string name = null, UserModel user = null)
+		public ProjectTagModel ProjectTag(string name = null, UserModel user = null)
 		{
 			return Track(() =>
 			{

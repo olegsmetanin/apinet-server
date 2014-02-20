@@ -49,7 +49,7 @@ namespace AGO.Tasks
 				{
 					Creator = admin,
 					Name = "Task management project",
-					Module = "tasks"
+					Module = ModuleDescriptor.MODULE_CODE
 				}
 			};
 

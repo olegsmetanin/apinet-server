@@ -96,9 +96,7 @@ namespace AGO.Tasks.Test
 			controller.GetTask(TestProject, "not existing number");
 		}
 
-		//nosuchentity overrided with nosuchprojectmember, because project code is invalid
-		//and member not found. sad, but true
-		[Test, ExpectedException(typeof(NoSuchProjectMemberException))]
+		[Test, ExpectedException(typeof(NoSuchProjectException))]
 		public void GetTaskByInvalidProjectThrow()
 		{
 			M.Task(1);
@@ -123,10 +121,7 @@ namespace AGO.Tasks.Test
 			controller.GetTaskDetails(TestProject, "not existing number");
 		}
 
-		/// <summary>
-		/// <see cref="GetTaskByInvalidProjectThrow"/> comment
-		/// </summary>
-		[Test, ExpectedException(typeof(NoSuchProjectMemberException))]
+		[Test, ExpectedException(typeof(NoSuchProjectException))]
 		public void GetTaskDetailsByInvalidProjectThrow()
 		{
 			M.Task(1);

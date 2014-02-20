@@ -1,13 +1,12 @@
 ﻿using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
-using AGO.Core.Security;
 using AGO.Tasks.Model.Dictionary;
 using NHibernate;
 
 namespace AGO.Tasks.SecurityProviders
 {
-	public class TaskTypeSecurityProvider: AbstractModuleSecurityConstraintsProvider<TaskTypeModel>
+	public class TaskTypeSecurityProvider: ModuleSecurityProvider<TaskTypeModel>
 	{
 		public TaskTypeSecurityProvider(IFilteringService filteringService) : base(filteringService)
 		{

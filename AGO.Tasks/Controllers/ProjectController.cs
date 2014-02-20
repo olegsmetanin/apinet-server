@@ -18,9 +18,7 @@ using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Task;
-using NHibernate;
 using NHibernate.Criterion;
-
 
 namespace AGO.Tasks.Controllers
 {
@@ -43,16 +41,15 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public ProjectDTO GetProject([NotEmpty] string project)
 		{
-			var currentUser = _AuthController.CurrentUser();
-			IModelFilterNode codePredicate = _FilteringService.Filter<ProjectModel>().Where(m => m.ProjectCode == project);
-			codePredicate = SecurityService.ApplyReadConstraint<ProjectModel>(project, currentUser.Id,
-				_SessionProvider.CurrentSession, codePredicate);
-			var p = _FilteringDao.List<ProjectModel>(new[] {codePredicate}).SingleOrDefault();
+			var fb = _FilteringService.Filter<ProjectModel>();
+			var codePredicate = SecurityService.ApplyReadConstraint<ProjectModel>(project, CurrentUser.Id,
+				Session, fb.Where(m => m.ProjectCode == project));
+			var p = _FilteringDao.Find<ProjectModel>(codePredicate);
 
 			if (p == null)
 				throw new NoSuchProjectException();
 
-			var adapter = new ProjectAdapter(_LocalizationService, _AuthController.CurrentUser());
+			var adapter = new ProjectAdapter(_LocalizationService, CurrentUser);
 			return adapter.Fill(p);
 		}
 
@@ -83,11 +80,6 @@ namespace AGO.Tasks.Controllers
 								p.Description = data.Value.ConvertSafe<string>().TrimSafe();
 								break;
 							case "VisibleForAll":
-								var isAdmin = _CrudDao.Exists<ProjectMemberModel>(q => q.Where(
-									m => m.ProjectCode == project && m.UserId == user.Id && m.CurrentRole == BaseProjectRoles.Administrator));
-								if (!isAdmin)
-									throw new AccessForbiddenException();
-
 								p.VisibleForAll = data.Value.ConvertSafe<bool>();
 								break;
 							case "Status":
@@ -119,28 +111,24 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var currentUser = _AuthController.CurrentUser();
+			var project = _CrudDao.Get<ProjectModel>(modelId, true);
+			SecurityService.DemandUpdate(project, project.ProjectCode, CurrentUser.Id, Session);
 
-			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-				.Where(m => m.Project.Id == modelId && m.Tag.Id == tagId).SingleOrDefault();
+			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
 
-			if (projectToTag != null)
+			if (link != null)
 				return false;
 
-			var project = _CrudDao.Get<ProjectModel>(modelId, true);
-			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
 			var tag = _CrudDao.Get<ProjectTagModel>(tagId, true);
-			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			_CrudDao.Store(new ProjectToTagModel
+			link = new ProjectToTagModel
 			{
-				Creator = currentUser,
+				Creator = CurrentUser,
 				Project = project,
 				Tag = tag
-			});
+			};
+			SecurityService.DemandUpdate(link, project.ProjectCode, CurrentUser.Id, Session);
+			project.Tags.Add(link);
+			_CrudDao.Store(link);
 
 			return true;
 		}
@@ -150,23 +138,16 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var currentUser = _AuthController.CurrentUser();
+			var project = _CrudDao.Get<ProjectModel>(modelId, true);
+			SecurityService.DemandUpdate(project, project.ProjectCode, CurrentUser.Id, Session);
 
-			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
-				.Where(m => m.Project.Id == modelId && m.Tag.Id == tagId).SingleOrDefault();
-
-			if (projectToTag == null)
+			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			if (link == null)
 				return false;
 
-			var project = projectToTag.Project;
-			if ((project.Creator == null || !currentUser.Equals(project.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			var tag = projectToTag.Tag;
-			if ((tag.Creator == null || !currentUser.Equals(tag.Creator)) && currentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			_CrudDao.Delete(projectToTag);
+			SecurityService.DemandDelete(link, project.ProjectCode, CurrentUser.Id, Session);
+			project.Tags.Remove(link);
+			_CrudDao.Delete(link);
 
 			return true;
 		}
@@ -174,29 +155,19 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectMemberDTO> GetMembers([NotEmpty] string project, string term, [InRange(0, null)] int page)
 		{
-			var q = MakeMembersPredicate(project, term);
+			var criteria = PrepareLookup<ProjectMemberModel>(project, term, page, m => m.FullName);
 			var adapter = new ProjectMemberAdapter(_LocalizationService);
-			return _CrudDao.PagedQuery(q, page).List().Select(adapter.Fill).ToList();
+			return criteria.List<ProjectMemberModel>().Select(adapter.Fill).ToList();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public int GetMembersCount([NotEmpty] string project, string term)
 		{
-			var q = MakeMembersPredicate(project, term);
-			return q.RowCount();
+			var criteria = PrepareLookup<ProjectMemberModel>(project, term, 0, m => m.FullName);
+			criteria.ClearOrders();
+			return criteria.SetProjection(Projections.RowCount()).UniqueResult<int>();
 		}
 
-		private IQueryOver<ProjectMemberModel> MakeMembersPredicate(string project, string term)
-		{
-			var q = Session.QueryOver<ProjectMemberModel>()
-				.Where(m => m.ProjectCode == project)
-				.OrderBy(m => m.FullName).Asc;
-			if (!term.IsNullOrWhiteSpace())
-				q = q.WhereRestrictionOn(m => m.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
-
-			return q;
-		}
-			
 		[JsonEndpoint, RequireAuthorization]
 		public ProjectMemberDTO AddMember([NotEmpty] string project, [NotEmpty] Guid userId, [NotEmpty] string[] roles)
 		{
@@ -212,7 +183,7 @@ namespace AGO.Tasks.Controllers
 				throw new UserAlreadyProjectMemberException();
 
 			var member = ProjectMemberModel.FromParameters(u, p, roles);
-			SecurityService.DemandUpdate(member, project, u.Id, Session);
+			SecurityService.DemandUpdate(member, project, CurrentUser.Id, Session);
 			_CrudDao.Store(member);
 			return new ProjectMemberAdapter(_LocalizationService).Fill(member);
 		}
@@ -222,7 +193,7 @@ namespace AGO.Tasks.Controllers
 		{
 			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
 			
-			SecurityService.DemandDelete(member, member.ProjectCode, _AuthController.CurrentUser().Id, Session);
+			SecurityService.DemandDelete(member, member.ProjectCode, CurrentUser.Id, Session);
 
 			if (_CrudDao.Exists<TaskExecutorModel>(q => q.Where(m => m.Executor.Id == member.Id)) ||
 				_CrudDao.Exists<TaskAgreementModel>(q => q.Where(m => m.Agreemer.Id == member.Id)))
@@ -267,13 +238,11 @@ namespace AGO.Tasks.Controllers
 		public UpdateResult<ProjectMemberDTO> ChangeMemberRoles([NotEmpty] Guid memberId, [NotEmpty] string[] roles)
 		{
 			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
-			
-
-			//TODO only project admins may change this
 
 			return Edit<ProjectMemberModel, ProjectMemberDTO>(member.Id, member.ProjectCode,
 			(model, validation) =>
 			{
+				//TODO localization
 				if (!TaskProjectRoles.IsValid(roles))
 				{
 					validation.AddFieldErrors("Roles", "Roles contains incorrect values");
@@ -296,12 +265,10 @@ namespace AGO.Tasks.Controllers
 		{
 			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
 
-
-			//TODO only project admins or user themself may change this
-
 			return Edit<ProjectMemberModel, ProjectMemberDTO>(member.Id, member.ProjectCode,
 			(model, validation) =>
 			{
+				//TODO localization
 				if (!TaskProjectRoles.IsValid(current))
 				{
 					validation.AddFieldErrors("CurrentRole", "Incorrect role");
@@ -327,8 +294,9 @@ namespace AGO.Tasks.Controllers
 			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
 			if (p == null)
 				throw new NoSuchProjectException();
-			var user = _AuthController.CurrentUser();
-			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == user.Id));
+
+			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(
+				m => m.ProjectCode == p.ProjectCode && m.UserId == CurrentUser.Id));
 			if (member == null)
 				throw new NoSuchProjectMemberException();
 

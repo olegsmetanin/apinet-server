@@ -75,7 +75,7 @@ namespace AGO.Core.Tests.Security
 			var testFilter = new ModelFilterNode {Path = "testpath"};
 			//arrange
 			var mock = Substitute.For<ISecurityConstraintsProvider>();
-			mock.AcceptRead(null).ReturnsForAnyArgs(true);
+			mock.AcceptRead(null, null, null).ReturnsForAnyArgs(true);
 			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
 			ss.RegisterProvider(mock);
 			//act
@@ -95,7 +95,7 @@ namespace AGO.Core.Tests.Security
 			var testFilter = new ModelFilterNode { Path = "testpath" };
 			//arrange
 			var mock = Substitute.For<ISecurityConstraintsProvider>();
-			mock.AcceptRead(null).ReturnsForAnyArgs(true);
+			mock.AcceptRead(null, null, null).ReturnsForAnyArgs(true);
 			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
 			ss.RegisterProvider(mock);
 			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == testProject.ProjectCode);
@@ -122,8 +122,8 @@ namespace AGO.Core.Tests.Security
 			var filter2 = new ModelFilterNode { Path = "f2" };
 			var mock1 = Substitute.For<ISecurityConstraintsProvider>();
 			var mock2 = Substitute.For<ISecurityConstraintsProvider>();
-			mock1.AcceptRead(null).ReturnsForAnyArgs(true);
-			mock2.AcceptRead(null).ReturnsForAnyArgs(false);
+			mock1.AcceptRead(null, null, null).ReturnsForAnyArgs(true);
+			mock2.AcceptRead(null, null, null).ReturnsForAnyArgs(false);
 			mock1.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(filter1);
 			mock2.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(filter2);
 			ss.RegisterProvider(mock1);
@@ -158,8 +158,8 @@ namespace AGO.Core.Tests.Security
 		{
 			var denyMock = Substitute.For<ISecurityConstraintsProvider>();
 			var grantMock = Substitute.For<ISecurityConstraintsProvider>();
-			denyMock.AcceptChange(null).ReturnsForAnyArgs(true);
-			grantMock.AcceptChange(null).ReturnsForAnyArgs(true);
+			denyMock.AcceptChange(null, null, null).ReturnsForAnyArgs(true);
+			grantMock.AcceptChange(null, null, null).ReturnsForAnyArgs(true);
 			denyMock.CanCreate(null, null, Guid.Empty, null).ReturnsForAnyArgs(false);
 			denyMock.CanUpdate(null, null, Guid.Empty, null).ReturnsForAnyArgs(false);
 			denyMock.CanDelete(null, null, Guid.Empty, null).ReturnsForAnyArgs(false);

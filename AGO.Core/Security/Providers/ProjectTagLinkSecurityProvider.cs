@@ -12,7 +12,7 @@ namespace AGO.Core.Security.Providers
 		{
 		}
 
-		private bool IsMember(ProjectToTagModel link, UserModel user)
+		protected bool IsMember(ProjectToTagModel link, UserModel user)
 		{
 			return link.Project.Members.Any(m => user.Equals(m.User));
 		}
@@ -26,7 +26,7 @@ namespace AGO.Core.Security.Providers
 		public override bool CanCreate(ProjectToTagModel model, string project, UserModel user, ISession session)
 		{
 			//sysadminis or project members may tag projects, but only own tags
-			return (user.IsAdmin || IsMember(model, user)) && user.Equals(model.Creator);
+			return (user.IsAdmin || IsMember(model, user)) && user.Equals(model.Tag.Creator);
 		}
 
 		public override bool CanUpdate(ProjectToTagModel model, string project, UserModel user, ISession session)
@@ -38,7 +38,7 @@ namespace AGO.Core.Security.Providers
 		public override bool CanDelete(ProjectToTagModel model, string project, UserModel user, ISession session)
 		{
 			//deletes only own tags (same logic as in create)
-			return (user.IsAdmin || IsMember(model, user)) && user.Equals(model.Creator);
+			return (user.IsAdmin || IsMember(model, user)) && user.Equals(model.Tag.Creator);
 		}
 	}
 }

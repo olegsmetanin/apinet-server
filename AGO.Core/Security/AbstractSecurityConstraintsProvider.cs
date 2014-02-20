@@ -23,14 +23,14 @@ namespace AGO.Core.Security
 
 		protected IFilteringService FilteringService { get; private set; }
 
-		public bool AcceptRead(Type modelType)
+		public virtual bool AcceptRead(Type modelType, string project, ISession session)
 		{
 			return typeof (TModel).IsAssignableFrom(modelType);
 		}
 
-		public bool AcceptChange(IIdentifiedModel model)
+		public virtual bool AcceptChange(IIdentifiedModel model, string project, ISession session)
 		{
-			return model != null && AcceptRead(model.GetType());
+			return model != null && AcceptRead(model.GetType(), project, session);
 		}
 
 		private UserModel UserFromId(Guid userId, ISession session)

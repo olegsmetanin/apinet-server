@@ -189,7 +189,8 @@ namespace AGO.Core.Tests.Security
 			{
 				M.Member(project.ProjectCode, user);
 			}
-			var tag = Session.QueryOver<ProjectTagModel>().List().Take(1).First();
+			var tag = M.ProjectTag(user.Login, user);
+				//Session.QueryOver<ProjectTagModel>().List().Take(1).First();
 
 			Login(user.Login);
 			var response = controller.TagProject(project.Id, tag.Id);

@@ -9,28 +9,19 @@ using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
 
 namespace AGO.Tasks.Test.Security
 {
-	public class DictionaryControllerSecurityTests: AbstractDictionaryTest
+	public class DictionaryControllerSecurityTests: AbstractSecurityTest
 	{
-		private UserModel admin;
-		private UserModel projAdmin;
-		private UserModel projManager;
-		private UserModel projExecutor;
-		private UserModel notMember;
+		private DictionaryController controller;
 
-		protected override void SetupTestProject()
+		public override void FixtureSetUp()
 		{
-			admin = LoginToUser("admin@apinet-test.com");
-			projAdmin = LoginToUser("user1@apinet-test.com");
-			projManager = LoginToUser("user2@apinet-test.com");
-			projExecutor = LoginToUser("user3@apinet-test.com");
-			notMember = LoginToUser("artem1@apinet-test.com");
-			FM.Project(TestProject);
-			FM.Member(TestProject, projAdmin, BaseProjectRoles.Administrator);
-			FM.Member(TestProject, projManager, TaskProjectRoles.Manager);
-			FM.Member(TestProject, projExecutor, TaskProjectRoles.Executor);
+			base.FixtureSetUp();
+
+			controller = IocContainer.GetInstance<DictionaryController>();
 		}
 
 		#region Task type
@@ -44,7 +35,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, LookupEntry[]> action = u =>
 			{
 				Login(u.Login);
-				return Controller.LookupTaskTypes(TestProject, null, 0).ToArray();
+				return controller.LookupTaskTypes(TestProject, null, 0).ToArray();
 			};
 			ReusableConstraint granted = Has.Length.EqualTo(2)
 				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == "aaa")
@@ -67,7 +58,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, TaskTypeDTO[]> action = u =>
 			{
 				Login(u.Login);
-				return Controller.GetTaskTypes(
+				return controller.GetTaskTypes(
 					TestProject, 
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					Enumerable.Empty<SortInfo>().ToList(), 
@@ -94,7 +85,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, int> action = u =>
 			{
 				Login(u.Login);
-				return Controller.GetTaskTypesCount(
+				return controller.GetTaskTypesCount(
 					TestProject,
 					Enumerable.Empty<IModelFilterNode>().ToList());
 			};
@@ -114,7 +105,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, UpdateResult<TaskTypeDTO>> action = u =>
 			{
 				Login(u.Login);
-				var ur = Controller.EditTaskType(
+				var ur = controller.EditTaskType(
 					TestProject,
 					new TaskTypeDTO {Name = u.Id.ToString()});
 				if (ur.Model != null)
@@ -141,7 +132,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, UpdateResult<TaskTypeDTO>> action = u =>
 			{
 				Login(u.Login);
-				return Controller.EditTaskType(
+				return controller.EditTaskType(
 					TestProject,
 					new TaskTypeDTO { Id = tt.Id, Name = u.Id.ToString() });
 			};
@@ -162,7 +153,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var tt = M.TaskType("for delete");
 				Login(u.Login);
-				return Controller.DeleteTaskType(tt.Id);
+				return controller.DeleteTaskType(tt.Id);
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
@@ -189,7 +180,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, LookupEntry[]> action = u =>
 			{
 				Login(u.Login);
-				return Controller.LookupTags(TestProject, null, 0).ToArray();
+				return controller.LookupTags(TestProject, null, 0).ToArray();
 			};
 			Func<TaskTagModel, ReusableConstraint> granted = tag => Has.Length.EqualTo(1)
 				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == tag.FullName);
@@ -212,7 +203,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, TaskTagDTO[]> action = u =>
 			{
 				Login(u.Login);
-				return Controller.GetTags(TestProject,
+				return controller.GetTags(TestProject,
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					Enumerable.Empty<SortInfo>().ToList(),
 					0).ToArray();
@@ -234,7 +225,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, bool> action = u =>
 			{
 				Login(u.Login);
-				var ur = Controller.CreateTag(TestProject, new TaskTagDTO { Name = u.Id.ToString() });
+				var ur = controller.CreateTag(TestProject, new TaskTagDTO { Name = u.Id.ToString() });
 				if (ur.Validation.Success)
 				{
 					M.Track(Session.Get<TaskTagModel>(ur.Model[0].Id));
@@ -258,7 +249,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var utag = M.Tag(u.Id.ToString(), owner: u);
 				Login(u.Login);
-				return Controller.EditTag(TestProject, new TaskTagDTO { Id = utag.Id, Name = "aaa" })
+				return controller.EditTag(TestProject, new TaskTagDTO { Id = utag.Id, Name = "aaa" })
 					.Validation.Success;
 			};
 			ReusableConstraint granted = Is.True;
@@ -281,7 +272,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, Guid, Guid[]> action = (u, id) =>
 			{				
 				Login(u.Login);
-				return Controller.DeleteTags(TestProject, new []{ id }).ToArray();
+				return controller.DeleteTags(TestProject, new []{ id }).ToArray();
 			};
 			Func<Guid, ReusableConstraint> granted = id => Has.Length.EqualTo(1)
 				.And.Exactly(1).Matches<Guid>(i => i == id);

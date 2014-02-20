@@ -12,14 +12,16 @@ namespace AGO.Tasks
     /// </summary>
     public class ModuleDescriptor: IModuleDescriptor
     {
+	    public const string MODULE_CODE = "Tasks";
+
         public string Name
         {
-            get { return "AGO.Tasks"; }
+            get { return "AGO." + MODULE_CODE; }
         }
 
         public string Alias
         {
-            get { return "Tasks"; }
+            get { return MODULE_CODE; }
         }
 
         public int Priority

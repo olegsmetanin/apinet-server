@@ -34,8 +34,8 @@ namespace AGO.Core.Tests.Security
 
 		private dynamic MakeTestTags()
 		{
-			var adminTag = M.Tag("nunit", admin);
-			var memberTag = M.Tag("nunit", member);
+			var adminTag = M.ProjectTag("nunit", admin);
+			var memberTag = M.ProjectTag("nunit", member);
 			return new {adm = adminTag, mbr = memberTag};
 		}
 
@@ -142,7 +142,7 @@ namespace AGO.Core.Tests.Security
 
 		private void DoCreateSubTagTest(UserModel parent, UserModel current, bool expectSuccess)
 		{
-			var ptag = M.Tag("nunit parent", parent);
+			var ptag = M.ProjectTag("nunit parent", parent);
 			M.Track(() => ptag);
 			
 			Login(current.Login);
@@ -197,7 +197,7 @@ namespace AGO.Core.Tests.Security
 		//update
 		private void DoUpdateTagTest(UserModel creator, UserModel updater, bool expectSuccess)
 		{
-			var tag = M.Tag("nunit", creator);
+			var tag = M.ProjectTag("nunit", creator);
 			M.Track(() => tag);
 
 			Login(updater.Login);
@@ -250,7 +250,7 @@ namespace AGO.Core.Tests.Security
 		//delete
 		private void DoDeleteTagTest(UserModel creator, UserModel current, bool expectSuccess)
 		{
-			var tag = M.Tag("nunit", creator);
+			var tag = M.ProjectTag("nunit", creator);
 			M.Track(() => tag);
 
 			Login(current.Login);

@@ -3,9 +3,9 @@ using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Projects;
 using NHibernate;
 
-namespace AGO.Core.Security.Providers
+namespace AGO.Tasks.SecurityProviders
 {
-	public class CustomPropertyTypeSecurityProvider: AbstractModuleSecurityConstraintsProvider<CustomPropertyTypeModel>
+	public class CustomPropertyTypeSecurityProvider: ModuleSecurityProvider<CustomPropertyTypeModel>
 	{
 		public CustomPropertyTypeSecurityProvider(IFilteringService filteringService) : base(filteringService)
 		{
@@ -16,9 +16,6 @@ namespace AGO.Core.Security.Providers
 			return FilteringService.Filter<CustomPropertyTypeModel>()
 				.Where(m => m.ProjectCode == project);
 		}
-
-		//don't know what else logic may be applied for core entity, that used
-		//only in modules (if two project from different modules with diff security logic persistet in one db)
 
 		public override bool CanCreate(CustomPropertyTypeModel model, string project, ProjectMemberModel member, ISession session)
 		{

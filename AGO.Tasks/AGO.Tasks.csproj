@@ -110,7 +110,12 @@
     <Compile Include="Reports\FakeLongRunningDataGenerator.cs" />
     <Compile Include="Reports\SimpleTaskListDataGenerator.cs" />
     <Compile Include="Reports\TaskListReportParameters.cs" />
+    <Compile Include="SecurityProviders\CustomPropertyTypeSecurityProvider.cs" />
+    <Compile Include="SecurityProviders\ModuleSecurityProvider.cs" />
+    <Compile Include="SecurityProviders\ProjectMemberSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskAgreementSecurityProvider.cs" />
+    <Compile Include="SecurityProviders\TaskProjectSecurityProvider.cs" />
+    <Compile Include="SecurityProviders\TaskProjectTagLinkSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskTagSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskToTagSecurityProvider.cs" />

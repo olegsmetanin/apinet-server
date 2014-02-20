@@ -34,7 +34,7 @@ namespace AGO.Core.Security
 		public IModelFilterNode ApplyReadConstraint<T>(string project, Guid userId, ISession session, params IModelFilterNode[] criterias)
 		{
 			var restrictions = providers
-				.Where(p => p.AcceptRead(typeof(T)))
+				.Where(p => p.AcceptRead(typeof(T), project, session))
 				.Select(p => p.ReadConstraint(project, userId, session));
 
 			if (criterias != null && criterias.Length > 0)
@@ -46,7 +46,7 @@ namespace AGO.Core.Security
 		public IEnumerable<IModelFilterNode> ApplyReadConstraint(Type modelType, string project, Guid userId, ISession session)
 		{
 			return providers
-				.Where(p => p.AcceptRead(modelType))
+				.Where(p => p.AcceptRead(modelType, project, session))
 				.Select(p => p.ReadConstraint(project, userId, session));
 		}
 
@@ -57,7 +57,7 @@ namespace AGO.Core.Security
 
 			var isNew = model.IsNew();
 			var allowed = providers
-				.Where(p => p.AcceptChange(model))
+				.Where(p => p.AcceptChange(model, project, session))
 				.All(p => isNew 
 					? p.CanCreate(model, project, userId, session) 
 					: p.CanUpdate(model, project, userId, session));
@@ -75,7 +75,7 @@ namespace AGO.Core.Security
 				throw new ArgumentNullException("model");
 
 			var allowed = providers
-				.Where(p => p.AcceptChange(model))
+				.Where(p => p.AcceptChange(model, project, session))
 				.All(p => p.CanDelete(model, project, userId, session));
 			if (!allowed)
 				throw new DeleteDeniedException(model);

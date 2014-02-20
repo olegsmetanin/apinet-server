@@ -13,27 +13,41 @@ namespace AGO.Core.Security
 	/// <typeparam name="TModel">Model type, that this provider handle</typeparam>
 	public abstract class AbstractModuleSecurityConstraintsProvider<TModel> : ISecurityConstraintsProvider
 	{
+		private readonly ProjectToModuleCache p2m;
+
 		protected AbstractModuleSecurityConstraintsProvider(IFilteringService filteringService)
 		{
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
 
 			FilteringService = filteringService;
+// ReSharper disable once DoNotCallOverridableMethodsInConstructor
+			p2m = new ProjectToModuleCache(Module);
 		}
 
 		protected IFilteringService FilteringService { get; private set; }
 
-		public bool AcceptRead(Type modelType)
+		protected ProjectModel CodeToProject(string project, ISession session)
 		{
-			return typeof (TModel).IsAssignableFrom(modelType);
+			var p = session.QueryOver<ProjectModel>()
+				.Where(m => m.ProjectCode == project)
+				.SingleOrDefault();
+			if (p == null)
+				throw new NoSuchProjectException();
+			return p;
+		}
+		
+		public virtual bool AcceptRead(Type modelType, string project, ISession session)
+		{
+			return typeof (TModel).IsAssignableFrom(modelType) && p2m.IsProjectInHandledModule(project, session);
 		}
 
-		public bool AcceptChange(IIdentifiedModel model)
+		public virtual bool AcceptChange(IIdentifiedModel model, string project, ISession session)
 		{
-			return model != null && AcceptRead(model.GetType());
+			return model != null && AcceptRead(model.GetType(), project, session);
 		}
 
-		private ProjectMemberModel UserIdToMember(string project, Guid userId, ISession session)
+		protected ProjectMemberModel UserIdToMember(string project, Guid userId, ISession session)
 		{
 			var member = session.QueryOver<ProjectMemberModel>()
 				.Where(m => m.ProjectCode == project && m.UserId == userId)
@@ -62,6 +76,8 @@ namespace AGO.Core.Security
 		{
 			return CanDelete((TModel)model, project, UserIdToMember(project, userId, session), session);
 		}
+
+		protected abstract string Module { get; }
 
 		public abstract IModelFilterNode ReadConstraint(string project, ProjectMemberModel member, ISession session);
 

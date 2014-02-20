@@ -75,7 +75,9 @@
     <Compile Include="AbstractTest.cs" />
     <Compile Include="DbCreator.cs" />
     <Compile Include="ModelHelper.cs" />
+    <Compile Include="Security\AbstractSecurityTest.cs" />
     <Compile Include="Security\DictionaryControllerSecurityTests.cs" />
+    <Compile Include="Security\ProjectControllerSecurityTests.cs" />
     <Compile Include="Security\TasksControllerSecurityTests.cs" />
     <Compile Include="TaskAgreementsTest.cs" />
     <Compile Include="TaskCRUDTest.cs" />

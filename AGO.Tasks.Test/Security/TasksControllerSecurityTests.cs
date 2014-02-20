@@ -14,33 +14,15 @@ using NUnit.Framework.Constraints;
 
 namespace AGO.Tasks.Test.Security
 {
-	public class TasksControllerSecurityTests: AbstractTest
+	public class TasksControllerSecurityTests: AbstractSecurityTest
 	{
 		private TasksController controller;
-		private UserModel admin;
-		private UserModel projAdmin;
-		private UserModel projManager;
-		private UserModel projExecutor;
-		private UserModel notMember;
 
 		public override void FixtureSetUp()
 		{
 			base.FixtureSetUp();
 
 			controller = IocContainer.GetInstance<TasksController>();
-		}
-
-		protected override void SetupTestProject()
-		{
-			admin = LoginToUser("admin@apinet-test.com");
-			projAdmin = LoginToUser("user1@apinet-test.com");
-			projManager = LoginToUser("user2@apinet-test.com");
-			projExecutor = LoginToUser("user3@apinet-test.com");
-			notMember = LoginToUser("artem1@apinet-test.com");
-			FM.Project(TestProject);
-			FM.Member(TestProject, projAdmin, BaseProjectRoles.Administrator);
-			FM.Member(TestProject, projManager, TaskProjectRoles.Manager);
-			FM.Member(TestProject, projExecutor, TaskProjectRoles.Executor);
 		}
 
 		[Test]
