@@ -10,6 +10,7 @@ using AGO.Core.Filters;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
+using AGO.Core.Tests;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.Reporting.Service;

@@ -103,9 +103,9 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UploadedFiles UploadTemplate([NotEmpty]HttpRequestBase request, [NotEmpty]HttpFileCollectionBase files)
+		public UploadedFiles<ReportTemplateModel> UploadTemplate([NotEmpty]HttpRequestBase request, [NotEmpty]HttpFileCollectionBase files)
 		{
-			var result = new UploadResult[files.Count];
+			var result = new UploadResult<ReportTemplateModel>[files.Count];
 			for(var fileIndex = 0; fileIndex < files.Count; fileIndex++)
 			{
 				var idx = fileIndex;
@@ -134,7 +134,7 @@ namespace AGO.Core.Controllers
 
 							_CrudDao.Store(template);
 
-							result[idx] = new UploadResult
+							result[idx] = new UploadResult<ReportTemplateModel>
 							{
 								Name = template.Name,
 								Length = template.Content.Length,
@@ -145,7 +145,7 @@ namespace AGO.Core.Controllers
 				);
 			}
 
-			return new UploadedFiles { Files = result };
+			return new UploadedFiles<ReportTemplateModel> { Files = result };
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -414,27 +414,6 @@ namespace AGO.Core.Controllers
 				.Where(m => m.ProjectCode == task.Project).SingleOrDefault();
 			var project = p != null ? p.Name : null;
 			return ReportTaskDTO.FromTask(task, _LocalizationService, project, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);
-		}
-
-		public class UploadResult
-		{
-			[JsonProperty("name")]
-			public string Name { get; set; }
-
-			[JsonProperty("length")]
-			public int Length { get; set; }
-
-			[JsonProperty("type")]
-			public string Type { get; set; }
-
-			[JsonProperty("model")]
-			public ReportTemplateModel Model { get; set; }
-		}
-
-		public class UploadedFiles
-		{
-			[JsonProperty("files")]
-			public IEnumerable<UploadResult> Files { get; set; }
 		}
 	}
 }

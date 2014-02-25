@@ -2,7 +2,6 @@
 using AGO.Core.Model;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
-using AGO.Core.Security;
 using AGO.Core.Security.Providers;
 using NHibernate;
 
@@ -11,19 +10,20 @@ namespace AGO.Tasks.SecurityProviders
 	/// <summary>
 	/// Deny changes to all except project admin (and sysadmin restricted too)
 	/// </summary>
-	public class TaskProjectSecurityProvider: ProjectSecurityProvider
+	public sealed class TaskProjectSecurityProvider: ProjectSecurityProvider
 	{
-		private readonly ProjectToModuleCache p2m;
-
 		public TaskProjectSecurityProvider(IFilteringService filteringService) : base(filteringService)
 		{
-			p2m = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE);
+		}
+
+		private bool IsProjectInTasksModule(ProjectModel model)
+		{
+			return model != null && model.Type != null && model.Type.Module == ModuleDescriptor.MODULE_CODE;
 		}
 
 		public override bool AcceptChange(IIdentifiedModel model, string project, ISession session)
 		{
-			return base.AcceptChange(model, project, session) && 
-				(model.IsNew() || p2m.IsProjectInHandledModule(project, session));
+			return base.AcceptChange(model, project, session) && IsProjectInTasksModule(model as ProjectModel);
 		}
 
 		private bool IsProjectAdmin(ProjectModel p, UserModel u, ISession session)

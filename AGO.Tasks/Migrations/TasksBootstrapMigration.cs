@@ -54,6 +54,14 @@ namespace AGO.Tasks.Migrations
 
 			Alter.ModelTable<TaskCustomPropertyModel>()
 				 .AddRefColumn<TaskCustomPropertyModel>(m => m.Task);
+
+	        Create.SecureModelTable<TaskFileModel>()
+		        .WithValueColumn<TaskFileModel>(m => m.Name)
+		        .WithValueColumn<TaskFileModel>(m => m.ContentType)
+		        .WithValueColumn<TaskFileModel>(m => m.Size)
+		        .WithValueColumn<TaskFileModel>(m => m.Path)
+		        .WithValueColumn<TaskFileModel>(m => m.Uploaded)
+		        .WithRefColumn<TaskFileModel>(m => m.Owner);
         }
 
         public override void Down()

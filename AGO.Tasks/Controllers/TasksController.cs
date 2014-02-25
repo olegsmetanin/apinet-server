@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Web;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -13,7 +16,6 @@ using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
-using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers.DTO;
@@ -28,52 +30,11 @@ namespace AGO.Tasks.Controllers
     /// Контроллер работы с задачами модуля задач
     /// </summary>
     public class TasksController: AbstractTasksController
-    {
-		[JsonEndpoint, RequireAuthorization]
-		public bool TagTask(
-			[NotEmpty] Guid modelId,
-			[NotEmpty] Guid tagId)
-		{
-			var task = _CrudDao.Get<TaskModel>(modelId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+	{
+		#region Configuration
 
-			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
-
-			if (link != null)
-				return false;
-			
-			var tag = _CrudDao.Get<TaskTagModel>(tagId, true);
-			link = new TaskToTagModel
-			{
-				Creator = CurrentUser,
-				Task = task,
-				Tag = tag
-			};
-			SecurityService.DemandUpdate(link, task.ProjectCode, CurrentUser.Id, Session);
-			task.Tags.Add(link);
-			_CrudDao.Store(link);
-
-			return true;
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public bool DetagTask(
-			[NotEmpty] Guid modelId,
-			[NotEmpty] Guid tagId)
-		{
-			var task = _CrudDao.Get<TaskModel>(modelId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
-
-			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
-			if (link == null)
-				return false;
-
-			SecurityService.DemandDelete(link, task.ProjectCode, CurrentUser.Id, Session);
-			task.Tags.Remove(link);
-			_CrudDao.Delete(link);
-
-			return true;
-		}
+		private string uploadPath;
+	    private string fileStoreRoot;
 
         public TasksController(
             IJsonService jsonService, 
@@ -88,6 +49,38 @@ namespace AGO.Tasks.Controllers
             : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
         {	
         }
+
+		protected override void DoSetConfigProperty(string key, string value)
+		{
+			if ("UploadPath".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				uploadPath = value;
+			else if ("FileStoreRoot".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				fileStoreRoot = value;
+			else
+				base.DoSetConfigProperty(key, value);
+		}
+
+		protected override string DoGetConfigProperty(string key)
+		{
+			if ("UploadPath".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				return uploadPath;
+			if ("FileStoreRoot".Equals(key, StringComparison.InvariantCultureIgnoreCase))
+				return fileStoreRoot;
+			return base.DoGetConfigProperty(key);
+		}
+
+		protected override void DoFinalizeConfig()
+		{
+			base.DoFinalizeConfig();
+			if (uploadPath.IsNullOrWhiteSpace())
+				uploadPath = System.IO.Path.GetTempPath();
+			if (fileStoreRoot.IsNullOrWhiteSpace())
+				Log.Warn("FileStoreRoot path not found in config (Tasks_Tasks_FileStoreRoot). Attempt to upload file to task will be failed");
+		}
+
+		#endregion
+
+		#region Task
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupTasks(
@@ -308,6 +301,56 @@ namespace AGO.Tasks.Controllers
 					() => { throw new TaskCreationNotSupportedException(); });
 		}
 
+		private void InternalDeleteTask(Guid id)
+		{
+			//TODO use project for security
+			//may be get(project, id) in filteringdao where T: IProjectBoundModel
+			var task = _CrudDao.Get<TaskModel>(id, true);
+
+			SecurityService.DemandDelete(task, task.ProjectCode, CurrentUser.Id, Session);
+
+			_CrudDao.Delete(task);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteTask([NotEmpty] Guid id)
+		{
+			InternalDeleteTask(id);
+
+			return true;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public bool DeleteTasks([NotEmpty] string project, [NotNull] ICollection<Guid> ids)
+		{
+			var s = _SessionProvider.CurrentSession;
+			var trn = s.BeginTransaction();
+			try
+			{
+				//TODO use project for security
+				foreach (var id in ids)
+					InternalDeleteTask(id);
+
+				trn.Commit();
+			}
+			catch (Exception)
+			{
+				trn.Rollback();
+				throw;
+			}
+			return true;
+		}
+
+		[JsonEndpointAttribute, RequireAuthorizationAttribute]
+		public IEnumerable<IModelMetadata> TaskMetadata()
+		{
+			return MetadataForModelAndRelations<TaskModel>();
+		}
+
+		#endregion
+
+		#region Agreements
+
 		[JsonEndpoint, RequireAuthorization]
 		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId, DateTime? dueDate = null)
 		{
@@ -403,51 +446,59 @@ namespace AGO.Tasks.Controllers
 			return TaskViewAdapter.ToAgreement(agreement);
 		}
 
-		private void InternalDeleteTask(Guid id)
-		{
-			//TODO use project for security
-			//may be get(project, id) in filteringdao where T: IProjectBoundModel
-			var task = _CrudDao.Get<TaskModel>(id, true);
+		#endregion
 
-			SecurityService.DemandDelete(task, task.ProjectCode, CurrentUser.Id, Session);
-
-			_CrudDao.Delete(task);
-		}
+		#region Tags
 
 		[JsonEndpoint, RequireAuthorization]
-		public bool DeleteTask([NotEmpty] Guid id)
+		public bool TagTask(
+			[NotEmpty] Guid modelId,
+			[NotEmpty] Guid tagId)
 		{
-			InternalDeleteTask(id);
+			var task = _CrudDao.Get<TaskModel>(modelId, true);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+
+			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+
+			if (link != null)
+				return false;
+
+			var tag = _CrudDao.Get<TaskTagModel>(tagId, true);
+			link = new TaskToTagModel
+			{
+				Creator = CurrentUser,
+				Task = task,
+				Tag = tag
+			};
+			SecurityService.DemandUpdate(link, task.ProjectCode, CurrentUser.Id, Session);
+			task.Tags.Add(link);
+			_CrudDao.Store(link);
 
 			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public bool DeleteTasks([NotEmpty] string project, [NotNull] ICollection<Guid> ids)
+		public bool DetagTask(
+			[NotEmpty] Guid modelId,
+			[NotEmpty] Guid tagId)
 		{
-			var s = _SessionProvider.CurrentSession;
-			var trn = s.BeginTransaction();
-			try
-			{
-				//TODO use project for security
-				foreach (var id in ids)
-					InternalDeleteTask(id);
+			var task = _CrudDao.Get<TaskModel>(modelId, true);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
 
-				trn.Commit();
-			}
-			catch (Exception)
-			{
-				trn.Rollback();
-				throw;
-			}
+			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			if (link == null)
+				return false;
+
+			SecurityService.DemandDelete(link, task.ProjectCode, CurrentUser.Id, Session);
+			task.Tags.Remove(link);
+			_CrudDao.Delete(link);
+
 			return true;
 		}
 
-		[JsonEndpointAttribute, RequireAuthorizationAttribute]
-		public IEnumerable<IModelMetadata> TaskMetadata()
-		{
-			return MetadataForModelAndRelations<TaskModel>();
-		}
+		#endregion
+
+		#region Params (user props)
 
 		[JsonEndpoint, RequireAuthorization]
     	public IEnumerable<CustomParameterTypeDTO> LookupParamTypes(
@@ -486,7 +537,6 @@ namespace AGO.Tasks.Controllers
 				});
 		}
 			
-			
 		[JsonEndpoint, RequireAuthorization]
 		public bool DeleteParam([NotEmpty] Guid paramId)
 		{
@@ -501,5 +551,168 @@ namespace AGO.Tasks.Controllers
 			_CrudDao.Delete(param);
 			return true;
 		}
-    }
+
+		#endregion
+
+		#region Files
+
+	    private const string TASK_ID_FORM_KEY = "ownerId";
+		private const string FILE_ID_FORM_KEY = "fileId";
+	    private const string PROJECT_FORM_KEY = "project";
+
+	    [JsonEndpoint, RequireAuthorization]
+	    public UploadedFiles<FileDTO> UploadFiles(
+		    [NotNull] HttpRequestBase request,
+		    [NotEmpty] HttpFileCollectionBase files)
+	    {
+			//TODO exceptions localization
+			var project = request.Form[PROJECT_FORM_KEY];
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentException("Project not specified for request");
+			var sTaskId = request.Form[TASK_ID_FORM_KEY];
+			if (sTaskId.IsNullOrWhiteSpace())
+				throw new ArgumentException("File owner id not specified for request");
+
+			//secure get by id
+		    var fb = _FilteringService.Filter<TaskModel>();
+		    IModelFilterNode predicate = fb.Where(m => m.Id == new Guid(sTaskId));
+			var securedPredicate = SecurityService.ApplyReadConstraint<TaskModel>(
+			    project, CurrentUser.Id, Session, predicate);
+
+		    var task = _FilteringDao.Find<TaskModel>(securedPredicate);
+			if (task == null)
+				throw new NoSuchEntityException();
+			
+			SecurityService.DemandUpdate(task, project, CurrentUser.Id, Session);
+
+		    var result = new UploadResult<FileDTO>[files.Count];
+		    var adapter = new FileAdapter();
+		    for (var fileIndex = 0; fileIndex < files.Count; fileIndex++)
+		    {
+			    var idx = fileIndex;
+			    var file = files[idx];
+				Debug.Assert(file != null);
+				new Uploader(uploadPath).HandleRequest(request, file, (fileName, content) =>
+				{
+					var fileId = !string.IsNullOrEmpty(request.Form[FILE_ID_FORM_KEY])
+						? new Guid(request.Form[FILE_ID_FORM_KEY])
+						: (Guid?)null;
+					var taskFile = fileId.HasValue ? task.Files.FirstOrDefault(f => f.Id == fileId.Value) : null;
+					if (taskFile == null)
+					{
+						taskFile = new TaskFileModel
+						{
+							ContentType = file.ContentType,
+							Size = content.Length,
+							Owner = task
+						};
+						task.Files.Add(taskFile);
+					}
+					taskFile.Name = fileName;
+
+					SecurityService.DemandUpdate(taskFile, project, CurrentUser.Id, Session);
+
+					_CrudDao.Store(taskFile);//must be called before store-need's file id for file name
+
+					var relativeFilePath = taskFile.Path;
+					if (relativeFilePath.IsNullOrWhiteSpace())
+					{
+						var ext = Path.GetExtension(fileName);
+						var newFileName = taskFile.Id + ext;
+						var rndFolder = new Random().Next(1000).ToString("D3");
+						relativeFilePath = Path.Combine(project, rndFolder, newFileName);
+					}
+					//overwrite existing file, if any
+					var absFilePath = Path.Combine(fileStoreRoot, relativeFilePath);
+					var absDir = Path.GetDirectoryName(absFilePath);
+					if (!Directory.Exists(absDir))
+						Directory.CreateDirectory(absDir);
+					using (var f = File.Open(absFilePath, FileMode.Create))
+					{
+						content.CopyTo(f);
+						f.Close();
+					}
+					
+					taskFile.Path = relativeFilePath;
+					taskFile.Uploaded = true;
+
+					result[idx] = new UploadResult<FileDTO>
+					{
+						Name = taskFile.Name,
+						Length = taskFile.Size,
+						Type = file.ContentType,
+						Model = adapter.Fill(taskFile)
+					};
+				});
+		    }
+
+		    return new UploadedFiles<FileDTO> {Files = result};
+	    }
+
+	    private IModelFilterNode MakeFilesPredicate(string project, Guid taskId, IEnumerable<IModelFilterNode> filters)
+	    {
+			var fb = _FilteringService.Filter<TaskFileModel>();
+			IModelFilterNode ownerPredicate = fb.Where(m => m.Owner.Id == taskId);
+			return SecurityService.ApplyReadConstraint<TaskFileModel>(
+				project, CurrentUser.Id, Session, filters.Concat(new [] { ownerPredicate }).ToArray());
+	    }
+
+		[JsonEndpoint, RequireAuthorization]
+	    public IEnumerable<FileDTO> GetFiles(
+		    [NotEmpty] string project,
+		    [NotEmpty] Guid ownerId,
+		    [NotNull] ICollection<IModelFilterNode> filter,
+		    [NotNull] ICollection<SortInfo> sorters,
+		    [InRange(0, null)] int page)
+	    {
+		    var securedPredicate = MakeFilesPredicate(project, ownerId, filter);
+		    var adapter = new FileAdapter();
+
+		    return _FilteringDao.List<TaskFileModel>(securedPredicate, page, sorters)
+			    .Select(adapter.Fill)
+				.ToArray();
+	    }
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetFilesCount(
+			[NotEmpty] string project,
+			[NotEmpty] Guid ownerId,
+			[NotNull] ICollection<IModelFilterNode> filter)
+		{
+			var securedPredicate = MakeFilesPredicate(project, ownerId, filter);
+			return _FilteringDao.RowCount<TaskFileModel>(securedPredicate);
+		}
+		
+		[JsonEndpoint, RequireAuthorization]
+	    public void DeleteFile([NotEmpty] string project, [NotEmpty] Guid fileId)
+	    {
+			var file = _CrudDao.Get<TaskFileModel>(fileId, true);
+
+			SecurityService.DemandUpdate(file.Owner, project, CurrentUser.Id, Session);
+			SecurityService.DemandDelete(file, project, CurrentUser.Id, Session);
+
+			file.Owner.Files.Remove(file);
+			_CrudDao.Delete(file);
+	    }
+
+		[JsonEndpoint, RequireAuthorization]
+	    public void DeleteFiles([NotEmpty] string project, [NotEmpty] ICollection<Guid> ids)
+	    {
+			var trn = Session.BeginTransaction();
+			try
+			{
+				foreach (var id in ids)
+					DeleteFile(project, id);
+
+				trn.Commit();
+			}
+			catch (Exception)
+			{
+				trn.Rollback();
+				throw;
+			}
+	    }
+
+		#endregion
+	}
 }

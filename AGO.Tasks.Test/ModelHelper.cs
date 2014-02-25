@@ -158,5 +158,26 @@ namespace AGO.Tasks.Test
 				return tag;
 			});
 		}
+
+		public TaskFileModel File(TaskModel task, string name = "testFile", long size = 1, string mime = "application/txt",
+			UserModel creator = null)
+		{
+			return Track(() =>
+			{
+				var file = new TaskFileModel
+				{
+					Owner = task,
+					Name = name,
+					ContentType = mime,
+					Size = size,
+					Creator = creator ?? CurrentUser()
+				};
+				task.Files.Add(file);
+				Session().Save(file);
+				Session().Flush();
+
+				return file;
+			});
+		}
 	}
 }

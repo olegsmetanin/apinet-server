@@ -12,6 +12,7 @@ namespace AGO.Core
 			var constExpr = expr as ConstantExpression;
 			var memberExpr = expr as MemberExpression;
 			var unaryExpr = expr as UnaryExpression;
+			var newExpr = expr as NewExpression;
 
 			if (unaryExpr != null)
 			{
@@ -24,6 +25,11 @@ namespace AGO.Core
 					var value = compiled.DynamicInvoke();
 					constExpr = Expression.Constant(value);
 				}
+			}
+			else if (newExpr != null)
+			{
+				var value = Expression.Lambda(newExpr).Compile().DynamicInvoke();
+				constExpr = Expression.Constant(value);
 			}
 
 			if (constExpr != null)

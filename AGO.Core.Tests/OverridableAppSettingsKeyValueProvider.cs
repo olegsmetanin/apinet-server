@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AGO.Core.Config;
 
-namespace AGO.Reporting.Tests
+namespace AGO.Core.Tests
 {
 	public class OverridableAppSettingsKeyValueProvider: IKeyValueProvider
 	{
@@ -20,12 +21,12 @@ namespace AGO.Reporting.Tests
 
 		public IEnumerable<string> Keys
 		{
-			get { return appSettings.Keys; }
+			get { return overrides.Keys.Union(appSettings.Keys); }
 		}
 
 		public string RealKey(string key)
 		{
-			return appSettings.RealKey(key);
+			return overrides.RealKey(key) ?? appSettings.RealKey(key);
 		}
 
 		public string Value(string key)

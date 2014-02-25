@@ -67,6 +67,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -79,6 +80,8 @@
     <Compile Include="Controllers\DTO\CreateTaskDTO.cs" />
     <Compile Include="Controllers\DTO\CustomParameterDTO.cs" />
     <Compile Include="Controllers\DTO\DictionaryAdapters.cs" />
+    <Compile Include="Controllers\DTO\FileAdapter.cs" />
+    <Compile Include="Controllers\DTO\FileDTO.cs" />
     <Compile Include="Controllers\DTO\ModelAdapter.cs" />
     <Compile Include="Controllers\DTO\ModelDTO.cs" />
     <Compile Include="Controllers\DTO\ProjectAdapter.cs" />
@@ -99,6 +102,7 @@
     <Compile Include="Model\Task\TaskAgreementModel.cs" />
     <Compile Include="Model\Task\TaskCustomPropertyModel.cs" />
     <Compile Include="Model\Task\TaskExecutorModel.cs" />
+    <Compile Include="Model\Task\TaskFileModel.cs" />
     <Compile Include="Model\Task\TaskModel.cs" />
     <Compile Include="Model\Task\TaskPriority.cs" />
     <Compile Include="Model\Task\TaskStatus.cs" />
@@ -114,6 +118,7 @@
     <Compile Include="SecurityProviders\ModuleSecurityProvider.cs" />
     <Compile Include="SecurityProviders\ProjectMemberSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskAgreementSecurityProvider.cs" />
+    <Compile Include="SecurityProviders\TaskFileSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskProjectSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskProjectTagLinkSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskSecurityProvider.cs" />

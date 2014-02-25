@@ -122,7 +122,6 @@
   <ItemGroup>
     <Compile Include="AbstractReportingTest.cs" />
     <Compile Include="ModelHelper.cs" />
-    <Compile Include="OverridableAppSettingsKeyValueProvider.cs" />
     <Compile Include="ProjectSelectorTest.cs" />
     <Compile Include="ReportingRepositoryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -130,6 +129,10 @@
     <Compile Include="TPLManageTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AGO.Core.Tests\AGO.Core.Tests.csproj">
+      <Project>{4187b3b2-27da-4954-bffc-e72928e8f0e4}</Project>
+      <Name>AGO.Core.Tests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AGO.Core\AGO.Core.csproj">
       <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
       <Name>AGO.Core</Name>

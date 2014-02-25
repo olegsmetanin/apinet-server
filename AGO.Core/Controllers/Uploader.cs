@@ -22,9 +22,19 @@ namespace AGO.Core.Controllers
 
 		public void HandleRequest(HttpRequestBase request, HttpPostedFileBase file, Action<string, byte[]> complete)
 		{
+			HandleRequest(request, file, (fileName, content) =>
+			{
+				var buffer = new byte[content.Length];
+				content.Read(buffer, 0, buffer.Length);
+				complete(fileName, buffer);
+			});
+		}
+
+		public void HandleRequest(HttpRequestBase request, HttpPostedFileBase file, Action<string, Stream> complete)
+		{
 			if (request == null)
 				throw new ArgumentNullException("request");
-			var fileName = Path.GetFileName(file.FileName);
+			var fileName = Path.GetFileName(file.FileName.Normalize()); //bug with ios unicode support (й as two separate symbols);
 			var bytes = request.Headers[RANGE_HEADER];
 			var uploadid = request.Form[UPLOADID_FORM_FIELD];
 			if (uploadid.IsNullOrWhiteSpace())
@@ -34,9 +44,7 @@ namespace AGO.Core.Controllers
 			if (bytes.IsNullOrWhiteSpace() || !rangeParser.IsMatch(bytes))
 			{
 				//as single file
-				var buffer = new byte[file.InputStream.Length];
-				file.InputStream.Read(buffer, 0, buffer.Length);
-				complete(fileName, buffer);
+				complete(fileName, file.InputStream);
 			}
 			else
 			{
@@ -56,29 +64,34 @@ namespace AGO.Core.Controllers
 				if ((size - to) <= 1)
 				{
 					//this is last chunck
-					var files = Directory.GetFiles(folder);
-					Array.Sort(files);
 					try
 					{
-						var buffer = new byte[size];
-						var offset = 0;
-						foreach (var fn in files)
+						var files = Directory.GetFiles(folder);
+						Array.Sort(files);
+						//combine chunks to single file in order
+						var combinedFileName = Path.Combine(folder, uploadid);
+						using (var trg = File.OpenWrite(combinedFileName))
 						{
-							using(var fs = File.OpenRead(fn))
+							foreach (var fn in files)
 							{
-								offset = fs.Read(buffer, offset, (int)fs.Length);
-								fs.Close();
+								using (var fs = File.OpenRead(fn))
+								{
+									fs.CopyTo(trg);
+									fs.Close();
+								}
 							}
+							trg.Close();
 						}
-						complete(fileName, buffer);
+						//call callback with combined file result
+						using (var cmb = File.OpenRead(combinedFileName))
+						{
+							complete(fileName, cmb);
+							cmb.Close();
+						}
 					}
 					finally
 					{
-						foreach (var fn in files)
-						{
-							File.Delete(fn);
-						}
-						Directory.Delete(folder);
+						Directory.Delete(folder, true);
 					}
 				}
 			}

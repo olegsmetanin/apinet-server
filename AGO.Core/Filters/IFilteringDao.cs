@@ -94,7 +94,7 @@ namespace AGO.Core.Filters
 			if (filteringDao == null)
 				throw new ArgumentNullException("filteringDao");
 
-			return filteringDao.Find<TModel>(new[] { filter });
+			return filteringDao.Find<TModel>(new [] { filter });
 		}
 	}
 }

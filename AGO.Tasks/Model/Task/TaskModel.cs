@@ -5,6 +5,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model;
+using AGO.Core.Model.Files;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Dictionary;
@@ -15,7 +16,7 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Задача - основная запись основного реестра модуля
     /// </summary>
-	public class TaskModel : SecureProjectBoundModel<Guid>, ITasksModel
+	public class TaskModel : SecureProjectBoundModel<Guid>, ITasksModel, IFileOwner<TaskModel, TaskFileModel>
     {
         #region Persistent
 
@@ -123,6 +124,17 @@ namespace AGO.Tasks.Model.Task
 			set { tagsStore = value; }
     	}
 		private ISet<TaskToTagModel> tagsStore = new HashSet<TaskToTagModel>();
+
+		/// <summary>
+		/// Файлы задачи
+		/// </summary>
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan, Column = "OwnerId")]
+	    public virtual ISet<TaskFileModel> Files
+	    {
+		    get { return files; }
+			set { files = value; }
+	    }
+		private ISet<TaskFileModel> files = new HashSet<TaskFileModel>();
 
     	#endregion
 

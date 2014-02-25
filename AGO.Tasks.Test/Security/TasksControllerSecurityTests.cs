@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
+using System.Web;
 using AGO.Core;
+using AGO.Core.Config;
 using AGO.Core.Controllers;
 using AGO.Core.Filters;
 using AGO.Core.Model.Security;
@@ -9,6 +14,7 @@ using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
+using NSubstitute;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
@@ -16,6 +22,7 @@ namespace AGO.Tasks.Test.Security
 {
 	public class TasksControllerSecurityTests: AbstractSecurityTest
 	{
+		private string testFileStoreRoot;
 		private TasksController controller;
 
 		public override void FixtureSetUp()
@@ -23,6 +30,17 @@ namespace AGO.Tasks.Test.Security
 			base.FixtureSetUp();
 
 			controller = IocContainer.GetInstance<TasksController>();
+			testFileStoreRoot = Path.Combine(Path.GetTempPath(), "apinet_nunit");
+			var uploadPath = Path.Combine(testFileStoreRoot, "upload");
+
+			var config = new Dictionary<string, string>
+			         	{
+							{"UploadPath", uploadPath},
+							{"FileStoreRoot", testFileStoreRoot}
+						};
+			var provider = new DictionaryKeyValueProvider(config);
+			new KeyValueConfigProvider(provider).ApplyTo(controller);
+			controller.Initialize();
 		}
 
 		[Test]
@@ -447,6 +465,145 @@ namespace AGO.Tasks.Test.Security
 			Assert.That(() => action(projExecutor, mgrTag), restricted);
 
 			Assert.That(() => action(notMember, execTag), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanGetFiles()
+		{
+			var task = M.Task(1, executor: projExecutor);
+			var f1 = M.File(task, "f1.doc");
+			var f2 = M.File(task, "f2.doc");
+
+			Func<UserModel, FileDTO[]> action = u =>
+			{
+				Login(u.Login);
+				return controller.GetFiles(TestProject, task.Id,
+					Enumerable.Empty<IModelFilterNode>().ToList(),
+					Enumerable.Empty<SortInfo>().ToList(),
+					0).ToArray();
+			};
+			ReusableConstraint granted = Has.Length.EqualTo(2)
+				.And.Exactly(1).Matches<FileDTO>(e => e.Name == f1.Name)
+				.And.Exactly(1).Matches<FileDTO>(e => e.Name == f2.Name);
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanGetFilesCount()
+		{
+			var task = M.Task(1, executor: projExecutor);
+			M.File(task, "f1.doc");
+			M.File(task, "f2.doc");
+
+			Func<UserModel, int> action = u =>
+			{
+				Login(u.Login);
+				return controller.GetFilesCount(TestProject, task.Id,
+					Enumerable.Empty<IModelFilterNode>().ToList());
+			};
+			ReusableConstraint granted = Is.EqualTo(2);
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanUploadFiles()
+		{
+			var task = M.Task(1, executor: projExecutor);
+			var data = new byte[] { 0x01, 0x02, 0x03 };
+			var reqMock = Substitute.For<HttpRequestBase>();
+			reqMock.Form.Returns(new NameValueCollection
+			{
+				{"project", TestProject},
+				{"ownerId", task.Id.ToString()},
+				{"uploadId", Guid.NewGuid().ToString()}
+			});
+			reqMock.Headers.Returns(new NameValueCollection());
+			var fileMock = Substitute.For<HttpPostedFileBase>();
+			fileMock.FileName.Returns("test.pdf");
+			fileMock.ContentType.Returns("application/pdf");
+			fileMock.InputStream.Returns(new MemoryStream(data));
+			var filesMock = Substitute.For<HttpFileCollectionBase>();
+			filesMock.Count.Returns(1);
+			filesMock[0].Returns(fileMock);
+
+			Func<UserModel, FileDTO[]> action = u =>
+			{
+				Login(u.Login);
+				return controller.UploadFiles(reqMock, filesMock)
+					.Files
+					.Select(dto => dto.Model)
+					.ToArray();
+			};
+			ReusableConstraint granted = Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<FileDTO>(f => f.Name == "test.pdf" && f.Uploaded);
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(action(projAdmin), granted);
+			Assert.That(action(projManager), granted);
+			Assert.That(action(projExecutor), granted);
+			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanDeleteFile()
+		{
+			var task = M.Task(1, executor: projExecutor);
+
+			Action<UserModel> action = u =>
+			{
+				var file = M.File(task);
+				Session.Clear();
+
+				Login(u.Login);
+				controller.DeleteFile(TestProject, file.Id);
+				Session.Flush();
+			};
+			ReusableConstraint granted = Throws.Nothing;
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(() => action(projAdmin), granted);
+			Assert.That(() => action(projManager), granted);
+			Assert.That(() => action(projExecutor), granted);
+			Assert.That(() => action(notMember), denied);
+		}
+
+		[Test]
+		public void OnlyMembersCanDeleteFiles()
+		{
+			var task = M.Task(1, executor: projExecutor);
+
+			Action<UserModel> action = u =>
+			{
+				var f1 = M.File(task, "f1");
+				var f2 = M.File(task, "f2");
+				Session.Clear();
+
+				Login(u.Login);
+				controller.DeleteFiles(TestProject, new [] {f1.Id, f2.Id});
+				Session.Flush();
+			};
+			ReusableConstraint granted = Throws.Nothing;
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin), denied);
+			Assert.That(() => action(projAdmin), granted);
+			Assert.That(() => action(projManager), granted);
+			Assert.That(() => action(projExecutor), granted);
+			Assert.That(() => action(notMember), denied);
 		}
 	}
 }

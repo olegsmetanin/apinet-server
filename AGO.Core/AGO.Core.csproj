@@ -107,6 +107,7 @@
     <Compile Include="Controllers\Security\UsersController.cs" />
     <Compile Include="Controllers\UpdateResult.cs" />
     <Compile Include="Controllers\Uploader.cs" />
+    <Compile Include="Controllers\UploadResult.cs" />
     <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
@@ -122,6 +123,8 @@
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
+    <Compile Include="Model\Files\IFile.cs" />
+    <Compile Include="Model\Files\IFileOwner.cs" />
     <Compile Include="Model\ICoreModel.cs" />
     <Compile Include="Model\IFileResource.cs" />
     <Compile Include="Model\IProjectBoundModel.cs" />
