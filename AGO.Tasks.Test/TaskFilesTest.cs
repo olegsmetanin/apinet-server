@@ -106,7 +106,7 @@ namespace AGO.Tasks.Test
 			reqMock.Form.Returns(new NameValueCollection
 			{
 				{"project", TestProject},
-				{"ownerId", task.Id.ToString()},
+				{"ownerId", task.SeqNumber},
 				{"uploadId", Guid.NewGuid().ToString()},
 				{"fileId", f.Id.ToString()}
 			});
@@ -139,7 +139,7 @@ namespace AGO.Tasks.Test
 			var f2 = M.File(task, "2.txt");
 
 			var files = controller.GetFiles(TestProject,
-				task.Id,
+				task.SeqNumber,
 				Enumerable.Empty<IModelFilterNode>().ToList(),
 				new[] {new SortInfo {Property = "Name"}},
 				0).ToArray();
@@ -159,7 +159,7 @@ namespace AGO.Tasks.Test
 			M.File(task, "2.txt");
 
 			var count = controller.GetFilesCount(TestProject,
-				task.Id,
+				task.SeqNumber,
 				Enumerable.Empty<IModelFilterNode>().ToList());
 
 			Assert.That(count, Is.EqualTo(2));

@@ -10,20 +10,20 @@ namespace AGO.WebApiApp.Controllers
 	{
 		public ActionResult DownloadReportTemplate(Guid id)
 		{
-			return Download(Downloader.REPORT_TEMPLATE_TYPE, id);
+			return Download(Downloader.REPORT_TEMPLATE_TYPE, null, id);
 		}
 
 		public ActionResult DownloadReport(Guid id)
 		{
-			return Download(Downloader.REPORT_TYPE, id);
+			return Download(Downloader.REPORT_TYPE, null, id);
 		}
 
-		public ActionResult DownloadFile(Guid id)
+		public ActionResult DownloadFile(string project, Guid id)
 		{
-			return Download(Downloader.REPORT_TYPE, id);
+			return Download(Downloader.FILE_TYPE, project, id);
 		}
 
-		private ActionResult Download(string type, Guid id)
+		private ActionResult Download(string type, string project, Guid id)
 		{
 			return DoSafe(() =>
 			{
@@ -35,7 +35,7 @@ namespace AGO.WebApiApp.Controllers
 					throw new NotAuthenticatedException();
 
 				var downloader = DependencyResolver.Current.GetService<Downloader>();
-				downloader.ServeDownloadWebRequest(Request, type, id);
+				downloader.ServeDownloadWebRequest(Request, type, project, id);
 				return null;
 			});
 		}

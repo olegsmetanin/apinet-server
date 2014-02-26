@@ -87,6 +87,7 @@
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
     <Compile Include="Controllers\Downloader.cs" />
     <Compile Include="Controllers\Extensions.cs" />
+    <Compile Include="Controllers\IFileResourceStorage.cs" />
     <Compile Include="Controllers\IStateStorage.cs" />
     <Compile Include="Controllers\LookupEntry.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />

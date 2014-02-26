@@ -13,6 +13,7 @@ using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using AGO.Core.Model;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
@@ -29,7 +30,7 @@ namespace AGO.Tasks.Controllers
     /// <summary>
     /// Контроллер работы с задачами модуля задач
     /// </summary>
-    public class TasksController: AbstractTasksController
+    public class TasksController: AbstractTasksController, IFileResourceStorage
 	{
 		#region Configuration
 
@@ -73,7 +74,7 @@ namespace AGO.Tasks.Controllers
 		{
 			base.DoFinalizeConfig();
 			if (uploadPath.IsNullOrWhiteSpace())
-				uploadPath = System.IO.Path.GetTempPath();
+				uploadPath = Path.GetTempPath();
 			if (fileStoreRoot.IsNullOrWhiteSpace())
 				Log.Warn("FileStoreRoot path not found in config (Tasks_Tasks_FileStoreRoot). Attempt to upload file to task will be failed");
 		}
@@ -569,13 +570,12 @@ namespace AGO.Tasks.Controllers
 			var project = request.Form[PROJECT_FORM_KEY];
 			if (project.IsNullOrWhiteSpace())
 				throw new ArgumentException("Project not specified for request");
-			var sTaskId = request.Form[TASK_ID_FORM_KEY];
-			if (sTaskId.IsNullOrWhiteSpace())
+			var numpp = request.Form[TASK_ID_FORM_KEY];
+			if (numpp.IsNullOrWhiteSpace())
 				throw new ArgumentException("File owner id not specified for request");
 
-			//secure get by id
 		    var fb = _FilteringService.Filter<TaskModel>();
-		    IModelFilterNode predicate = fb.Where(m => m.Id == new Guid(sTaskId));
+		    IModelFilterNode predicate = fb.Where(m => m.ProjectCode == project && m.SeqNumber == numpp);
 			var securedPredicate = SecurityService.ApplyReadConstraint<TaskModel>(
 			    project, CurrentUser.Id, Session, predicate);
 
@@ -602,6 +602,8 @@ namespace AGO.Tasks.Controllers
 					{
 						taskFile = new TaskFileModel
 						{
+							Creator = CurrentUser,
+							CreationTime = DateTime.UtcNow,
 							ContentType = file.ContentType,
 							Size = content.Length,
 							Owner = task
@@ -609,6 +611,8 @@ namespace AGO.Tasks.Controllers
 						task.Files.Add(taskFile);
 					}
 					taskFile.Name = fileName;
+					taskFile.LastChanger = CurrentUser;
+					taskFile.LastChangeTime = DateTime.UtcNow;
 
 					SecurityService.DemandUpdate(taskFile, project, CurrentUser.Id, Session);
 
@@ -649,10 +653,10 @@ namespace AGO.Tasks.Controllers
 		    return new UploadedFiles<FileDTO> {Files = result};
 	    }
 
-	    private IModelFilterNode MakeFilesPredicate(string project, Guid taskId, IEnumerable<IModelFilterNode> filters)
+	    private IModelFilterNode MakeFilesPredicate(string project, string numpp, IEnumerable<IModelFilterNode> filters)
 	    {
 			var fb = _FilteringService.Filter<TaskFileModel>();
-			IModelFilterNode ownerPredicate = fb.Where(m => m.Owner.Id == taskId);
+			IModelFilterNode ownerPredicate = fb.Where(m => m.Owner.ProjectCode == project && m.Owner.SeqNumber == numpp);
 			return SecurityService.ApplyReadConstraint<TaskFileModel>(
 				project, CurrentUser.Id, Session, filters.Concat(new [] { ownerPredicate }).ToArray());
 	    }
@@ -660,7 +664,7 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 	    public IEnumerable<FileDTO> GetFiles(
 		    [NotEmpty] string project,
-		    [NotEmpty] Guid ownerId,
+		    [NotEmpty] string ownerId,
 		    [NotNull] ICollection<IModelFilterNode> filter,
 		    [NotNull] ICollection<SortInfo> sorters,
 		    [InRange(0, null)] int page)
@@ -676,7 +680,7 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public int GetFilesCount(
 			[NotEmpty] string project,
-			[NotEmpty] Guid ownerId,
+			[NotEmpty] string ownerId,
 			[NotNull] ICollection<IModelFilterNode> filter)
 		{
 			var securedPredicate = MakeFilesPredicate(project, ownerId, filter);
@@ -712,6 +716,31 @@ namespace AGO.Tasks.Controllers
 				throw;
 			}
 	    }
+
+		[JsonEndpointAttribute, RequireAuthorizationAttribute]
+		public IEnumerable<IModelMetadata> TaskFilesMetadata()
+		{
+			return MetadataForModelAndRelations<TaskFileModel>();
+		}
+
+		#region IFileResourceStorage implementation
+
+		private readonly ProjectToModuleCache p2m = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE);
+
+		public IFileResource FindFile(string project, Guid fileId)
+		{
+			if (!p2m.IsProjectInHandledModule(project, Session)) 
+				return null;
+
+			var fb = _FilteringService.Filter<TaskFileModel>();
+			IModelFilterNode predicate = fb.Where(m => m.Owner.ProjectCode == project && m.Id == fileId);
+			predicate = SecurityService.ApplyReadConstraint<TaskFileModel>(project, CurrentUser.Id, Session, predicate);
+
+			var file = _FilteringDao.Find<TaskFileModel>(predicate);
+			return file != null ? new TaskFileWrapper(fileStoreRoot, file) : null;
+		}
+
+		#endregion
 
 		#endregion
 	}

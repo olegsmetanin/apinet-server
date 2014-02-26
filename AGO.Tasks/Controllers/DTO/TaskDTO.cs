@@ -36,7 +36,7 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public IEnumerable<AgreementView> Agreements { get; set; }
 
-		public IEnumerable<string> Files { get; set; }
+		public IEnumerable<LookupEntry> Files { get; set; }
 	}
 
 	public class TaskViewDTO: BaseTaskDTO

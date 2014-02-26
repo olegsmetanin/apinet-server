@@ -120,6 +120,15 @@ namespace AGO.Tasks.Controllers.DTO
 			       	};
 		}
 
+		private LookupEntry ToFile(TaskFileModel file)
+		{
+			return new LookupEntry
+			{
+				Id = file.Id.ToString(),
+				Text = file.Name
+			};
+		}
+
 		public TaskListItemDetailsDTO Fill(TaskModel task)
 		{
 			return new TaskListItemDetailsDTO
@@ -128,7 +137,7 @@ namespace AGO.Tasks.Controllers.DTO
 			       		Content = task.Content,
 			       		Note = task.Note,
 			       		Agreements = task.Agreements.Select(ToAgreement).ToArray(),
-			       		Files = new[] {"Invoice.docx", "Orders.xlsx"}
+			       		Files = task.Files.OrderBy(f => f.CreationTime).Take(5).Select(ToFile).ToArray()
 			       	};
 		}
 	}

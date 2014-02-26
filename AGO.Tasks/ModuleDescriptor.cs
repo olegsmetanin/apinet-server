@@ -1,9 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AGO.Core.Application;
+using AGO.Core.Controllers;
 using AGO.Core.Modules;
 using AGO.Core.Localization;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers;
+using SimpleInjector;
+using SimpleInjector.Advanced;
+using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
 
 namespace AGO.Tasks
 {
@@ -32,6 +37,12 @@ namespace AGO.Tasks
 		public void Register(IApplication app)
 		{
 			app.RegisterModuleSecurityProviders(GetType().Assembly);
+
+			var registration = Lifestyle.Singleton.CreateRegistration(
+				typeof(IFileResourceStorage),
+				() => app.IocContainer.GetInstance<TasksController>(),
+				app.IocContainer);
+			app.IocContainer.AppendToCollection(typeof(IFileResourceStorage), registration);
 		}
 
 		public void Initialize(IApplication app)

@@ -193,7 +193,7 @@ namespace AGO.WebApiApp.Application
 							"download/" + Downloader.REPORT_TYPE + "/{id}",
 							new { controller = "Download", action = "DownloadReport" });
 			routes.MapRoute(Downloader.FILE_TYPE,
-							"download/" + Downloader.FILE_TYPE + "/{id}",
+							"download/" + Downloader.FILE_TYPE + "/{project}/{id}",
 							new { controller = "Download", action = "DownloadFile" });
 		}
 

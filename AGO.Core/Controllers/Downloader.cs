@@ -37,12 +37,14 @@ namespace AGO.Core.Controllers
 			this.diContainer = diContainer;
 		}
 
-		public void ServeDownloadWebRequest(HttpRequestBase request, string type, Guid id)
+		public void ServeDownloadWebRequest(HttpRequestBase request, string type, string project, Guid id)
 		{
+			
 			var sp = diContainer.GetInstance<ISessionProvider>();
 			switch (type)
 			{
 				case REPORT_TEMPLATE_TYPE:
+					//TODO security for downloading
 					var template = sp.CurrentSession.Get<ReportTemplateModel>(id);
 					if (template == null)
 					{
@@ -55,6 +57,7 @@ namespace AGO.Core.Controllers
 					}
 					break;
 				case REPORT_TYPE:
+					//TODO security for downloading
 					var report = sp.CurrentSession.Get<ReportTaskModel>(id);
 					if (report == null)
 					{
@@ -85,7 +88,22 @@ namespace AGO.Core.Controllers
 					}
 					break;
 				case FILE_TYPE:
-					throw new NotImplementedException();
+					//security implemented in storages
+					var storages = diContainer.GetAllInstances<IFileResourceStorage>();
+					IFileResource file = null;
+					foreach (var s in storages)
+					{
+						file = s.FindFile(project, id);
+						if (file != null) break;
+					}
+					if (file == null)
+					{
+						NotFound(request.RequestContext.HttpContext.Response, "No file with this id in project");
+					}
+					else
+					{
+						Send(request, file);
+					}
 					break;
 				default:
 					NotFound(request.RequestContext.HttpContext.Response, "Unknown resource type: " + type);

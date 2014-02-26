@@ -477,7 +477,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, FileDTO[]> action = u =>
 			{
 				Login(u.Login);
-				return controller.GetFiles(TestProject, task.Id,
+				return controller.GetFiles(TestProject, task.SeqNumber,
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					Enumerable.Empty<SortInfo>().ToList(),
 					0).ToArray();
@@ -504,7 +504,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, int> action = u =>
 			{
 				Login(u.Login);
-				return controller.GetFilesCount(TestProject, task.Id,
+				return controller.GetFilesCount(TestProject, task.SeqNumber,
 					Enumerable.Empty<IModelFilterNode>().ToList());
 			};
 			ReusableConstraint granted = Is.EqualTo(2);
@@ -526,7 +526,7 @@ namespace AGO.Tasks.Test.Security
 			reqMock.Form.Returns(new NameValueCollection
 			{
 				{"project", TestProject},
-				{"ownerId", task.Id.ToString()},
+				{"ownerId", task.SeqNumber},
 				{"uploadId", Guid.NewGuid().ToString()}
 			});
 			reqMock.Headers.Returns(new NameValueCollection());
