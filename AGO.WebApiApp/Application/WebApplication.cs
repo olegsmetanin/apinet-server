@@ -210,11 +210,11 @@ namespace AGO.WebApiApp.Application
 		#endregion
 	}
 
-	public static class Initializer
-	{
-		public static void Initialize()
-		{
-			new WebApplication { WebEnabled = true }.Initialize();
-		}
-	}
+//	public static class Initializer
+//	{
+//		public static void Initialize()
+//		{
+//			new WebApplication { WebEnabled = true }.Initialize();
+//		}
+//	}
 }

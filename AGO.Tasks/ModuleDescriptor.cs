@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AGO.Core.Application;
 using AGO.Core.Controllers;
 using AGO.Core.Modules;

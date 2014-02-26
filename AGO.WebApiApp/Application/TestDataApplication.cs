@@ -2,7 +2,7 @@
 
 namespace AGO.WebApiApp.Application
 {
-	public class TestDataApplication : AbstractPersistenceApplication, ITestDataApplication
+	public class TestDataApplication : AbstractControllersApplication, ITestDataApplication
 	{
 		public void CreateDatabase()
 		{
