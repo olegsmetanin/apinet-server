@@ -17,7 +17,7 @@ using Newtonsoft.Json.Linq;
 
 namespace AGO.Reporting.Service
 {
-	public class ReportingService: AbstractPersistenceApplication, IInitializable, IReportingService
+	public class ReportingService: AbstractControllersApplication, IInitializable, IReportingService
 	{
 		#region Configuration and initialization
 
