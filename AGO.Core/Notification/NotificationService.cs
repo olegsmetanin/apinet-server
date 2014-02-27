@@ -147,7 +147,7 @@ namespace AGO.Core.Notification
 				Task connectTask = ConnectToRedis();
 				try
 				{
-					connectTask.Wait();
+					connectTask.Wait(TimeSpan.FromSeconds(10));
 					//LogDebug("Connect task successfull");
 					Interlocked.Exchange(ref state, State.Connected);
 					LogInfo("Started");
