@@ -24,11 +24,15 @@ call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86 
 %MSBUILD% AGO.WebApiApp\AGO.WebApiApp.csproj /t:_WPPCopyWebApplication /p:BuildingProject=false;WebProjectOutputDir=%CURDIR%\distr\api /verbosity:m >> %CURDIR%\build.log
 popd
 rd /S /Q tmp  >> build.log
+rem copy module bins to api
+robocopy ..\AGO.Tasks\bin\Debug\ distr\api\bin\ AGO.Tasks.* >> build.log >> build.log
+robocopy ..\AGO.Tasks\bin\Debug\ru\ distr\api\bin\ru\ AGO.Tasks.resources.* >> build.log
 
 rem copy reporting service
 robocopy ..\AGO.Reporting.Service\bin\Debug\ distr\reporting\ /MIR /XD logs Mappings >> build.log
-robocopy distr\api\bin\ distr\reporting\ AGO.Tasks.* >> build.log >> build.log
-robocopy distr\api\bin\ru\ distr\reporting\ru\ AGO.Tasks.resources.* >> build.log
+rem copy module bins to reporting
+robocopy ..\AGO.Tasks\bin\Debug\ distr\reporting\ AGO.Tasks.* >> build.log >> build.log
+robocopy ..\AGO.Tasks\bin\Debug\ru\ distr\reporting\ru\ AGO.Tasks.resources.* >> build.log
 
 rem copy watcher host
 robocopy ..\AGO.WatchersHost\bin\Debug\ distr\watcher\ /MIR /XD logs Mappings >> build.log
