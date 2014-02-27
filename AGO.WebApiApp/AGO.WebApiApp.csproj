@@ -15,7 +15,7 @@
     <AssemblyName>AGO.WebApiApp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
-    <UseIISExpress>true</UseIISExpress>
+    <UseIISExpress>false</UseIISExpress>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <TargetFrameworkProfile />
@@ -211,10 +211,6 @@
     <ProjectReference Include="..\AGO.Core\AGO.Core.csproj">
       <Project>{D1E286D4-B20A-11E1-95C4-08356288709B}</Project>
       <Name>AGO.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AGO.Tasks\AGO.Tasks.csproj">
-      <Project>{A8703384-0A00-471E-B76E-7BEEB4082475}</Project>
-      <Name>AGO.Tasks</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

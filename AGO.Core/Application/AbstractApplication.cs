@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using AGO.Core.Security;
 using Common.Logging;
 using AGO.Core.Config;
@@ -52,11 +53,23 @@ namespace AGO.Core.Application
 		{
 			get
 			{
-				_ModuleDescriptors = _ModuleDescriptors ?? new List<IModuleDescriptor>(
-					AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).SelectMany(a => a.GetExportedTypes()
-						.Where(t => t.IsClass && t.IsPublic && typeof(IModuleDescriptor).IsAssignableFrom(t)))
+				if (_ModuleDescriptors == null)
+				{
+					var modules = (KeyValueProvider.Value("Modules") ?? string.Empty)
+						.Split(new []{';'}, StringSplitOptions.RemoveEmptyEntries);
+					foreach (var assembyName in modules)
+					{
+						Assembly.Load(assembyName);
+					}
+
+					_ModuleDescriptors = new List<IModuleDescriptor>(AppDomain.CurrentDomain
+						.GetAssemblies()
+						.Where(a => !a.IsDynamic)
+						.SelectMany(a => a.GetExportedTypes()
+							.Where(t => t.IsClass && t.IsPublic && typeof(IModuleDescriptor).IsAssignableFrom(t)))
 						.Select(Activator.CreateInstance).OfType<IModuleDescriptor>()
 						.OrderBy(m => m.Priority));
+				}
 
 				return _ModuleDescriptors;
 			}

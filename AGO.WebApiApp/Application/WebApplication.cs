@@ -17,19 +17,9 @@ using SimpleInjector.Integration.Web.Mvc;
 
 namespace AGO.WebApiApp.Application
 {
-	public enum DevMode
-	{
-		Dev,
-		Prod
-	}
-
 	public class WebApplication : AbstractControllersApplication, IWebApplication
 	{
 		#region Properties, fields, constructors
-
-		public static DevMode DevMode { get; private set; }
-
-		public static bool DisableCaching { get; private set; }
 
 		public override IKeyValueProvider KeyValueProvider
 		{
@@ -99,9 +89,6 @@ namespace AGO.WebApiApp.Application
 
 		protected virtual void DoRegisterWebServices()
 		{
-			DevMode = KeyValueProvider.Value("DevMode").ParseEnumSafe(DevMode.Dev);
-			DisableCaching = KeyValueProvider.Value("DisableCaching").ConvertSafe<bool>();
-
 			IocContainer.RegisterSingle<IEnvironmentService, HostingEnvironmentService>();
 			IocContainer.RegisterInitializer<HostingEnvironmentService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Environment_(.*)", KeyValueProvider)).ApplyTo(service));
@@ -209,12 +196,4 @@ namespace AGO.WebApiApp.Application
 		
 		#endregion
 	}
-
-//	public static class Initializer
-//	{
-//		public static void Initialize()
-//		{
-//			new WebApplication { WebEnabled = true }.Initialize();
-//		}
-//	}
 }
