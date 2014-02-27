@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Web;
+using AGO.Core;
 using AGO.Core.Config;
 using AGO.Core.Filters;
 using AGO.Tasks.Controllers;
@@ -69,7 +70,7 @@ namespace AGO.Tasks.Test
 			reqMock.Form.Returns(new NameValueCollection
 			{
 				{"project", TestProject},
-				{"ownerId", task.Id.ToString()},
+				{"ownerId", task.SeqNumber},
 				{"uploadId", Guid.NewGuid().ToString()}
 			});
 			reqMock.Headers.Returns(new NameValueCollection());
@@ -94,6 +95,32 @@ namespace AGO.Tasks.Test
 			var storedFileName = Path.Combine(testFileStoreRoot, file.Path);
 			Assert.That(File.Exists(storedFileName), Is.True);
 			Assert.That(File.ReadAllBytes(storedFileName), Is.EqualTo(data));
+		}
+
+		[Test]
+		public void CreateDuplicateFileThrow()
+		{
+			var alreadyExists = M.File(task, "test.pdf", mime: "application/pdf");
+
+			var data = new byte[] { 0x01, 0x02, 0x03 };
+			var reqMock = Substitute.For<HttpRequestBase>();
+			reqMock.Form.Returns(new NameValueCollection
+			{
+				{"project", TestProject},
+				{"ownerId", task.SeqNumber},
+				{"uploadId", Guid.NewGuid().ToString()}
+			});
+			reqMock.Headers.Returns(new NameValueCollection());
+			var fileMock = Substitute.For<HttpPostedFileBase>();
+			fileMock.FileName.Returns(alreadyExists.Name);
+			fileMock.ContentType.Returns(alreadyExists.ContentType);
+			fileMock.InputStream.Returns(new MemoryStream(data));
+			var filesMock = Substitute.For<HttpFileCollectionBase>();
+			filesMock.Count.Returns(1);
+			filesMock[0].Returns(fileMock);
+
+			Assert.That(() => controller.UploadFiles(reqMock, filesMock),
+				Throws.Exception.TypeOf<MustBeUniqueException>());
 		}
 
 		[Test]
@@ -130,6 +157,33 @@ namespace AGO.Tasks.Test
 			var storedFileName = Path.Combine(testFileStoreRoot, f.Path);
 			Assert.That(File.Exists(storedFileName), Is.True);
 			Assert.That(File.ReadAllBytes(storedFileName), Is.EqualTo(data));
+		}
+
+		[Test]
+		public void UpdateDuplicateFileThrow()
+		{
+			var f1 = M.File(task, "1.txt");
+			var f2 = M.File(task, "2.txt");
+
+			var data = new byte[] { 0x01, 0x02, 0x03 };
+			var reqMock = Substitute.For<HttpRequestBase>();
+			reqMock.Form.Returns(new NameValueCollection
+			{
+				{"project", TestProject},
+				{"ownerId", task.SeqNumber},
+				{"uploadId", Guid.NewGuid().ToString()},
+				{"fileId", f1.Id.ToString()}
+			});
+			reqMock.Headers.Returns(new NameValueCollection());
+			var fileMock = Substitute.For<HttpPostedFileBase>();
+			fileMock.FileName.Returns(f2.Name);
+			fileMock.InputStream.Returns(new MemoryStream(data));
+			var filesMock = Substitute.For<HttpFileCollectionBase>();
+			filesMock.Count.Returns(1);
+			filesMock[0].Returns(fileMock);
+
+			Assert.That(() => controller.UploadFiles(reqMock, filesMock),
+				Throws.Exception.TypeOf<MustBeUniqueException>());
 		}
 
 		[Test]

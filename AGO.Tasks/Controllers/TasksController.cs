@@ -598,6 +598,10 @@ namespace AGO.Tasks.Controllers
 						? new Guid(request.Form[FILE_ID_FORM_KEY])
 						: (Guid?)null;
 					var taskFile = fileId.HasValue ? task.Files.FirstOrDefault(f => f.Id == fileId.Value) : null;
+					//Test for unique file name
+					if (task.Files.Any(f => f.Name == fileName && (taskFile == null || f.Id != taskFile.Id)))
+						throw new MustBeUniqueException();
+
 					if (taskFile == null)
 					{
 						taskFile = new TaskFileModel

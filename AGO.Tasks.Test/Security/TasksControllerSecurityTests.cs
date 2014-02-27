@@ -531,15 +531,16 @@ namespace AGO.Tasks.Test.Security
 			});
 			reqMock.Headers.Returns(new NameValueCollection());
 			var fileMock = Substitute.For<HttpPostedFileBase>();
-			fileMock.FileName.Returns("test.pdf");
 			fileMock.ContentType.Returns("application/pdf");
 			fileMock.InputStream.Returns(new MemoryStream(data));
 			var filesMock = Substitute.For<HttpFileCollectionBase>();
 			filesMock.Count.Returns(1);
 			filesMock[0].Returns(fileMock);
-
+			var counter = 0;
 			Func<UserModel, FileDTO[]> action = u =>
 			{
+				counter++;
+				fileMock.FileName.Returns(counter + "test.pdf");
 				Login(u.Login);
 				return controller.UploadFiles(reqMock, filesMock)
 					.Files
@@ -547,7 +548,7 @@ namespace AGO.Tasks.Test.Security
 					.ToArray();
 			};
 			ReusableConstraint granted = Has.Length.EqualTo(1)
-				.And.Exactly(1).Matches<FileDTO>(f => f.Name == "test.pdf" && f.Uploaded);
+				.And.Exactly(1).Matches<FileDTO>(f => f.Name.EndsWith("test.pdf") && f.Uploaded);
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
 
 			Assert.That(() => action(admin), denied);

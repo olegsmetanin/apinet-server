@@ -13,7 +13,7 @@ namespace AGO.Tasks.Model.Task
 	/// </summary>
 	public class TaskFileModel: SecureModel<Guid>, IFile<TaskModel, TaskFileModel>
 	{
-		[NotEmpty, NotLonger(256)]
+		[NotEmpty, NotLonger(256), UniqueProperty("OwnerId")]
 		public virtual string Name { get; set; }
 
 		[NotEmpty, MetadataExclude]
