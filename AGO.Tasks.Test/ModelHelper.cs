@@ -113,6 +113,7 @@ namespace AGO.Tasks.Test
 					PropertyType = paramType,
 					Value = value
 				};
+				task.CustomProperties.Add(p);
 				Session().Save(p);
 				Session().Flush();
 

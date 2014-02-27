@@ -465,6 +465,7 @@ namespace AGO.Tasks
 			const string csvDetailedTemplate = "<range_data>\"{$num$}\",\"{$type$}\",\"{$content$}\",\"{$dueDate$}\",\"{$executors$}\"</range_data>";
 			byte[] xltSimpleTemplate;
 			byte[] xltDetailedTemplate;
+			byte[] xltDetailedWithParamsTemplate;
 			using (var rs = Assembly.GetExecutingAssembly().GetManifestResourceStream("AGO.Tasks.Reports.TaskList.xlt"))
 			{
 				System.Diagnostics.Debug.Assert(rs != null, "No report template resource in assembly");
@@ -476,6 +477,12 @@ namespace AGO.Tasks
 				System.Diagnostics.Debug.Assert(rs != null, "No report template resource in assembly");
 				xltDetailedTemplate = new byte[rs.Length];
 				rs.Read(xltDetailedTemplate, 0, xltDetailedTemplate.Length);
+			}
+			using (var rs = Assembly.GetExecutingAssembly().GetManifestResourceStream("AGO.Tasks.Reports.DetailedTaskListWithParams.xlt"))
+			{
+				System.Diagnostics.Debug.Assert(rs != null, "No report template resource in assembly");
+				xltDetailedWithParamsTemplate = new byte[rs.Length];
+				rs.Read(xltDetailedWithParamsTemplate, 0, xltDetailedWithParamsTemplate.Length);
 			}
 
 			var st = new ReportTemplateModel
@@ -506,10 +513,18 @@ namespace AGO.Tasks
 				Name = "DetailedTaskList.xlt",
 				Content = xltDetailedTemplate
 			};
+			var xdpt = new ReportTemplateModel
+			{
+				CreationTime = DateTime.UtcNow,
+				LastChange = DateTime.UtcNow,
+				Name = "DetailedTaskListWithParams.xlt",
+				Content = xltDetailedWithParamsTemplate
+			};
 			CurrentSession.Save(st);
 			CurrentSession.Save(dt);
 			CurrentSession.Save(xst);
 			CurrentSession.Save(xdt);
+			CurrentSession.Save(xdpt);
 			CurrentSession.Flush();
 
 			var ss = new ReportSettingModel
@@ -552,10 +567,21 @@ namespace AGO.Tasks
 				ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
 				ReportTemplate = xdt
 			};
+			var xdps = new ReportSettingModel
+			{
+				CreationTime = DateTime.UtcNow,
+				Name = "Detailed task list with user props (MS Excel)",
+				TypeCode = "task-list",
+				DataGeneratorType = typeof(DetailedTaskListWithCustomPropsDataGenerator).AssemblyQualifiedName,
+				GeneratorType = GeneratorType.XlsSyncFusionGenerator,
+				ReportParameterType = typeof(TaskListReportParameters).AssemblyQualifiedName,
+				ReportTemplate = xdpt
+			};
 			_CrudDao.Store(ss);
 			_CrudDao.Store(xss);
 			_CrudDao.Store(ds);
 			_CrudDao.Store(xds);
+			_CrudDao.Store(xdps);
 
 			var fake = new ReportSettingModel
 			{

@@ -156,6 +156,7 @@ namespace AGO.Tasks.Test
 		public void DeleteParamReturnSuccess()
 		{
 			var p = M.Param(task, "s1", "spv");
+			Session.Clear();
 
 			var res = controller.DeleteParam(p.Id);
 			_SessionProvider.FlushCurrentSession(!res);
@@ -163,7 +164,7 @@ namespace AGO.Tasks.Test
 			Assert.IsTrue(res);
 			p = Session.Get<TaskCustomPropertyModel>(p.Id);
 			Assert.IsNull(p);
-			Session.Refresh(task);
+			task = Session.Get<TaskModel>(task.Id);
 			Assert.AreEqual(0, task.CustomProperties.Count);
 		}
 	}
