@@ -153,16 +153,11 @@
                                 headers_lowercase[m[1].toLowerCase()] = headers[m[1]] = m[2];
                             }
                             
-                            if ((req.status < 200 || req.status >= 300) && req.status !== 401 && req.status !== 403) {
-                                if (useAccessControl) {
-                                    error('INVALID_STATUS_CODE');
-                                }
-                                else {
-                                    error('INVALID_STATUS_CODE', {
-                                        status: req.status,
-                                        data: req.responseText
-                                    });
-                                }
+                            if (req.status < 200 || req.status >= 300) {
+                                error('INVALID_STATUS_CODE', {
+                                    status: req.status,
+                                    data: req.responseText
+                                });
                             }
                             else {
                             
