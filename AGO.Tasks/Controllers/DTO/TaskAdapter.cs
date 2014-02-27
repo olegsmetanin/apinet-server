@@ -243,6 +243,8 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.Parameters = model.CustomProperties.OrderBy(p => p.PropertyType.FullName).Select(ParamToDTO).ToArray();
 			dto.Author = ToAuthor(model);
 			dto.CreationTime = model.CreationTime;
+			dto.EstimatedTime = model.EstimatedTime;
+			dto.SpentTime = model.CalculateSpentTime();
 
 			return dto;
 		}

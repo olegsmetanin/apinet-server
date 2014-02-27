@@ -284,6 +284,10 @@ namespace AGO.Tasks.Controllers
 										_CrudDao.Store(executor);
 									}
 									break;
+								case "EstimatedTime":
+									var time = data.Value.ConvertSafe<decimal?>();
+									task.EstimatedTime = time;
+									break;
 								default:
 									vr.AddErrors(string.Format("Unsupported prop for update: '{0}'", data.Prop));
 									break;

@@ -136,7 +136,17 @@ namespace AGO.Tasks.Model.Task
 	    }
 		private ISet<TaskFileModel> files = new HashSet<TaskFileModel>();
 
-    	#endregion
+		#region Time tracking
+
+		/// <summary>
+		/// Планируемое время выполнения задачи
+		/// </summary>
+		[InRange(0, null, false)]
+		public virtual decimal? EstimatedTime { get; set; }
+
+		#endregion
+
+		#endregion
 
 		public virtual TaskStatusHistoryModel ChangeStatus(TaskStatus newStatus, UserModel changer)
 		{
@@ -147,5 +157,11 @@ namespace AGO.Tasks.Model.Task
 		{
 			return member != null && Agreements.Any(a => member.Equals(a.Agreemer));
 		}
+
+	    public virtual decimal? CalculateSpentTime()
+	    {
+			//TODO implement
+		    return null;
+	    }
     }
 }

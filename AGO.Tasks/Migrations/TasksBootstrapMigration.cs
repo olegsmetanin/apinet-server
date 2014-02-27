@@ -28,7 +28,8 @@ namespace AGO.Tasks.Migrations
         		.WithRefColumn<TaskModel>(m => m.TaskType)
         		.WithValueColumn<TaskModel>(m => m.Content)
         		.WithValueColumn<TaskModel>(m => m.Note)
-        		.WithValueColumn<TaskModel>(m => m.DueDate);
+        		.WithValueColumn<TaskModel>(m => m.DueDate)
+				.WithValueColumn<TaskModel>(m => m.EstimatedTime);
 
             Create.SecureModelTable<TaskStatusHistoryModel>()
                 .WithValueColumn<TaskStatusHistoryModel>(m => m.Start)

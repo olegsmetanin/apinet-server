@@ -58,6 +58,12 @@ namespace AGO.Tasks.Controllers.DTO
 		public string Author { get; set; }
 
 		public DateTime? CreationTime { get; set; }
+
+		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
+		public decimal? EstimatedTime { get; set; }
+
+		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
+		public decimal? SpentTime { get; set; }
 	}
 
 	public class Executor
