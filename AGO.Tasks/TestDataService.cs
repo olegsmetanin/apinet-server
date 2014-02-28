@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using AGO.Core;
@@ -11,6 +12,7 @@ using AGO.Reporting.Common;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using AGO.Tasks.Reports;
+using TaskStatus = AGO.Tasks.Model.Task.TaskStatus;
 
 namespace AGO.Tasks
 {
@@ -284,8 +286,8 @@ namespace AGO.Tasks
 
 		protected void DoPopulateTasks(dynamic context, dynamic projects, dynamic taskTypes, dynamic propertyTypes, dynamic tags)
 		{
-			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, dynamic[], TaskModel> createTask =
-				(num, type, status, priority, content, dueDate, proj, users) =>
+			Func<int, TaskTypeModel, TaskStatus, TaskPriority, string, DateTime?, ProjectModel, dynamic[], decimal?, TaskModel> createTask =
+				(num, type, status, priority, content, dueDate, proj, users, estimate) =>
 			{
 				var task = new TaskModel
 				{
@@ -296,7 +298,8 @@ namespace AGO.Tasks
 					Priority = priority,
 					Content = content,
 					DueDate = dueDate,
-					TaskType = type
+					TaskType = type,
+					EstimatedTime = estimate
 				};
 				task.ChangeStatus(status, context.Admin);
 				foreach (var user in users)
@@ -333,6 +336,17 @@ namespace AGO.Tasks
 			                    };
 			    _CrudDao.Store(tagLink);
 			};
+			Action<TaskModel, UserModel, decimal, string> addTime = (task, user, time, comment) =>
+			{
+				var entry = new TaskTimelogEntryModel
+				{
+					Task = task,
+					Member = task.Executors.First(e => e.Executor.UserId == user.Id).Executor,
+					Time = time,
+					Comment = comment
+				};
+				_CrudDao.Store(entry);
+			};
 
 // ReSharper disable UnusedVariable
 
@@ -343,18 +357,18 @@ namespace AGO.Tasks
 			var spt = propertyTypes.Software;
 			var stg = tags.Software;
 			var st1 = createTask(seqnum++, stt.Feature, TaskStatus.Done, TaskPriority.Low,
-				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1, context.User2 });
+				"Workflow configuration", DateTime.Now.AddDays(3), sp, new[] { context.User1, context.User2 }, 4);
 			var st2 = createTask(seqnum++, stt.Bug, TaskStatus.New, TaskPriority.High,
-				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp, new[] { context.User1 });
+				"Ticket subject and text cuting when recieving from E-mail", DateTime.Now.AddDays(1), sp, new[] { context.User1 }, null);
 			var st3 = createTask(seqnum++, stt.Feature, TaskStatus.Doing, TaskPriority.Normal,
-				"Encrypt emails with SMIME", DateTime.Now.AddDays(-2), sp, new[] { context.User1 });
+				"Encrypt emails with SMIME", DateTime.Now.AddDays(-2), sp, new[] { context.User1 }, 12);
 			var st4 = createTask(seqnum++, stt.Feature, TaskStatus.Closed, TaskPriority.Normal,
-				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp, new[] { context.User1 });
+				"Improve usage of label \"button_update\"", DateTime.Now.AddDays(-10), sp, new[] { context.User1 }, 3);
 			var st5 = createTask(seqnum++, stt.Support, TaskStatus.Discarded, TaskPriority.Normal,
-				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp, new[] { context.User3 });
+				"Plugin rollback migration", DateTime.Now.AddDays(-1), sp, new[] { context.User3 }, null);
 			var st6 = createTask(seqnum, stt.Bug, TaskStatus.New, TaskPriority.High,
 				"Can't move parent ticket between projects", DateTime.Now.AddDays(1), sp, 
-				new[] { context.User1, context.User2, context.User3 });
+				new[] { context.User1, context.User2, context.User3 }, null);
 			createTaskProperty(st1, spt.PO, "Jonh O'Connor");
 			createTaskProperty(st1, spt.MgrEstimate, 3);
 			createTaskProperty(st1, spt.DevEstimate, 5);
@@ -366,6 +380,10 @@ namespace AGO.Tasks
 			addTag(st1, stg.NeedsLearning);
 			addTag(st3, stg.NeedsLearning);
 			addTag(st5, stg.Refactor);
+			addTime(st1, context.User1, 2, null);
+			addTime(st1, context.User2, 2.5m, null);
+			addTime(st3, context.User1, 5, "Add bcrypt library and write tests");
+			addTime(st4, context.User1, 1.8m, "Add regex to label matcher");
 
 			//CRM
 			seqnum = 0;
@@ -374,15 +392,15 @@ namespace AGO.Tasks
 			var crmpt = propertyTypes.CRM;
 			var ctg = tags.CRM;
 			var ct1 = createTask(seqnum++, crmtt.Upselling, TaskStatus.Doing, TaskPriority.Normal,
-			                     "Launch test compaign", DateTime.Now.AddDays(7), crm, new[] {context.User2});
+			                     "Launch test compaign", DateTime.Now.AddDays(7), crm, new[] {context.User2}, 4);
 			var ct2 = createTask(seqnum++, crmtt.Audit, TaskStatus.Done, TaskPriority.High,
-								 "Prepare for audit", DateTime.Now.AddDays(-2), crm, new[] { context.User1 });
+								 "Prepare for audit", DateTime.Now.AddDays(-2), crm, new[] { context.User1 }, 40);
 			var ct3 = createTask(seqnum++, crmtt.Personal, TaskStatus.Closed, TaskPriority.Normal,
-								 "Call Mr. Cobson for new bills", DateTime.Now.AddDays(-15), crm, new[] { context.User3 });
+								 "Call Mr. Cobson for new bills", DateTime.Now.AddDays(-15), crm, new[] { context.User3 }, 0.5m);
 			var ct4 = createTask(seqnum++, crmtt.Upselling, TaskStatus.New, TaskPriority.Low,
-								 "Meeting with CEOs", null, crm, new[] { context.User1, context.User3 });
+								 "Meeting with CEOs", null, crm, new[] { context.User1, context.User3 }, 2.5m);
 			var ct5 = createTask(seqnum, crmtt.Upselling, TaskStatus.New, TaskPriority.Normal,
-								 "Email partners (confirm $30,000 deal)", DateTime.Now.AddDays(2), crm, new[] { context.User2 });
+								 "Email partners (confirm $30,000 deal)", DateTime.Now.AddDays(2), crm, new[] { context.User2 }, null);
 			createTaskProperty(ct1, crmpt.RelationsLevel, "Good");
 			createTaskProperty(ct1, crmpt.Prospects, 2);
 			createTaskProperty(ct4, crmpt.RelationsLevel, "Excellent");
@@ -393,6 +411,9 @@ namespace AGO.Tasks
 			addTag(ct1, ctg.ABC);
 			addTag(ct2, ctg.Forget);
 			addTag(ct5, ctg.ABC);
+			addTime(ct1, context.User2, 2, null);
+			addTime(ct2, context.User1, 52, "Long wait for accounting department shift deadline");
+			addTime(ct3, context.User3, 0.7m, null);
 
 			//Personal
 			seqnum = 0;
@@ -401,17 +422,17 @@ namespace AGO.Tasks
 			var ppt = propertyTypes.Personal;
 			var ptg = tags.Personal;
 			var pt1 = createTask(seqnum++, ptt.Home, TaskStatus.New, TaskPriority.Normal,
-			                     "after test, get book to read", null, pp, new[] {context.User2});
+			                     "after test, get book to read", null, pp, new[] {context.User2}, null);
 			var pt2 = createTask(seqnum++, ptt.Bills, TaskStatus.New, TaskPriority.Normal,
-								 "pay car insurance", DateTime.Now.AddDays(26), pp, new[] { context.User2 });
+								 "pay car insurance", DateTime.Now.AddDays(26), pp, new[] { context.User2 }, null);
 			var pt3 = createTask(seqnum++, ptt.Web, TaskStatus.Doing, TaskPriority.Normal,
-								 "stock pictures", null, pp, new[] { context.User2 });
+								 "stock pictures", null, pp, new[] { context.User2 }, null);
 			var pt4 = createTask(seqnum++, ptt.Work, TaskStatus.Closed, TaskPriority.High,
-								 "call to office for tomorrow meeting issues", DateTime.Now, pp, new[] { context.User2 });
+								 "call to office for tomorrow meeting issues", DateTime.Now, pp, new[] { context.User2 }, null);
 			var pt5 = createTask(seqnum++, ptt.Home, TaskStatus.Done, TaskPriority.Normal,
-								 "plan for hispanohablantes", DateTime.Now.AddDays(-5), pp, new[] { context.User2 });
+								 "plan for hispanohablantes", DateTime.Now.AddDays(-5), pp, new[] { context.User2 }, null);
 			var pt6 = createTask(seqnum, ptt.Web, TaskStatus.New, TaskPriority.Normal,
-								 "emotion posters", null, pp, new[] { context.User2 });
+								 "emotion posters", null, pp, new[] { context.User2 }, null);
 			createTaskProperty(pt1, ppt.Note, "use my new kindle HD");
 			createTaskProperty(pt4, ppt.Deadline, DateTime.Now.AddDays(1));
 			addTag(pt1, ptg.Optional);
@@ -426,21 +447,21 @@ namespace AGO.Tasks
 			var hpt = propertyTypes.Helpdesk;
 			var htg = tags.Helpdesk;
 			var ht1 = createTask(seqnum++, htt.Consult, TaskStatus.Doing, TaskPriority.Normal,
-			                     "Can't connect to office vpn", DateTime.Now, hp, new[] {context.User2});
+			                     "Can't connect to office vpn", DateTime.Now, hp, new[] {context.User2}, 1);
 			var ht2 = createTask(seqnum++, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
-								 "Remove paper jam from fax on office 314", DateTime.Now, hp, new[] { context.User1 });
+								 "Remove paper jam from fax on office 314", DateTime.Now, hp, new[] { context.User1 }, 0.5m);
 			var ht3 = createTask(seqnum++, htt.Management, TaskStatus.New, TaskPriority.High,
-								 "Calculate total work hours at the end of week", DateTime.Now.AddDays(2), hp, new[] { context.Admin });
+								 "Calculate total work hours at the end of week", DateTime.Now.AddDays(2), hp, new[] { context.Admin }, 0.5m);
 			var ht4 = createTask(seqnum++, htt.Test, TaskStatus.New, TaskPriority.Low,
-								 "Execute memory test on new laptops 23433 and 23434", null, hp, new[] { context.User1 });
+								 "Execute memory test on new laptops 23433 and 23434", null, hp, new[] { context.User1 }, 2m);
 			var ht5 = createTask(seqnum++, htt.Consult, TaskStatus.New, TaskPriority.Normal,
-								 "Needs help for SAP in accounting department", DateTime.Now.AddDays(1), hp, new[] { context.User3 });
+								 "Needs help for SAP in accounting department", DateTime.Now.AddDays(1), hp, new[] { context.User3 }, null);
 			var ht6 = createTask(seqnum++, htt.Support, TaskStatus.New, TaskPriority.High,
-								 "No wifi in meeting room", DateTime.Now, hp, new[] { context.User2 });
+								 "No wifi in meeting room", DateTime.Now, hp, new[] { context.User2 }, 0.8m);
 			var ht7 = createTask(seqnum++, htt.Management, TaskStatus.Done, TaskPriority.Normal,
-								 "Plan vacations for next year", DateTime.Now.AddDays(-2), hp, new[] { context.Admin });
+								 "Plan vacations for next year", DateTime.Now.AddDays(-2), hp, new[] { context.Admin }, 15);
 			var ht8 = createTask(seqnum, htt.Support, TaskStatus.Closed, TaskPriority.Normal,
-								 "Move accounting database backup to NV office", DateTime.Now.AddDays(-6), hp, new[] { context.User3 });
+								 "Move accounting database backup to NV office", DateTime.Now.AddDays(-6), hp, new[] { context.User3 }, 15);
 			createTaskProperty(ht1, hpt.SpentHours, 1.2m);
 			createTaskProperty(ht1, hpt.ClientSatisfaction, "normal");
 			createTaskProperty(ht3, hpt.SpentHours, 3);
@@ -455,6 +476,9 @@ namespace AGO.Tasks
 			addTag(ht6, htg.Level1);
 			addTag(ht7, htg.Level3);
 			addTag(ht8, htg.Level2);
+			addTime(ht1, context.User2, 1, "Require sysadmin support, can't fix myself");
+			addTime(ht7, context.Admin, 13, null);
+			addTime(ht8, context.User3, 14, null);
 
 // ReSharper restore UnusedVariable
 		}

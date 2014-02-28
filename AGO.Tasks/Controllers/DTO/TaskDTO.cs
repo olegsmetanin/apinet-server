@@ -64,6 +64,8 @@ namespace AGO.Tasks.Controllers.DTO
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public decimal? SpentTime { get; set; }
+
+		public IEnumerable<TimelogDTO> Timelog { get; set; }
 	}
 
 	public class Executor
@@ -98,5 +100,16 @@ namespace AGO.Tasks.Controllers.DTO
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public string Comment;
+	}
+
+	public class TimelogDTO
+	{
+		public Guid Id { get; set; }
+
+		public string Member { get; set; }
+
+		public decimal Time { get; set; }
+
+		public string Comment { get; set; }
 	}
 }

@@ -751,5 +751,62 @@ namespace AGO.Tasks.Controllers
 		#endregion
 
 		#endregion
+
+		#region Time tracking
+
+		[JsonEndpoint, RequireAuthorization]
+	    public TimelogDTO TrackTime(
+		    [NotEmpty] string project,
+		    [NotEmpty] Guid taskId,
+		    [InRange(0, null, false)] decimal time,
+		    string comment)
+		{
+			var fb = _FilteringService.Filter<TaskModel>();
+			var taskPredicate = SecurityService.ApplyReadConstraint<TaskModel>(project, CurrentUser.Id, Session,
+				fb.Where(m => m.ProjectCode == project && m.Id == taskId));
+			var task = _FilteringDao.Find<TaskModel>(taskPredicate);
+			if (task == null)
+				throw new NoSuchEntityException();
+
+			SecurityService.DemandUpdate(task, project, CurrentUser.Id, Session);
+
+			var entry = task.TrackTime(CurrentUser, time, comment);
+			SecurityService.DemandUpdate(entry, project, CurrentUser.Id, Session);
+			_CrudDao.Store(entry);
+
+			return TaskViewAdapter.ToTimelog(entry);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public TimelogDTO UpdateTime(
+			[NotEmpty] string project,
+			[NotEmpty] Guid timeId,
+			[InRange(0, null, false)] decimal time,
+			string comment)
+		{
+			var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
+			SecurityService.DemandUpdate(entry.Task, project, CurrentUser.Id, Session);
+			SecurityService.DemandUpdate(entry, project, CurrentUser.Id, Session);
+
+			entry.Time = time;
+			entry.Comment = comment;
+			_CrudDao.Store(entry);
+
+			return TaskViewAdapter.ToTimelog(entry);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+	    public void DeleteTime([NotEmpty] string project, [NotEmpty] Guid timeId)
+	    {
+		    var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
+
+			SecurityService.DemandUpdate(entry.Task, project, CurrentUser.Id, Session);
+			SecurityService.DemandDelete(entry, project, CurrentUser.Id, Session);
+
+		    entry.Task.Timelog.Remove(entry);
+			_CrudDao.Delete(entry);
+	    }
+
+		#endregion
 	}
 }

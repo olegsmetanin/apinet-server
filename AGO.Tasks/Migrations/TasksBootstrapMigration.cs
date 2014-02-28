@@ -63,6 +63,12 @@ namespace AGO.Tasks.Migrations
 		        .WithValueColumn<TaskFileModel>(m => m.Path)
 		        .WithValueColumn<TaskFileModel>(m => m.Uploaded)
 		        .WithRefColumn<TaskFileModel>(m => m.Owner);
+
+	        Create.SecureModelTable<TaskTimelogEntryModel>()
+		        .WithRefColumn<TaskTimelogEntryModel>(m => m.Task)
+		        .WithRefColumn<TaskTimelogEntryModel>(m => m.Member)
+		        .WithValueColumn<TaskTimelogEntryModel>(m => m.Time)
+		        .WithValueColumn<TaskTimelogEntryModel>(m => m.Comment);
         }
 
         public override void Down()

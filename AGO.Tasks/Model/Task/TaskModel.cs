@@ -144,6 +144,18 @@ namespace AGO.Tasks.Model.Task
 		[InRange(0, null, false)]
 		public virtual decimal? EstimatedTime { get; set; }
 
+		/// <summary>
+		/// Затраченное время на выполнение задачи
+		/// </summary>
+		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+	    public virtual ISet<TaskTimelogEntryModel> Timelog
+	    {
+			get { return timelogEntries; }
+			set { timelogEntries = value; }
+	    }
+
+	    private ISet<TaskTimelogEntryModel> timelogEntries = new HashSet<TaskTimelogEntryModel>();
+
 		#endregion
 
 		#endregion
@@ -153,6 +165,11 @@ namespace AGO.Tasks.Model.Task
 			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
 		}
 
+	    public virtual bool IsExecutor(ProjectMemberModel member)
+	    {
+		    return member != null && Executors.Any(e => member.Equals(e.Executor));
+	    }
+
 		public virtual bool IsAgreemer(ProjectMemberModel member)
 		{
 			return member != null && Agreements.Any(a => member.Equals(a.Agreemer));
@@ -160,8 +177,29 @@ namespace AGO.Tasks.Model.Task
 
 	    public virtual decimal? CalculateSpentTime()
 	    {
-			//TODO implement
-		    return null;
+		    return Timelog.Any() ? Timelog.Sum(e => e.Time) : (decimal?) null;
+	    }
+
+	    public virtual TaskTimelogEntryModel TrackTime(UserModel user, decimal time, string comment = null)
+	    {
+			if (user == null)
+				throw new ArgumentNullException("user");
+			if (time <= decimal.Zero)
+				throw new ArgumentException("Time can not be less than zero", "time");
+
+		    var executor = Executors.FirstOrDefault(e => e.Executor.UserId == user.Id);
+			if (executor == null)
+				throw new InvalidOperationException("Provided user is not executor in this task");
+
+		    var entry = new TaskTimelogEntryModel
+		    {
+			    Task = this,
+			    Member = executor.Executor,
+			    Time = time,
+			    Comment = comment
+		    };
+		    Timelog.Add(entry);
+		    return entry;
 	    }
     }
 }

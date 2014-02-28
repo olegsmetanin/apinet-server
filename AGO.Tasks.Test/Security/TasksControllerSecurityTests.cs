@@ -606,5 +606,108 @@ namespace AGO.Tasks.Test.Security
 			Assert.That(() => action(projExecutor), granted);
 			Assert.That(() => action(notMember), denied);
 		}
+
+		[Test]
+		public void OnlyExecutorsCanTrackTime()
+		{
+			var num = 0;
+			Func<UserModel, UserModel, TimelogDTO> action = (u, e) =>
+			{
+				num++;
+				var task = M.Task(num, executor: e);
+				Login(u.Login);
+				return controller.TrackTime(TestProject, task.Id, 2, null);
+			};
+
+			ReusableConstraint granted = Is.Not.Null;
+			ReusableConstraint restricted = Throws.Exception.TypeOf<InvalidOperationException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+			
+			Assert.That(() => action(admin, projExecutor), denied);
+
+			Assert.That(action(projAdmin, projAdmin), granted);
+			Assert.That(() => action(projAdmin, projManager), restricted);
+			Assert.That(() => action(projAdmin, projExecutor), restricted);
+
+			Assert.That(action(projManager, projManager), granted);
+			Assert.That(() => action(projManager, projAdmin), restricted);
+			Assert.That(() => action(projManager, projExecutor), restricted);
+
+			Assert.That(action(projExecutor, projExecutor), granted);
+			Assert.That(() => action(projExecutor, projAdmin), restricted);
+			Assert.That(() => action(projExecutor, projManager), restricted);
+
+			Assert.That(() => action(notMember, projExecutor), denied);
+		}
+
+		[Test]
+		public void OnlyMyselfOrProjAdminCanChangeTime()
+		{
+			var num = 0;
+			Func<UserModel, UserModel, TimelogDTO> action = (u, e) =>
+			{
+				num++;
+				var task = M.Task(num, executor: e);
+				var time = M.Time(task, e);
+				Login(u.Login);
+				return controller.UpdateTime(TestProject, time.Id, 2, null);
+			};
+
+			ReusableConstraint granted = Is.Not.Null;
+			ReusableConstraint restricted = Throws.Exception.TypeOf<ChangeDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin, projExecutor), denied);
+
+			Assert.That(action(projAdmin, projAdmin), granted);
+			Assert.That(action(projAdmin, projManager), granted);
+			Assert.That(action(projAdmin, projExecutor), granted);
+
+			Assert.That(action(projManager, projManager), granted);
+			Assert.That(() => action(projManager, projAdmin), restricted);
+			Assert.That(() => action(projManager, projExecutor), restricted);
+
+			Assert.That(action(projExecutor, projExecutor), granted);
+			Assert.That(() => action(projExecutor, projAdmin), restricted);
+			Assert.That(() => action(projExecutor, projManager), restricted);
+
+			Assert.That(() => action(notMember, projExecutor), denied);
+		}
+
+		[Test]
+		public void OnlyMyselfOrProjAdminCanDeleteTime()
+		{
+			var num = 0;
+			Action<UserModel, UserModel> action = (u, e) =>
+			{
+				num++;
+				var task = M.Task(num, executor: e);
+				var time = M.Time(task, e);
+				Session.Clear();
+				Login(u.Login);
+				controller.DeleteTime(TestProject, time.Id);
+				Session.Flush();
+			};
+
+			ReusableConstraint granted = Throws.Nothing;
+			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+
+			Assert.That(() => action(admin, projExecutor), denied);
+
+			Assert.That(() => action(projAdmin, projAdmin), granted);
+			Assert.That(() => action(projAdmin, projManager), granted);
+			Assert.That(() => action(projAdmin, projExecutor), granted);
+
+			Assert.That(() => action(projManager, projManager), granted);
+			Assert.That(() => action(projManager, projAdmin), restricted);
+			Assert.That(() => action(projManager, projExecutor), restricted);
+
+			Assert.That(() => action(projExecutor, projExecutor), granted);
+			Assert.That(() => action(projExecutor, projAdmin), restricted);
+			Assert.That(() => action(projExecutor, projManager), restricted);
+
+			Assert.That(() => action(notMember, projExecutor), denied);
+		}
 	}
 }

@@ -180,5 +180,16 @@ namespace AGO.Tasks.Test
 				return file;
 			});
 		}
+
+		public TaskTimelogEntryModel Time(TaskModel task, UserModel executor, decimal time = 1m, string comment = null)
+		{
+			return Track(() =>
+			{
+				var entry = task.TrackTime(executor, time, comment);
+				Session().Save(entry);
+				Session().Flush();
+				return entry;
+			});
+		}
 	}
 }

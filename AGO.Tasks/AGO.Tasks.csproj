@@ -108,6 +108,7 @@
     <Compile Include="Model\Task\TaskPriority.cs" />
     <Compile Include="Model\Task\TaskStatus.cs" />
     <Compile Include="Model\Task\TaskStatusHistoryModel.cs" />
+    <Compile Include="Model\Task\TaskTimelogEntryModel.cs" />
     <Compile Include="Model\Task\TaskToTagModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="SecurityProviders\TaskProjectTagLinkSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskTagSecurityProvider.cs" />
+    <Compile Include="SecurityProviders\TaskTimelogSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskToTagSecurityProvider.cs" />
     <Compile Include="SecurityProviders\TaskTypeSecurityProvider.cs" />
     <Compile Include="TaskProjectRoles.cs" />

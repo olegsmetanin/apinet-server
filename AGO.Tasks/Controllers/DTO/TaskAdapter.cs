@@ -230,6 +230,17 @@ namespace AGO.Tasks.Controllers.DTO
 			};
 		}
 
+		public static TimelogDTO ToTimelog(TaskTimelogEntryModel entry)
+		{
+			return new TimelogDTO
+			{
+				Id = entry.Id,
+				Member = entry.Member.FIO,
+				Time = entry.Time,
+				Comment = entry.Comment
+			};
+		}
+
 		public override TaskViewDTO Fill(TaskModel model)
 		{
 			var dto = base.Fill(model);
@@ -245,6 +256,7 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.CreationTime = model.CreationTime;
 			dto.EstimatedTime = model.EstimatedTime;
 			dto.SpentTime = model.CalculateSpentTime();
+			dto.Timelog = model.Timelog.Select(ToTimelog).ToArray();
 
 			return dto;
 		}
