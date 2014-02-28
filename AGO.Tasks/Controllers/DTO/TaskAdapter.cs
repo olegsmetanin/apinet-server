@@ -135,6 +135,8 @@ namespace AGO.Tasks.Controllers.DTO
 			       	{
 			       		Priority = (lc.MessageForType(typeof(TaskPriority), task.Priority) ?? task.Priority.ToString()),
 			       		Content = task.Content,
+						EstimatedTime = task.EstimatedTime,
+						SpentTime = task.CalculateSpentTime(),
 			       		Note = task.Note,
 			       		Agreements = task.Agreements.Select(ToAgreement).ToArray(),
 			       		Files = task.Files.OrderBy(f => f.CreationTime).Take(5).Select(ToFile).ToArray()
@@ -237,7 +239,9 @@ namespace AGO.Tasks.Controllers.DTO
 				Id = entry.Id,
 				Member = entry.Member.FIO,
 				Time = entry.Time,
-				Comment = entry.Comment
+				Comment = entry.Comment,
+				Editor = entry.LastChanger != null ? entry.LastChanger.FIO : null,
+				CreationTime = entry.CreationTime
 			};
 		}
 

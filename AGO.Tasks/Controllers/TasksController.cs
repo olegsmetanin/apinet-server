@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -286,6 +287,14 @@ namespace AGO.Tasks.Controllers
 									break;
 								case "EstimatedTime":
 									var time = data.Value.ConvertSafe<decimal?>();
+									if (data.Value != null && time == null)
+										time = data.Value.ConvertSafe<decimal?>(CultureInfo.InvariantCulture);
+									if (data.Value != null && time == null)
+									{
+										//TODO localization
+										vr.AddFieldErrors("EstimatedTime", "Incorrect float number value");
+										break;
+									}
 									task.EstimatedTime = time;
 									break;
 								default:
@@ -781,7 +790,7 @@ namespace AGO.Tasks.Controllers
 		public TimelogDTO UpdateTime(
 			[NotEmpty] string project,
 			[NotEmpty] Guid timeId,
-			[InRange(0, null, false)] decimal time,
+			[NotEmpty, InRange(0, null, false)] decimal time,
 			string comment)
 		{
 			var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
@@ -790,6 +799,8 @@ namespace AGO.Tasks.Controllers
 
 			entry.Time = time;
 			entry.Comment = comment;
+			entry.LastChanger = CurrentUser;
+			entry.LastChangeTime = DateTime.UtcNow;
 			_CrudDao.Store(entry);
 
 			return TaskViewAdapter.ToTimelog(entry);

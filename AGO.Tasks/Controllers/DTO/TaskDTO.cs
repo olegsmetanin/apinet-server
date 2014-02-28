@@ -32,6 +32,10 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public string Content { get; set; }
 
+		public decimal? EstimatedTime { get; set; }
+
+		public decimal? SpentTime { get; set; }
+
 		public string Note { get; set; }
 
 		public IEnumerable<AgreementView> Agreements { get; set; }
@@ -102,14 +106,16 @@ namespace AGO.Tasks.Controllers.DTO
 		public string Comment;
 	}
 
-	public class TimelogDTO
+	public class TimelogDTO: ModelDTO
 	{
-		public Guid Id { get; set; }
-
 		public string Member { get; set; }
 
 		public decimal Time { get; set; }
 
 		public string Comment { get; set; }
+
+		public string Editor { get; set; }
+
+		public DateTime? CreationTime { get; set; }
 	}
 }

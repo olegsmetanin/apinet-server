@@ -193,6 +193,8 @@ namespace AGO.Tasks.Model.Task
 
 		    var entry = new TaskTimelogEntryModel
 		    {
+				Creator = user,
+				CreationTime = DateTime.UtcNow,
 			    Task = this,
 			    Member = executor.Executor,
 			    Time = time,
