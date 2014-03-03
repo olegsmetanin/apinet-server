@@ -23,6 +23,10 @@ namespace AGO.Tasks
 	{
 	}
 
+	public class CurrentUserIsNotTaskExecutorException : TasksException
+	{
+	}
+
 	public class TaskCreationNotSupportedException: TasksException
 	{
 	}

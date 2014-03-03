@@ -280,7 +280,7 @@ namespace AGO.Tasks.Controllers
 			    			}
 			    			break;
 			    		case "EstimatedTime":
-			    			var time = data.Value.ConvertSafe<decimal?>();
+			    			var time = data.Value.ConvertSafe<decimal?>(CultureInfo.CurrentUICulture);
 			    			if (data.Value != null && time == null)
 			    				time = data.Value.ConvertSafe<decimal?>(CultureInfo.InvariantCulture);
 			    			if (data.Value != null && time == null)
@@ -758,20 +758,15 @@ namespace AGO.Tasks.Controllers
 	    public TimelogDTO TrackTime(
 		    [NotEmpty] string project,
 		    [NotEmpty] Guid taskId,
-		    [InRange(0, null, false)] decimal time,
+		    [NotEmpty, InRange(0, null, false)] decimal time,
 		    string comment)
 		{
-			var fb = _FilteringService.Filter<TaskModel>();
-			var taskPredicate = SecurityService.ApplyReadConstraint<TaskModel>(project, CurrentUser.Id, Session,
-				fb.Where(m => m.ProjectCode == project && m.Id == taskId));
-			var task = _FilteringDao.Find<TaskModel>(taskPredicate);
-			if (task == null)
-				throw new NoSuchEntityException();
+			var task = SecureFind<TaskModel>(project, taskId);
 
-			SecurityService.DemandUpdate(task, project, CurrentUser.Id, Session);
+			DemandUpdate(task, project);
 
 			var entry = task.TrackTime(CurrentUser, time, comment);
-			SecurityService.DemandUpdate(entry, project, CurrentUser.Id, Session);
+			DemandUpdate(entry, project);
 			_CrudDao.Store(entry);
 
 			return TaskViewAdapter.ToTimelog(entry);
@@ -785,8 +780,8 @@ namespace AGO.Tasks.Controllers
 			string comment)
 		{
 			var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
-			SecurityService.DemandUpdate(entry.Task, project, CurrentUser.Id, Session);
-			SecurityService.DemandUpdate(entry, project, CurrentUser.Id, Session);
+			DemandUpdate(entry.Task, project);
+			DemandUpdate(entry, project);
 
 			entry.Time = time;
 			entry.Comment = comment;
@@ -802,8 +797,8 @@ namespace AGO.Tasks.Controllers
 	    {
 		    var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
 
-			SecurityService.DemandUpdate(entry.Task, project, CurrentUser.Id, Session);
-			SecurityService.DemandDelete(entry, project, CurrentUser.Id, Session);
+			DemandUpdate(entry.Task, project);
+			DemandDelete(entry, project);
 
 		    entry.Task.Timelog.Remove(entry);
 			_CrudDao.Delete(entry);

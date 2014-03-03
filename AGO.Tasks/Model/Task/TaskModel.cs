@@ -189,7 +189,7 @@ namespace AGO.Tasks.Model.Task
 
 		    var executor = Executors.FirstOrDefault(e => e.Executor.UserId == user.Id);
 			if (executor == null)
-				throw new InvalidOperationException("Provided user is not executor in this task");
+				throw new CurrentUserIsNotTaskExecutorException();
 
 		    var entry = new TaskTimelogEntryModel
 		    {

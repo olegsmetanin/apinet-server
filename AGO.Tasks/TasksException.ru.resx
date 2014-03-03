@@ -135,6 +135,9 @@
   <data name="CurrentUserIsNotAgreemerInTaskException" xml:space="preserve">
     <value>Текущий пользователь не является согласующим задачи</value>
   </data>
+  <data name="CurrentUserIsNotTaskExecutorException" xml:space="preserve">
+    <value>Заданный пользователь не является исполнителем задачи</value>
+  </data>
   <data name="DueDateBeforeTodayException" xml:space="preserve">
     <value>Срок выполнения не может быть раньше текущего дня</value>
   </data>

@@ -278,7 +278,7 @@ namespace AGO.Core
 
 			try
 			{
-				return Convert.ChangeType(obj, resultType, formatProvider);
+				return Convert.ChangeType(obj, resultType, formatProvider ?? CultureInfo.InvariantCulture);
 			}
 			catch (InvalidCastException)
 			{
