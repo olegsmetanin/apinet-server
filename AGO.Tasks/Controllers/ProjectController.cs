@@ -60,50 +60,50 @@ namespace AGO.Tasks.Controllers
 				throw new NoSuchProjectException();
 
 			var user = _AuthController.CurrentUser();
-			return Edit<ProjectModel, ProjectDTO>(data.Id, project,
-				(p, vr) =>
+			return Edit<ProjectModel, ProjectDTO>(data.Id, project, (p, vr) =>
+			{
+				if (data.Prop.IsNullOrWhiteSpace())
 				{
-					if (data.Prop.IsNullOrWhiteSpace())
-					{
-						vr.AddErrors("Property name required");
-						return;
-					}
+					throw new RequiredValueException();
+				}
 
-					try
+				try
+				{
+					switch (data.Prop)
 					{
-						switch (data.Prop)
-						{
-							case "Name":
-								p.Name = data.Value.ConvertSafe<string>().TrimSafe();
-								break;
-							case "Description":
-								p.Description = data.Value.ConvertSafe<string>().TrimSafe();
-								break;
-							case "VisibleForAll":
-								p.VisibleForAll = data.Value.ConvertSafe<bool>();
-								break;
-							case "Status":
-								//TODO business logic, security and other checks
-								var newStatus = data.Value.ConvertSafe<ProjectStatus>();
-								p.ChangeStatus(newStatus, _AuthController.CurrentUser());//create entity saved via cascade
-								break;
-							default:
-								vr.AddErrors(string.Format("Unsupported prop for update: '{0}'", data.Prop));
-								break;
-						}
+						case "Name":
+							p.Name = data.Value.ConvertSafe<string>().TrimSafe();
+							break;
+						case "Description":
+							p.Description = data.Value.ConvertSafe<string>().TrimSafe();
+							break;
+						case "VisibleForAll":
+							p.VisibleForAll = data.Value.ConvertSafe<bool>();
+							break;
+						case "Status":
+							//TODO business logic, security and other checks
+							var newStatus = data.Value.ConvertSafe<ProjectStatus>();
+							p.ChangeStatus(newStatus, _AuthController.CurrentUser());//create entity saved via cascade
+							break;
+						default:
+							throw new UnsupportedPropertyForUpdateException(data.Prop);
 					}
-					catch (InvalidCastException cex)
-					{
-						vr.AddFieldErrors(data.Prop, cex.GetBaseException().Message);
-					}
-					catch (OverflowException oex)
-					{
-						vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
-					}
-
-				},
-				p => new ProjectAdapter(_LocalizationService, user).Fill(p),
-				() => { throw new ProjectCreationNotSupportedException(); });
+				}
+				catch (InvalidCastException cex)
+				{
+					vr.AddFieldErrors(data.Prop, cex.GetBaseException().Message);
+				}
+				catch (OverflowException oex)
+				{
+					vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
+				}
+				catch (TasksException ex)
+				{
+					vr.AddFieldErrors(data.Prop, ex.GetBaseException().Message);
+				}
+			},
+			p => new ProjectAdapter(_LocalizationService, user).Fill(p),
+			() => { throw new ProjectCreationNotSupportedException(); });
 		}
 
 		[JsonEndpoint, RequireAuthorization]

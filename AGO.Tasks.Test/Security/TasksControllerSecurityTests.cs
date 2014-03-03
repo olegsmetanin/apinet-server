@@ -319,7 +319,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var task = M.Task(1, executor: projExecutor);
 				Login(u.Login);
-				return controller.DeleteTask(task.Id);
+				return controller.DeleteTask(TestProject, task.Id);
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();

@@ -183,6 +183,9 @@
   <data name="TaskModel.DueDate" xml:space="preserve">
     <value>Срок исполнения</value>
   </data>
+  <data name="TaskModel.EstimatedTime" xml:space="preserve">
+    <value>Планируемое время</value>
+  </data>
   <data name="TaskModel.Executors" xml:space="preserve">
     <value>Исполнители</value>
   </data>

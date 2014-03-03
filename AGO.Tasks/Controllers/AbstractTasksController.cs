@@ -172,5 +172,32 @@ namespace AGO.Tasks.Controllers
 
 			return result;
 		}
+
+		protected IModelFilterNode ApplyReadConstraint<TModel>(string project, params IModelFilterNode[] filter)
+		{
+			return SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, filter);
+		}
+
+		protected void DemandUpdate(IdentifiedModel model, string project)
+		{
+			SecurityService.DemandUpdate(model, project, CurrentUser.Id, Session);
+		}
+
+		protected void DemandDelete(IdentifiedModel model, string project)
+		{
+			SecurityService.DemandDelete(model, project, CurrentUser.Id, Session);
+		}
+
+		protected TModel SecureFind<TModel>(string project, Guid id) where TModel : class, IProjectBoundModel, IIdentifiedModel<Guid>
+		{
+			var fb = _FilteringService.Filter<TModel>();
+			var predicate = ApplyReadConstraint<TModel>(project, fb.Where(m => 
+				m.ProjectCode == project && m.Id == id));
+			var model = _FilteringDao.Find<TModel>(predicate);
+			if (model == null)
+				throw new NoSuchEntityException();
+
+			return model;
+		}
 	}
 }

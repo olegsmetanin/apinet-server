@@ -183,6 +183,9 @@
   <data name="TaskModel.DueDate" xml:space="preserve">
     <value>Due date</value>
   </data>
+  <data name="TaskModel.EstimatedTime" xml:space="preserve">
+    <value>Estimated time</value>
+  </data>
   <data name="TaskModel.Executors" xml:space="preserve">
     <value>Executors</value>
   </data>

@@ -231,7 +231,7 @@ namespace AGO.Tasks.Test
 		{
 			var t = M.Task(1);
 
-			var res = controller.DeleteTask(t.Id);
+			var res = controller.DeleteTask(TestProject, t.Id);
 			_SessionProvider.FlushCurrentSession(!res);
 
 			Assert.IsTrue(res);

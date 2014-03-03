@@ -135,6 +135,12 @@
   <data name="CurrentUserIsNotAgreemerInTaskException" xml:space="preserve">
     <value>Текущий пользователь не является согласующим задачи</value>
   </data>
+  <data name="DueDateBeforeTodayException" xml:space="preserve">
+    <value>Срок выполнения не может быть раньше текущего дня</value>
+  </data>
+  <data name="IncorrectEstimatedTimeValueException" xml:space="preserve">
+    <value>Некорректное значение планируемого времени выполнения ({0})</value>
+  </data>
   <data name="ProjectCreationNotSupportedException" xml:space="preserve">
     <value>Создание проекта в этом методе не поддерживается</value>
   </data>
@@ -146,6 +152,9 @@
   </data>
   <data name="TaskCreationNotSupportedException" xml:space="preserve">
     <value>Создание задачи в этом методе не поддерживается</value>
+  </data>
+  <data name="UnsupportedPropertyForUpdateException" xml:space="preserve">
+    <value>Изменение свойства '{0}' не поддерживается</value>
   </data>
   <data name="UserAlreadyProjectMemberException" xml:space="preserve">
     <value>Заданный пользователь уже является участником этого проекта</value>

@@ -59,4 +59,24 @@ namespace AGO.Tasks
 	public class TagCreationNotSupportedException: TasksException
 	{
 	}
+
+	public class UnsupportedPropertyForUpdateException : TasksException
+	{
+		public UnsupportedPropertyForUpdateException(string prop)
+		{
+			_MessageArguments.Add(prop);
+		}
+	}
+
+	public class DueDateBeforeTodayException : TasksException
+	{
+	}
+
+	public class IncorrectEstimatedTimeValueException : TasksException
+	{
+		public IncorrectEstimatedTimeValueException(object value)
+		{
+			_MessageArguments.Add(value);
+		}
+	}
 }

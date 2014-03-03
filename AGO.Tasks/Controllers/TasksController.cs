@@ -164,56 +164,54 @@ namespace AGO.Tasks.Controllers
 			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
 
-			return Edit<TaskModel, string>(default(Guid), project,
-				(task, vr) =>
-					{
-						if (model.TaskType == default(Guid))
-							vr.AddFieldErrors("TaskType", "Не задан тип задачи");
-						if (model.Executors == null || model.Executors.Length <= 0)
-							vr.AddFieldErrors("Executors", "Не заданы исполнители");
-						if (!vr.Success)
-							return;
+			return Edit<TaskModel, string>(default(Guid), project, (task, vr) =>
+				{
+					if (model.TaskType == default(Guid))
+						vr.AddFieldErrors("TaskType", _LocalizationService.MessageForException(new RequiredValueException()));
+					if (model.Executors == null || model.Executors.Length <= 0)
+						vr.AddFieldErrors("Executors", _LocalizationService.MessageForException(new RequiredValueException()));
+					if (!vr.Success)
+						return;
 
-			            //FIXME: это надо переделать на sequence или свой аналог
-						var num = Session.QueryOver<TaskModel>()
-							.Where(m => m.ProjectCode == project)
-							.UnderlyingCriteria
-							.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
-							.UniqueResult<long?>().GetValueOrDefault(0) + 1;
+			        //FIXME: это надо переделать на sequence или свой аналог
+					var num = Session.QueryOver<TaskModel>()
+						.Where(m => m.ProjectCode == project)
+						.UnderlyingCriteria
+						.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
+						.UniqueResult<long?>().GetValueOrDefault(0) + 1;
 
-			            task.InternalSeqNumber = num;
-			            task.SeqNumber = "t0-" + num;
-			            task.TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskType);
-			            task.DueDate = model.DueDate;
-			            task.Content = model.Content;
-			            task.Priority = model.Priority;
+			        task.InternalSeqNumber = num;
+			        task.SeqNumber = "t0-" + num;
+			        task.TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskType);
+			        task.DueDate = model.DueDate;
+			        task.Content = model.Content;
+			        task.Priority = model.Priority;
 
-			            task.ChangeStatus(TaskStatus.New, task.Creator);
+			        task.ChangeStatus(TaskStatus.New, task.Creator);
 
-			            foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
+			        foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
+			        {
+			            var member = _CrudDao.Get<ProjectMemberModel>(id);
+			            if (member == null)
 			            {
-			                var member = _CrudDao.Get<ProjectMemberModel>(id);
-			                if (member == null)
-			                {
-			                    vr.AddFieldErrors("Executors", "Участник проекта по заданному идентификатору не найден");
-			                    continue;
-			                }
-			                //TODO это лучше бы делать через _CrudDao.Get<>(project, id), а не так проверять
-			                if (member.ProjectCode != task.ProjectCode)
-			                {
-			                    vr.AddFieldErrors("Executors", "Не учавствует в проекте задачи");
-			                    continue;
-			                }
-
-			                var executor = new TaskExecutorModel
-			                       			{
-			                       			    Creator = task.Creator,
-			                       			    Task = task,
-			                       			    Executor = member
-			                       			};
-			                task.Executors.Add(executor);
+			                vr.AddFieldErrors("Executors", _LocalizationService.MessageForException(new NoSuchProjectMemberException()));
+			                continue;
 			            }
-					}, task => task.SeqNumber);
+			            if (member.ProjectCode != task.ProjectCode)
+			            {
+							vr.AddFieldErrors("Executors", _LocalizationService.MessageForException(new NoSuchProjectMemberException()));
+			                continue;
+			            }
+
+			            var executor = new TaskExecutorModel
+			                       		{
+			                       			Creator = task.Creator,
+			                       			Task = task,
+			                       			Executor = member
+			                       		};
+			            task.Executors.Add(executor);
+			        }
+				}, task => task.SeqNumber);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -222,114 +220,109 @@ namespace AGO.Tasks.Controllers
 			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
 
-			return Edit<TaskModel, TaskViewDTO>(data.Id, project,
-			    (task, vr) =>
+			return Edit<TaskModel, TaskViewDTO>(data.Id, project, (task, vr) =>
+			{
+				if (data.Prop.IsNullOrWhiteSpace())
+				{
+					throw new RequiredValueException();
+				}
+
+			    try
+			    {
+			    	switch (data.Prop)
 			    	{
-						if (data.Prop.IsNullOrWhiteSpace())
-						{
-							vr.AddErrors("Property name required");
-							return;
-						}
+			    		case "Content":
+			    			task.Content = (string) data.Value;
+			    			break;
+			    		case "Note":
+			    			task.Note = (string) data.Value;
+			    			break;
+			    		case "Priority":
+			    			task.Priority = (TaskPriority) Enum.Parse(typeof (TaskPriority), (string) data.Value);
+			    			break;
+			    		case "Status":
+			    			var newStatus = (TaskStatus) Enum.Parse(typeof (TaskStatus), (string) data.Value);
+			    			task.ChangeStatus(newStatus, _AuthController.CurrentUser());
+			    			break;
+			    		case "TaskType":
+			    			task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
+			    			break;
+			    		case "DueDate":
+			    			var dd = data.Value.ConvertSafe<DateTime?>();
+			    			if (dd != null && dd.Value < DateTime.Today.ToUniversalTime())
+			    			{
+			    				throw new DueDateBeforeTodayException();
+			    			}
+			    			task.DueDate = dd;
+			    			break;
+			    		case "Executors":
+			    			var ids = (data.Value.ConvertSafe<JArray>() ?? new JArray())
+			    				.Select(id => id.ConvertSafe<Guid>()).ToArray();
+			    			var toRemove = task.Executors.Where(e => !ids.Contains(e.Executor.Id)).ToArray();
+			    			var toAdd = ids.Where(id => task.Executors.All(e => !e.Executor.Id.Equals(id)))
+			    				.Select(id => _CrudDao.Get<ProjectMemberModel>(id, true));
 
-						try
-						{
-							switch (data.Prop)
-							{
-								case "Content":
-									task.Content = (string)data.Value;
-									break;
-								case "Note":
-									task.Note = (string)data.Value;
-									break;
-								case "Priority":
-									task.Priority = (TaskPriority)Enum.Parse(typeof(TaskPriority), (string)data.Value);
-									break;
-								case "Status":
-									var newStatus = (TaskStatus)Enum.Parse(typeof(TaskStatus), (string)data.Value);
-									task.ChangeStatus(newStatus, _AuthController.CurrentUser());
-									break;
-								case "TaskType":
-									task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
-									break;
-								case "DueDate":
-									var dd = data.Value.ConvertSafe<DateTime?>();
-									if (dd != null && dd.Value < DateTime.Today.ToUniversalTime())
-									{
-										//TODO localization??
-										vr.AddFieldErrors("DueDate", "Due date can't be before today");
-										break;
-									}
-									task.DueDate = dd;
-									break;
-								case "Executors":
-									var ids = (data.Value.ConvertSafe<JArray>() ?? new JArray())
-										.Select(id => id.ConvertSafe<Guid>()).ToArray();
-									var toRemove = task.Executors.Where(e => !ids.Contains(e.Executor.Id)).ToArray();
-									var toAdd = ids.Where(id => task.Executors.All(e => !e.Executor.Id.Equals(id)))
-										.Select(id => _CrudDao.Get<ProjectMemberModel>(id, true));
-
-									foreach (var removed in toRemove)
-									{
-										task.Executors.Remove(removed);
-										_CrudDao.Delete(removed);
-									}
-									foreach (var added in toAdd)
-									{
-										var executor = new TaskExecutorModel
-										         	{
-										         		Creator = _AuthController.CurrentUser(),
-										         		Task = task,
-										         		Executor = added
-										         	};
-										task.Executors.Add(executor);
-										_CrudDao.Store(executor);
-									}
-									break;
-								case "EstimatedTime":
-									var time = data.Value.ConvertSafe<decimal?>();
-									if (data.Value != null && time == null)
-										time = data.Value.ConvertSafe<decimal?>(CultureInfo.InvariantCulture);
-									if (data.Value != null && time == null)
-									{
-										//TODO localization
-										vr.AddFieldErrors("EstimatedTime", "Incorrect float number value");
-										break;
-									}
-									task.EstimatedTime = time;
-									break;
-								default:
-									vr.AddErrors(string.Format("Unsupported prop for update: '{0}'", data.Prop));
-									break;
-							}
-						}
-						catch (InvalidCastException cex)
-						{
-							vr.AddFieldErrors(data.Prop, cex.GetBaseException().Message);
-						}
-						catch (OverflowException oex)
-						{
-							vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
-						}
-			        }, 
-					task => new TaskViewAdapter(_LocalizationService).Fill(task),
-					() => { throw new TaskCreationNotSupportedException(); });
+			    			foreach (var removed in toRemove)
+			    			{
+			    				task.Executors.Remove(removed);
+			    				_CrudDao.Delete(removed);
+			    			}
+			    			foreach (var added in toAdd)
+			    			{
+			    				var executor = new TaskExecutorModel
+			    				{
+			    					Creator = _AuthController.CurrentUser(),
+			    					Task = task,
+			    					Executor = added
+			    				};
+			    				task.Executors.Add(executor);
+			    				_CrudDao.Store(executor);
+			    			}
+			    			break;
+			    		case "EstimatedTime":
+			    			var time = data.Value.ConvertSafe<decimal?>();
+			    			if (data.Value != null && time == null)
+			    				time = data.Value.ConvertSafe<decimal?>(CultureInfo.InvariantCulture);
+			    			if (data.Value != null && time == null)
+			    			{
+								throw new IncorrectEstimatedTimeValueException(data.Value);
+			    			}
+			    			task.EstimatedTime = time;
+			    			break;
+			    		default:
+			    			throw new UnsupportedPropertyForUpdateException(data.Prop);
+			    	}
+			    }
+			    catch (InvalidCastException cex)
+			    {
+			    	vr.AddFieldErrors(data.Prop, cex.GetBaseException().Message);
+			    }
+			    catch (OverflowException oex)
+			    {
+			    	vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
+			    }
+			    catch (TasksException ex)
+			    {
+					vr.AddFieldErrors(data.Prop, ex.GetBaseException().Message);
+			    }
+			}, 
+			task => new TaskViewAdapter(_LocalizationService).Fill(task),
+			() => { throw new TaskCreationNotSupportedException(); });
 		}
 
-		private void InternalDeleteTask(Guid id)
+		private void InternalDeleteTask(string project, Guid id)
 		{
-			//TODO use project for security
-			//may be get(project, id) in filteringdao where T: IProjectBoundModel
-			var task = _CrudDao.Get<TaskModel>(id, true);
+			var task = SecureFind<TaskModel>(project, id);
 
-			SecurityService.DemandDelete(task, task.ProjectCode, CurrentUser.Id, Session);
+			DemandDelete(task, task.ProjectCode);
 
 			_CrudDao.Delete(task);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public bool DeleteTask([NotEmpty] Guid id)
+		public bool DeleteTask([NotEmpty] string project, [NotEmpty] Guid id)
 		{
-			InternalDeleteTask(id);
+			InternalDeleteTask(project, id);
 
 			return true;
 		}
@@ -341,9 +334,8 @@ namespace AGO.Tasks.Controllers
 			var trn = s.BeginTransaction();
 			try
 			{
-				//TODO use project for security
 				foreach (var id in ids)
-					InternalDeleteTask(id);
+					InternalDeleteTask(project, id);
 
 				trn.Commit();
 			}
@@ -579,7 +571,6 @@ namespace AGO.Tasks.Controllers
 		    [NotNull] HttpRequestBase request,
 		    [NotEmpty] HttpFileCollectionBase files)
 	    {
-			//TODO exceptions localization
 			var project = request.Form[PROJECT_FORM_KEY];
 			if (project.IsNullOrWhiteSpace())
 				throw new ArgumentException("Project not specified for request");
