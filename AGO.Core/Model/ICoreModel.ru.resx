@@ -264,4 +264,10 @@
   <data name="ProjectModel.VisibleForAll" xml:space="preserve">
     <value>Виден всем</value>
   </data>
+  <data name="ReportTemplateModel.LastChange" xml:space="preserve">
+    <value>Изменен</value>
+  </data>
+  <data name="ReportTemplateModel.Name" xml:space="preserve">
+    <value>Наименование</value>
+  </data>
 </root>
