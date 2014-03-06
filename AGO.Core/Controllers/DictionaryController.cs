@@ -114,22 +114,22 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ProjectTagModel> GetProjectTags(
 			[InRange(0, null)] int page,
-			[NotNull] ICollection<IModelFilterNode> filters,
+			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var filter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
-				CurrentUser.Id, Session, filters.ToArray());
+			var predicate = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
+				CurrentUser.Id, Session, filter.ToArray());
 
-			return _FilteringDao.List<ProjectTagModel>(filter, page, sorters);
+			return _FilteringDao.List<ProjectTagModel>(predicate, page, sorters);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public int GetProjectTagsCount([NotNull] ICollection<IModelFilterNode> filters)
+		public int GetProjectTagsCount([NotNull] ICollection<IModelFilterNode> filter)
 		{
-			var filter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
-				CurrentUser.Id, Session, filters.ToArray());
+			var predicate = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
+				CurrentUser.Id, Session, filter.ToArray());
 
-			return _FilteringDao.RowCount<ProjectTagModel>(filter);
+			return _FilteringDao.RowCount<ProjectTagModel>(predicate);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
