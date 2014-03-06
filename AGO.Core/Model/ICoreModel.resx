@@ -261,4 +261,7 @@
   <data name="ProjectParticipantModel.UserPriority" xml:space="preserve">
     <value>User work priority</value>
   </data>
+  <data name="ProjectModel.VisibleForAll" xml:space="preserve">
+    <value>Visible to all</value>
+  </data>
 </root>

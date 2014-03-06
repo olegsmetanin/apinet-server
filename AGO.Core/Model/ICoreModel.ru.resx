@@ -124,10 +124,10 @@
     <value>Кто создал</value>
   </data>
   <data name="SecureModel.LastChanger" xml:space="preserve">
-    <value>Кто последний раз редактировал</value>
+    <value>Кто изменил</value>
   </data>
   <data name="SecureModel.LastChangeTime" xml:space="preserve">
-    <value>Когда последний раз редактировали</value>
+    <value>Дата изменения</value>
   </data>
   <data name="CoreModel.ProjectCode" xml:space="preserve">
     <value>Код проекта</value>
@@ -260,5 +260,8 @@
   </data>
   <data name="ProjectParticipantModel.UserPriority" xml:space="preserve">
     <value>Приоритет выполнения задач пользователя</value>
+  </data>
+  <data name="ProjectModel.VisibleForAll" xml:space="preserve">
+    <value>Виден всем</value>
   </data>
 </root>
