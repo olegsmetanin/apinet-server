@@ -264,10 +264,25 @@
   <data name="ProjectModel.VisibleForAll" xml:space="preserve">
     <value>Виден всем</value>
   </data>
+  <data name="ReportTaskModel.CompletedAt" xml:space="preserve">
+    <value>Время завершения</value>
+  </data>
+  <data name="ReportTaskModel.ErrorMsg" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="ReportTaskModel.ResultName" xml:space="preserve">
+    <value>Результирующий файл</value>
+  </data>
+  <data name="ReportTaskModel.ResultUnread" xml:space="preserve">
+    <value>Результат не прочтен</value>
+  </data>
+  <data name="ReportTaskModel.StartedAt" xml:space="preserve">
+    <value>Время запуска</value>
+  </data>
+  <data name="ReportTaskModel.State" xml:space="preserve">
+    <value>Состояние</value>
+  </data>
   <data name="ReportTemplateModel.LastChange" xml:space="preserve">
     <value>Изменен</value>
-  </data>
-  <data name="ReportTemplateModel.Name" xml:space="preserve">
-    <value>Наименование</value>
   </data>
 </root>

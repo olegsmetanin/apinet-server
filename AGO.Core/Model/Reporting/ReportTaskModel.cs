@@ -23,11 +23,12 @@ namespace AGO.Core.Model.Reporting
 		[NotEmpty, NotLonger(250), JsonProperty]
 		public virtual string Name { get; set; }
 
-		[NotNull]
+		[NotNull, MetadataExclude]
 		public virtual ReportSettingModel ReportSetting { get; set; }
-		[ReadOnlyProperty]
+		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ReportSettingId { get; set; }
 
+		[MetadataExclude]
 		public virtual string Parameters { get; set; }
 		
 		[MetadataExclude]
@@ -36,10 +37,10 @@ namespace AGO.Core.Model.Reporting
 		[JsonProperty]
 		public virtual ReportTaskState State { get; set; }
 
-		[InRange(0, 100), JsonProperty]
+		[InRange(0, 100), JsonProperty, MetadataExclude]
 		public virtual byte DataGenerationProgress { get; set; }
 
-		[InRange(0, 100), JsonProperty]
+		[InRange(0, 100), JsonProperty, MetadataExclude]
 		public virtual byte ReportGenerationProgress { get; set; }
 
 		[JsonProperty]
@@ -51,7 +52,7 @@ namespace AGO.Core.Model.Reporting
 		[JsonProperty]
 		public virtual string ErrorMsg { get; set; }
 
-		[JsonProperty]
+		[JsonProperty, MetadataExclude]
 		public virtual string ErrorDetails { get; set; }
 
 		[MetadataExclude, LazyLoad]
