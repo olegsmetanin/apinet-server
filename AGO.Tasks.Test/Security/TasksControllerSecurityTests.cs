@@ -57,13 +57,37 @@ namespace AGO.Tasks.Test.Security
 			ReusableConstraint granted = Has.Length.EqualTo(2)
 				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == "t0-1")
 				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == "t0-2");
+			ReusableConstraint grantedWithRestriction = Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == "t0-2");
 			ReusableConstraint denied = Is.Empty;
 
 			Assert.That(action(admin), denied);
 			Assert.That(action(projAdmin), granted);
 			Assert.That(action(projManager), granted);
-			Assert.That(action(projExecutor), granted);
+			Assert.That(action(projExecutor), grantedWithRestriction);
 			Assert.That(action(notMember), denied);
+		}
+
+		[Test]
+		public void MembersCanLookupTasksWithGroupRestrictions()
+		{
+			M.Task(1, executor: projAdmin);
+			M.Task(2, executor: projManager);
+			M.Task(3, executor: projExecutor);
+
+			Func<UserModel, LookupEntry[]> action = u =>
+			{
+				Login(u.Login);
+				return controller.LookupTasks(TestProject, null, 0).ToArray();
+			};
+
+			ReusableConstraint allowed = Has.Length.EqualTo(3);
+			ReusableConstraint restricted = Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<LookupEntry>(e => e.Text == "t0-3");
+
+			Assert.That(action(projAdmin), allowed);
+			Assert.That(action(projManager), allowed);
+			Assert.That(action(projExecutor), restricted);
 		}
 
 		[Test]
@@ -83,12 +107,14 @@ namespace AGO.Tasks.Test.Security
 			ReusableConstraint granted = Has.Length.EqualTo(2)
 				.And.Exactly(1).Matches<TaskListItemDTO>(e => e.SeqNumber == "t0-1")
 				.And.Exactly(1).Matches<TaskListItemDTO>(e => e.SeqNumber == "t0-2");
+			ReusableConstraint grantedWithRestriction = Has.Length.EqualTo(1)
+				.And.Exactly(1).Matches<TaskListItemDTO>(e => e.SeqNumber == "t0-2");
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
 
 			Assert.That(() => action(admin), denied);
 			Assert.That(action(projAdmin), granted);
 			Assert.That(action(projManager), granted);
-			Assert.That(action(projExecutor), granted);
+			Assert.That(action(projExecutor), grantedWithRestriction);
 			Assert.That(() => action(notMember), denied);
 		}
 
@@ -106,19 +132,20 @@ namespace AGO.Tasks.Test.Security
 					TaskPredefinedFilter.All);
 			};
 			ReusableConstraint granted = Is.EqualTo(2);
+			ReusableConstraint grantedWithRestriction = Is.EqualTo(1);
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
 
 			Assert.That(() => action(admin), denied);
 			Assert.That(action(projAdmin), granted);
 			Assert.That(action(projManager), granted);
-			Assert.That(action(projExecutor), granted);
+			Assert.That(action(projExecutor), grantedWithRestriction);
 			Assert.That(() => action(notMember), denied);
 		}
 
 		[Test]
 		public void OnlyMembersCanGetTaskDetails()
 		{
-			var task = M.Task(1, executor: projManager);
+			var task = M.Task(1, executor: projExecutor);
 
 			Func<UserModel, TaskListItemDetailsDTO> action = u =>
 			{
@@ -138,7 +165,7 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyMembersCanGetTask()
 		{
-			var task = M.Task(1, executor: projManager);
+			var task = M.Task(1, executor: projExecutor);
 
 			Func<UserModel, TaskViewDTO> action = u =>
 			{
@@ -620,22 +647,23 @@ namespace AGO.Tasks.Test.Security
 			};
 
 			ReusableConstraint granted = Is.Not.Null;
-			ReusableConstraint restricted = Throws.Exception.TypeOf<InvalidOperationException>();
+			ReusableConstraint notExecutorRestriction = Throws.Exception.TypeOf<CurrentUserIsNotTaskExecutorException>();
+			ReusableConstraint noAccessRestriction = Throws.Exception.TypeOf<NoSuchEntityException>();
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
 			
 			Assert.That(() => action(admin, projExecutor), denied);
 
 			Assert.That(action(projAdmin, projAdmin), granted);
-			Assert.That(() => action(projAdmin, projManager), restricted);
-			Assert.That(() => action(projAdmin, projExecutor), restricted);
+			Assert.That(() => action(projAdmin, projManager), notExecutorRestriction);
+			Assert.That(() => action(projAdmin, projExecutor), notExecutorRestriction);
 
 			Assert.That(action(projManager, projManager), granted);
-			Assert.That(() => action(projManager, projAdmin), restricted);
-			Assert.That(() => action(projManager, projExecutor), restricted);
+			Assert.That(() => action(projManager, projAdmin), notExecutorRestriction);
+			Assert.That(() => action(projManager, projExecutor), notExecutorRestriction);
 
 			Assert.That(action(projExecutor, projExecutor), granted);
-			Assert.That(() => action(projExecutor, projAdmin), restricted);
-			Assert.That(() => action(projExecutor, projManager), restricted);
+			Assert.That(() => action(projExecutor, projAdmin), noAccessRestriction);
+			Assert.That(() => action(projExecutor, projManager), noAccessRestriction);
 
 			Assert.That(() => action(notMember, projExecutor), denied);
 		}
@@ -691,6 +719,7 @@ namespace AGO.Tasks.Test.Security
 
 			ReusableConstraint granted = Throws.Nothing;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
+			ReusableConstraint noAccess = Throws.Exception.TypeOf<ChangeDeniedException>();
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
 
 			Assert.That(() => action(admin, projExecutor), denied);
@@ -704,8 +733,8 @@ namespace AGO.Tasks.Test.Security
 			Assert.That(() => action(projManager, projExecutor), restricted);
 
 			Assert.That(() => action(projExecutor, projExecutor), granted);
-			Assert.That(() => action(projExecutor, projAdmin), restricted);
-			Assert.That(() => action(projExecutor, projManager), restricted);
+			Assert.That(() => action(projExecutor, projAdmin), noAccess);
+			Assert.That(() => action(projExecutor, projManager), noAccess);
 
 			Assert.That(() => action(notMember, projExecutor), denied);
 		}

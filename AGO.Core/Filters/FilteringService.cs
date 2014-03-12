@@ -594,7 +594,7 @@ namespace AGO.Core.Filters
 				{
 					var newModelType = modelType;
 					var newAlias = alias;
-					var newPath = alias;
+					var newPath = !alias.IsNullOrWhiteSpace() ? alias.Replace("_", ".") : alias;
 
 					if (propertyInfo != null)
 					{
