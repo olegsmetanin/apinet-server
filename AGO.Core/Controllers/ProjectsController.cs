@@ -105,6 +105,8 @@ namespace AGO.Core.Controllers
 				var newProject = new ProjectModel
 				{
 					Creator = currentUser,
+					LastChanger = currentUser,
+					LastChangeTime = DateTime.UtcNow,
 					ProjectCode = model.ProjectCode.TrimSafe(),
 					Name = model.Name.TrimSafe(),
 					Description = model.Description.TrimSafe(),
@@ -122,7 +124,9 @@ namespace AGO.Core.Controllers
 				//need to call before first Store called, because after this IsNew return false
 				SecurityService.DemandUpdate(newProject, newProject.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
 
+				
 				_CrudDao.Store(newProject);
+				_ModelProcessingService.AfterModelCreated(newProject);
 
 				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, currentUser);
 				_CrudDao.Store(statusHistoryRow);

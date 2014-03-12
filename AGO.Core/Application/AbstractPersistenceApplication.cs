@@ -83,14 +83,17 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^ModelProcessing_(.*)", KeyValueProvider)).ApplyTo(service));
 
 			IocContainer.RegisterAll<IModelValidator>(AllModelValidators);
-		}
+			IocContainer.RegisterAll<IModelPostProcessor>(AllModelPostProcessors);
+		}		
 
 		protected virtual void DoRegisterNotification()
 		{
-			IocContainer.RegisterSingle<INotificationService, NotificationService>();
+			IocContainer.RegisterSingle(typeof(INotificationService), NotificationServiceType);
 			IocContainer.RegisterInitializer<NotificationService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Notification_(.*)", KeyValueProvider)).ApplyTo(service));
 		}
+
+		protected virtual Type NotificationServiceType { get { return typeof (NotificationService); } }
 
 		protected virtual void DoRegisterWorkQueue()
 		{
@@ -115,6 +118,11 @@ namespace AGO.Core.Application
 		protected virtual IEnumerable<Type> AllModelValidators
 		{
 			get { return new[] { typeof(AttributeValidatingModelValidator) }; }
+		}
+
+		protected virtual IEnumerable<Type> AllModelPostProcessors
+		{
+			get { return Enumerable.Empty<Type>(); }
 		}
 
 		protected override void DoRegisterModules(IList<Modules.IModuleDescriptor> moduleDescriptors)

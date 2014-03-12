@@ -117,19 +117,19 @@ namespace AGO.Core.Controllers
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var predicate = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
+			var finalFilter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
 				CurrentUser.Id, Session, filter.ToArray());
 
-			return _FilteringDao.List<ProjectTagModel>(predicate, page, sorters);
+			return _FilteringDao.List<ProjectTagModel>(finalFilter, page, sorters);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public int GetProjectTagsCount([NotNull] ICollection<IModelFilterNode> filter)
 		{
-			var predicate = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
+			var finalFilter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
 				CurrentUser.Id, Session, filter.ToArray());
 
-			return _FilteringDao.RowCount<ProjectTagModel>(predicate);
+			return _FilteringDao.RowCount<ProjectTagModel>(finalFilter);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -278,6 +278,7 @@ namespace AGO.Core.Controllers
 			fullName.Append(tag.Name);
 
 			tag.FullName = fullName.ToString();
+
 			_CrudDao.Store(tag);
 			affected.Add(tag);
 

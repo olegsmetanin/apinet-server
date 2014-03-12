@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
@@ -13,7 +14,7 @@ namespace AGO.Core.Model.Dictionary
 	{
 		#region Persistent
 
-		[JsonProperty, NotLonger(32)]
+		[JsonProperty, NotLonger(ProjectModel.PROJECT_CODE_SIZE)]
 		public virtual string ProjectCode { get; set; }
 
 		[JsonProperty, NotLonger(128), NotEmpty]

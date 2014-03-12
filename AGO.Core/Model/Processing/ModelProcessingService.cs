@@ -21,11 +21,14 @@ namespace AGO.Core.Model.Processing
 
 		protected readonly ISet<IModelValidator> _ModelValidators;
 
+		protected readonly ISet<IModelPostProcessor> _ModelPostProcessors;
+
 		public ModelProcessingService(
 			ILocalizationService localizationService,
 			ICrudDao crudDao,
 			ISessionProvider sessionProvider,
-			IEnumerable<IModelValidator> modelValidators)
+			IEnumerable<IModelValidator> modelValidators,
+			IEnumerable<IModelPostProcessor> modelPostProcessors)
 		{
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
@@ -42,6 +45,10 @@ namespace AGO.Core.Model.Processing
 			if (modelValidators == null)
 				throw new ArgumentNullException("modelValidators");
 			_ModelValidators = new HashSet<IModelValidator>(modelValidators);
+
+			if (modelPostProcessors == null)
+				throw new ArgumentNullException("modelPostProcessors");
+			_ModelPostProcessors = new HashSet<IModelPostProcessor>(modelPostProcessors);
 		}
 
 		#endregion
@@ -90,7 +97,38 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("target");
 
 			return DoCopyModelProperties(target, source, capability);
-		} 
+		}
+
+		public void AfterModelCreated(IIdentifiedModel model)
+		{
+			if (!_Ready)
+				throw new ServiceNotInitializedException();
+
+			if (model == null)
+				throw new ArgumentNullException("model");
+
+			foreach (var postProcessor in _ModelPostProcessors.Where(v => v.Accepts(model)))
+				postProcessor.AfterModelCreated(model);
+		}
+
+		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original)
+		{
+			if (!_Ready)
+				throw new ServiceNotInitializedException();
+
+			if (model == null)
+				throw new ArgumentNullException("model");
+			if (original == null)
+				throw new ArgumentNullException("original");
+
+			foreach (var postProcessor in _ModelPostProcessors.Where(v => v.Accepts(model)))
+				postProcessor.AfterModelUpdated(model, original);
+		}
+
+		public void RegisterModelPostProcessors(IEnumerable<IModelPostProcessor> postProcessors)
+		{
+			_ModelPostProcessors.UnionWith(postProcessors ?? Enumerable.Empty<IModelPostProcessor>());
+		}
 
 		#endregion
 

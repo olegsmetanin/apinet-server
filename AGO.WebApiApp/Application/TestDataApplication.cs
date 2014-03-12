@@ -1,4 +1,6 @@
-﻿using AGO.Core.Application;
+﻿using System;
+using AGO.Core.Application;
+using AGO.Core.Notification;
 
 namespace AGO.WebApiApp.Application
 {
@@ -22,5 +24,6 @@ namespace AGO.WebApiApp.Application
 			Initialize();
 			DoPopulateDatabase();
 		}
+		protected override Type NotificationServiceType { get { return typeof(NoopNotificationService); } }
 	}
 }

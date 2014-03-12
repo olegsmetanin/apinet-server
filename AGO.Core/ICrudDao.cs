@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AGO.Core.Filters;
 using NHibernate;
 using AGO.Core.Model;
 
@@ -27,6 +28,21 @@ namespace AGO.Core
 			where TModel : class, IIdentifiedModel;
 
 		TModel Merge<TModel>(TModel model)
+			where TModel : class, IIdentifiedModel;
+
+		IList<TModel> List<TModel>(
+			ICriteria criteria,
+			FilteringOptions options = null)
+			where TModel : class, IIdentifiedModel;
+
+		IEnumerable<TModel> Future<TModel>(
+			ICriteria criteria,
+			FilteringOptions options = null)
+			where TModel : class, IIdentifiedModel;
+
+		int RowCount<TModel>(
+			ICriteria criteria,
+			Type modelType = null)
 			where TModel : class, IIdentifiedModel;
 
 		ICriteria PagedCriteria(ICriteria criteria, int page, int pageSize = 0);

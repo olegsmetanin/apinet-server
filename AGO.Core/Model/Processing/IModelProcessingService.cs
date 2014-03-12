@@ -11,5 +11,11 @@ namespace AGO.Core.Model.Processing
 		void RegisterModelValidators(IEnumerable<IModelValidator> validators);
 
 		bool CopyModelProperties(IIdentifiedModel target, IIdentifiedModel source, object capability = null);
+
+		void AfterModelCreated(IIdentifiedModel model);
+
+		void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original);
+
+		void RegisterModelPostProcessors(IEnumerable<IModelPostProcessor> postProcessors);
 	}
 }

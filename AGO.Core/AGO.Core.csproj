@@ -84,6 +84,14 @@
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
+    <Compile Include="Controllers\Activity\CollectionChangeActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\AttributeChangeActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\AbstractActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\IActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\ActivityItemView.cs" />
+    <Compile Include="Controllers\Activity\ActivityView.cs" />
+    <Compile Include="Controllers\Activity\ActivityPredefinedFilter.cs" />
+    <Compile Include="Controllers\Activity\ProjectAttributeActivityViewProcessor.cs" />
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
     <Compile Include="Controllers\Downloader.cs" />
     <Compile Include="Controllers\Extensions.cs" />
@@ -94,6 +102,7 @@
     <Compile Include="AbstractDao.cs" />
     <Compile Include="AbstractTestDataService.cs" />
     <Compile Include="Controllers\MimeAssistant.cs" />
+    <Compile Include="Controllers\AbstractActivityController.cs" />
     <Compile Include="Controllers\ProjectsController.cs" />
     <Compile Include="Controllers\Projects\ProjectViewModel.cs" />
     <Compile Include="Controllers\ReportingController.cs" />
@@ -122,6 +131,9 @@
     <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
+    <Compile Include="Model\Activity\CollectionChangeActivityRecordModel.cs" />
+    <Compile Include="Model\Activity\AttributeChangeActivityRecordModel.cs" />
+    <Compile Include="Model\Activity\ActivityRecordModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
     <Compile Include="Model\Files\IFile.cs" />
@@ -130,8 +142,13 @@
     <Compile Include="Model\IFileResource.cs" />
     <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\IStatusHistoryRecordModel.cs" />
+    <Compile Include="Model\Processing\ActivityPostProcessor.cs" />
+    <Compile Include="Model\Processing\CollectionChangeActivityPostProcessor.cs" />
+    <Compile Include="Model\Processing\ProjectAttributesActivityPostProcessor.cs" />
+    <Compile Include="Model\Processing\AttributeChangeActivityPostProcessor.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
+    <Compile Include="Model\Processing\IModelPostProcessor.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
     <Compile Include="Model\Projects\ProjectMembershipModel.cs" />
@@ -153,6 +170,7 @@
     <Compile Include="Model\StatusChangeHelper.cs" />
     <Compile Include="Modules\IWebServiceDescriptor.cs" />
     <Compile Include="Notification\INotificationService.cs" />
+    <Compile Include="Notification\NoopNotificationService.cs" />
     <Compile Include="Notification\NotificationService.cs" />
     <Compile Include="QueryOverExtensions.cs" />
     <Compile Include="Security\AbstractModuleSecurityConstraintsProvider.cs" />
@@ -161,6 +179,7 @@
     <Compile Include="Security\ISecurityService.cs" />
     <Compile Include="Security\OperationDeniedException.cs" />
     <Compile Include="Security\ProjectToModuleCache.cs" />
+    <Compile Include="Security\Providers\ActivityRecordSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagLinkSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagSecurityProvider.cs" />
@@ -342,6 +361,30 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AbstractApplicationException.ru.resx">
       <DependentUpon>AbstractApplicationException.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\CollectionChangeActivityViewProcessor.resx">
+      <DependentUpon>CollectionChangeActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\CollectionChangeActivityViewProcessor.ru.resx">
+      <DependentUpon>CollectionChangeActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\AttributeChangeActivityViewProcessor.resx">
+      <DependentUpon>AttributeChangeActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\AttributeChangeActivityViewProcessor.ru.resx">
+      <DependentUpon>AttributeChangeActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\IActivityViewProcessor.resx">
+      <DependentUpon>IActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\IActivityViewProcessor.ru.resx">
+      <DependentUpon>IActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\ProjectAttributeActivityViewProcessor.resx">
+      <DependentUpon>ProjectAttributeActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\ProjectAttributeActivityViewProcessor.ru.resx">
+      <DependentUpon>ProjectAttributeActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Execution\AbstractExecutionException.resx">
       <DependentUpon>AbstractExecutionException.cs</DependentUpon>

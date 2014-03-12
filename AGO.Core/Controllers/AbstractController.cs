@@ -10,6 +10,7 @@ using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
 using AGO.Core.Security;
+using NHibernate;
 
 namespace AGO.Core.Controllers
 {
@@ -86,6 +87,11 @@ namespace AGO.Core.Controllers
 		#endregion
 
 		#region Template methods
+
+		protected virtual ISession Session
+		{
+			get { return _SessionProvider.CurrentSession; }
+		}
 
 		protected override void DoInitialize()
 		{

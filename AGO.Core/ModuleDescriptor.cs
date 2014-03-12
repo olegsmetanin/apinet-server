@@ -4,6 +4,7 @@ using AGO.Core.Config;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Localization;
+using AGO.Core.Model.Processing;
 using AGO.Core.Modules;
 using AGO.Core.Controllers;
 using AGO.Core.Security;
@@ -40,6 +41,8 @@ namespace AGO.Core
 				{OAuthProvider.Facebook, di.GetInstance<FacebookProvider>},
 				{OAuthProvider.Twitter, di.GetInstance<TwitterProvider>}
 			});
+
+			di.RegisterSingle<ProjectAttributesActivityPostProcessor, ProjectAttributesActivityPostProcessor>();
 		}
 
 		public void Initialize(IApplication app)
@@ -48,6 +51,13 @@ namespace AGO.Core
 
 			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
 			app.LocalizationService.RegisterModuleLocalizers(typeof(ReportTaskState).Assembly);
+
+			var persistentApp = app as IPersistenceApplication;
+			if (persistentApp == null)
+				return;
+
+			persistentApp.ModelProcessingService.RegisterModelPostProcessors(
+				new[] { app.IocContainer.GetInstance<ProjectAttributesActivityPostProcessor>() });
 		}
 
 		public ModuleDescriptor()

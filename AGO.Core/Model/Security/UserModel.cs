@@ -129,5 +129,10 @@ namespace AGO.Core.Model.Security
 		{
 			get { return SystemRole == SystemRole.Administrator; }
 		}
+
+		public override string ToString()
+		{
+			return (FIO.IsNullOrWhiteSpace() ? Login : FIO).TrimSafe();
+		}
 	}
 }

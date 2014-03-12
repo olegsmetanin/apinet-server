@@ -34,11 +34,6 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		protected virtual ISession Session
-		{
-			get { return _SessionProvider.CurrentSession; }
-		}
-
 		protected virtual UserModel CurrentUser
 		{
 			get { return _AuthController.CurrentUser(); }
@@ -131,25 +126,46 @@ namespace AGO.Tasks.Controllers
 			where TModel: CoreModel<Guid>, new()
 		{
 			var result = new UpdateResult<TDTO> {Validation = new ValidationResult()};
+			
 			Func<TModel> defaultFactory = () =>
 			{
 				var m = new TModel();
 				var secureModel = m as ISecureModel;
 				if (secureModel != null)
+				{
 					secureModel.Creator = _AuthController.CurrentUser();
-			    var projectBoundModel = m as IProjectBoundModel;
+					secureModel.LastChanger = CurrentUser;
+					secureModel.LastChangeTime = DateTime.UtcNow;
+				}
+				var projectBoundModel = m as IProjectBoundModel;
 			    if (projectBoundModel != null)
 			        projectBoundModel.ProjectCode = project;
 			    return m;
 			};
 
+			Func<TModel, TModel> postFactory = model =>
+			{
+				var secureModel = model as ISecureModel;
+				if (secureModel != null)
+				{
+					secureModel.LastChanger = CurrentUser;
+					secureModel.LastChangeTime = DateTime.UtcNow;
+				}
+
+				return model;
+			};
+
 			try
 			{
 				var persistentModel = default(Guid).Equals(id)
-				                      	?  (factory ?? defaultFactory)()
+										? postFactory((factory ?? defaultFactory)())
 				                      	: _CrudDao.Get<TModel>(id);
 				if (persistentModel == null)
 					throw new NoSuchEntityException();
+
+				TModel original = null;
+				if (!persistentModel.IsNew())
+					original = (TModel) persistentModel.Clone();
 
 				update(persistentModel, result.Validation);
 				//validate model
@@ -160,6 +176,11 @@ namespace AGO.Tasks.Controllers
 				SecurityService.DemandUpdate(persistentModel, project, _AuthController.CurrentUser().Id, Session);
 				//persist
 				_CrudDao.Store(persistentModel);
+
+				if (original != null)
+					_ModelProcessingService.AfterModelUpdated(persistentModel, original);
+				else
+					_ModelProcessingService.AfterModelCreated(persistentModel);
 
 				result.Model = convert(persistentModel);
 			}

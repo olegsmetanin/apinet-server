@@ -1,4 +1,5 @@
-﻿using AGO.Core.Model.Dictionary;
+﻿using AGO.Core.Model.Activity;
+using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
@@ -166,6 +167,23 @@ namespace AGO.Core.Migrations
 				.WithColumn("CreateDate").AsDateTime().NotNullable()
 				.WithColumn("PriorityType").AsInt32().NotNullable()
 				.WithColumn("UserPriority").AsInt32().NotNullable();
+
+			Create.SecureModelTable<ActivityRecordModel>()
+				.WithValueColumn<ActivityRecordModel>(m => m.ProjectCode)
+				.WithValueColumn<ActivityRecordModel>(m => m.ItemType)
+				.WithValueColumn<ActivityRecordModel>(m => m.ItemName)
+				.WithValueColumn<ActivityRecordModel>(m => m.ItemId);
+
+			Alter.ModelTable<ActivityRecordModel>()
+				.AddValueColumn<AttributeChangeActivityRecordModel>(m => m.Attribute)
+				.AddValueColumn<AttributeChangeActivityRecordModel>(m => m.OldValue)
+				.AddValueColumn<AttributeChangeActivityRecordModel>(m => m.NewValue);
+
+			Alter.ModelTable<ActivityRecordModel>()
+				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.RelatedItemType)
+				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.RelatedItemName)
+				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.RelatedItemId)
+				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.ChangeType);
 		}
 
 		public override void Down()

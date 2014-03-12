@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Controllers;
+using AGO.Core.Controllers.Activity;
 using AGO.Core.Execution;
 
 namespace AGO.Core.Application
@@ -40,7 +41,12 @@ namespace AGO.Core.Application
 			IocContainer.RegisterAll<IActionParameterTransformer>(AllActionParameterTransformers.Concat(
 				new[] { typeof(AttributeValidatingParameterTransformer) }));
 			IocContainer.RegisterAll<IActionResultTransformer>(AllActionResultTransformers);
+			IocContainer.RegisterAll<IActivityViewProcessor>(ActivityViewProcessors);
 
+			IocContainer.RegisterSingle<CollectionChangeActivityViewProcessor, CollectionChangeActivityViewProcessor>();
+			IocContainer.RegisterSingle<AttributeChangeActivityViewProcessor, AttributeChangeActivityViewProcessor>();
+			IocContainer.RegisterSingle<ProjectAttributeActivityViewProcessor, ProjectAttributeActivityViewProcessor>();
+			
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 		}
 
@@ -64,6 +70,19 @@ namespace AGO.Core.Application
 		protected virtual IEnumerable<Type> AllActionResultTransformers
 		{
 			get { return Enumerable.Empty<Type>(); }
+		}
+
+		protected virtual IEnumerable<Type> ActivityViewProcessors
+		{
+			get
+			{ 
+				return new[]
+				{
+					typeof(CollectionChangeActivityViewProcessor),
+					typeof(AttributeChangeActivityViewProcessor),
+					typeof(ProjectAttributeActivityViewProcessor)
+				}; 
+			}
 		}
 
 		protected override void DoInitializeApplication()

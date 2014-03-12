@@ -203,26 +203,18 @@ namespace AGO.Core
 		}
 
 		public IList<TModel> List<TModel>(
-			IEnumerable<IModelFilterNode> filters,
-			FilteringOptions options = null)
-			where TModel : class, IIdentifiedModel
+			ICriteria criteria, 
+			FilteringOptions options = null) where TModel : class, IIdentifiedModel
 		{
-			return Future<TModel>(filters, options).ToList();
+			return Future<TModel>(criteria, options).ToList();
 		}
 
 		public IEnumerable<TModel> Future<TModel>(
-			IEnumerable<IModelFilterNode> filters,
+			ICriteria criteria, 
 			FilteringOptions options = null) where TModel : class, IIdentifiedModel
 		{
-			if (filters == null)
-				throw new ArgumentNullException("filters");
+			options = options ?? new FilteringOptions();
 
-			options = options ?? new FilteringOptions();	
-
-			var compiled = _FilteringService.CompileFilter(
-				_FilteringService.ConcatFilters(filters), options.ModelType ?? typeof(TModel));
-
-			var criteria = compiled.GetExecutableCriteria(CurrentSession);
 			foreach (var sortInfo in options.ActualSorters.Where(sortInfo => !sortInfo.Property.IsNullOrWhiteSpace()))
 			{
 				var finalSortProperty = sortInfo.Property.TrimSafe();
@@ -259,11 +251,44 @@ namespace AGO.Core
 					throw new Exception("Requested model type is not mapped");
 
 				foreach (var modelProperty in metadata.ModelProperties.Where(m => !m.IsCollection))
-						criteria.SetFetchMode(modelProperty.Name, options.FetchStrategy == 
-					FetchStrategy.FetchRootReferences ? FetchMode.Join : FetchMode.Lazy);
+					criteria.SetFetchMode(modelProperty.Name, options.FetchStrategy ==
+				FetchStrategy.FetchRootReferences ? FetchMode.Join : FetchMode.Lazy);
 			}
 
 			return PagedFuture<TModel>(criteria, options.Page, options.PageSize);
+		}
+
+		public int RowCount<TModel>(
+			ICriteria criteria, 
+			Type modelType = null) where TModel : class, IIdentifiedModel
+		{
+			return criteria
+				.SetProjection(Projections.RowCount())
+				.UniqueResult<int>();
+		}
+
+		public IList<TModel> List<TModel>(
+			IEnumerable<IModelFilterNode> filters,
+			FilteringOptions options = null)
+			where TModel : class, IIdentifiedModel
+		{
+			return Future<TModel>(filters, options).ToList();
+		}
+
+		public IEnumerable<TModel> Future<TModel>(
+			IEnumerable<IModelFilterNode> filters,
+			FilteringOptions options = null) where TModel : class, IIdentifiedModel
+		{
+			if (filters == null)
+				throw new ArgumentNullException("filters");
+
+			options = options ?? new FilteringOptions();	
+
+			var compiled = _FilteringService.CompileFilter(
+				_FilteringService.ConcatFilters(filters), options.ModelType ?? typeof(TModel));
+
+			return Future<TModel>(compiled.GetExecutableCriteria(CurrentSession));
+			
 		}
 
 		public int RowCount<TModel>(
@@ -277,9 +302,7 @@ namespace AGO.Core
 			var compiled = _FilteringService.CompileFilter(
 				_FilteringService.ConcatFilters(filters), modelType ?? typeof(TModel));
 
-			return compiled.GetExecutableCriteria(CurrentSession)
-				.SetProjection(Projections.RowCount())
-				.UniqueResult<int>();
+			return RowCount<TModel>(compiled.GetExecutableCriteria(CurrentSession));
 		}
 
 		#endregion

@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using AGO.Core.Application;
 using AGO.Core.Controllers;
+using AGO.Core.Model.Processing;
 using AGO.Core.Modules;
 using AGO.Core.Localization;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers;
+using AGO.Tasks.Controllers.Activity;
+using AGO.Tasks.Processing;
 using SimpleInjector;
 using SimpleInjector.Advanced;
 using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
@@ -42,11 +45,26 @@ namespace AGO.Tasks
 				() => app.IocContainer.GetInstance<TasksController>(),
 				app.IocContainer);
 			app.IocContainer.AppendToCollection(typeof(IFileResourceStorage), registration);
+
+			app.IocContainer.RegisterSingle<TaskAttributesActivityPostProcessor, TaskAttributesActivityPostProcessor>();
+			app.IocContainer.RegisterSingle<TaskCollectionActivityPostProcessor, TaskCollectionActivityPostProcessor>();			
+			app.IocContainer.RegisterSingle<TaskAttributeActivityViewProcessor, TaskAttributeActivityViewProcessor>();
+			app.IocContainer.RegisterSingle<TaskCollectionActivityViewProcessor, TaskCollectionActivityViewProcessor>();
 		}
 
 		public void Initialize(IApplication app)
 		{
 			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
+
+			var persistentApp = app as IPersistenceApplication;
+			if (persistentApp == null)
+				return;
+
+			persistentApp.ModelProcessingService.RegisterModelPostProcessors(new IModelPostProcessor[]
+			{
+				app.IocContainer.GetInstance<TaskCollectionActivityPostProcessor>(),
+				app.IocContainer.GetInstance<TaskAttributesActivityPostProcessor>()				
+			});
 		}
 
         public IEnumerable<IServiceDescriptor> Services { get; private set; }
@@ -59,6 +77,7 @@ namespace AGO.Tasks
                 new AttributedWebServiceDescriptor<TasksController>(this),
 				new AttributedWebServiceDescriptor<ProjectController>(this),
 				new AttributedWebServiceDescriptor<ConfigController>(this),
+				new AttributedWebServiceDescriptor<ActivityController>(this)
             };
         }
     }

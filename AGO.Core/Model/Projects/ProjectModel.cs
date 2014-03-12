@@ -56,7 +56,7 @@ namespace AGO.Core.Model.Projects
 
 		public override string ToString()
 		{
-			return Name;
+			return Name.TrimSafe() ?? base.ToString();
 		}
 
 		#endregion

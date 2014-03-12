@@ -209,11 +209,10 @@ namespace AGO.Core
 
 			if (typeof (string).IsAssignableFrom(resultType))
 			{
-				if (strObj != null)
-					return strObj;
+				return strObj ?? obj.ToStringSafe(formatProvider);
 
-				var identifiedModel = obj as IIdentifiedModel;
-				return identifiedModel != null ? identifiedModel.UniqueId : obj.ToStringSafe(formatProvider);
+				/*var identifiedModel = obj as IIdentifiedModel;
+				return identifiedModel != null ? identifiedModel.UniqueId : obj.ToStringSafe(formatProvider);*/
 			}
 
 			if (resultType == typeof(bool) && strObj != null)

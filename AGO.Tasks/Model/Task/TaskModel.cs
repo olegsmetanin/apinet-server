@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -203,5 +204,10 @@ namespace AGO.Tasks.Model.Task
 		    Timelog.Add(entry);
 		    return entry;
 	    }
+
+		public override string ToString()
+		{
+			return SeqNumber.TrimSafe() ?? base.ToString();
+		}
     }
 }

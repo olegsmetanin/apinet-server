@@ -1,4 +1,5 @@
 ﻿using System;
+using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Security;
@@ -16,5 +17,10 @@ namespace AGO.Tasks.Model.Dictionary
 		/// </summary>
 		[JsonProperty, UniqueProperty("ProjectCode"), NotEmpty, NotLonger(256)]
 		public virtual string Name { get; set; }
+
+		public override string ToString()
+		{
+			return !Name.IsNullOrWhiteSpace() ? Name : base.ToString();
+		}
 	}
 }

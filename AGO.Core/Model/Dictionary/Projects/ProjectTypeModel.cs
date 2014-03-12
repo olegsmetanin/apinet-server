@@ -28,7 +28,7 @@ namespace AGO.Core.Model.Dictionary.Projects
 
 		public override string ToString()
 		{
-			return Name;
+			return !Name.IsNullOrWhiteSpace() ? Name : base.ToString();
 		}
 
 		#endregion

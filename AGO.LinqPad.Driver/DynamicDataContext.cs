@@ -118,6 +118,10 @@ namespace AGO.LinqPad.Driver
 							value += ";";
 						value += GetType().Assembly.GetName().Name;
 					}
+
+					if (key.Equals("Hibernate_current_session_context_class"))
+						value = "NHibernate.Context.ThreadStaticContext, NHibernate";
+
 					appSettings[key] = value;
 				}
 
