@@ -26,6 +26,8 @@ namespace AGO.Core
 			var cryptoProvider = new MD5CryptoServiceProvider();
 			var pwdHash = Encoding.Default.GetString(
 				cryptoProvider.ComputeHash(Encoding.Default.GetBytes("1")));
+			var demoPwdHash = Encoding.Default.GetString(
+				cryptoProvider.ComputeHash(Encoding.Default.GetBytes("demo")));
 
 			var admin = new UserModel
 			{
@@ -40,6 +42,19 @@ namespace AGO.Core
 			};
 			admin.Creator = admin;
 			_CrudDao.Store(admin);
+
+			var demo = new UserModel
+			{
+				Login = "demo@apinet-test.com",
+				PwdHash = demoPwdHash,
+				Active = true,
+				LastName = "User",
+				Name = "Demo",
+				MiddleName = "",
+				SystemRole = SystemRole.Member
+			};
+			demo.Creator = admin;
+			_CrudDao.Store(demo);
 
 			var user1 = new UserModel
 			{

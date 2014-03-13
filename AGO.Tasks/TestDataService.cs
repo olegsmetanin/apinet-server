@@ -35,6 +35,8 @@ namespace AGO.Tasks
 			var context = new
 			{
 				Admin = admin,
+				Demo = CurrentSession.QueryOver<UserModel>()
+					.Where(m => m.Login == "demo@apinet-test.com").SingleOrDefault(),
 				User1 = CurrentSession.QueryOver<UserModel>()
 					.Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault(),
 				User2 = CurrentSession.QueryOver<UserModel>()
@@ -55,7 +57,7 @@ namespace AGO.Tasks
 				}
 			};
 
-			if (context.Admin == null || context.User1 == null || context.User2 == null ||
+			if (context.Admin == null || context.Demo == null || context.User1 == null || context.User2 == null ||
 					context.User3 == null || context.Artem1 == null || context.OlegSmith == null)
 				throw new Exception("Test data inconsistency");
 
@@ -109,6 +111,11 @@ namespace AGO.Tasks
 				var pcAdmin = addMember(project, context.Admin, BaseProjectRoles.Administrator);
 				pcAdmin.UserPriority = 50;
 				_CrudDao.Store(pcAdmin);
+
+				var pcDemo = addMember(project, context.Demo, BaseProjectRoles.Administrator);
+				pcDemo.Roles = new[] {BaseProjectRoles.Administrator, TaskProjectRoles.Manager, TaskProjectRoles.Executor};
+				pcDemo.CurrentRole = TaskProjectRoles.Manager;
+				_CrudDao.Store(pcDemo);
 
 				var pcUser1 = addMember(project, context.User1, BaseProjectRoles.Administrator);
 				pcUser1.UserPriority = 25;
