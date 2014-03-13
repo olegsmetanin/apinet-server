@@ -13,7 +13,7 @@ namespace AGO.Tasks.Controllers.DTO
 
 		public string Content { get; set; }
 
-		public IEnumerable<Executor> Executors { get; set; }
+		public IEnumerable<LookupEntry> Executors { get; set; }
 
 		[JsonProperty(NullValueHandling = NullValueHandling.Include)]
 		public DateTime? DueDate { get; set; }
@@ -70,18 +70,6 @@ namespace AGO.Tasks.Controllers.DTO
 		public decimal? SpentTime { get; set; }
 
 		public IEnumerable<TimelogDTO> Timelog { get; set; }
-	}
-
-	public class Executor
-	{
-		[JsonProperty("id")]
-		public string Id { get; set; }
-
-		[JsonProperty("text")]
-		public string Name { get; set; }
-
-		[JsonProperty("description")]
-		public string Description { get; set; }
 	}
 
 	public class AgreementView

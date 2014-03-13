@@ -31,22 +31,22 @@ namespace AGO.Tasks
 
 		public void Populate()
 		{
-			var admin = _CrudDao.Find<UserModel>(q => q.Where(m => m.Login == "admin@apinet-test.com"));
+			var admin = _CrudDao.Find<UserModel>(q => q.Where(m => m.Email == "admin@apinet-test.com"));
 			var context = new
 			{
 				Admin = admin,
 				Demo = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "demo@apinet-test.com").SingleOrDefault(),
+					.Where(m => m.Email == "demo@apinet-test.com").SingleOrDefault(),
 				User1 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "user1@apinet-test.com").SingleOrDefault(),
+					.Where(m => m.Email == "user1@apinet-test.com").SingleOrDefault(),
 				User2 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "user2@apinet-test.com").SingleOrDefault(),
+					.Where(m => m.Email == "user2@apinet-test.com").SingleOrDefault(),
 				User3 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "user3@apinet-test.com").SingleOrDefault(),
+					.Where(m => m.Email == "user3@apinet-test.com").SingleOrDefault(),
 				Artem1 = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "artem1@apinet-test.com").SingleOrDefault(),
+					.Where(m => m.Email == "artem1@twitter.com").SingleOrDefault(),
 				OlegSmith = CurrentSession.QueryOver<UserModel>()
-					.Where(m => m.Login == "olegsmith@apinet-test.com").SingleOrDefault(),
+					.Where(m => m.Email == "olegsmith@apinet-test.com").SingleOrDefault(),
 				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Creator.Id == admin.Id).List(),
 				ProjectType = new ProjectTypeModel

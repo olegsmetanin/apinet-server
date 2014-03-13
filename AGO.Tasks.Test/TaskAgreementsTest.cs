@@ -97,7 +97,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(ivanov.Login);
+			Login(ivanov.Email);
 			var res = controller.RemoveAgreement(task.Id, agr.Id);
 			_SessionProvider.FlushCurrentSession();
 
@@ -131,7 +131,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(ivanov.Login);
+			Login(ivanov.Email);
 			controller.RemoveAgreement(task.Id, agr.Id);
 			_SessionProvider.FlushCurrentSession();
 		}
@@ -151,7 +151,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(ivanov.Login);
+			Login(ivanov.Email);
 			controller.AgreeTask(task.Id, "good job, bro");
 			_SessionProvider.FlushCurrentSession();
 
@@ -179,7 +179,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(petrov.Login);
+			Login(petrov.Email);
 			try
 			{
 				controller.AgreeTask(task.Id, "good job, bro");
@@ -207,7 +207,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(ivanov.Login);
+			Login(ivanov.Email);
 			try
 			{
 				controller.AgreeTask(task.Id, "good job, bro");
@@ -237,7 +237,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(ivanov.Login);
+			Login(ivanov.Email);
 			controller.RevokeAgreement(task.Id);
 			_SessionProvider.FlushCurrentSession();
 			
@@ -266,7 +266,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(petrov.Login);
+			Login(petrov.Email);
 			try
 			{
 				controller.RevokeAgreement(task.Id);
@@ -297,7 +297,7 @@ namespace AGO.Tasks.Test
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
-			Login(ivanov.Login);
+			Login(ivanov.Email);
 			try
 			{
 				controller.RevokeAgreement(task.Id);

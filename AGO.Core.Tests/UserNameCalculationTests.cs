@@ -7,48 +7,19 @@ namespace AGO.Core.Tests
 	public class UserNameCalculationTests
 	{
 		[Test]
-		public void FullNameCalculatesForAllThreePart()
+		public void FullNameCalculatesForAnyParts()
 		{
-			var u = new UserModel
-			        	{
-							LastName = "Ivanov",
-			        		Name = "Petr",
-							MiddleName = "Andreevich"
-			        	};
+			var u = new UserModel { LastName = "Ivanov", FirstName = "Petr" };
+			var fu = new UserModel { FirstName = "Petr" };
+			var lu = new UserModel { LastName = "Ivanov" };
+			var eu = new UserModel { FirstName = null, LastName = "  "};
+			var nu = new UserModel();
 
-			Assert.AreEqual(u.FullName, "Ivanov Petr Andreevich");
-			Assert.AreEqual(u.FIO, "Ivanov P.A.");
-		}
-
-		[Test]
-		public void FullNameCalculatesForNameAndLastNameOnly()
-		{
-			var u = new UserModel
-			{
-				LastName = "Connor",
-				Name = "Jonh"
-			};
-
-			Assert.AreEqual(u.FullName, "Jonh Connor");
-			Assert.AreEqual(u.FIO, "Connor J.");
-		}
-
-		[Test]
-		public void BugFIONotCalculatedOnTestDataGeneration()
-		{
-			//extracted from Core TestDataService
-			var user1 = new UserModel
-			{
-				Login = "user1@apinet-test.com",
-				Active = true,
-				LastName = "Bryan",
-				Name = "Thomas",
-				MiddleName = "",
-				SystemRole = SystemRole.Member
-			};
-
-			Assert.AreEqual(user1.FullName, "Thomas Bryan");
-			Assert.AreEqual(user1.FIO, "Bryan T.");
+			Assert.AreEqual("Petr Ivanov", u.FullName);
+			Assert.AreEqual("Petr", fu.FullName);
+			Assert.AreEqual("Ivanov", lu.FullName);
+			Assert.AreEqual(eu.FullName, string.Empty);
+			Assert.IsNull(nu.FullName);
 		}
 	}
 }

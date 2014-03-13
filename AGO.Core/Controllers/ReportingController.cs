@@ -209,7 +209,7 @@ namespace AGO.Core.Controllers
 				_SessionProvider.FlushCurrentSession();
 
 				//Add task to system shared work queue, so one of workers can grab and execute it
-				var qi = new QueueItem("Report", task.Id, project, user.Login)
+				var qi = new QueueItem("Report", task.Id, project, user.Email)
 				{
 					PriorityType = priority,
 					UserPriority = participant != null ? participant.UserPriority : 0
@@ -218,7 +218,7 @@ namespace AGO.Core.Controllers
 				//emit event for reporting service (about new task to work)
 				bus.EmitRunReport(task.Id);
 				//emit event for client (about his task in queue and start soon)
-				bus.EmitReportChanged(ReportEvents.CREATED, user.Login,  ReportTaskToDTO(task));
+				bus.EmitReportChanged(ReportEvents.CREATED, user.Email,  ReportTaskToDTO(task));
 			}
 			catch (Exception ex)
 			{
@@ -334,7 +334,7 @@ namespace AGO.Core.Controllers
 
 			//emit event for client (about his task is canceled)
 			var dto = ReportTaskToDTO(task);
-			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Login, dto);
+			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Email, dto);
 			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
 			{
 				//and to creator, if another person cancel task (admin, for example)
@@ -354,7 +354,7 @@ namespace AGO.Core.Controllers
 			_CrudDao.Delete(task);
 
 			//emit event for client (about his task is successfully deleted)
-			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Login, dto);
+			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Email, dto);
 			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
 			{
 				//and to creator, if another person delete task (admin, for example)
@@ -403,7 +403,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<WorkQueueWatchService.ReportQueuePosition> GetReportQueuePositions()
 		{
-			var login = _AuthController.CurrentUser().Login;
+			var login = _AuthController.CurrentUser().Email;
 			var snapshot = workQueue.Snapshot();
 			return WorkQueueWatchService.GetPositionsForUser(login, snapshot).ToArray();
 		}

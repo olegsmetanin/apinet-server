@@ -368,7 +368,7 @@ namespace AGO.Tasks.Controllers
 				throw new CanNotAddAgreemerToClosedTaskException();
 
 			if (task.IsAgreemer(member))
-				throw new AgreemerAlreadyAssignedToTaskException(member.FIO, task.SeqNumber);
+				throw new AgreemerAlreadyAssignedToTaskException(member.FullName, task.SeqNumber);
 
 			var agreement = new TaskAgreementModel
 			{
@@ -521,7 +521,7 @@ namespace AGO.Tasks.Controllers
 			{
 				//same as in lookup method from base class
 				Log.WarnFormat("Lookup from not project member catched. User '{0}' for type '{1}'", 
-					CurrentUser.Login, typeof(CustomPropertyTypeModel).AssemblyQualifiedName);
+					CurrentUser.Email, typeof(CustomPropertyTypeModel).AssemblyQualifiedName);
 				return Enumerable.Empty<CustomParameterTypeDTO>();
 			}
 		}

@@ -1,49 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Controllers.Security.OAuth;
-using AGO.Core.Model.Dictionary;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Security
 {
 	public class UserModel : SecureModel<Guid>
 	{
-		private const int LOGIN_SIZE_CONST = 64;
-		public static readonly int LOGIN_SIZE = LOGIN_SIZE_CONST;//because const will be inlined in using classes, but not const is not compile time value
-		public const int FULLNAME_SIZE = 256;
+		private const int EMAIL_SIZE_CONST = 64;
+		private const int NAME_SIZE = 64;
+		public static readonly int EMAIL_SIZE = EMAIL_SIZE_CONST;//because const will be inlined in using classes, but not const is not compile time value
+		public const int FULLNAME_SIZE = NAME_SIZE * 2 + 1;
 
 		#region Persistent
 
 		private string lastName;
-		private string name;
-		private string middleName;
+		private string firstName;
 
-		[JsonProperty, NotLonger(LOGIN_SIZE_CONST), NotEmpty]
-		public virtual string Login { get; set; }
-
-		[NotLonger(128), NotEmpty, MetadataExclude]
-		public virtual string PwdHash { get; set; }
+		[JsonProperty, NotLonger(EMAIL_SIZE_CONST), NotEmpty]
+		public virtual string Email { get; set; }
 
 		[JsonProperty, NotNull]
 		public virtual bool Active { get; set; }
 
-		[JsonProperty, NotLonger(64), NotEmpty]
-		public virtual string Name
+		[JsonProperty, NotLonger(NAME_SIZE), NotEmpty]
+		public virtual string FirstName
 		{
-			get { return name; }
+			get { return firstName; }
 			set
 			{
-				if (name == value) return;
+				if (firstName == value) return;
 
-				name = value;
+				firstName = value;
 				CalculateNames();
 			}
 		}
 
-		[JsonProperty, NotLonger(64), NotEmpty]
+		[JsonProperty, NotLonger(NAME_SIZE), NotEmpty]
 		public virtual string LastName
 		{
 			get { return lastName; }
@@ -56,72 +51,30 @@ namespace AGO.Core.Model.Security
 			}
 		}
 
-		[JsonProperty, NotLonger(64)]
-		public virtual string MiddleName
-		{
-			get { return middleName; } 
-			set
-			{
-				if (middleName == value) return;
-
-				middleName = value;
-				CalculateNames();
-			}
-		}
-
 		[JsonProperty, NotLonger(FULLNAME_SIZE)]
 		public virtual string FullName { get; protected internal set; }
 
-		[JsonProperty, NotLonger(FULLNAME_SIZE)]
-		public virtual string FIO { get; protected internal set; }
-
-		[JsonProperty, NotLonger(256)]
-		public virtual string WhomFIO { get; set; }
-
-		[JsonProperty, NotLonger(64)]
-		public virtual string JobName { get; set; }
-
-		[JsonProperty, NotLonger(64)]
-		public virtual string WhomJobName { get; set; }
-
-		[JsonProperty, NotLonger(64), NotEmpty]
+		[JsonProperty, NotEmpty]
 		public virtual SystemRole SystemRole { get; set; }
 		
-		[PersistentCollection(Inverse = false)]
-		public virtual ISet<DepartmentModel> Departments { get { return _Departments; } set { _Departments = value; } }
-		private ISet<DepartmentModel> _Departments = new HashSet<DepartmentModel>();
-
 		[NotLonger(1024), JsonProperty]
 		public virtual string AvatarUrl { get; set; }
 
 		[MetadataExclude]
 		public virtual OAuthProvider? OAuthProvider { get; set; }
 
-		[MetadataExclude, NotLonger(LOGIN_SIZE_CONST)]
+		[MetadataExclude, NotLonger(EMAIL_SIZE_CONST)]
 		public virtual string OAuthUserId { get; set; }
 
 		#endregion
 
 		private void CalculateNames()
 		{
-			//TODO: extract from here and localize algorithm
-			if (MiddleName.IsNullOrWhiteSpace())
-			{
-				//en style
-				var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + "." : null;
-				FIO = ni != null ? LastName + ni : LastName;
-
-				FullName = string.Join(" ", Name, LastName); 
-			}
-			else
-			{
-				//ru style
-				var ni = !Name.IsNullOrWhiteSpace() ? " " + Name.Substring(0, 1).ToUpper() + "." : null;
-				var mi = !MiddleName.IsNullOrWhiteSpace() ? MiddleName.Substring(0, 1).ToUpper() + "." : null;
-				FIO = ni != null && mi != null ? LastName + ni + mi : LastName;
-
-				FullName = string.Join(" ", LastName, Name, MiddleName);
-			}
+			FullName = FirstName.IsNullOrWhiteSpace()
+				? LastName.IsNullOrWhiteSpace() ? string.Empty : LastName.TrimSafe()
+				: LastName.IsNullOrWhiteSpace() 
+					? FirstName.TrimSafe() 
+					: FirstName.TrimSafe() + " " + LastName.TrimSafe();
 		}
 
 		[NotMapped, MetadataExclude]
@@ -132,7 +85,7 @@ namespace AGO.Core.Model.Security
 
 		public override string ToString()
 		{
-			return (FIO.IsNullOrWhiteSpace() ? Login : FIO).TrimSafe();
+			return (FullName.IsNullOrWhiteSpace() ? Email : FullName).TrimSafe();
 		}
 	}
 }

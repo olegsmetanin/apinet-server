@@ -260,7 +260,6 @@
     <Compile Include="Model\Dictionary\CustomPropertyValueType.cs" />
     <Compile Include="Model\Dictionary\IDictionaryItemModel.cs" />
     <Compile Include="Model\Dictionary\IHierarchicalDictionaryItemModel.cs" />
-    <Compile Include="Model\Dictionary\DepartmentModel.cs" />
     <Compile Include="Model\CoreModel.cs" />
     <Compile Include="Model\IComponent.cs" />
     <Compile Include="Model\IdentifiedModel.cs" />

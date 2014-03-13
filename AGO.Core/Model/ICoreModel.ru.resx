@@ -135,41 +135,20 @@
   <data name="UserModel.Active" xml:space="preserve">
     <value>Активен</value>
   </data>
-  <data name="UserModel.Departments" xml:space="preserve">
-    <value>Подразделения</value>
-  </data>
-  <data name="UserModel.FIO" xml:space="preserve">
-    <value>Фамилия с инициалами (именительный)</value>
-  </data>
   <data name="UserModel.FullName" xml:space="preserve">
     <value>ФИО</value>
-  </data>
-  <data name="UserModel.JobName" xml:space="preserve">
-    <value>Краткое наименование должности (именительный)</value>
   </data>
   <data name="UserModel.LastName" xml:space="preserve">
     <value>Фамилия</value>
   </data>
-  <data name="UserModel.Login" xml:space="preserve">
-    <value>Логин</value>
+  <data name="UserModel.Email" xml:space="preserve">
+    <value>Email</value>
   </data>
-  <data name="UserModel.MiddleName" xml:space="preserve">
-    <value>Отчество</value>
-  </data>
-  <data name="UserModel.Name" xml:space="preserve">
+  <data name="UserModel.FirstName" xml:space="preserve">
     <value>Имя</value>
-  </data>
-  <data name="UserModel.PwdHash" xml:space="preserve">
-    <value>MD5 хеш</value>
   </data>
   <data name="UserModel.SystemRole" xml:space="preserve">
     <value>Системная роль</value>
-  </data>
-  <data name="UserModel.WhomFIO" xml:space="preserve">
-    <value>Фамилия с инициалами (родительный)</value>
-  </data>
-  <data name="UserModel.WhomJobName" xml:space="preserve">
-    <value>Краткое наименование должности (родительный)</value>
   </data>
   <data name="CoreModel.Id" xml:space="preserve">
     <value>Идентификатор</value>
@@ -231,14 +210,14 @@
   <data name="ProjectModel.Type" xml:space="preserve">
     <value>Тип проекта</value>
   </data>
-  <data name="ProjectParticipantModel.GroupName" xml:space="preserve">
-    <value>Группа</value>
+  <data name="ProjectMemberModel.CurrentRole" xml:space="preserve">
+    <value>Текущая роль</value>
   </data>
-  <data name="ProjectParticipantModel.IsDefaultGroup" xml:space="preserve">
-    <value>Группа по умолчанию</value>
+  <data name="ProjectMemberModel.RolesString" xml:space="preserve">
+    <value>Роли</value>
   </data>
-  <data name="ProjectParticipantModel.User" xml:space="preserve">
-    <value>Пользователь</value>
+  <data name="ProjectParticipantModel.UserId" xml:space="preserve">
+    <value>Идентификатор пользователя</value>
   </data>
   <data name="ProjectStatusHistoryModel.EndDate" xml:space="preserve">
     <value>Дата конца</value>

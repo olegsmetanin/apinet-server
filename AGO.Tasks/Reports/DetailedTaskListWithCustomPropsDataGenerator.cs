@@ -87,7 +87,7 @@ namespace AGO.Tasks.Reports
 						.Select(h => string.Concat(
 							las.MessageForType(typeof (TaskStatus), h.Status),
 							" - ",
-							(h.Creator != null ? h.Creator.FIO : "<no author>"),
+							(h.Creator != null ? h.Creator.FullName : "<no author>"),
 							" - ",
 							h.Start.ToString(CultureInfo.CurrentUICulture)))));
 

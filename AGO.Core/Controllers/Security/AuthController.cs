@@ -1,9 +1,6 @@
 using System;
 using System.Data;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
@@ -45,24 +42,15 @@ namespace AGO.Core.Controllers.Security
 		#region Json endpoints
 
 		[JsonEndpoint]
-		public object Login([NotEmpty] string email, [NotEmpty] string password)
+		public object LoginAsDemo()
 		{
 			var validation = new ValidationResult();
 
 			var user = sessionProvider.CurrentSession.QueryOver<UserModel>()
-				.Where(m => m.Login == email.TrimSafe()).Take(1).List().FirstOrDefault();
+				.Where(m => m.Email == "demo@apinet-test.com").Take(1).List().FirstOrDefault();
 			if (user == null)
 			{
 				validation.AddFieldErrors("email", localizationService.MessageForException(new NoSuchUserException()));
-				return validation;
-			}
-
-			var cryptoProvider = new MD5CryptoServiceProvider();
-			var pwdHash = Encoding.Default.GetString(
-				cryptoProvider.ComputeHash(Encoding.Default.GetBytes(password.TrimSafe())));
-			if (!string.Equals(user.PwdHash, pwdHash))
-			{
-				validation.AddFieldErrors("password", localizationService.MessageForException(new InvalidPwdException()));
 				return validation;
 			}
 			
@@ -75,7 +63,7 @@ namespace AGO.Core.Controllers.Security
 		{
 			//TODO избавиться от сессии (stateless)
 			stateStorage["CurrentUser"] = user;
-			stateStorage["CurrentUserToken"] = RegisterToken(user.Login).ToString();
+			stateStorage["CurrentUserToken"] = RegisterToken(user.Email).ToString();
 		}
 
 		[JsonEndpoint]
@@ -134,7 +122,7 @@ insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") valu
 			var pLogin = cmd.CreateParameter();
 			pLogin.ParameterName = "login";
 			pLogin.DbType = DbType.String;
-			pLogin.Size = UserModel.LOGIN_SIZE;
+			pLogin.Size = UserModel.EMAIL_SIZE;
 			pLogin.Value = login;
 			var pExpireDate = cmd.CreateParameter();
 			pExpireDate.ParameterName = "expireDate";
@@ -167,12 +155,10 @@ insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") valu
 			return new
 			{
 				user.Id,
-				user.Login,
-				user.Name,
+				Login = user.Email,
+				user.FirstName,
 				user.LastName,
-				user.MiddleName,
 				user.FullName,
-				user.FIO,
 				user.SystemRole,
 				user.AvatarUrl,
 				Token = token

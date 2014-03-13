@@ -81,7 +81,7 @@ namespace AGO.Core.Controllers
 							var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == report.Project).SingleOrDefault();
 							//User must be logged in to download report, so, we don't check user to null
 							var dto = ReportTaskDTO.FromTask(report, lc, p != null ? p.Name : null, user.SystemRole != SystemRole.Administrator);
-							diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Login, dto);
+							diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Email, dto);
 
 							sp.FlushCurrentSession();
 						}

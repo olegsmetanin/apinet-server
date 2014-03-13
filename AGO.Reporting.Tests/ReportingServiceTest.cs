@@ -90,7 +90,7 @@ namespace AGO.Reporting.Tests
 
 		private void WriteTaskToQueue(ReportTaskModel task)
 		{
-			var qi = new QueueItem("Report", task.Id, "fake", task.Creator.Login);
+			var qi = new QueueItem("Report", task.Id, "fake", task.Creator.Email);
 			realsvc.WorkQueue.Add(qi);
 		}
 
@@ -156,10 +156,10 @@ namespace AGO.Reporting.Tests
 			foreach (var tag in tags)
 			{
 				StringAssert.Contains(tag.Id.ToString(), report);
-				StringAssert.Contains(tag.Creator.Name, report);
+				StringAssert.Contains(tag.Creator.FullName, report);
 				StringAssert.Contains(tag.Name, report);
 			}
-			StringAssert.Contains(CurrentUser.Name, report);
+			StringAssert.Contains(CurrentUser.FullName, report);
 		}
 
 		[Test]

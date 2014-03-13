@@ -23,17 +23,11 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<UserModel>(m => m.LastChangeTime)
 				.AddRefColumn<UserModel>(m => m.LastChanger)
 
-				.AddValueColumn<UserModel>(m => m.Login)
-				.AddValueColumn<UserModel>(m => m.PwdHash)
+				.AddValueColumn<UserModel>(m => m.Email)
 				.AddValueColumn<UserModel>(m => m.Active)
-				.AddValueColumn<UserModel>(m => m.Name)
+				.AddValueColumn<UserModel>(m => m.FirstName)
 				.AddValueColumn<UserModel>(m => m.LastName)
-				.AddValueColumn<UserModel>(m => m.MiddleName)
 				.AddValueColumn<UserModel>(m => m.FullName)
-				.AddValueColumn<UserModel>(m => m.FIO)
-				.AddValueColumn<UserModel>(m => m.WhomFIO)
-				.AddValueColumn<UserModel>(m => m.JobName)
-				.AddValueColumn<UserModel>(m => m.WhomJobName)
 				.AddValueColumn<UserModel>(m => m.SystemRole)
 				.AddValueColumn<UserModel>(m => m.AvatarUrl)
 				.AddValueColumn<UserModel>(m => m.OAuthProvider)
@@ -49,18 +43,6 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)
 				.WithValueColumn<UserFilterModel>(m => m.Filter)
 				.WithRefColumn<UserFilterModel>(m => m.User);
-
-			Create.SecureModelTable<DepartmentModel>()
-				.WithValueColumn<DepartmentModel>(m => m.ProjectCode)
-				.WithValueColumn<DepartmentModel>(m => m.Name)
-				.WithValueColumn<DepartmentModel>(m => m.FullName)
-				.WithRefColumn<DepartmentModel>(m => m.Parent);
-
-			Create.Table("UserModelToDepartmentModel").InSchema(MODULE_SCHEMA)
-				.WithColumn("UserId").AsGuid().NotNullable()
-					.ForeignKey("FK_UserModelToDepartmentModel_UserId", MODULE_SCHEMA, "UserModel", "Id")
-				.WithColumn("DepartmentId").AsGuid().NotNullable()
-					.ForeignKey("FK_UserModelToDepartmentModel_DepartmentId", MODULE_SCHEMA, "DepartmentModel", "Id");
 
 			Create.SecureModelTable<CustomPropertyTypeModel>()
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.ProjectCode)
@@ -110,7 +92,6 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectMemberModel>(m => m.ProjectCode)
 				.WithValueColumn<ProjectMemberModel>(m => m.UserId)
 				.WithValueColumn<ProjectMemberModel>(m => m.FullName)
-				.WithValueColumn<ProjectMemberModel>(m => m.FIO)
 				.WithValueColumn<ProjectMemberModel>(m => m.RolesString)
 				.WithValueColumn<ProjectMemberModel>(m => m.CurrentRole)
 				.WithValueColumn<ProjectMemberModel>(m => m.UserPriority);
@@ -155,7 +136,7 @@ namespace AGO.Core.Migrations
 			//to particulat user
 			Create.Table("TokenToLogin").InSchema(MODULE_SCHEMA)
 				.WithColumn("Token").AsGuid().NotNullable().PrimaryKey()
-				.WithColumn("Login").AsString(UserModel.LOGIN_SIZE).NotNullable()
+				.WithColumn("Login").AsString(UserModel.EMAIL_SIZE).NotNullable()
 				.WithColumn("CreatedAt").AsDateTime().NotNullable();
 
 			//WorkQueue, will be used later as source for all async worker (now only for reporting service)
@@ -163,7 +144,7 @@ namespace AGO.Core.Migrations
 				.WithColumn("TaskType").AsString(128).NotNullable()
 				.WithColumn("TaskId").AsGuid().NotNullable().PrimaryKey()
 				.WithColumn("Project").AsString(ProjectModel.PROJECT_CODE_SIZE).NotNullable()
-				.WithColumn("User").AsString(UserModel.LOGIN_SIZE).NotNullable()
+				.WithColumn("User").AsString(UserModel.EMAIL_SIZE).NotNullable()
 				.WithColumn("CreateDate").AsDateTime().NotNullable()
 				.WithColumn("PriorityType").AsInt32().NotNullable()
 				.WithColumn("UserPriority").AsInt32().NotNullable();

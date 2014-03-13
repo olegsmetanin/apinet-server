@@ -51,7 +51,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, LookupEntry[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.LookupTasks(TestProject, null, 0).ToArray();
 			};
 			ReusableConstraint granted = Has.Length.EqualTo(2)
@@ -77,7 +77,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, LookupEntry[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.LookupTasks(TestProject, null, 0).ToArray();
 			};
 
@@ -98,7 +98,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, TaskListItemDTO[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTasks(TestProject, 
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					Enumerable.Empty<SortInfo>().ToList(),
@@ -126,7 +126,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, int> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTasksCount(TestProject,
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					TaskPredefinedFilter.All);
@@ -149,7 +149,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, TaskListItemDetailsDTO> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTaskDetails(TestProject, task.SeqNumber);
 			};
 			ReusableConstraint granted = Is.Not.Null;
@@ -169,7 +169,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, TaskViewDTO> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTask(TestProject, task.SeqNumber);
 			};
 			ReusableConstraint granted = Is.Not.Null;
@@ -189,7 +189,7 @@ namespace AGO.Tasks.Test.Security
 			var executorId = M.MemberFromUser(TestProject, projExecutor).Id;
 			Func<UserModel, bool> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var ur = controller.CreateTask(TestProject,
 					new CreateTaskDTO {TaskType = tt.Id, Content = "nunit", Executors = new[] {executorId}});
 				Session.Flush();
@@ -218,7 +218,7 @@ namespace AGO.Tasks.Test.Security
 			var task = M.Task(1, executor:projExecutor);
 			Func<UserModel, bool> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var ur = controller.UpdateTask(TestProject,
 					new PropChangeDTO
 					{
@@ -245,7 +245,7 @@ namespace AGO.Tasks.Test.Security
 			var agreemerId = M.MemberFromUser(TestProject, projManager).Id;
 			Func<UserModel, Agreement> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var task = M.Task(1, executor: projExecutor);
 				return controller.AddAgreemer(task.Id, agreemerId);
 			};
@@ -267,7 +267,7 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(1, executor: projExecutor);
 				var agreement = M.Agreement(task, a, u);
 
-				Login(u.Login);
+				Login(u.Email);
 
 				return controller.RemoveAgreement(task.Id, agreement.Id);
 			};
@@ -293,7 +293,7 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(1, executor: projExecutor);
 				M.Agreement(task, a, u);
 
-				Login(u.Login);
+				Login(u.Email);
 
 				return controller.AgreeTask(task.Id, "nunit").Done;
 			};
@@ -320,7 +320,7 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(1, executor: projExecutor);
 				M.Agreement(task, a, u, true);
 
-				Login(u.Login);
+				Login(u.Email);
 
 				return controller.RevokeAgreement(task.Id).Done;
 			};
@@ -345,7 +345,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, bool> action = u =>
 			{
 				var task = M.Task(1, executor: projExecutor);
-				Login(u.Login);
+				Login(u.Email);
 				return controller.DeleteTask(TestProject, task.Id);
 			};
 			ReusableConstraint granted = Is.True;
@@ -367,7 +367,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, CustomParameterTypeDTO[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.LookupParamTypes(TestProject, null, 0).ToArray();
 			};
 			ReusableConstraint granted = Has.Length.EqualTo(2)
@@ -389,7 +389,7 @@ namespace AGO.Tasks.Test.Security
 			var pt = M.ParamType();
 			Func<UserModel, bool> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var ur1 = controller.EditParam(task.Id,
 					new CustomParameterDTO
 					{
@@ -425,7 +425,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var task = M.Task(1, executor: projExecutor);
 				
-				Login(u.Login);
+				Login(u.Email);
 				var result = controller.TagTask(task.Id, t.Id);
 				Session.Flush();
 				return result;
@@ -470,7 +470,7 @@ namespace AGO.Tasks.Test.Security
 				Session.Flush();
 				Session.Clear();//needs for cascade operation
 
-				Login(u.Login);
+				Login(u.Email);
 				var result = controller.DetagTask(task.Id, t.Id);
 				Session.Flush();
 				return result;
@@ -503,7 +503,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, FileDTO[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetFiles(TestProject, task.SeqNumber,
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					Enumerable.Empty<SortInfo>().ToList(),
@@ -530,7 +530,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, int> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetFilesCount(TestProject, task.SeqNumber,
 					Enumerable.Empty<IModelFilterNode>().ToList());
 			};
@@ -568,7 +568,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				counter++;
 				fileMock.FileName.Returns(counter + "test.pdf");
-				Login(u.Login);
+				Login(u.Email);
 				return controller.UploadFiles(reqMock, filesMock)
 					.Files
 					.Select(dto => dto.Model)
@@ -595,7 +595,7 @@ namespace AGO.Tasks.Test.Security
 				var file = M.File(task);
 				Session.Clear();
 
-				Login(u.Login);
+				Login(u.Email);
 				controller.DeleteFile(TestProject, file.Id);
 				Session.Flush();
 			};
@@ -620,7 +620,7 @@ namespace AGO.Tasks.Test.Security
 				var f2 = M.File(task, "f2");
 				Session.Clear();
 
-				Login(u.Login);
+				Login(u.Email);
 				controller.DeleteFiles(TestProject, new [] {f1.Id, f2.Id});
 				Session.Flush();
 			};
@@ -642,7 +642,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				num++;
 				var task = M.Task(num, executor: e);
-				Login(u.Login);
+				Login(u.Email);
 				return controller.TrackTime(TestProject, task.Id, 2, null);
 			};
 
@@ -677,7 +677,7 @@ namespace AGO.Tasks.Test.Security
 				num++;
 				var task = M.Task(num, executor: e);
 				var time = M.Time(task, e);
-				Login(u.Login);
+				Login(u.Email);
 				return controller.UpdateTime(TestProject, time.Id, 2, null);
 			};
 
@@ -712,7 +712,7 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(num, executor: e);
 				var time = M.Time(task, e);
 				Session.Clear();
-				Login(u.Login);
+				Login(u.Email);
 				controller.DeleteTime(TestProject, time.Id);
 				Session.Flush();
 			};

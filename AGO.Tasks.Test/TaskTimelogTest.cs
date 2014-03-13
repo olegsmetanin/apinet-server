@@ -44,7 +44,7 @@ namespace AGO.Tasks.Test
 			Assert.That(timelog, Has.Length.EqualTo(1));
 			var entry = timelog[0];
 			Assert.That(entry.Id, Is.EqualTo(time.Id));
-			Assert.That(entry.Member, Is.EqualTo(time.Member.FIO));
+			Assert.That(entry.Member, Is.EqualTo(time.Member.FullName));
 			Assert.That(entry.Time, Is.EqualTo(time.Time));
 			Assert.That(entry.Comment, Is.EqualTo(time.Comment));
 		}
@@ -56,7 +56,7 @@ namespace AGO.Tasks.Test
 
 			Assert.That(dto, Is.Not.Null);
 			Assert.That(dto.Id, Is.Not.EqualTo(Guid.Empty));
-			Assert.That(dto.Member, Is.EqualTo(admin.FIO));
+			Assert.That(dto.Member, Is.EqualTo(admin.FullName));
 			Assert.That(dto.Time, Is.EqualTo(3m));
 			Assert.That(dto.Comment, Is.EqualTo("qwe"));
 		}
