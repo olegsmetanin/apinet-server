@@ -81,6 +81,15 @@ namespace AGO.Core.Controllers.Security.OAuth
 			}
 		}
 
+		public override bool IsCancel(NameValueCollection parameters)
+		{
+			var error = parameters["error"];
+			var code = parameters["error_code"];
+			var reason = parameters["error_reason"];
+			return !error.IsNullOrWhiteSpace() && !code.IsNullOrWhiteSpace() && !reason.IsNullOrWhiteSpace()
+			       && error == "access_denied" && code == "200" && reason == "user_denied";
+		}
+
 		#region Configuration
 
 		private string loginUrl;

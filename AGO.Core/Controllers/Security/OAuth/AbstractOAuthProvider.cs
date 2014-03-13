@@ -81,5 +81,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 		public abstract OAuthProvider Type { get; }
 		public abstract Task<string> PrepareForLogin(OAuthDataModel data);
 		public abstract Task<UserModel> QueryUserId(OAuthDataModel data, NameValueCollection parameters);
+		public abstract bool IsCancel(NameValueCollection parameters);
 	}
 }

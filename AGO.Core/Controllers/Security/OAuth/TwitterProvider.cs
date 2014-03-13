@@ -29,7 +29,7 @@ namespace AGO.Core.Controllers.Security.OAuth
 		{
 			return new TwitterOAuthDataModel();
 		}
-		//RedirectUrl + "?state=" + state
+		
 		private string MakeAuthHeader(string method, string relativeUrl, string callback = null, string token = null, string secret = null, string verifier = null, string userId = null)
 		{
 			//kvp for each possible parameter, participating in header or signing
@@ -184,6 +184,11 @@ namespace AGO.Core.Controllers.Security.OAuth
 				Log.ErrorFormat("Error when get userId from twitter:\r\nBody:{0}\r\nException:{1}", body, ex.ToString());
 				throw new OAuthLoginException(ex);
 			}
+		}
+
+		public override bool IsCancel(NameValueCollection parameters)
+		{
+			return !parameters["denied"].IsNullOrWhiteSpace();
 		}
 
 		private static string Sign(string key, string signString)
