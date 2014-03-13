@@ -136,7 +136,7 @@ namespace AGO.Core.Migrations
 			//to particulat user
 			Create.Table("TokenToLogin").InSchema(MODULE_SCHEMA)
 				.WithColumn("Token").AsGuid().NotNullable().PrimaryKey()
-				.WithColumn("Login").AsString(UserModel.EMAIL_SIZE).NotNullable()
+				.WithColumn("Login").AsString(64).NotNullable()
 				.WithColumn("CreatedAt").AsDateTime().NotNullable();
 
 			//WorkQueue, will be used later as source for all async worker (now only for reporting service)

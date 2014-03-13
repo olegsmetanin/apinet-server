@@ -19,7 +19,7 @@ namespace AGO.Core.Model.Security
 		private string lastName;
 		private string firstName;
 
-		[JsonProperty, NotLonger(EMAIL_SIZE_CONST), NotEmpty]
+		[JsonProperty, NotLonger(EMAIL_SIZE_CONST)]
 		public virtual string Email { get; set; }
 
 		[JsonProperty, NotNull]
@@ -38,7 +38,7 @@ namespace AGO.Core.Model.Security
 			}
 		}
 
-		[JsonProperty, NotLonger(NAME_SIZE), NotEmpty]
+		[JsonProperty, NotLonger(NAME_SIZE)]
 		public virtual string LastName
 		{
 			get { return lastName; }

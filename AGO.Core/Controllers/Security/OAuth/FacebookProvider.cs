@@ -64,8 +64,15 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 					var jobj = JObject.Parse(response);
 					var userId = jobj.TokenValue("id");
-
 					var user = FindUserById(userId);
+					if (user == null)
+					{
+						var fname = jobj.TokenValue("first_name");
+						var lname = jobj.TokenValue("last_name");
+						user = RegisterUser(userId, fname, lname);
+					}
+
+
 					if (user.AvatarUrl.IsNullOrWhiteSpace())
 					{
 						UpdateAvatar(user, "https://graph.facebook.com/" + userId + "/picture?width=23&height=23");

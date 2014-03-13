@@ -76,6 +76,6 @@ namespace AGO.Core.Model.Reporting
 		}
 
 		[NotMapped, MetadataExclude]
-		public virtual string AuthorLogin { get { return Creator != null ? Creator.Email : null; } }
+		public virtual string AuthorLogin { get { return Creator != null ? Creator.Id.ToString() : null; } }
 	}
 }

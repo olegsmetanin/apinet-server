@@ -34,13 +34,13 @@ namespace AGO.Core
 
 			var demo = new UserModel
 			{
+				Creator = admin,
 				Email = "demo@apinet-test.com",
 				Active = true,
 				LastName = "User",
 				FirstName = "Demo",
 				SystemRole = SystemRole.Member
 			};
-			demo.Creator = admin;
 			_CrudDao.Store(demo);
 
 			var user1 = new UserModel
@@ -87,7 +87,6 @@ namespace AGO.Core
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "100007697794498"
 			};
-			
 			var artem1Twi = new UserModel
 			{
 				Creator = admin,
@@ -101,6 +100,7 @@ namespace AGO.Core
 			};
 			_CrudDao.Store(artem1Fb);
 			_CrudDao.Store(artem1Twi);
+
 			var olegsmith = new UserModel
 			{
 				Creator = admin,

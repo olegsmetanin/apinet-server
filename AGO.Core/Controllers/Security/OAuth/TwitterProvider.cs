@@ -171,8 +171,17 @@ namespace AGO.Core.Controllers.Security.OAuth
 					body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 					response.EnsureSuccessStatusCode();
 
-					var user = FindUserById(userId);
 					var jobj = JObject.Parse(body);
+					var user = FindUserById(userId);
+					if (user == null)
+					{
+						var name = jobj.TokenValue("name");
+						var parts = name.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+						var fname = parts[0];
+						var lname = parts.Length > 1 ? parts[1] : null;
+						user = RegisterUser(userId, fname, lname);
+					}
+					
 					var profileImageUrl = jobj.TokenValue("profile_image_url_https");
 					UpdateAvatar(user, profileImageUrl);
 

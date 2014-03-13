@@ -46,15 +46,15 @@ namespace AGO.Core.Controllers.Security
 		{
 			var validation = new ValidationResult();
 
-			var user = sessionProvider.CurrentSession.QueryOver<UserModel>()
+			var demoUser = sessionProvider.CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.Email == "demo@apinet-test.com").Take(1).List().FirstOrDefault();
-			if (user == null)
+			if (demoUser == null)
 			{
 				validation.AddFieldErrors("email", localizationService.MessageForException(new NoSuchUserException()));
 				return validation;
 			}
 			
-			LoginInternal(user);
+			LoginInternal(demoUser);
 			
 			return CurrentUserDto();
 		}
@@ -63,7 +63,7 @@ namespace AGO.Core.Controllers.Security
 		{
 			//TODO избавиться от сессии (stateless)
 			stateStorage["CurrentUser"] = user;
-			stateStorage["CurrentUserToken"] = RegisterToken(user.Email).ToString();
+			stateStorage["CurrentUserToken"] = RegisterToken(user.Id.ToString()).ToString();
 		}
 
 		[JsonEndpoint]
