@@ -287,7 +287,7 @@ namespace AGO.Core
 			var compiled = _FilteringService.CompileFilter(
 				_FilteringService.ConcatFilters(filters), options.ModelType ?? typeof(TModel));
 
-			return Future<TModel>(compiled.GetExecutableCriteria(CurrentSession));
+			return Future<TModel>(compiled.GetExecutableCriteria(CurrentSession), options);
 			
 		}
 
