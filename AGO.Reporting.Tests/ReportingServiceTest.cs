@@ -8,6 +8,7 @@ using AGO.Core;
 using AGO.Core.Config;
 using AGO.Core.Filters;
 using AGO.Core.Model.Dictionary.Projects;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Tests;
@@ -22,34 +23,24 @@ using NUnit.Framework;
 
 namespace AGO.Reporting.Tests
 {
-	[TestFixture]
 	public class ReportingServiceTest: AbstractReportingTest
 	{
-		[TestFixtureSetUp]
-		public new void Init()
-		{
-			base.Init();
-		}
-
-		[TestFixtureTearDown]
-		public new void Cleanup()
-		{
-			base.Cleanup();
-		}
-
+		private ProjectModel project;
 		private ReportingService realsvc;
 		private IReportingService svc;
 		private DictionaryKeyValueProvider provider;
 		private IDictionary<string, string> config;
-		[SetUp]
-		public void SetUp()
+		
+		public override void SetUp()
 		{
+			base.SetUp();
+
+			project = M.Project(Guid.NewGuid().ToString().Replace("-", ""));
 			realsvc = new ReportingService();
 			config = new Dictionary<string, string>
-			         	{
-							{"Reporting_ServiceName", "NUnit Fast reports"}, 
-							{"Reporting_TemplatesCacheDirectory", "templates_cache"}
-						};
+			{
+				{"Reporting_TemplatesCacheDirectory", "templates_cache"}
+			};
 			provider = new DictionaryKeyValueProvider(config);
 			realsvc.KeyValueProvider = new OverridableAppSettingsKeyValueProvider(provider);
 			svc = realsvc;
@@ -58,6 +49,7 @@ namespace AGO.Reporting.Tests
 		[TearDown]
 		public new void TearDown()
 		{
+			project = null;
 			svc.Dispose();
 			svc = null;
 			base.TearDown();
@@ -81,7 +73,8 @@ namespace AGO.Reporting.Tests
 		{
 			var checker = Session.CreateCriteria<ReportTaskModel>()
 				.SetProjection(Projections.Property<ReportTaskModel>(m => m.State))
-				.Add(Restrictions.Eq("Id", taskId));
+				.Add(Restrictions.And(
+					Restrictions.Eq("Id", taskId), Restrictions.Eq("ProjectCode", project.ProjectCode)));
 
 			WaitFor(waitTimeout, () => waitState == checker.UniqueResult<ReportTaskState>());
 
@@ -90,7 +83,7 @@ namespace AGO.Reporting.Tests
 
 		private void WriteTaskToQueue(ReportTaskModel task)
 		{
-			var qi = new QueueItem("Report", task.Id, "fake", task.Creator.Email);
+			var qi = new QueueItem("Report", task.Id, project.ProjectCode, task.Creator.Id.ToString());
 			realsvc.WorkQueue.Add(qi);
 		}
 
@@ -107,11 +100,11 @@ namespace AGO.Reporting.Tests
 		{
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator, 
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator, 
 				typeof (FakeGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 			
@@ -131,8 +124,8 @@ namespace AGO.Reporting.Tests
 			const string search = "en";
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$id$}\",\"{$author$}\",\"{$name$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$id$}\",\"{$author$}\",\"{$name$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(ModelDataGenerator).AssemblyQualifiedName,
 				typeof(ModelParameters).AssemblyQualifiedName);
 			var param = new ModelParameters();
@@ -141,7 +134,7 @@ namespace AGO.Reporting.Tests
 				FilteringService.Filter<ProjectTagModel>().WhereString(m => m.Name).Like(search, true, true));
 			var writer = new StringWriter();
 			JsonService.CreateSerializer().Serialize(writer, param);
-			var task = M.Task("controlled", stg.Id, writer.ToString());
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, writer.ToString());
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
@@ -167,11 +160,11 @@ namespace AGO.Reporting.Tests
 		{
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
@@ -197,11 +190,11 @@ namespace AGO.Reporting.Tests
 			config.Add("Reporting_ConcurrentWorkersTimeout", "2");//timeout 2 sec
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
@@ -218,11 +211,11 @@ namespace AGO.Reporting.Tests
 			config.Add("Reporting_ConcurrentWorkersTimeout", "2");//timeout 2 sec
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
@@ -238,11 +231,11 @@ namespace AGO.Reporting.Tests
 		{
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 
@@ -266,11 +259,11 @@ namespace AGO.Reporting.Tests
 			config.Add("Reporting_TrackProgressInterval", "50");//each 50ms track state
 			realsvc.Initialize();
 
-			var tpl = M.Template("fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting("fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeTenIterationGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task("controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			_SessionProvider.CloseCurrentSession();
 

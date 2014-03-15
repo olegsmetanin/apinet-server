@@ -12,7 +12,7 @@ namespace AGO.Reporting.Service.Workers
 		private IReportDataGenerator dataGenerator;
 		private IReportGenerator reportGenerator;
 
-		public ReportWorker(Guid taskId, Container di, TemplateResolver resolver) : base(taskId, di, resolver)
+		public ReportWorker(string project, Guid taskId, Container di, TemplateResolver resolver) : base(project, taskId, di, resolver)
 		{
 		}
 

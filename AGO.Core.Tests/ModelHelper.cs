@@ -62,6 +62,7 @@ namespace AGO.Core.Tests
 					Type = pt,
 					VisibleForAll = pub
 				};
+				p.ConnectionString = Session().Connection.ConnectionString; //by default use main cs
 				Session().Save(p);
 				Session().Flush();
 				return p;

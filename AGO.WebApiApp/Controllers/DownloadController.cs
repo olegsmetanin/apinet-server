@@ -8,14 +8,14 @@ namespace AGO.WebApiApp.Controllers
 {
 	public class DownloadController: BaseMvcController
 	{
-		public ActionResult DownloadReportTemplate(Guid id)
+		public ActionResult DownloadReportTemplate(string project, Guid id)
 		{
-			return Download(Downloader.REPORT_TEMPLATE_TYPE, null, id);
+			return Download(Downloader.REPORT_TEMPLATE_TYPE, project, id);
 		}
 
-		public ActionResult DownloadReport(Guid id)
+		public ActionResult DownloadReport(string project, Guid id)
 		{
-			return Download(Downloader.REPORT_TYPE, null, id);
+			return Download(Downloader.REPORT_TYPE, project, id);
 		}
 
 		public ActionResult DownloadFile(string project, Guid id)

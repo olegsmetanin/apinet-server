@@ -39,75 +39,83 @@ namespace AGO.Core.Controllers
 
 		public void ServeDownloadWebRequest(HttpRequestBase request, string type, string project, Guid id)
 		{
-			
-			var sp = diContainer.GetInstance<ISessionProvider>();
-			switch (type)
+			var registry = diContainer.GetInstance<ISessionProviderRegistry>();
+			var sp = registry.GetProjectProvider(project);
+			try
 			{
-				case REPORT_TEMPLATE_TYPE:
-					//TODO security for downloading
-					var template = sp.CurrentSession.Get<ReportTemplateModel>(id);
-					if (template == null)
-					{
-						NotFound(request.RequestContext.HttpContext.Response, "Report template with given id not exists");
-					}
-					else
-					{
-						var wrapper = new TemplateWrapper(template);
-						Send(request, wrapper);
-					}
-					break;
-				case REPORT_TYPE:
-					//TODO security for downloading
-					var report = sp.CurrentSession.Get<ReportTaskModel>(id);
-					if (report == null)
-					{
-						NotFound(request.RequestContext.HttpContext.Response, "Report with given id not exists");
-					}
-					else if (report.ResultContent == null)
-					{
-						NotFound(request.RequestContext.HttpContext.Response, "Report without result");
-					}
-					else
-					{
-						var wrapper = new ReportWrapper(report);
-						Send(request, wrapper);
-						if (report.ResultUnread)
+				switch (type)
+				{
+					case REPORT_TEMPLATE_TYPE:
+						//TODO security for downloading
+						var template = sp.CurrentSession.Get<ReportTemplateModel>(id);
+						if (template == null)
 						{
-							report.ResultUnread = false;
-							diContainer.GetInstance<ICrudDao>().Store(report);
-
-							var lc = diContainer.GetInstance<ILocalizationService>();
-							var user = diContainer.GetInstance<AuthController>().CurrentUser();
-							var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == report.Project).SingleOrDefault();
-							//User must be logged in to download report, so, we don't check user to null
-							var dto = ReportTaskDTO.FromTask(report, lc, p != null ? p.Name : null, user.SystemRole != SystemRole.Administrator);
-							diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Id.ToString(), dto);
-
-							sp.FlushCurrentSession();
+							NotFound(request.RequestContext.HttpContext.Response, "Report template with given id not exists");
 						}
-					}
-					break;
-				case FILE_TYPE:
-					//security implemented in storages
-					var storages = diContainer.GetAllInstances<IFileResourceStorage>();
-					IFileResource file = null;
-					foreach (var s in storages)
-					{
-						file = s.FindFile(project, id);
-						if (file != null) break;
-					}
-					if (file == null)
-					{
-						NotFound(request.RequestContext.HttpContext.Response, "No file with this id in project");
-					}
-					else
-					{
-						Send(request, file);
-					}
-					break;
-				default:
-					NotFound(request.RequestContext.HttpContext.Response, "Unknown resource type: " + type);
-					break;
+						else
+						{
+							var wrapper = new TemplateWrapper(template);
+							Send(request, wrapper);
+						}
+						break;
+					case REPORT_TYPE:
+						//TODO security for downloading
+						var report = sp.CurrentSession.Get<ReportTaskModel>(id);
+						if (report == null)
+						{
+							NotFound(request.RequestContext.HttpContext.Response, "Report with given id not exists");
+						}
+						else if (report.ResultContent == null)
+						{
+							NotFound(request.RequestContext.HttpContext.Response, "Report without result");
+						}
+						else
+						{
+							var wrapper = new ReportWrapper(report);
+							Send(request, wrapper);
+							if (report.ResultUnread)
+							{
+								report.ResultUnread = false;
+								sp.CurrentSession.Update(report);
+								sp.CurrentSession.Flush();
+
+								var lc = diContainer.GetInstance<ILocalizationService>();
+								var user = diContainer.GetInstance<AuthController>().CurrentUser();
+								var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == report.ProjectCode).SingleOrDefault();
+								//User must be logged in to download report, so, we don't check user to null
+								var dto = ReportTaskDTO.FromTask(report, lc, p != null ? p.Name : null, user.SystemRole != SystemRole.Administrator);
+								diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Id.ToString(), dto);
+
+								sp.FlushCurrentSession();
+							}
+						}
+						break;
+					case FILE_TYPE:
+						//security implemented in storages
+						var storages = diContainer.GetAllInstances<IFileResourceStorage>();
+						IFileResource file = null;
+						foreach (var s in storages)
+						{
+							file = s.FindFile(project, id);
+							if (file != null) break;
+						}
+						if (file == null)
+						{
+							NotFound(request.RequestContext.HttpContext.Response, "No file with this id in project");
+						}
+						else
+						{
+							Send(request, file);
+						}
+						break;
+					default:
+						NotFound(request.RequestContext.HttpContext.Response, "Unknown resource type: " + type);
+						break;
+				}
+			}
+			finally
+			{
+				sp.CloseCurrentSession();
 			}
 		}
 

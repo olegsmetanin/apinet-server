@@ -7,7 +7,7 @@ namespace AGO.Reporting.Service.Workers
 {
 	public class CustomReportWorker: AbstractReportWorker
 	{
-		public CustomReportWorker(Guid taskId, Container di, TemplateResolver resolver) : base(taskId, di, resolver)
+		public CustomReportWorker(string project, Guid taskId, Container di, TemplateResolver resolver) : base(project, taskId, di, resolver)
 		{
 		}
 

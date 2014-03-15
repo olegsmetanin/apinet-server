@@ -2,6 +2,7 @@
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
+using AGO.Core.Model.Projects;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using Newtonsoft.Json;
@@ -11,9 +12,12 @@ namespace AGO.Core.Model.Reporting
 	/// <summary>
 	/// Модель настроек отчета
 	/// </summary>
-	public class ReportSettingModel: CoreModel<Guid>, IReportSetting
+	public class ReportSettingModel: CoreModel<Guid>, IReportSetting, IProjectBoundModel
 	{
 		#region Persistent
+
+		[NotEmpty, NotLonger(ProjectModel.PROJECT_CODE_SIZE), JsonProperty]
+		public virtual string ProjectCode { get; set; }
 
 		[NotEmpty, UniqueProperty, JsonProperty]
 		public virtual string Name { get; set; }

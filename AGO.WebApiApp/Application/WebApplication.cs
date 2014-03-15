@@ -174,10 +174,10 @@ namespace AGO.WebApiApp.Application
 		protected void RegisterDownloadRoutes(RouteCollection routes)
 		{
 			routes.MapRoute(Downloader.REPORT_TEMPLATE_TYPE,
-			                "download/" + Downloader.REPORT_TEMPLATE_TYPE + "/{id}",
+							"download/" + Downloader.REPORT_TEMPLATE_TYPE + "/{project}/{id}",
 			                new {controller = "Download", action = "DownloadReportTemplate"});
 			routes.MapRoute(Downloader.REPORT_TYPE,
-							"download/" + Downloader.REPORT_TYPE + "/{id}",
+							"download/" + Downloader.REPORT_TYPE + "/{project}/{id}",
 							new { controller = "Download", action = "DownloadReport" });
 			routes.MapRoute(Downloader.FILE_TYPE,
 							"download/" + Downloader.FILE_TYPE + "/{project}/{id}",

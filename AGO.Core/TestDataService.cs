@@ -1,5 +1,4 @@
 ﻿using AGO.Core.Controllers.Security.OAuth;
-using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 
@@ -9,8 +8,8 @@ namespace AGO.Core
 	{
 		#region Properties, fields, constructors
 
-		public TestDataService(ISessionProvider sessionProvider, ICrudDao crudDao)
-			:base(sessionProvider, crudDao)
+		public TestDataService(ISessionProvider sessionProvider, ISessionProviderRegistry registry, ICrudDao crudDao)
+			:base(sessionProvider, registry, crudDao)
 
 		{
 		}
@@ -134,20 +133,6 @@ namespace AGO.Core
 				Creator = admin,
 				Name = "Pay attention",
 				FullName = "Pay attention",
-			});
-
-			_CrudDao.Store(new ReportingServiceDescriptorModel
-			{
-			    Name = "Default",
-				EndPoint = "http://localhost:36652",
-				LongRunning = false
-			});
-
-			_CrudDao.Store(new ReportingServiceDescriptorModel
-			{
-				Name = "Long-runnign reports",
-				EndPoint = "http://localhost:36652",
-				LongRunning = true
 			});
 		}
 

@@ -5,6 +5,7 @@ using AGO.Core;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Model.Security;
+using NHibernate;
 
 namespace AGO.WebApiApp.Controllers
 {
@@ -15,30 +16,44 @@ namespace AGO.WebApiApp.Controllers
 			get { return DependencyResolver.Current; }
 		}
 
+		private T DoWithSession<T>(Func<ISession, T> action)
+		{
+			var registry = Resolver.GetService<ISessionProviderRegistry>();
+			var mainDb = registry.GetMainDbProvider();
+			try
+			{
+				return action(mainDb.CurrentSession);
+			}
+			finally
+			{
+				registry.CloseCurrentSessions();
+			}
+		}
+
 		public Task<ActionResult> BeginLoginFlow(OAuthProvider providerType)
 		{
-			return DoSafeAsync(async () =>
+			return DoSafeAsync(() => DoWithSession<Task<ActionResult>>(async session =>
 			{
 				var sourceUrl = Request.QueryString["url"];
 				if (sourceUrl.IsNullOrWhiteSpace())
 					throw new ArgumentException("No return url in query string");
-				
+
 				var provider = Resolver.GetService<IOAuthProviderFactory>().Get(providerType);
 				var data = provider.CreateData();
 				data.RedirectUrl = sourceUrl;
-				Resolver.GetService<ICrudDao>().Store(data);
-				Resolver.GetService<ISessionProvider>().FlushCurrentSession();
+				session.Save(data);
+				session.Flush();
 
 				var redirectUrl = await provider.PrepareForLogin(data);
 				return Redirect(redirectUrl);
-			});
+			}));
 		}
 
 		//Not use async, because our StateStorage implementation relies on HttpContext.Current, that is null
 		//in async method
 		public ActionResult EndLoginFlow(OAuthProvider providerType)
 		{
-			return DoSafe(() =>
+			return DoSafe(() => DoWithSession<ActionResult>(session =>
 			{
 				OAuthDataModel data = null;
 				try
@@ -71,7 +86,7 @@ namespace AGO.WebApiApp.Controllers
 						Resolver.GetService<ISessionProvider>().CloseCurrentSession();
 					}
 				}
-			});
+			}));
 		}
 	}
 }

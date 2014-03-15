@@ -99,7 +99,6 @@
     <Compile Include="Controllers\IStateStorage.cs" />
     <Compile Include="Controllers\LookupEntry.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
-    <Compile Include="AbstractDao.cs" />
     <Compile Include="AbstractTestDataService.cs" />
     <Compile Include="Controllers\MimeAssistant.cs" />
     <Compile Include="Controllers\AbstractActivityController.cs" />
@@ -118,6 +117,8 @@
     <Compile Include="Controllers\UpdateResult.cs" />
     <Compile Include="Controllers\Uploader.cs" />
     <Compile Include="Controllers\UploadResult.cs" />
+    <Compile Include="DataAccess\CrudDao.cs" />
+    <Compile Include="DataAccess\DaoFactory.cs" />
     <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
@@ -128,6 +129,7 @@
     <Compile Include="Execution\IActionParameterTransformer.cs" />
     <Compile Include="Execution\JsonTokenParameterTransformer.cs" />
     <Compile Include="IEnvironmentService.cs" />
+    <Compile Include="ISessionProviderRegistry.cs" />
     <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
@@ -158,7 +160,6 @@
     <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
     <Compile Include="Model\Projects\ProjectToTagModel.cs" />
     <Compile Include="Model\Reporting\ReportingRepository.cs" />
-    <Compile Include="Model\Reporting\ReportingServiceDescriptorModel.cs" />
     <Compile Include="Model\Reporting\ReportSettingModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskDTO.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="Security\Providers\ProjectTagLinkSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagSecurityProvider.cs" />
     <Compile Include="Security\SecurityService.cs" />
+    <Compile Include="SessionProviderRegistry.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
     <Compile Include="TestDataService.cs" />
@@ -210,7 +212,6 @@
     <Compile Include="Filters\Exceptions.cs" />
     <Compile Include="Filters\IFilteringService.cs" />
     <Compile Include="Filters\FilteringService.cs" />
-    <Compile Include="CrudDao.cs" />
     <Compile Include="Filters\IModelFilterNode.cs" />
     <Compile Include="Filters\ModelFilterOperators.cs" />
     <Compile Include="Filters\ValueFilterBuilder.cs" />

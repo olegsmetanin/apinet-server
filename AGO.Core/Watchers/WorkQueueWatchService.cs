@@ -12,7 +12,7 @@ using Snapshot = System.Collections.Generic.IDictionary<string, System.Collectio
 namespace AGO.Core.Watchers
 {
 	/// <summary>
-	/// Наблюдает за событиями в системе, распространяемыми через <see cref="INotificationService"/> и рассылкает клиентам
+	/// Наблюдает за событиями в системе, распространяемыми через <see cref="INotificationService"/> и рассылает клиентам
 	/// информацию о позиции их задач в общей очереди <see cref="IWorkQueue"/>.
 	/// </summary>
 	public class WorkQueueWatchService: IDisposable

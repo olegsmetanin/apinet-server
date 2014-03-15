@@ -50,6 +50,18 @@ namespace AGO.Core.Model.Projects
 		public virtual ISet<ProjectMembershipModel> Members { get { return members; } set { members = value; } }
 		private ISet<ProjectMembershipModel> members = new HashSet<ProjectMembershipModel>();
 
+		#region Technical info
+
+		/// <summary>
+		/// Connection string to project database
+		/// </summary>
+		/// <remarks>May be empty, if project data stored in main db with projects and users. 
+		/// Situation mostly for development and test.</remarks>
+		[MetadataExclude, NotLonger(512)]
+		public virtual string ConnectionString { get; set; }
+
+		#endregion
+
 		#endregion
 
 		#region Non-persistent

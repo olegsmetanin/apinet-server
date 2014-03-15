@@ -8,75 +8,81 @@ using NHibernate;
 
 namespace AGO.Reporting.Tests
 {
-	public class ModelHelper
+	public class ModelHelper: Core.Tests.ModelHelper
 	{
-		private readonly Func<ISession> session;
-		private readonly Func<UserModel> currentUser;
-
-		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser)
+		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser): base(session, currentUser)
 		{
-			this.session = session;
-			this.currentUser = currentUser;
 		}
 
-		public ReportTemplateModel Template(string name, Stream content)
+		public ReportTemplateModel Template(string project, string name, Stream content)
 		{
 			var buffer = new byte[content.Length];
 			new BinaryReader(content).Read(buffer, 0, buffer.Length);
-			return Template(name, buffer);
+			return Template(project, name, buffer);
 		}
 
-		public ReportTemplateModel Template(string name, byte[] template)
+		public ReportTemplateModel Template(string project, string name, byte[] template)
 		{
-			var tpl = new ReportTemplateModel
-			          	{
-			          		Name = "NUnit " + name,
-			          		Content = template,
-			          		CreationTime = DateTime.Now,
-			          		LastChange = DateTime.Now
-			          	};
-			session().Save(tpl);
-			session().Flush();
+			return Track(() =>
+			{
+				var tpl = new ReportTemplateModel
+				{
+					ProjectCode = project,
+					Name = "NUnit " + name,
+					Content = template,
+					CreationTime = DateTime.Now,
+					LastChange = DateTime.Now
+				};
+				Session().Save(tpl);
+				Session().Flush();
 
-			return tpl;
+				return tpl;
+			});
 		}
 
-		public ReportSettingModel Setting(string name, Guid templateId, 
+		public ReportSettingModel Setting(string project, string name, Guid templateId, 
 			GeneratorType type = GeneratorType.CvsGenerator, string datagen = "fake", string param = "fake")
 		{
-			var setting = new ReportSettingModel
-			              	{
-								Name = "NUnit " + name,
-								TypeCode = "NUnit",
-			              		GeneratorType = type,
-			              		DataGeneratorType = datagen,
-			              		ReportParameterType = param,
-			              		ReportTemplate = session().Get<ReportTemplateModel>(templateId)
-			              	};
-			session().Save(setting);
-			session().Flush();
+			return Track(() =>
+			{
+				var setting = new ReportSettingModel
+				{
+					ProjectCode = project,
+					Name = "NUnit " + name,
+					TypeCode = "NUnit",
+					GeneratorType = type,
+					DataGeneratorType = datagen,
+					ReportParameterType = param,
+					ReportTemplate = Session().Get<ReportTemplateModel>(templateId)
+				};
+				Session().Save(setting);
+				Session().Flush();
 
-			return setting;
+				return setting;
+			});
 		}
 
-		public ReportTaskModel Task(string name, Guid settingId, string param = null)
+		public ReportTaskModel Task(string project, string name, Guid settingId, string param = null)
 		{
-			var setting = session().Get<ReportSettingModel>(settingId);
-			var task = new ReportTaskModel
-			           	{
-							Project = "Nunit proj",
-							Culture = "en",
-			           		Name = "NUnit " + name,
-			           		ReportSetting = setting,
-			           		Parameters = param,
-			           		State = ReportTaskState.NotStarted,
-							Creator = currentUser(),
-							CreationTime = DateTime.UtcNow
-			           	};
-			session().Save(task);
-			session().Flush();
+			return Track(() =>
+			{
+				var setting = Session().Get<ReportSettingModel>(settingId);
+				var task = new ReportTaskModel
+				{
+					ProjectCode = project,
+					Culture = "en",
+					Name = "NUnit " + name,
+					ReportSetting = setting,
+					Parameters = param,
+					State = ReportTaskState.NotStarted,
+					Creator = CurrentUser(),
+					CreationTime = DateTime.UtcNow
+				};
+				Session().Save(task);
+				Session().Flush();
 
-			return task;
+				return task;
+			});
 		}
 	}
 }

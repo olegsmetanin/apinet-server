@@ -14,8 +14,10 @@ namespace AGO.Reporting.Service.Workers
 	/// </summary>
 	public abstract class AbstractReportWorker
 	{
-		protected AbstractReportWorker(Guid taskId, SimpleInjector.Container di, TemplateResolver resolver)
+		protected AbstractReportWorker(string project, Guid taskId, SimpleInjector.Container di, TemplateResolver resolver)
 		{
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("project");
 			if (taskId == default(Guid))
 				throw new ArgumentNullException("taskId");
 			if (di == null)
@@ -23,14 +25,17 @@ namespace AGO.Reporting.Service.Workers
 			if (resolver == null)
 				throw new ArgumentNullException("resolver");
 
+			Project = project;
 			TaskId = taskId;
 			Container = di;
 			TemplateResolver = resolver;
 
 			Repository = Container.GetInstance<IReportingRepository>();
-			SessionProvider = Container.GetInstance<ISessionProvider>();
+			SessionProviderRegistry = Container.GetInstance<ISessionProviderRegistry>();
 			Bus = Container.GetInstance<INotificationService>();
 		}
+
+		public string Project { get; private set; }
 
 		public Guid TaskId { get; private set; }
 
@@ -40,7 +45,7 @@ namespace AGO.Reporting.Service.Workers
 
 		protected IReportingRepository Repository { get; private set; }
 
-		protected ISessionProvider SessionProvider { get; private set; }
+		protected ISessionProviderRegistry SessionProviderRegistry { get; private set; }
 
 		protected INotificationService Bus { get; private set; }
 
@@ -182,7 +187,7 @@ namespace AGO.Reporting.Service.Workers
 					Thread.CurrentThread.CurrentUICulture = UserCulture;
 					try
 					{
-						return DALHelper.Do(SessionProvider, s => InternalStart());
+						return DALHelper.Do(SessionProviderRegistry, Project, (ms, ps) => InternalStart());
 					}
 					finally
 					{
@@ -248,19 +253,19 @@ namespace AGO.Reporting.Service.Workers
 		{
 			lock (stateChangeSync)
 			{
-				DALHelper.Do(SessionProvider, session =>
+				DALHelper.Do(SessionProviderRegistry, Project, (mainSess, projSess)=>
 				{
 					var backupCulture = Thread.CurrentThread.CurrentUICulture;
 					Thread.CurrentThread.CurrentUICulture = UserCulture;
 					try
 					{
-						var reportTask = Repository.GetTask(TaskId);
+						var reportTask = Repository.GetTask(projSess, TaskId);
 						action(reportTask);
-						session.SaveOrUpdate(reportTask);
+						projSess.SaveOrUpdate(reportTask);
 						var login = reportTask.AuthorLogin;//cache login, because after flush user proxy can't be loaded
-						SessionProvider.FlushCurrentSession();
+						projSess.Flush();
 						//Not wait for the task complete - no care if some of messages was lost
-						Bus.EmitReportChanged(type, login, Repository.GetTaskAsDTO(reportTask.Id));
+						Bus.EmitReportChanged(type, login, Repository.GetTaskAsDTO(mainSess, projSess, reportTask.Id));
 					}
 					finally
 					{

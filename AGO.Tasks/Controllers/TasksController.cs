@@ -10,6 +10,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
@@ -47,8 +48,10 @@ namespace AGO.Tasks.Controllers
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
-			ISecurityService securityService) 
-            : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory)
+            : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
         {	
         }
 
@@ -348,9 +351,9 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpointAttribute, RequireAuthorizationAttribute]
-		public IEnumerable<IModelMetadata> TaskMetadata()
+		public IEnumerable<IModelMetadata> TaskMetadata([NotEmpty] string project)
 		{
-			return MetadataForModelAndRelations<TaskModel>();
+			return MetadataForModelAndRelations<TaskModel>(project);
 		}
 
 		#endregion
@@ -726,9 +729,9 @@ namespace AGO.Tasks.Controllers
 	    }
 
 		[JsonEndpointAttribute, RequireAuthorizationAttribute]
-		public IEnumerable<IModelMetadata> TaskFilesMetadata()
+		public IEnumerable<IModelMetadata> TaskFilesMetadata([NotEmpty] string project)
 		{
-			return MetadataForModelAndRelations<TaskFileModel>();
+			return MetadataForModelAndRelations<TaskFileModel>(project);
 		}
 
 		#region IFileResourceStorage implementation

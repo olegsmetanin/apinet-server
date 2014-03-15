@@ -13,12 +13,12 @@ namespace AGO.Core.Model.Reporting
 	/// Модель задачи на создание отчета
 	/// </summary>
 	[LazyLoad]
-	public class ReportTaskModel: SecureModel<Guid>, IReportTask
+	public class ReportTaskModel: SecureModel<Guid>, IReportTask, IProjectBoundModel
 	{
 		#region Persistent
 
 		[NotEmpty, NotLonger(ProjectModel.PROJECT_CODE_SIZE), JsonProperty]
-		public virtual string Project { get; set; }
+		public virtual string ProjectCode { get; set; }
 
 		[NotEmpty, NotLonger(250), JsonProperty]
 		public virtual string Name { get; set; }

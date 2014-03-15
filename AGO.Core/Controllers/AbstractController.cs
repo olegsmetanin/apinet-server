@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Filters;
@@ -22,11 +23,18 @@ namespace AGO.Core.Controllers
 
 		protected readonly IFilteringService _FilteringService;
 
+		[Obsolete("Use DaoFactory.CreateXXX instead")]
 		protected readonly ICrudDao _CrudDao;
 
+		[Obsolete("Use DaoFactory.CreateXXX instead")]
 		protected readonly IFilteringDao _FilteringDao;
 
+		protected readonly DaoFactory DaoFactory;
+
+		[Obsolete("Use SessionProviderRegistry instead")]
 		protected readonly ISessionProvider _SessionProvider;
+
+		protected readonly ISessionProviderRegistry SessionProviderRegistry;
 
 		protected readonly ILocalizationService _LocalizationService;
 
@@ -45,7 +53,9 @@ namespace AGO.Core.Controllers
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
-			ISecurityService securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry providerRegistry,
+			DaoFactory factory)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -82,16 +92,19 @@ namespace AGO.Core.Controllers
 			if (securityService == null)
 				throw new ArgumentNullException("securityService");
 			SecurityService = securityService;
+
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
+			SessionProviderRegistry = providerRegistry;
+
+			if (factory == null)
+				throw new ArgumentNullException("factory");
+			DaoFactory = factory;
 		}
 
 		#endregion
 
 		#region Template methods
-
-		protected virtual ISession Session
-		{
-			get { return _SessionProvider.CurrentSession; }
-		}
 
 		protected override void DoInitialize()
 		{
@@ -124,28 +137,53 @@ namespace AGO.Core.Controllers
 
 		#region Helper methods
 
+		[Obsolete("Use MainSession and ProjectSession instead")]
+		protected virtual ISession Session
+		{
+			get { return _SessionProvider.CurrentSession; }
+		}
+
+		protected virtual ISession MainSession
+		{
+			get { return SessionProviderRegistry.GetMainDbProvider().CurrentSession; }
+		}
+
+		protected virtual ISession ProjectSession(string project)
+		{
+			return SessionProviderRegistry.GetProjectProvider(project).CurrentSession;
+		}
+
 		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations<TModel>()
 			where TModel : IIdentifiedModel
 		{
-			return MetadataForModelAndRelations(typeof (TModel));
+			return MetadataForModelAndRelations(null, typeof (TModel));
 		}
 
-		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations(Type modelType)
+		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations<TModel>(string project)
+			where TModel : IIdentifiedModel
+		{
+			return MetadataForModelAndRelations(project, typeof(TModel));
+		}
+
+		private IEnumerable<IModelMetadata> MetadataForModelAndRelations(string project, Type modelType)
 		{
 			var result = new List<IModelMetadata>();
 			var processedTypes = new HashSet<Type>();
 
-			ProcessMetadata(modelType, result, processedTypes);
+			ProcessMetadata(project, modelType, result, processedTypes);
 
 			return result;
 		}
 
-		private void ProcessMetadata(Type modelType, ICollection<IModelMetadata> result, ICollection<Type> processedTypes)
+		private void ProcessMetadata(string project, Type modelType, ICollection<IModelMetadata> result, ICollection<Type> processedTypes)
 		{
 			if (modelType == null || processedTypes.Contains(modelType))
 				return;
 
-			var metadata = _SessionProvider.ModelMetadata(modelType);
+			var sp = project == null
+				? SessionProviderRegistry.GetMainDbProvider()
+				: SessionProviderRegistry.GetProjectProvider(project);
+			var metadata = sp.ModelMetadata(modelType);
 			if (metadata == null)
 				return;
 
@@ -153,7 +191,7 @@ namespace AGO.Core.Controllers
 			processedTypes.Add(modelType);
 
 			foreach (var modelProperty in metadata.ModelProperties)
-				ProcessMetadata(modelProperty.PropertyType, result, processedTypes);
+				ProcessMetadata(project, modelProperty.PropertyType, result, processedTypes);
 		}
 
 		protected TModel GetModel<TModel, TId>(TId id, bool dontFetchReferences)

@@ -6,6 +6,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
@@ -37,8 +38,10 @@ namespace AGO.Tasks.Controllers
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
-			ISecurityService securityService)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 		}
 
@@ -160,9 +163,9 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> TaskTypeMetadata()
+		public IEnumerable<IModelMetadata> TaskTypeMetadata([NotEmpty] string project)
 		{
-			return MetadataForModelAndRelations<TaskTypeModel>();
+			return MetadataForModelAndRelations<TaskTypeModel>(project);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

@@ -76,7 +76,8 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectModel>(m => m.Description)
 				.WithRefColumn<ProjectModel>(m => m.Type)
 				.WithValueColumn<ProjectModel>(m => m.VisibleForAll)
-				.WithValueColumn<ProjectModel>(m => m.Status);
+				.WithValueColumn<ProjectModel>(m => m.Status)
+				.WithValueColumn<ProjectModel>(m => m.ConnectionString);
 
 			Create.CoreModelTable<ProjectMembershipModel>()
 				.WithRefColumn<ProjectMembershipModel>(pm => pm.Project)
@@ -100,15 +101,13 @@ namespace AGO.Core.Migrations
 				.WithRefColumn<ProjectToTagModel>(m => m.Project)
 				.WithRefColumn<ProjectToTagModel>(m => m.Tag);
 
-			Create.CoreModelTable<ReportingServiceDescriptorModel>()
-				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.Name)
-				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.EndPoint)
-				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.LongRunning);
 			Create.CoreModelTable<ReportTemplateModel>()
+				.WithValueColumn<ReportTemplateModel>(m => m.ProjectCode)
 				.WithValueColumn<ReportTemplateModel>(m => m.Name)
 				.WithBinaryColumn<ReportTemplateModel>(m => m.Content)
 				.WithValueColumn<ReportTemplateModel>(m => m.LastChange);
 			Create.CoreModelTable<ReportSettingModel>()
+				.WithValueColumn<ReportTemplateModel>(m => m.ProjectCode)
 				.WithValueColumn<ReportSettingModel>(m => m.Name)
 				.WithValueColumn<ReportSettingModel>(m => m.TypeCode)
 				.WithValueColumn<ReportSettingModel>(m => m.GeneratorType)
@@ -116,7 +115,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportSettingModel>(m => m.ReportParameterType)
 				.WithRefColumn<ReportSettingModel>(m => m.ReportTemplate);
 			Create.SecureModelTable<ReportTaskModel>()
-				.WithValueColumn<ReportTaskModel>(m => m.Project)
+				.WithValueColumn<ReportTaskModel>(m => m.ProjectCode)
 				.WithValueColumn<ReportTaskModel>(m => m.Name)
 				.WithRefColumn<ReportTaskModel>(m => m.ReportSetting)
 				.WithValueColumn<ReportTaskModel>(m => m.Parameters)

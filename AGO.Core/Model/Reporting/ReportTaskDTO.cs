@@ -17,7 +17,8 @@ namespace AGO.Core.Model.Reporting
 			return new ReportTaskDTO
 			{
 				Id = m.Id,
-				Project = project ?? m.Project,
+				Project = project ?? m.ProjectCode,
+				ProjectCode = m.ProjectCode,
 				Name = m.Name,
 				State = m.State.ToString(),
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
@@ -36,6 +37,8 @@ namespace AGO.Core.Model.Reporting
 		public Guid Id { get; set; }
 
 		public string Project { get; set; }
+
+		public string ProjectCode { get; set; }
 
 		public string Name { get; set; }
 

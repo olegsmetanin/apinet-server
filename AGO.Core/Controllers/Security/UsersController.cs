@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
@@ -39,8 +40,10 @@ namespace AGO.Core.Controllers.Security
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
 			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory,
 			IStateStorage<string> clientStateStorage)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			if (clientStateStorage == null)
 				throw new ArgumentNullException("clientStateStorage");

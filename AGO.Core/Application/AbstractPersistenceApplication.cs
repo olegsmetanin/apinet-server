@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using AGO.Core.AutoMapping;
 using AGO.Core.Config;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
@@ -20,8 +21,12 @@ namespace AGO.Core.Application
 	{
 		#region Properties, fields, constructors
 
+		[Obsolete("Replace with SessionProviderRegistry when it will be implemented")]
 		protected ISessionProvider _SessionProvider;
+		[Obsolete("Replace with SessionProviderRegistry when it will be implemented")]
 		public ISessionProvider SessionProvider { get { return _SessionProvider; } }
+
+		public ISessionProviderRegistry SessionProviderRegistry { get; private set; }
 
 		protected IFilteringService _FilteringService;
 		public IFilteringService FilteringService { get { return _FilteringService; } }
@@ -31,6 +36,7 @@ namespace AGO.Core.Application
 
 		protected ICrudDao _CrudDao;
 		public ICrudDao CrudDao { get { return _CrudDao; } }
+		public DaoFactory DaoFactory { get; private set; }
 
 		protected IMigrationService _MigrationService;
 		public IMigrationService MigrationService { get { return _MigrationService; } }
@@ -64,13 +70,18 @@ namespace AGO.Core.Application
 			IocContainer.RegisterInitializer<AutoMappedSessionFactoryBuilder>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)).ApplyTo(service));
 
+			IocContainer.RegisterSingle<ISessionProviderRegistry, SessionProviderRegistry>();
+			IocContainer.RegisterInitializer<SessionProviderRegistry>(service =>
+				service.Initialize(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)));
+
 			IocContainer.RegisterSingle<IFilteringService, FilteringService>();
 			IocContainer.RegisterInitializer<FilteringService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Filtering_(.*)", KeyValueProvider)).ApplyTo(service));
 
+			IocContainer.RegisterSingle<DaoFactory>();
+
 			IocContainer.RegisterSingle<CrudDao, CrudDao>();
-			IocContainer.RegisterInitializer<CrudDao>(service =>
-				new KeyValueConfigProvider(new RegexKeyValueProvider("^CrudDao_(.*)", KeyValueProvider)).ApplyTo(service));
+
 			IocContainer.Register<ICrudDao>(IocContainer.GetInstance<CrudDao>);
 			IocContainer.Register<IFilteringDao>(IocContainer.GetInstance<CrudDao>);
 
@@ -148,7 +159,9 @@ namespace AGO.Core.Application
 		protected virtual void DoInitializePersistence()
 		{
 			_SessionProvider = IocContainer.GetInstance<ISessionProvider>();
+			SessionProviderRegistry = IocContainer.GetInstance<ISessionProviderRegistry>();
 			_FilteringService = IocContainer.GetInstance<IFilteringService>();
+			DaoFactory = IocContainer.GetInstance<DaoFactory>();
 			_FilteringDao = IocContainer.GetInstance<IFilteringDao>();
 			_CrudDao = IocContainer.GetInstance<ICrudDao>();
 			_MigrationService = IocContainer.GetInstance<IMigrationService>();

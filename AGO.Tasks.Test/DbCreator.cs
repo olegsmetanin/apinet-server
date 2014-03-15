@@ -1,4 +1,6 @@
-﻿using AGO.Core.Application;
+﻿using System;
+using AGO.Core.Application;
+using AGO.Core.Notification;
 using NUnit.Framework;
 
 namespace AGO.Tasks.Test
@@ -13,6 +15,11 @@ namespace AGO.Tasks.Test
 
 			Initialize();
 			DoPopulateDatabase();
+		}
+
+		protected override Type NotificationServiceType
+		{
+			get { return typeof (NoopNotificationService); }
 		}
 	}
 }

@@ -45,14 +45,14 @@ rem Build client
 SET APINET_CLIENT=..\..\apinet-client
 
 pushd %APINET_CLIENT%\src\core
-call npm install >> %CURDIR%\build.log
-call bower install >> %CURDIR%\build.log
+rem call npm install >> %CURDIR%\build.log
+rem call bower install >> %CURDIR%\build.log
 call grunt build >> %CURDIR%\build.log
 popd
 
 pushd %APINET_CLIENT%\src\tasks
-call npm install >> %CURDIR%\build.log
-call bower install >> %CURDIR%\build.log
+rem call npm install >> %CURDIR%\build.log
+rem call bower install >> %CURDIR%\build.log
 call grunt build >> %CURDIR%\build.log
 popd
 

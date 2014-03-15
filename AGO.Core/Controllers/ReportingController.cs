@@ -10,6 +10,7 @@ using System.Web;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
@@ -48,8 +49,10 @@ namespace AGO.Core.Controllers
 			AuthController authController,
 			INotificationService notificationService,
 			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory,
 			IWorkQueue workQueue) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			if (notificationService == null)
 				throw new ArgumentNullException("notificationService");
@@ -197,7 +200,7 @@ namespace AGO.Core.Controllers
 				           		Creator = user,
 				           		State = ReportTaskState.NotStarted,
 				           		ReportSetting = settings,
-								Project = project,
+								ProjectCode = project,
 								Name = name, 
 								Parameters = parameters.ToStringSafe(),
 								ResultName = !resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : null,
@@ -410,7 +413,7 @@ namespace AGO.Core.Controllers
 		private ReportTaskDTO ReportTaskToDTO(ReportTaskModel task)
 		{
 			var p = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-				.Where(m => m.ProjectCode == task.Project).SingleOrDefault();
+				.Where(m => m.ProjectCode == task.ProjectCode).SingleOrDefault();
 			var project = p != null ? p.Name : null;
 			return ReportTaskDTO.FromTask(task, _LocalizationService, project, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);
 		}

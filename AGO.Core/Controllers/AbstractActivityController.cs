@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Controllers.Activity;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
@@ -31,8 +32,10 @@ namespace AGO.Core.Controllers
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
 			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory,
 			IEnumerable<IActivityViewProcessor> activityViewProcessors)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			if (activityViewProcessors == null)
 				throw new ArgumentNullException("activityViewProcessors");

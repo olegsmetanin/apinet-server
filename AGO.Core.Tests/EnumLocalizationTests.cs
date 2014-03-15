@@ -35,15 +35,17 @@ namespace AGO.Core.Tests
 		[Test]
 		public void ModelMetadalaForEnumLocalized()
 		{
+// ReSharper disable once InconsistentNaming
 			const string en_meta_regex =
 				@"""SystemRole"": {\s*""DisplayName"": ""System role"",\s*""PropertyType"": ""enum"",\s* ""PossibleValues"": {\s*""Member"": ""Member"",\s*""Administrator"": ""Administrator""\s*}\s*}";
 
+// ReSharper disable once InconsistentNaming
 			const string ru_meta_regex =
 				@"""SystemRole"": {\s*""DisplayName"": ""Системная роль"",\s*""PropertyType"": ""enum"",\s* ""PossibleValues"": {\s*""Member"": ""Участник"",\s*""Administrator"": ""Администратор""\s*}\s*}";
 
 			var en = new CultureInfo("en");
 			var ru = new CultureInfo("ru");
-			var metadata = new [] { _SessionProvider.ModelMetadata(typeof(UserModel)) };
+			var metadata = new [] { SessionProviderRegistry.GetMainDbProvider().ModelMetadata(typeof(UserModel)) };
 			var jsonService = IocContainer.GetInstance<IJsonService>();
 			jsonService.TryInitialize();
 			var stringBuilder = new StringBuilder();

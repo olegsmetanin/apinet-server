@@ -71,13 +71,12 @@ namespace AGO.Reporting.Service
 		protected override void DoInitializeSingletons()
 		{
 			base.DoInitializeSingletons();
-			resolver = new TemplateResolver(IocContainer.GetInstance<IReportingRepository>(), TemplatesCacheDirectory);
+			resolver = new TemplateResolver(TemplatesCacheDirectory);
 			selector = new ProjectSelector(ServicedProjects);
 		}
 
 		private void ReadConfiguration()
 		{
-			ServiceName = KeyValueProvider.Value("Reporting_ServiceName");
 			ServicedProjects = KeyValueProvider.Value("Reporting_ServicedProjects") ?? "*";
 			TemplatesCacheDirectory = KeyValueProvider.Value("Reporting_TemplatesCacheDirectory");
 			int n;
@@ -114,11 +113,6 @@ namespace AGO.Reporting.Service
 			//run with 0, so, immediate query work queue and start work, if any
 			runTaskTimer.Run(0);
 		}
-
-		/// <summary>
-		/// Имя текущего сервиса отчетов
-		/// </summary>
-		public string ServiceName { get; set; }
 
 		/// <summary>
 		/// Проекты, задачи которых обслуживаются сервисом.
@@ -221,36 +215,41 @@ namespace AGO.Reporting.Service
 						//work queue is empty
 						break;
 					}
-					var task = repository.GetTask(qi.TaskId);
-					if (task == null)
+					DALHelper.Do(SessionProviderRegistry, qi.Project, (mainSess, projSess) =>
 					{
-						//странно, задачу запустили и потом сразу удалили? такое может случиться
-						Log.WarnFormat("ReportTask with id '{0}' not found and can't be runned. Ignore.", qi.TaskId);
-						continue;
-					}
-					if (task.State != ReportTaskState.NotStarted || HasWorker(task.Id, w => true))
-					{
-						//уже запущена, либо отменена до запуска, но вообще непонятно как такое могло произойти. 
-						//накладка по вызовам таймера?
-						Log.WarnFormat("ReportTask with id '{0}' has invalid state for running ({1}) or worker already runned for this task. Ignore.", task.Id, task.State);
-						continue;
-					}
-					try
-					{
+						var task = repository.GetTask(projSess, qi.TaskId);
+						if (task == null)
+						{
+							//странно, задачу запустили и потом сразу удалили? такое может случиться
+							Log.WarnFormat("ReportTask with id '{0}' not found and can't be runned. Ignore.", qi.TaskId);
+							return;
+						}
+						if (task.State != ReportTaskState.NotStarted || HasWorker(task.Id, w => true))
+						{
+							//уже запущена, либо отменена до запуска, но вообще непонятно как такое могло произойти. 
+							//накладка по вызовам таймера?
+							Log.WarnFormat(
+								"ReportTask with id '{0}' has invalid state for running ({1}) or worker already runned for this task. Ignore.",
+								task.Id, task.State);
+							return;
+						}
+						try
+						{
 
-						var worker = CreateWorker(task);
-						AddWorker(worker);
-						worker.Start();
-						worker.End += RemoveWorker;
-					}
-					catch (Exception ex)
-					{
-						task.State = ReportTaskState.Error;
-						task.ErrorMsg = ex.Message;
-						task.ErrorDetails = ex.ToString();
-						SessionProvider.CurrentSession.SaveOrUpdate(task);
-						SessionProvider.FlushCurrentSession();
-					}
+							var worker = CreateWorker(task);
+							AddWorker(worker);
+							worker.Start();
+							worker.End += RemoveWorker;
+						}
+						catch (Exception ex)
+						{
+							task.State = ReportTaskState.Error;
+							task.ErrorMsg = ex.Message;
+							task.ErrorDetails = ex.ToString();
+							projSess.SaveOrUpdate(task);
+							projSess.Flush();
+						}
+					});
 				}
 			}
 			catch (ThreadAbortException)
@@ -280,8 +279,8 @@ namespace AGO.Reporting.Service
 		private AbstractReportWorker CreateWorker(IReportTask task)
 		{
 			var worker = task.Setting.GeneratorType == GeneratorType.CustomGenerator
-			             	? (AbstractReportWorker) new CustomReportWorker(task.Id, IocContainer, resolver)
-							: new ReportWorker(task.Id, IocContainer, resolver);
+			             	? (AbstractReportWorker) new CustomReportWorker(task.ProjectCode, task.Id, IocContainer, resolver)
+							: new ReportWorker(task.ProjectCode, task.Id, IocContainer, resolver);
 			if (!task.Parameters.IsNullOrWhiteSpace())
 			{
 				var tokenReader = new JTokenReader(JToken.Parse(task.Parameters)) { CloseInput = false };

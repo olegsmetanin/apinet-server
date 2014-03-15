@@ -217,7 +217,7 @@ namespace AGO.Core
 		{
 			base.DoFinalizeConfig();
 
-			CurrentSessionContextClass = CurrentSessionContextClass ?? typeof(ThreadStaticSessionContext);
+			CurrentSessionContextClass = CurrentSessionContextClass ?? typeof (CallSessionContext); //typeof(ThreadStaticSessionContext); not usable when two sessionfactory on same thread
 			CollectionTypeFactoryClass = CollectionTypeFactoryClass ?? typeof(Net4CollectionTypeFactory);
 		}
 

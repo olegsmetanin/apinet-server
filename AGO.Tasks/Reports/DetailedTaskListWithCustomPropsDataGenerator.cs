@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
@@ -17,20 +18,20 @@ namespace AGO.Tasks.Reports
 		private const int MAX_PROPS = 50;
 
 		private readonly IFilteringService fs;
-		private readonly IFilteringDao dao;
+		private readonly DaoFactory daoFactory;
 		private readonly ILocalizationService las;
 
-		public DetailedTaskListWithCustomPropsDataGenerator(IFilteringService service, IFilteringDao fdao, ILocalizationService las)
+		public DetailedTaskListWithCustomPropsDataGenerator(IFilteringService service, DaoFactory factory, ILocalizationService las)
 		{
 			if (service == null)
 				throw new ArgumentNullException("service");
-			if (fdao == null)
-				throw new ArgumentNullException("fdao");
+			if (factory == null)
+				throw new ArgumentNullException("factory");
 			if (las == null)
 				throw new ArgumentNullException("las");
 
 			fs = service;
-			dao = fdao;
+			daoFactory = factory;
 			this.las = las;
 		}
 
@@ -39,6 +40,8 @@ namespace AGO.Tasks.Reports
 			var param = parameters as TaskListReportParameters;
 			if (param == null)
 				throw new ArgumentException("parameters is not " + typeof(TaskListReportParameters).Name, "parameters");
+
+			var dao = daoFactory.CreateProjectFilteringDao(param.Project);
 
 			var filter = fs.ParseFilterSetFromJson(param.Filter);
 

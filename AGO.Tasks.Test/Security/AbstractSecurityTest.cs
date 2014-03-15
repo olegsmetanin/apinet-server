@@ -16,7 +16,7 @@ namespace AGO.Tasks.Test.Security
 			projAdmin = LoginToUser("user1@apinet-test.com");
 			projManager = LoginToUser("user2@apinet-test.com");
 			projExecutor = LoginToUser("user3@apinet-test.com");
-			notMember = LoginToUser("artem1@apinet-test.com");
+			notMember = LoginToUser("artem1@facebook.com");
 			FM.Project(TestProject, creator:admin);
 			FM.Member(TestProject, projAdmin, BaseProjectRoles.Administrator);
 			FM.Member(TestProject, projManager, TaskProjectRoles.Manager);
