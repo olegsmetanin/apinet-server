@@ -28,8 +28,8 @@ namespace AGO.Core.Tests.Security
 
 		protected override void CreateModelHelpers()
 		{
-			FM = new ModelHelper(() => Session, () => CurrentUser);
-			M = new ModelHelper(() => Session, () => CurrentUser);
+			FM = new ModelHelper(() => MainSession, () => CurrentUser);
+			M = new ModelHelper(() => MainSession, () => CurrentUser);
 		}
 
 		private dynamic MakeTestTags()
@@ -118,7 +118,7 @@ namespace AGO.Core.Tests.Security
 		{
 			Login(user.Email);
 			var response = controller.CreateProjectTag(Guid.Empty, "nunit");
-			Session.Flush();
+			MainSession.Flush();
 
 			Assert.That(response, Is.Not.Null);
 			Assert.That(response, Is.TypeOf<ProjectTagModel>());
@@ -140,10 +140,9 @@ namespace AGO.Core.Tests.Security
 			DoCreateTagTest(member);
 		}
 
-		private void DoCreateSubTagTest(UserModel parent, UserModel current, bool expectSuccess)
+		private void DoCreateSubTagTest(UserModel tagOwner, UserModel current, bool expectSuccess)
 		{
-			var ptag = M.ProjectTag("nunit parent", parent);
-			M.Track(() => ptag);
+			var ptag = M.ProjectTag("nunit parent", tagOwner);
 			
 			Login(current.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
@@ -151,7 +150,7 @@ namespace AGO.Core.Tests.Security
 
 			if (!expectSuccess)
 			{
-				Session.Clear(); //rollback
+				MainSession.Clear(); //rollback
 
 				Assert.That(response, Is.Not.Null);
 				Assert.That(response, Is.TypeOf<ValidationResult>());
@@ -160,7 +159,7 @@ namespace AGO.Core.Tests.Security
 			}
 			else
 			{
-				Session.Flush();
+				MainSession.Flush();
 
 				Assert.That(response, Is.Not.Null);
 				Assert.That(response, Is.TypeOf<ProjectTagModel>());
@@ -198,14 +197,13 @@ namespace AGO.Core.Tests.Security
 		private void DoUpdateTagTest(UserModel creator, UserModel updater, bool expectSuccess)
 		{
 			var tag = M.ProjectTag("nunit", creator);
-			M.Track(() => tag);
 
 			Login(updater.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.UpdateProjectTag(tag.Id, "new nunit");
 			if (!expectSuccess)
 			{
-				Session.Clear();
+				MainSession.Clear();
 
 				Assert.That(response, Is.Not.Null);
 				Assert.That(response, Is.TypeOf<ValidationResult>());
@@ -214,7 +212,7 @@ namespace AGO.Core.Tests.Security
 			}
 			else
 			{
-				Session.Flush();
+				MainSession.Flush();
 
 				Assert.That(response, Is.Not.Null);
 				Assert.That(response, Is.TypeOf<HashSet<ProjectTagModel>>());
@@ -251,14 +249,13 @@ namespace AGO.Core.Tests.Security
 		private void DoDeleteTagTest(UserModel creator, UserModel current, bool expectSuccess)
 		{
 			var tag = M.ProjectTag("nunit", creator);
-			M.Track(() => tag);
 
 			Login(current.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.DeleteProjectTag(tag.Id);
 			if (!expectSuccess)
 			{
-				Session.Clear();
+				MainSession.Clear();
 
 				Assert.That(response, Is.Not.Null);
 				Assert.That(response, Is.TypeOf<ValidationResult>());
@@ -267,7 +264,7 @@ namespace AGO.Core.Tests.Security
 			}
 			else
 			{
-				Session.Flush();
+				MainSession.Flush();
 
 				Assert.That(response, Is.Not.Null);
 				Assert.That(response, Is.TypeOf<HashSet<Guid>>());

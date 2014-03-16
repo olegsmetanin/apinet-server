@@ -194,23 +194,24 @@ namespace AGO.Core.Controllers
 				ProcessMetadata(project, modelProperty.PropertyType, result, processedTypes);
 		}
 
-		protected TModel GetModel<TModel, TId>(TId id, bool dontFetchReferences)
-			where TModel : class, IIdentifiedModel<TId>
-		{
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<TModel>(new[] { filter }, new FilteringOptions
-			{
-				PageSize = 1,
-				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
-			}).FirstOrDefault();
-		}
+		//TODO remove??? (artem1 2014-03-16)
+//		protected TModel GetModel<TModel, TId>(TId id, bool dontFetchReferences)
+//			where TModel : class, IIdentifiedModel<TId>
+//		{
+//			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
+//			filter.AddItem(new ValueFilterNode
+//			{
+//				Path = "Id",
+//				Operator = ValueFilterOperators.Eq,
+//				Operand = id.ToStringSafe()
+//			});
+//
+//			return _FilteringDao.List<TModel>(new[] { filter }, new FilteringOptions
+//			{
+//				PageSize = 1,
+//				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
+//			}).FirstOrDefault();
+//		}
 
 		protected IEnumerable<LookupEntry> LookupEnum<TEnum>(
 			string term,

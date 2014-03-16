@@ -94,13 +94,13 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectTagModel ProjectTag(string name = null, UserModel user = null)
+		public ProjectTagModel ProjectTag(string name = null, UserModel owner = null)
 		{
 			return Track(() =>
 			{
 				var tag = new ProjectTagModel
 				{
-					Creator = user ?? CurrentUser(),
+					Creator = owner ?? CurrentUser(),
 					CreationTime = DateTime.UtcNow,
 					Name = name ?? "NUnit test tag"
 				};
