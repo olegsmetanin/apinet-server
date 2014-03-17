@@ -114,7 +114,7 @@ namespace AGO.Tasks.Controllers
 			}
 			catch (NoSuchProjectMemberException)
 			{
-				Log.WarnFormat("Lookup from not project member catched. User '{0}' for type '{1}'", CurrentUser.Login, typeof(TModel).AssemblyQualifiedName);
+				Log.WarnFormat("Lookup from not project member catched. User '{0}' for type '{1}'", CurrentUser.Email, typeof(TModel).AssemblyQualifiedName);
 				return Enumerable.Empty<LookupEntry>();
 			}
 		}

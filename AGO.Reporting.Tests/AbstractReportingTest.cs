@@ -72,7 +72,7 @@ namespace AGO.Reporting.Tests
 
 		protected UserModel Login(string email)
 		{
-			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>().Where(m => m.Login == email).SingleOrDefault();
+			var user = _SessionProvider.CurrentSession.QueryOver<UserModel>().Where(m => m.Email == email).SingleOrDefault();
 			IocContainer.GetInstance<AuthController>().LoginInternal(user);
 			return user;
 		}

@@ -52,8 +52,13 @@ namespace AGO.WebApiApp.Controllers
 
 					var provider = Resolver.GetService<IOAuthProviderFactory>().Get(providerType);
 					data = Resolver.GetService<ICrudDao>().Get<OAuthDataModel>(dataId);
-					var user = provider.QueryUserId(data, Request.QueryString).Result;
 
+					if (provider.IsCancel(Request.QueryString))
+					{
+						return Redirect(data.RedirectUrl);
+					}
+
+					var user = provider.QueryUserId(data, Request.QueryString).Result;
 					Resolver.GetService<AuthController>().LoginInternal(user);
 
 					return Redirect(data.RedirectUrl);

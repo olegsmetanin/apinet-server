@@ -51,7 +51,7 @@ namespace AGO.Core.Tests.Security
 
 		private IEnumerable<ProjectViewModel> DoGetProjectsTest(UserModel user)
 		{
-			Login(user.Login);
+			Login(user.Email);
 
 			var testProjFilter = new[] {_FilteringService.Filter<ProjectModel>()
 				.WhereString(m => m.Name).Like("NUnit", appendWildcard: true)};
@@ -67,7 +67,7 @@ namespace AGO.Core.Tests.Security
 
 		private void DoGetProjectsCountTest(UserModel user, int expected)
 		{
-			Login(user.Login);
+			Login(user.Email);
 
 			var testProjFilter = new[] {_FilteringService.Filter<ProjectModel>()
 				.WhereString(m => m.Name).Like("NUnit", appendWildcard: true)};
@@ -169,7 +169,7 @@ namespace AGO.Core.Tests.Security
 				Name = "NUnit test",
 				TypeId = ptype.Id
 			};
-			Login(member.Login);
+			Login(member.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.CreateProject(data, new HashSet<Guid>());
 			Session.Clear();//rollback as in action executor
@@ -189,10 +189,10 @@ namespace AGO.Core.Tests.Security
 			{
 				M.Member(project.ProjectCode, user);
 			}
-			var tag = M.ProjectTag(user.Login, user);
+			var tag = M.ProjectTag(user.Email, user);
 				//Session.QueryOver<ProjectTagModel>().List().Take(1).First();
 
-			Login(user.Login);
+			Login(user.Email);
 			var response = controller.TagProject(project.Id, tag.Id);
 			Session.Flush();
 
@@ -241,7 +241,7 @@ namespace AGO.Core.Tests.Security
 			Session.Flush();
 			Session.Clear();//if omit this, will be exception "object will be re-saved on cascade", can't fix other way
 
-			Login(user.Login);
+			Login(user.Email);
 			var response = controller.DetagProject(project.Id, tag.Id);
 			Session.Flush();
 

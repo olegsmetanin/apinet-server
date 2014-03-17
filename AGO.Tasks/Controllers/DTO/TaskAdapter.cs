@@ -38,17 +38,13 @@ namespace AGO.Tasks.Controllers.DTO
 			       	};
 		}
 
-		protected static Executor ToExecutor(TaskExecutorModel executor)
+		protected static LookupEntry ToExecutor(TaskExecutorModel executor)
 		{
-			return new Executor
-			       	{
-			       		Id = executor.Executor.Id.ToString(), //use participants instead of technical entity - TaskExecutorModel
-			       		Name = executor.Executor.FIO,
-						Description = executor.Executor.FullName //use departments from local project, remove from user
-						/*+ (u.Departments.Count > 0
-			       		                            	? " (" + string.Join("; ", u.Departments.Select(d => d.FullName)) + ")"
-			       		                            	: string.Empty)*/
-			       	};
+			return new LookupEntry
+			{
+			    Id = executor.Executor.Id.ToString(), //use participants instead of technical entity - TaskExecutorModel
+			    Text = executor.Executor.FullName
+			};
 		}
 
 		public static LookupEntry ToTag(TaskToTagModel tagLink)
@@ -115,7 +111,7 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			return new AgreementView
 			       	{
-			       		Agreemer = agreement.Agreemer.FIO,
+			       		Agreemer = agreement.Agreemer.FullName,
 			       		Done = agreement.Done
 			       	};
 		}
@@ -224,7 +220,7 @@ namespace AGO.Tasks.Controllers.DTO
 			{
 				Id = agreement.Id,
 				ModelVersion = agreement.ModelVersion,
-				Agreemer = agreement.Agreemer.FIO,
+				Agreemer = agreement.Agreemer.FullName,
 				DueDate = agreement.DueDate,
 				Done = agreement.Done,
 				AgreedAt = agreement.AgreedAt,
@@ -237,10 +233,10 @@ namespace AGO.Tasks.Controllers.DTO
 			return new TimelogDTO
 			{
 				Id = entry.Id,
-				Member = entry.Member.FIO,
+				Member = entry.Member.FullName,
 				Time = entry.Time,
 				Comment = entry.Comment,
-				Editor = entry.LastChanger != null ? entry.LastChanger.FIO : null,
+				Editor = entry.LastChanger != null ? entry.LastChanger.FullName : null,
 				CreationTime = entry.CreationTime
 			};
 		}

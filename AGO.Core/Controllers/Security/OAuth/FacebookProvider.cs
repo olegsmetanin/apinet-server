@@ -64,8 +64,15 @@ namespace AGO.Core.Controllers.Security.OAuth
 
 					var jobj = JObject.Parse(response);
 					var userId = jobj.TokenValue("id");
-
 					var user = FindUserById(userId);
+					if (user == null)
+					{
+						var fname = jobj.TokenValue("first_name");
+						var lname = jobj.TokenValue("last_name");
+						user = RegisterUser(userId, fname, lname);
+					}
+
+
 					if (user.AvatarUrl.IsNullOrWhiteSpace())
 					{
 						UpdateAvatar(user, "https://graph.facebook.com/" + userId + "/picture?width=23&height=23");
@@ -79,6 +86,15 @@ namespace AGO.Core.Controllers.Security.OAuth
 				Log.ErrorFormat("Error when retrieving userId from facebook: {0}", ex.ToString());
 				throw new OAuthLoginException(ex);
 			}
+		}
+
+		public override bool IsCancel(NameValueCollection parameters)
+		{
+			var error = parameters["error"];
+			var code = parameters["error_code"];
+			var reason = parameters["error_reason"];
+			return !error.IsNullOrWhiteSpace() && !code.IsNullOrWhiteSpace() && !reason.IsNullOrWhiteSpace()
+			       && error == "access_denied" && code == "200" && reason == "user_denied";
 		}
 
 		#region Configuration

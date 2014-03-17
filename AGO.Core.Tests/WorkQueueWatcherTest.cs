@@ -8,7 +8,6 @@ using AGO.Core.Notification;
 using AGO.Core.Watchers;
 using AGO.Reporting.Common;
 using AGO.WorkQueue;
-using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -29,6 +28,7 @@ namespace AGO.Core.Tests
 			var wq = Substitute.For<IWorkQueue>();
 			var ns = Substitute.For<INotificationService>();
 
+// ReSharper disable once UnusedVariable
 			var watcher = new WorkQueueWatchService(ns, wq);
 
 			ns.Received().SubscribeToReportChanged(Arg.Any<Action<string, string, object>>());
@@ -41,6 +41,7 @@ namespace AGO.Core.Tests
 			wq.Snapshot().Returns(MakeEmptySnapshot());
 			var ns = Substitute.For<INotificationService>();
 
+// ReSharper disable once UnusedVariable
 			var watcher = new WorkQueueWatchService(ns, wq);
 
 			wq.Received().Snapshot();
@@ -63,6 +64,7 @@ namespace AGO.Core.Tests
 			const int throttleDelay = 50; //lower value may exceed system timer accuracy
 			const double epsilon = throttleDelay*0.1;//10%
 			const int eventsCount = 40;
+// ReSharper disable once UnusedVariable
 			var watcher = new WorkQueueWatchService(ns, wq, throttleDelay);
 			Task[] tasks = Enumerable.Range(0, eventsCount)
 					.Select(i => Task.Run(() =>

@@ -21,9 +21,6 @@ namespace AGO.Core.Model.Projects
 		[JsonProperty, NotEmpty, NotLonger(UserModel.FULLNAME_SIZE)]
 		public virtual string FullName { get; set; }
 
-		[JsonProperty, NotEmpty, NotLonger(UserModel.FULLNAME_SIZE)]
-		public virtual string FIO { get; set; }
-
 		[MetadataExclude, NotEmpty, NotLonger(128)]
 		public virtual string RolesString { get; set; }
 
@@ -77,7 +74,6 @@ namespace AGO.Core.Model.Projects
 				ProjectCode = project.ProjectCode,
 				UserId = user.Id,
 				FullName = user.FullName,
-				FIO = user.FIO,
 				Roles = roles,
 				CurrentRole = roles[0]
 			};

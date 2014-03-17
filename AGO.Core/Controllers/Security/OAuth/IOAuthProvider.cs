@@ -35,5 +35,11 @@ namespace AGO.Core.Controllers.Security.OAuth
 		/// </summary>
 		/// <returns>Provider-specific user identifier</returns>
 		Task<UserModel> QueryUserId(OAuthDataModel data, NameValueCollection parameters);
+
+		/// <summary>
+		/// Determine, if user cancel login process on provider side
+		/// </summary>
+		/// <returns>true, if user cancel login flow</returns>
+		bool IsCancel(NameValueCollection parameters);
 	}
 }

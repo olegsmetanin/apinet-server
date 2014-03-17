@@ -25,7 +25,6 @@ using AGO.Core.Watchers;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
 using AGO.WorkQueue;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NHibernate;
 
@@ -209,7 +208,7 @@ namespace AGO.Core.Controllers
 				_SessionProvider.FlushCurrentSession();
 
 				//Add task to system shared work queue, so one of workers can grab and execute it
-				var qi = new QueueItem("Report", task.Id, project, user.Login)
+				var qi = new QueueItem("Report", task.Id, project, user.Id.ToString())
 				{
 					PriorityType = priority,
 					UserPriority = participant != null ? participant.UserPriority : 0
@@ -218,7 +217,7 @@ namespace AGO.Core.Controllers
 				//emit event for reporting service (about new task to work)
 				bus.EmitRunReport(task.Id);
 				//emit event for client (about his task in queue and start soon)
-				bus.EmitReportChanged(ReportEvents.CREATED, user.Login,  ReportTaskToDTO(task));
+				bus.EmitReportChanged(ReportEvents.CREATED, user.Id.ToString(),  ReportTaskToDTO(task));
 			}
 			catch (Exception ex)
 			{
@@ -334,7 +333,7 @@ namespace AGO.Core.Controllers
 
 			//emit event for client (about his task is canceled)
 			var dto = ReportTaskToDTO(task);
-			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Login, dto);
+			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Id.ToString(), dto);
 			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
 			{
 				//and to creator, if another person cancel task (admin, for example)
@@ -354,7 +353,7 @@ namespace AGO.Core.Controllers
 			_CrudDao.Delete(task);
 
 			//emit event for client (about his task is successfully deleted)
-			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Login, dto);
+			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Id.ToString(), dto);
 			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
 			{
 				//and to creator, if another person delete task (admin, for example)
@@ -403,7 +402,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<WorkQueueWatchService.ReportQueuePosition> GetReportQueuePositions()
 		{
-			var login = _AuthController.CurrentUser().Login;
+			var login = _AuthController.CurrentUser().Id.ToString();
 			var snapshot = workQueue.Snapshot();
 			return WorkQueueWatchService.GetPositionsForUser(login, snapshot).ToArray();
 		}

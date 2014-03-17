@@ -174,41 +174,20 @@
   <data name="UserModel.Active" xml:space="preserve">
     <value>Is active</value>
   </data>
-  <data name="UserModel.Departments" xml:space="preserve">
-    <value>Departments</value>
-  </data>
-  <data name="UserModel.FIO" xml:space="preserve">
-    <value>Short name</value>
-  </data>
   <data name="UserModel.FullName" xml:space="preserve">
     <value>Full name</value>
-  </data>
-  <data name="UserModel.JobName" xml:space="preserve">
-    <value>Job name</value>
   </data>
   <data name="UserModel.LastName" xml:space="preserve">
     <value>Last name</value>
   </data>
-  <data name="UserModel.Login" xml:space="preserve">
-    <value>Login</value>
+  <data name="UserModel.Email" xml:space="preserve">
+    <value>Email</value>
   </data>
-  <data name="UserModel.MiddleName" xml:space="preserve">
-    <value>Middle name</value>
-  </data>
-  <data name="UserModel.Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="UserModel.PwdHash" xml:space="preserve">
-    <value>Password hash</value>
+  <data name="UserModel.FirstName" xml:space="preserve">
+    <value>First Name</value>
   </data>
   <data name="UserModel.SystemRole" xml:space="preserve">
     <value>System role</value>
-  </data>
-  <data name="UserModel.WhomFIO" xml:space="preserve">
-    <value>Short name (whom form)</value>
-  </data>
-  <data name="UserModel.WhomJobName" xml:space="preserve">
-    <value>Job name (whom form)</value>
   </data>
   <data name="CoreModel.Description" xml:space="preserve">
     <value>Description</value>
@@ -231,14 +210,14 @@
   <data name="ProjectModel.Type" xml:space="preserve">
     <value>Project type</value>
   </data>
-  <data name="ProjectParticipantModel.GroupName" xml:space="preserve">
-    <value>Group name</value>
+  <data name="ProjectMemberModel.CurrentRole" xml:space="preserve">
+    <value>Current role</value>
   </data>
-  <data name="ProjectParticipantModel.IsDefaultGroup" xml:space="preserve">
-    <value>Is default  group</value>
+  <data name="ProjectMemberModel.RolesString" xml:space="preserve">
+    <value>Roles</value>
   </data>
-  <data name="ProjectParticipantModel.User" xml:space="preserve">
-    <value>User</value>
+  <data name="ProjectMemberModel.UserId" xml:space="preserve">
+    <value>User id</value>
   </data>
   <data name="ProjectStatusHistoryModel.EndDate" xml:space="preserve">
     <value>End date</value>
@@ -258,7 +237,7 @@
   <data name="ProjectToTagModel.Tag" xml:space="preserve">
     <value>Tag</value>
   </data>
-  <data name="ProjectParticipantModel.UserPriority" xml:space="preserve">
+  <data name="ProjectMemberModel.UserPriority" xml:space="preserve">
     <value>User work priority</value>
   </data>
   <data name="ProjectModel.VisibleForAll" xml:space="preserve">
@@ -284,5 +263,8 @@
   </data>
   <data name="ReportTemplateModel.LastChange" xml:space="preserve">
     <value>Changed</value>
+  </data>
+  <data name="ProjectMemberModel.FullName" xml:space="preserve">
+    <value>Full name</value>
   </data>
 </root>

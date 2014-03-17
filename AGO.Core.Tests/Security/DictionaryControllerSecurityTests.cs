@@ -56,7 +56,7 @@ namespace AGO.Core.Tests.Security
 		public void MemberLookupOwnTags()
 		{
 			var d = MakeTestTags();
-			Login(member.Login);
+			Login(member.Email);
 			var response = controller.LookupProjectTags(0, "nunit");
 
 			Assert.That(response.Count(), Is.EqualTo(1));
@@ -80,7 +80,7 @@ namespace AGO.Core.Tests.Security
 		public void MemberGetOwnTags()
 		{
 			var d = MakeTestTags();
-			Login(member.Login);
+			Login(member.Email);
 			var termFilter = _FilteringService.Filter<ProjectTagModel>()
 				.WhereString(m => m.FullName).Like("nunit", true, true);
 			var response = controller.GetProjectTags(0, new[] { termFilter }, Enumerable.Empty<SortInfo>().ToList());
@@ -105,7 +105,7 @@ namespace AGO.Core.Tests.Security
 		public void MemberGetOwnTagsCount()
 		{
 			MakeTestTags();
-			Login(member.Login);
+			Login(member.Email);
 			var termFilter = _FilteringService.Filter<ProjectTagModel>()
 				.WhereString(m => m.FullName).Like("nunit", true, true);
 			var response = controller.GetProjectTagsCount(new[] { termFilter });
@@ -116,7 +116,7 @@ namespace AGO.Core.Tests.Security
 
 		private void DoCreateTagTest(UserModel user)
 		{
-			Login(user.Login);
+			Login(user.Email);
 			var response = controller.CreateProjectTag(Guid.Empty, "nunit");
 			Session.Flush();
 
@@ -145,7 +145,7 @@ namespace AGO.Core.Tests.Security
 			var ptag = M.ProjectTag("nunit parent", parent);
 			M.Track(() => ptag);
 			
-			Login(current.Login);
+			Login(current.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.CreateProjectTag(ptag.Id, "nunit child");
 
@@ -200,7 +200,7 @@ namespace AGO.Core.Tests.Security
 			var tag = M.ProjectTag("nunit", creator);
 			M.Track(() => tag);
 
-			Login(updater.Login);
+			Login(updater.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.UpdateProjectTag(tag.Id, "new nunit");
 			if (!expectSuccess)
@@ -253,7 +253,7 @@ namespace AGO.Core.Tests.Security
 			var tag = M.ProjectTag("nunit", creator);
 			M.Track(() => tag);
 
-			Login(current.Login);
+			Login(current.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.DeleteProjectTag(tag.Id);
 			if (!expectSuccess)

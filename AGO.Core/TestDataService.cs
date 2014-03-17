@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using AGO.Core.Controllers.Security.OAuth;
+﻿using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
@@ -23,33 +21,35 @@ namespace AGO.Core
 
 		public void Populate()
 		{
-			var cryptoProvider = new MD5CryptoServiceProvider();
-			var pwdHash = Encoding.Default.GetString(
-				cryptoProvider.ComputeHash(Encoding.Default.GetBytes("1")));
-
 			var admin = new UserModel
 			{
-				Login = "admin@apinet-test.com",
-				PwdHash = pwdHash,
+				Email = "admin@apinet-test.com",
 				Active = true,
 				LastName = "Connor",
-				Name = "John",
-				MiddleName = "",
-				JobName = "Administrator",
+				FirstName = "John",
 				SystemRole = SystemRole.Administrator
 			};
 			admin.Creator = admin;
 			_CrudDao.Store(admin);
 
+			var demo = new UserModel
+			{
+				Creator = admin,
+				Email = "demo@apinet-test.com",
+				Active = true,
+				LastName = "User",
+				FirstName = "Demo",
+				SystemRole = SystemRole.Member
+			};
+			_CrudDao.Store(demo);
+
 			var user1 = new UserModel
 			{
 				Creator = admin,
-				Login = "user1@apinet-test.com",
-				PwdHash = pwdHash,
+				Email = "user1@apinet-test.com",
 				Active = true,
 				LastName = "Bryan",
-				Name = "Thomas",
-				MiddleName = "",
+				FirstName = "Thomas",
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user1);
@@ -57,12 +57,10 @@ namespace AGO.Core
 			var user2 = new UserModel
 			{
 				Creator = admin,
-				Login = "user2@apinet-test.com",
-				PwdHash = pwdHash,
+				Email = "user2@apinet-test.com",
 				Active = true,
 				LastName = "Scoggins",
-				Name = "Samuel",
-				MiddleName = "",
+				FirstName = "Samuel",
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user2);
@@ -70,67 +68,47 @@ namespace AGO.Core
 			var user3 = new UserModel
 			{
 				Creator = admin,
-				Login = "user3@apinet-test.com",
-				PwdHash = pwdHash,
+				Email = "user3@apinet-test.com",
 				Active = true,
 				LastName = "Moore",
-				Name = "Caroline",
-				MiddleName = "",
+				FirstName = "Caroline",
 				SystemRole = SystemRole.Member
 			};
 			_CrudDao.Store(user3);
 
-			var artem1 = new UserModel
-			{
-				Creator = admin,
-				Login = "artem1@apinet-test.com",
-				PwdHash = pwdHash,
-				Active = true,
-				LastName = "Naumov",
-				Name = "Artem",
-				MiddleName = "",
-				SystemRole = SystemRole.Member
-			};
 			var artem1Fb = new UserModel
 			{
 				Creator = admin,
-				Login = "artem1@facebook.com",
-				PwdHash = pwdHash,
+				Email = "artem1@facebook.com",
 				Active = true,
 				LastName = "Facebook",
-				Name = "Artem",
-				MiddleName = "",
+				FirstName = "Artem",
 				SystemRole = SystemRole.Member,
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "100007697794498"
 			};
-			
 			var artem1Twi = new UserModel
 			{
 				Creator = admin,
-				Login = "artem1@twitter.com",
-				PwdHash = pwdHash,
+				Email = "artem1@twitter.com",
 				Active = true,
 				LastName = "Twitter",
-				Name = "Artem",
-				MiddleName = "",
-				SystemRole = SystemRole.Member,
+				FirstName = "Artem",
+				SystemRole = SystemRole.Administrator,
 				OAuthProvider = OAuthProvider.Twitter,
 				OAuthUserId = "1632745315"
 			};
-			_CrudDao.Store(artem1);
 			_CrudDao.Store(artem1Fb);
 			_CrudDao.Store(artem1Twi);
+
 			var olegsmith = new UserModel
 			{
 				Creator = admin,
-				Login = "olegsmith@apinet-test.com",
-				PwdHash = pwdHash,
+				Email = "olegsmith@apinet-test.com",
 				Active = true,
 				LastName = "Smith",
-				Name = "Oleg",
-				MiddleName = "",
-				SystemRole = SystemRole.Member,
+				FirstName = "Oleg",
+				SystemRole = SystemRole.Administrator,
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "1640647496"
 			};

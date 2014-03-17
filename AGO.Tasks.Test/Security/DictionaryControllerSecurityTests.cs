@@ -34,7 +34,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, LookupEntry[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.LookupTaskTypes(TestProject, null, 0).ToArray();
 			};
 			ReusableConstraint granted = Has.Length.EqualTo(2)
@@ -57,7 +57,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, TaskTypeDTO[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTaskTypes(
 					TestProject, 
 					Enumerable.Empty<IModelFilterNode>().ToList(),
@@ -84,7 +84,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, int> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTaskTypesCount(
 					TestProject,
 					Enumerable.Empty<IModelFilterNode>().ToList());
@@ -104,7 +104,7 @@ namespace AGO.Tasks.Test.Security
 		{
 			Func<UserModel, UpdateResult<TaskTypeDTO>> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var ur = controller.EditTaskType(
 					TestProject,
 					new TaskTypeDTO {Name = u.Id.ToString()});
@@ -131,7 +131,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, UpdateResult<TaskTypeDTO>> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.EditTaskType(
 					TestProject,
 					new TaskTypeDTO { Id = tt.Id, Name = u.Id.ToString() });
@@ -152,7 +152,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, bool> action = u =>
 			{
 				var tt = M.TaskType("for delete");
-				Login(u.Login);
+				Login(u.Email);
 				return controller.DeleteTaskType(tt.Id);
 			};
 			ReusableConstraint granted = Is.True;
@@ -173,13 +173,13 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyMembersCanLookupOwnTags()
 		{
-			var admintTag = M.Tag(projAdmin.Login, owner: projAdmin);
-			var mgrTag = M.Tag(projManager.Login, owner: projManager);
-			var execTag = M.Tag(projExecutor.Login, owner: projExecutor);
+			var admintTag = M.Tag(projAdmin.Email, owner: projAdmin);
+			var mgrTag = M.Tag(projManager.Email, owner: projManager);
+			var execTag = M.Tag(projExecutor.Email, owner: projExecutor);
 
 			Func<UserModel, LookupEntry[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.LookupTags(TestProject, null, 0).ToArray();
 			};
 			Func<TaskTagModel, ReusableConstraint> granted = tag => Has.Length.EqualTo(1)
@@ -196,13 +196,13 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyMembersCanGetOwnTags()
 		{
-			var admintTag = M.Tag(projAdmin.Login, owner: projAdmin);
-			var mgrTag = M.Tag(projManager.Login, owner: projManager);
-			var execTag = M.Tag(projExecutor.Login, owner: projExecutor);
+			var admintTag = M.Tag(projAdmin.Email, owner: projAdmin);
+			var mgrTag = M.Tag(projManager.Email, owner: projManager);
+			var execTag = M.Tag(projExecutor.Email, owner: projExecutor);
 
 			Func<UserModel, TaskTagDTO[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetTags(TestProject,
 					Enumerable.Empty<IModelFilterNode>().ToList(),
 					Enumerable.Empty<SortInfo>().ToList(),
@@ -224,7 +224,7 @@ namespace AGO.Tasks.Test.Security
 		{
 			Func<UserModel, bool> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var ur = controller.CreateTag(TestProject, new TaskTagDTO { Name = u.Id.ToString() });
 				if (ur.Validation.Success)
 				{
@@ -248,7 +248,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, bool> action = u =>
 			{
 				var utag = M.Tag(u.Id.ToString(), owner: u);
-				Login(u.Login);
+				Login(u.Email);
 				return controller.EditTag(TestProject, new TaskTagDTO { Id = utag.Id, Name = "aaa" })
 					.Validation.Success;
 			};
@@ -265,13 +265,13 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyMembersCanDeleteOwnTags()
 		{
-			var admintTag = M.Tag(projAdmin.Login, owner: projAdmin);
-			var mgrTag = M.Tag(projManager.Login, owner: projManager);
-			var execTag = M.Tag(projExecutor.Login, owner: projExecutor);
+			var admintTag = M.Tag(projAdmin.Email, owner: projAdmin);
+			var mgrTag = M.Tag(projManager.Email, owner: projManager);
+			var execTag = M.Tag(projExecutor.Email, owner: projExecutor);
 
 			Func<UserModel, Guid, Guid[]> action = (u, id) =>
 			{				
-				Login(u.Login);
+				Login(u.Email);
 				return controller.DeleteTags(TestProject, new []{ id }).ToArray();
 			};
 			Func<Guid, ReusableConstraint> granted = id => Has.Length.EqualTo(1)

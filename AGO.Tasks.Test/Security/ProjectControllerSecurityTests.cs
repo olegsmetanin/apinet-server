@@ -28,7 +28,7 @@ namespace AGO.Tasks.Test.Security
 		{
 			Func<UserModel, ProjectDTO> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetProject(TestProject);
 			};
 			ReusableConstraint granted = Is.Not.Null;
@@ -46,7 +46,7 @@ namespace AGO.Tasks.Test.Security
 		{
 			Func<UserModel, bool> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				var proj = M.ProjectFromCode(TestProject);
 				var ur = controller.UpdateProject(TestProject,
 					new PropChangeDTO
@@ -78,7 +78,7 @@ namespace AGO.Tasks.Test.Security
 
 			Func<UserModel, ProjectTagModel, bool> action = (u, t) =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.TagProject(proj.Id, t.Id);
 			};
 			ReusableConstraint granted = Is.True;
@@ -121,7 +121,7 @@ namespace AGO.Tasks.Test.Security
 				Session.Flush();
 				Session.Clear();
 				
-				Login(u.Login);
+				Login(u.Email);
 				return controller.DetagProject(proj.Id, t.Id);
 			};
 			ReusableConstraint granted = Is.True;
@@ -147,7 +147,7 @@ namespace AGO.Tasks.Test.Security
 		{
 			Func<UserModel, ProjectMemberDTO[]> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetMembers(TestProject, null, 0).ToArray();
 			};
 			ReusableConstraint granted = Is.Not.Empty;
@@ -165,7 +165,7 @@ namespace AGO.Tasks.Test.Security
 		{
 			Func<UserModel, int> action = u =>
 			{
-				Login(u.Login);
+				Login(u.Email);
 				return controller.GetMembersCount(TestProject, null);
 			};
 			ReusableConstraint granted = Is.GreaterThan(0);
@@ -185,7 +185,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				try
 				{
-					Login(u.Login);
+					Login(u.Email);
 					var dto = controller.AddMember(TestProject, mb.Id, new[] {TaskProjectRoles.Executor});
 					Session.Flush();
 					Session.Clear();
@@ -231,7 +231,7 @@ namespace AGO.Tasks.Test.Security
 					var newMember = M.Member(TestProject, mb);
 					Session.Clear();
 
-					Login(u.Login);
+					Login(u.Email);
 					controller.RemoveMember(newMember.Id);
 					Session.Flush();
 					Session.Clear();
@@ -271,7 +271,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, UserModel, bool> action = (u, mb) =>
 			{
 				var member = M.MemberFromUser(TestProject, mb);
-				Login(u.Login);
+				Login(u.Email);
 				var ur = controller.ChangeMemberRoles(member.Id, member.Roles);
 				return ur.Validation.Success;
 			};
@@ -291,7 +291,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, UserModel, bool> action = (u, mb) =>
 			{
 				var member = M.MemberFromUser(TestProject, mb);
-				Login(u.Login);
+				Login(u.Email);
 				var ur = controller.ChangeMemberCurrentRole(member.Id, member.CurrentRole);
 				return ur.Validation.Success;
 			};

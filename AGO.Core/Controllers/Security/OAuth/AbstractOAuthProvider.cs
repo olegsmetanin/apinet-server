@@ -40,9 +40,29 @@ namespace AGO.Core.Controllers.Security.OAuth
 			{
 				u = s.QueryOver<UserModel>().Where(m => m.OAuthProvider == Type && m.OAuthUserId == userId).SingleOrDefault();
 			});
-			if (u == null)
-				throw new NoSuchUserException();
+
 			return u;
+		}
+
+		protected UserModel RegisterUser(string userId, string fname, string lname)
+		{
+			UserModel user = null;
+			DoInSession(s =>
+			{
+				user = new UserModel
+				{
+					CreationTime = DateTime.UtcNow,
+					Active = true,
+					FirstName = fname,
+					LastName = lname,
+					SystemRole = SystemRole.Member,
+					OAuthProvider = Type,
+					OAuthUserId = userId
+				};
+				user.Creator = user;
+				s.Save(user);
+			});
+			return user;
 		}
 
 		protected virtual void UpdateAvatar(UserModel user, string url)
@@ -81,5 +101,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 		public abstract OAuthProvider Type { get; }
 		public abstract Task<string> PrepareForLogin(OAuthDataModel data);
 		public abstract Task<UserModel> QueryUserId(OAuthDataModel data, NameValueCollection parameters);
+		public abstract bool IsCancel(NameValueCollection parameters);
 	}
 }
