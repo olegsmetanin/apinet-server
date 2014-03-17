@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
@@ -6,6 +7,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Controllers.Activity;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Filters;
+using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
@@ -48,16 +50,24 @@ namespace AGO.Tasks.Controllers
 		public IEnumerable<ActivityView> GetActivities(
 			[NotEmpty] string project,
 			[NotNull] ICollection<IModelFilterNode> filter,
-			ActivityPredefinedFilter predefined)
+			Guid itemId,
+			ActivityPredefinedFilter predefined,
+			DateTime specificDate)
 		{
-			var criteria = MakeActivityCriteria(project, filter, predefined);
+			var criteria = MakeActivityCriteria(project, filter, itemId, predefined, specificDate);
 
 			return ActivityViewsFromRecords(_CrudDao.Future<ActivityRecordModel>(criteria, new FilteringOptions 
 			{ 
 				Page = 0,
 				PageSize = 0,
 				Sorters = new[] { new SortInfo { Property = "CreationTime", Descending = true} }
-			}));
+			}), default(Guid).Equals(itemId));
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<IModelMetadata> ActivityMetadata()
+		{
+			return MetadataForModelAndRelations<ActivityRecordModel>();
 		}
 
 		#endregion

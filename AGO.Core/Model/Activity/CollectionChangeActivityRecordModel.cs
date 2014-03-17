@@ -6,7 +6,8 @@ namespace AGO.Core.Model.Activity
 	public enum ChangeType
 	{
 		Insert,
-		Delete
+		Delete,
+		Update
 	}
 
 	public class CollectionChangeActivityRecordModel : ActivityRecordModel

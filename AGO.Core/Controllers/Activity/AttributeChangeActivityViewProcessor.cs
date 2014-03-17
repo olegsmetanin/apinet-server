@@ -23,13 +23,27 @@ namespace AGO.Core.Controllers.Activity
 
 		protected override void DoProcessItem(ActivityItemView view, AttributeChangeActivityRecordModel model)
 		{
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("t", CultureInfo.CurrentUICulture);
-			view.User = model.Creator.ToStringSafe();
+			base.DoProcessItem(view, model);
+
+			var groupedView = view as GroupedActivityItemView;
+			if (groupedView != null)
+			{
+				groupedView.Action = groupedView.Action.IsNullOrWhiteSpace() ? ChangeType.Update.ToString() : groupedView.Action;
+				return;
+			}
+
 			view.Action = model.Attribute;
 			view.Before = model.OldValue;
-			view.After = model.NewValue;
+			view.After = model.NewValue;			
+		}
 
-			LocalizeUser(view);
+		protected override void DoPostProcessItem(ActivityItemView view)
+		{
+			base.DoPostProcessItem(view);
+			if (typeof (AttributeChangeActivityRecordModel) != view.RecordType)
+				return;
+
+			LocalizeValues(view);
 		}
 
 		protected virtual string GetLocalizedAttributeName(Type type, string attribute)
@@ -53,8 +67,15 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual void LocalizeAction<TModel>(ActivityItemView view)
 		{
-			if (view.Action.IsNullOrWhiteSpace())
+			if (view.Action.IsNullOrWhiteSpace() && ChangeType.Update.ToString().Equals(view.Action))
 				return;
+
+			if (view is GroupedActivityItemView)
+			{
+				view.Action = _LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Updated",
+					CultureInfo.CurrentUICulture, view.Action);
+				return;
+			}
 
 			view.Action = _LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Action", 
 				CultureInfo.CurrentUICulture, GetLocalizedAttributeName(typeof(TModel), view.Action));
@@ -62,6 +83,9 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual void LocalizeValues(ActivityItemView view)
 		{
+			if (view is GroupedActivityItemView)
+				return;
+
 			Func<string, string, string> process = (str, key) =>
 			{
 				if (str.IsNullOrWhiteSpace())
@@ -77,6 +101,9 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual void TransformDateValues(ActivityItemView view, bool includeTime = false)
 		{
+			if (view is GroupedActivityItemView)
+				return;
+
 			Func<string, string> process = str =>
 			{
 				DateTime date;

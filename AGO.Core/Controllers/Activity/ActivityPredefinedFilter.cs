@@ -15,7 +15,8 @@ namespace AGO.Core.Controllers.Activity
 		ThisWeek,
 		PastWeek,
 		ThisMonth,
-		PastMonth
+		PastMonth,
+		SpecificDate
 	}
 
 	public static class TaskPredefinedFilterExtensions
@@ -24,10 +25,13 @@ namespace AGO.Core.Controllers.Activity
 		/// Превращает значение предустановленного фильтра в критерий
 		/// </summary>
 		/// <param name="predefined">Значение фильтра</param>
+		/// <param name="specificDate">Конкретная дата</param>
 		/// <param name="builder">Построитель критерия</param>
 		/// <returns>Фильтр или null, если фильтр не задан</returns>
 		public static IModelFilterNode ToFilter(
-			this ActivityPredefinedFilter predefined, IModelFilterBuilder<ActivityRecordModel, ActivityRecordModel> builder)
+			this ActivityPredefinedFilter predefined, 
+			DateTime specificDate,
+			IModelFilterBuilder<ActivityRecordModel, ActivityRecordModel> builder)
 		{
 			var today = DateTime.Today;
 			var culture = Thread.CurrentThread.CurrentUICulture;
@@ -66,6 +70,14 @@ namespace AGO.Core.Controllers.Activity
 					firstDay = firstDay.AddMonths(-1);
 
 				var nextFirstDay = firstDay.AddMonths(1);
+
+				return builder.Where(m => m.CreationTime >= firstDay && m.CreationTime < nextFirstDay);
+			}
+
+			if (predefined == ActivityPredefinedFilter.SpecificDate)
+			{
+				var firstDay = new DateTime(specificDate.Year, specificDate.Month, specificDate.Day, 0, 0, 0, DateTimeKind.Local);
+				var nextFirstDay = firstDay.AddDays(1);
 
 				return builder.Where(m => m.CreationTime >= firstDay && m.CreationTime < nextFirstDay);
 			}

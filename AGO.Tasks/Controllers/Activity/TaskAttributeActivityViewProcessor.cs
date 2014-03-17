@@ -23,22 +23,37 @@ namespace AGO.Tasks.Controllers.Activity
 
 		protected override void DoProcess(ActivityView view, AttributeChangeActivityRecordModel model)
 		{
-			if (!"TaskModel".Equals(model.ItemType))
+			if (!"TaskModel".Equals(view.ItemType))
 				return;
-
-			LocalizeActivityItem<TaskAttributeActivityViewProcessor>(view);
+			base.DoProcess(view, model);
 		}
 
 		protected override void DoProcessItem(ActivityItemView view, AttributeChangeActivityRecordModel model)
 		{
-			if (!"TaskModel".Equals(model.ItemType))
+			if (!"TaskModel".Equals(view.ItemType))
 				return;
+			base.DoProcessItem(view, model);
+		}
 
-			if ("DueDate".Equals(model.Attribute))
+		protected override void DoPostProcess(ActivityView view)
+		{
+			if (!"TaskModel".Equals(view.ItemType))
+				return;
+			base.DoPostProcess(view);
+
+			LocalizeActivityItem<TaskAttributeActivityViewProcessor>(view);
+		}
+
+		protected override void DoPostProcessItem(ActivityItemView view)
+		{
+			if (!"TaskModel".Equals(view.ItemType) || typeof(AttributeChangeActivityRecordModel) != view.RecordType)
+				return;
+			base.DoPostProcessItem(view);
+
+			if ("DueDate".Equals(view.Action))
 				TransformDateValues(view);
 
 			LocalizeAction<TaskModel>(view);
-			LocalizeValues(view);
 		}
 
 		#endregion

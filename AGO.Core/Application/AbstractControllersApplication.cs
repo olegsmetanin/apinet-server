@@ -45,7 +45,6 @@ namespace AGO.Core.Application
 
 			IocContainer.RegisterSingle<CollectionChangeActivityViewProcessor, CollectionChangeActivityViewProcessor>();
 			IocContainer.RegisterSingle<AttributeChangeActivityViewProcessor, AttributeChangeActivityViewProcessor>();
-			IocContainer.RegisterSingle<ProjectAttributeActivityViewProcessor, ProjectAttributeActivityViewProcessor>();
 			
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();
 		}
@@ -75,13 +74,8 @@ namespace AGO.Core.Application
 		protected virtual IEnumerable<Type> ActivityViewProcessors
 		{
 			get
-			{ 
-				return new[]
-				{
-					typeof(CollectionChangeActivityViewProcessor),
-					typeof(AttributeChangeActivityViewProcessor),
-					typeof(ProjectAttributeActivityViewProcessor)
-				}; 
+			{
+				return Enumerable.Empty<Type>();
 			}
 		}
 

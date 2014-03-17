@@ -2,7 +2,6 @@
 using AGO.Core.Controllers.Activity;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
-using AGO.Tasks.Model.Task;
 
 namespace AGO.Tasks.Controllers.Activity
 {
@@ -21,15 +20,11 @@ namespace AGO.Tasks.Controllers.Activity
 
 		#region Template methods
 
-		protected override void DoProcess(ActivityView view, CollectionChangeActivityRecordModel model)
+		protected override void DoPostProcessItem(ActivityItemView view)
 		{
-			LocalizeActivityItem<TaskCollectionActivityViewProcessor>(view);
-		}
-
-		protected override void DoProcessItem(ActivityItemView view, CollectionChangeActivityRecordModel model)
-		{
-			if (!"TaskModel".Equals(model.RelatedItemType))
+			if (!"TaskModel".Equals(view.ItemType) || typeof(CollectionChangeActivityRecordModel) != view.RecordType)
 				return;
+			base.DoPostProcessItem(view);
 
 			LocalizeRelatedActivityItem<TaskCollectionActivityViewProcessor>(view);
 		}

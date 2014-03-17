@@ -1,7 +1,5 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using AGO.Core.Localization;
-using AGO.Core.Model;
 using AGO.Core.Model.Activity;
 
 namespace AGO.Core.Controllers.Activity
@@ -23,14 +21,21 @@ namespace AGO.Core.Controllers.Activity
 
 		protected override void DoProcessItem(ActivityItemView view, CollectionChangeActivityRecordModel model)
 		{
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("t", CultureInfo.CurrentUICulture);
-			view.User = model.Creator.ToStringSafe();
+			base.DoProcessItem(view, model);
+
 			view.Action = model.ChangeType.ToString();
 			view.Before = model.RelatedItemName;
+		}
 
-			LocalizeUser(view);
+		protected override void DoPostProcessItem(ActivityItemView view)
+		{
+			base.DoPostProcessItem(view);
+			if (typeof(CollectionChangeActivityRecordModel) != view.RecordType)
+				return;
+
 			LocalizeAction(view);
 		}
+
 
 		protected virtual void LocalizeAction(ActivityItemView view)
 		{

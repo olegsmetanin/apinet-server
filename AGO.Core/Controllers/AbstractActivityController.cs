@@ -48,24 +48,26 @@ namespace AGO.Core.Controllers
 			get { return _AuthController.CurrentUser(); }
 		}
 
-		protected virtual ActivityView ActivityViewFromRecord(ActivityRecordModel record)
+		protected virtual ActivityView ActivityViewFromRecord(ActivityRecordModel record, bool grouping)
 		{
-			return new ActivityView(record.ItemId);
+			return new ActivityView(record.ItemId, record.ItemType, grouping);
 		}
 
-		protected virtual ActivityItemView ActivityItemViewFromRecord(ActivityRecordModel record)
+		protected virtual ActivityItemView ActivityItemViewFromRecord(ActivityRecordModel record, bool grouping)
 		{
-			return new ActivityItemView(record.ItemId);
+			return !grouping
+				? new ActivityItemView(record.ItemId, record.ItemType, record.GetType()) 
+				: new GroupedActivityItemView(record.ItemId, record.ItemType, record.GetType());
 		}
 
-		protected virtual bool IsNewActivityViewRequired(ActivityView currentView, ActivityRecordModel record, ActivityRecordModel prevRecord)
+		protected virtual bool IsNewActivityViewRequired(
+			ActivityView currentView, 
+			ActivityRecordModel record, 
+			ActivityRecordModel prevRecord)
 		{
-			if (currentView == null || prevRecord == null)
+			if (currentView == null || prevRecord == null || !currentView.ItemId.Equals(record.ItemId))
 				return true;
 			
-			if (!currentView.ItemId.Equals(record.ItemId))
-				return true;
-
 			var prevDate = (prevRecord.CreationTime ?? DateTime.Now).ToLocalTime();
 			prevDate = new DateTime(prevDate.Year, prevDate.Month, prevDate.Day);
 			
@@ -74,19 +76,52 @@ namespace AGO.Core.Controllers
 
 			return !date.Equals(prevDate);
 		}
+
+		protected virtual ActivityItemView GetExistingActivityItemView(
+			ActivityView currentView, 
+			ActivityRecordModel record,
+			bool grouping)
+		{
+			if (!grouping || currentView == null)
+				return null;
+
+			foreach (var groupedView in currentView.Items.OfType<GroupedActivityItemView>())
+			{
+				if (!groupedView.ItemId.Equals(record.ItemId))
+					continue;			
+				if (record is AttributeChangeActivityRecordModel && ChangeType.Update.ToString().Equals(groupedView.Action))
+					return groupedView;
+
+				var collectionChangeRecord = record as CollectionChangeActivityRecordModel;
+				if (collectionChangeRecord != null && collectionChangeRecord.ChangeType.ToString().Equals(groupedView.Action) &&
+						collectionChangeRecord.RelatedItemType.Equals(groupedView.Before))
+					return groupedView;
+			}
+
+			return null;
+		}
 		
 		#endregion
 
 		#region Helper methods
 		
-		protected ICriteria MakeActivityCriteria(string project, IEnumerable<IModelFilterNode> filter, ActivityPredefinedFilter predefined)
+		protected ICriteria MakeActivityCriteria(
+			string project, 
+			IEnumerable<IModelFilterNode> filter,
+			Guid itemId,
+			ActivityPredefinedFilter predefined,
+			DateTime specificDate)
 		{
 			return _FilteringService.CompileFilter(SecurityService.ApplyReadConstraint<ActivityRecordModel>(project, CurrentUser.Id, Session,
-				filter.Concat(new[] { predefined.ToFilter(_FilteringService.Filter<ActivityRecordModel>()) }).ToArray()), typeof(ActivityRecordModel))
+				filter.Concat(new[]
+				{
+					predefined.ToFilter(specificDate, _FilteringService.Filter<ActivityRecordModel>()),
+					!default(Guid).Equals(itemId) ? _FilteringService.Filter<ActivityRecordModel>().Where(m => m.ItemId == itemId) : null
+				}).ToArray()), typeof(ActivityRecordModel))
 				.GetExecutableCriteria(Session);
 		}
 
-		protected IList<ActivityView> ActivityViewsFromRecords(IEnumerable<ActivityRecordModel> records)
+		protected IList<ActivityView> ActivityViewsFromRecords(IEnumerable<ActivityRecordModel> records, bool grouping)
 		{
 			var result = new List<ActivityView>();
 
@@ -94,17 +129,17 @@ namespace AGO.Core.Controllers
 			{
 				if (view == null)
 					return;
-					
-				view.Items = view.Items.Reverse().ToList();
 
-				var currentUser = string.Empty;
-				foreach (var itemView in view.Items)
+				foreach (var processor in _ActivityViewProcessors)
+					processor.PostProcess(view);
+				
+				foreach (var item in view.Items)
 				{
-					if (string.Equals(itemView.User, currentUser))
-						itemView.User = string.Empty;
-					else
-						currentUser = itemView.User;
+					foreach (var processor in _ActivityViewProcessors)
+						processor.PostProcessItem(item);
 				}
+
+				view.Items = view.Items.Reverse().ToList();
 			};
 
 			ActivityView currentView = null;
@@ -116,7 +151,7 @@ namespace AGO.Core.Controllers
 				{
 					postProcess(currentView);
 
-					currentView = ActivityViewFromRecord(record);
+					currentView = ActivityViewFromRecord(record, grouping);
 					if (currentView != null)
 					{
 						foreach (var processor in _ActivityViewProcessors)
@@ -130,13 +165,13 @@ namespace AGO.Core.Controllers
 				if (currentView == null)
 					continue;
 
-				var itemView = ActivityItemViewFromRecord(record);
-				if (itemView == null)
-					continue;
+				var existingItem = GetExistingActivityItemView(currentView, record, grouping);
+				var currentItemView = existingItem ?? ActivityItemViewFromRecord(record, grouping);
+				if (existingItem == null)
+					currentView.Items.Add(currentItemView);
 
 				foreach (var processor in _ActivityViewProcessors)
-					processor.ProcessItem(itemView, record);
-				currentView.Items.Add(itemView);
+					processor.ProcessItem(currentItemView, record);
 			}
 
 			postProcess(currentView);

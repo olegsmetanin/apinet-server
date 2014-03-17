@@ -7,7 +7,7 @@ using AGO.Tasks.Model.Task;
 
 namespace AGO.Tasks.Processing
 {
-	public class TaskCollectionActivityPostProcessor : CollectionChangeActivityPostProcessor<TaskModel, ProjectModel>
+	public class TaskCollectionActivityPostProcessor : CollectionChangeActivityPostProcessor<TaskModel, TaskModel>
 	{
 		#region Properties, fields, constructors
 
@@ -29,7 +29,7 @@ namespace AGO.Tasks.Processing
 			var project = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
 				.Where(m => m.ProjectCode == model.ProjectCode).Take(1).SingleOrDefault();
 			if(project != null)
-					result.Add(PopulateCollectionActivityRecord(model, project,
+					result.Add(PopulateCollectionActivityRecord(model, model,
 				new CollectionChangeActivityRecordModel { ProjectCode = model.ProjectCode}, ChangeType.Insert));
 
 			return result;
@@ -42,7 +42,7 @@ namespace AGO.Tasks.Processing
 			var project = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
 				.Where(m => m.ProjectCode == model.ProjectCode).Take(1).SingleOrDefault();
 			if (project != null)
-					result.Add(PopulateCollectionActivityRecord(model, project,
+					result.Add(PopulateCollectionActivityRecord(model, model,
 				new CollectionChangeActivityRecordModel { ProjectCode = model.ProjectCode }, ChangeType.Delete));
 
 			return result;

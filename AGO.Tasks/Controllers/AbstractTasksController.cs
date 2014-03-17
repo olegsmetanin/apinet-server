@@ -133,7 +133,7 @@ namespace AGO.Tasks.Controllers
 				var secureModel = m as ISecureModel;
 				if (secureModel != null)
 				{
-					secureModel.Creator = _AuthController.CurrentUser();
+					secureModel.Creator = CurrentUser;
 					secureModel.LastChanger = CurrentUser;
 					secureModel.LastChangeTime = DateTime.UtcNow;
 				}
@@ -157,10 +157,9 @@ namespace AGO.Tasks.Controllers
 
 			try
 			{
-				var persistentModel = default(Guid).Equals(id)
-										? postFactory((factory ?? defaultFactory)())
-				                      	: _CrudDao.Get<TModel>(id);
-				if (persistentModel == null)
+				var persistentModel = postFactory(default(Guid).Equals(id) 
+					? (factory ?? defaultFactory)() : _CrudDao.Get<TModel>(id));
+				if (persistentModel == null) 
 					throw new NoSuchEntityException();
 
 				TModel original = null;
