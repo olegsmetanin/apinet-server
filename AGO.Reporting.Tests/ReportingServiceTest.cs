@@ -46,12 +46,12 @@ namespace AGO.Reporting.Tests
 			svc = realsvc;
 		}
 
-		[TearDown]
-		public new void TearDown()
+		public override void TearDown()
 		{
 			project = null;
 			svc.Dispose();
 			svc = null;
+
 			base.TearDown();
 		}
 

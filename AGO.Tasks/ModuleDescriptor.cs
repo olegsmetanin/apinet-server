@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using AGO.Core.Application;
 using AGO.Core.Controllers;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
 using AGO.Core.Modules;
 using AGO.Core.Localization;
 using AGO.Core.Security;
@@ -11,6 +13,8 @@ using AGO.Tasks.Processing;
 using SimpleInjector;
 using SimpleInjector.Advanced;
 using DictionaryController = AGO.Tasks.Controllers.DictionaryController;
+
+[assembly: InternalsVisibleTo("AGO.Tasks.Test")]
 
 namespace AGO.Tasks
 {
@@ -40,16 +44,22 @@ namespace AGO.Tasks
 		{
 			app.RegisterModuleSecurityProviders(GetType().Assembly);
 
-			var registration = Lifestyle.Singleton.CreateRegistration(
+			var fileResRegistration = Lifestyle.Singleton.CreateRegistration(
 				typeof(IFileResourceStorage),
 				() => app.IocContainer.GetInstance<TasksController>(),
 				app.IocContainer);
-			app.IocContainer.AppendToCollection(typeof(IFileResourceStorage), registration);
+			app.IocContainer.AppendToCollection(typeof(IFileResourceStorage), fileResRegistration);
 
 			app.IocContainer.RegisterSingle<TaskAttributesActivityPostProcessor, TaskAttributesActivityPostProcessor>();
 			app.IocContainer.RegisterSingle<TaskCollectionActivityPostProcessor, TaskCollectionActivityPostProcessor>();			
 			app.IocContainer.RegisterSingle<TaskAttributeActivityViewProcessor, TaskAttributeActivityViewProcessor>();
 			app.IocContainer.RegisterSingle<TaskCollectionActivityViewProcessor, TaskCollectionActivityViewProcessor>();
+
+			var projFactoryRegistration = Lifestyle.Singleton.CreateRegistration(
+				typeof (IProjectFactory),
+				typeof (TasksProjectFactory),
+				app.IocContainer);
+			app.IocContainer.AppendToCollection(typeof(IProjectFactory), projFactoryRegistration);
 		}
 
 		public void Initialize(IApplication app)

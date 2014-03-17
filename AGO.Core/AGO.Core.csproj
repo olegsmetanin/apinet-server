@@ -153,6 +153,7 @@
     <Compile Include="Model\Processing\IModelPostProcessor.cs" />
     <Compile Include="Model\Processing\IModelValidator.cs" />
     <Compile Include="Model\Processing\ModelProcessingService.cs" />
+    <Compile Include="Model\Projects\IProjectFactory.cs" />
     <Compile Include="Model\Projects\ProjectMembershipModel.cs" />
     <Compile Include="Model\Projects\ProjectModel.cs" />
     <Compile Include="Model\Projects\ProjectMemberModel.cs" />

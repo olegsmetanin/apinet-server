@@ -168,9 +168,10 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<ReportSettingModel> GetSettings([NotEmpty] string[] types)
+		public IEnumerable<ReportSettingModel> GetSettings([NotEmpty] string project, [NotEmpty] string[] types)
 		{
-			return _SessionProvider.CurrentSession.QueryOver<ReportSettingModel>()
+			return ProjectSession(project).QueryOver<ReportSettingModel>()
+				.Where(m => m.ProjectCode == project)
 				.WhereRestrictionOn(m => m.TypeCode).IsIn(types.Cast<object>().ToArray())
 				.OrderBy(m => m.Name).Asc
 				.UnderlyingCriteria.List<ReportSettingModel>();
@@ -186,11 +187,11 @@ namespace AGO.Core.Controllers
 		{
 			try
 			{
-				var settings = _CrudDao.Get<ReportSettingModel>(settingsId);
+				var dao = DaoFactory.CreateProjectCrudDao(project);
+				var settings = dao.Get<ReportSettingModel>(settingsId);
 				var user = _AuthController.CurrentUser();
-				var participant = _FilteringService.Filter<ProjectMemberModel>()
-					.Where(m => m.UserId == user.Id && m.ProjectCode == project)
-					.List(_FilteringDao).FirstOrDefault();
+				var participant = dao.Find<ProjectMemberModel>(q => q.Where(
+					m => m.UserId == user.Id && m.ProjectCode == project));
 
 				var name = (!resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : settings.Name)
 				           + " " + DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -207,8 +208,8 @@ namespace AGO.Core.Controllers
 								ResultUnread = true,
 								Culture = CultureInfo.CurrentUICulture.Name
 				           	};
-				_CrudDao.Store(task);
-				_SessionProvider.FlushCurrentSession();
+				dao.Store(task);
+				//_SessionProvider.FlushCurrentSession();
 
 				//Add task to system shared work queue, so one of workers can grab and execute it
 				var qi = new QueueItem("Report", task.Id, project, user.Id.ToString())
@@ -412,7 +413,7 @@ namespace AGO.Core.Controllers
 
 		private ReportTaskDTO ReportTaskToDTO(ReportTaskModel task)
 		{
-			var p = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
+			var p = MainSession.QueryOver<ProjectModel>()
 				.Where(m => m.ProjectCode == task.ProjectCode).SingleOrDefault();
 			var project = p != null ? p.Name : null;
 			return ReportTaskDTO.FromTask(task, _LocalizationService, project, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);

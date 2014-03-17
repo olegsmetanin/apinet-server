@@ -80,7 +80,7 @@ namespace AGO.Core.Tests
 
 		public UserModel LoginToUser(string login)
 		{
-			return Session.QueryOver<UserModel>().Where(m => m.Email == login).SingleOrDefault();
+			return MainSession.QueryOver<UserModel>().Where(m => m.Email == login).SingleOrDefault();
 		}
 
 		protected UserModel Login(string email)

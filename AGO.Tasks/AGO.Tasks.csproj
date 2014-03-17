@@ -136,6 +136,8 @@
     <Compile Include="SecurityProviders\TaskTypeSecurityProvider.cs" />
     <Compile Include="TaskProjectRoles.cs" />
     <Compile Include="TasksException.cs" />
+    <Compile Include="TasksProjectFactory.cs" />
+    <Compile Include="TasksReports.cs" />
     <Compile Include="TestDataService.cs" />
   </ItemGroup>
   <ItemGroup>
