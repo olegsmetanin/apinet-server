@@ -44,7 +44,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<UserFilterModel>(m => m.Filter)
 				.WithRefColumn<UserFilterModel>(m => m.User);
 
-			Create.SecureModelTable<CustomPropertyTypeModel>()
+			Create.SecureProjectBoundModelTable<CustomPropertyTypeModel>()
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.ProjectCode)
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.Name)
 				.WithValueColumn<CustomPropertyTypeModel>(m => m.FullName)
@@ -143,12 +143,12 @@ namespace AGO.Core.Migrations
 				.WithColumn("TaskType").AsString(128).NotNullable()
 				.WithColumn("TaskId").AsGuid().NotNullable().PrimaryKey()
 				.WithColumn("Project").AsString(ProjectModel.PROJECT_CODE_SIZE).NotNullable()
-				.WithColumn("User").AsString(UserModel.EMAIL_SIZE).NotNullable()
+				.WithColumn("User").AsString(32).NotNullable()
 				.WithColumn("CreateDate").AsDateTime().NotNullable()
 				.WithColumn("PriorityType").AsInt32().NotNullable()
 				.WithColumn("UserPriority").AsInt32().NotNullable();
 
-			Create.SecureModelTable<ActivityRecordModel>()
+			Create.SecureProjectBoundModelTable<ActivityRecordModel>()
 				.WithValueColumn<ActivityRecordModel>(m => m.ProjectCode)
 				.WithValueColumn<ActivityRecordModel>(m => m.ItemType)
 				.WithValueColumn<ActivityRecordModel>(m => m.ItemName)

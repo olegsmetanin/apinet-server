@@ -14,9 +14,11 @@ namespace AGO.Core
 {
 	public class ModuleDescriptor : IModuleDescriptor
 	{
+		internal const string MODULE_CODE = "Core";
+
 		public string Name { get { return "AGO.Core"; } }
 
-		public string Alias { get { return "Core"; } }
+		public string Alias { get { return MODULE_CODE; } }
 
 		public int Priority { get { return int.MinValue; } }
 

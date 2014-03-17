@@ -1,53 +1,77 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using AGO.Core;
+using AGO.Core.DataAccess;
+using AGO.Core.Model;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
-using AGO.Core.Model.Reporting;
 using AGO.Core.Model.Security;
-using AGO.Reporting.Common;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
-using AGO.Tasks.Reports;
+using Npgsql;
 using TaskStatus = AGO.Tasks.Model.Task.TaskStatus;
 
 namespace AGO.Tasks
 {
 	public class TestDataService : AbstractTestDataService, ITestDataService
 	{
+		private const string DB_SOFT = "ago_apinet_soft";
+		private const string DB_OTHERS = "ago_apinet_others";
+
 		#region Properties, fields, constructors
 
-		public TestDataService(ISessionProvider sessionProvider, ISessionProviderRegistry registry, ICrudDao crudDao)
-			: base(sessionProvider, registry, crudDao)
+		public TestDataService(ISessionProviderRegistry registry, DaoFactory factory)
+			: base(registry, factory)
 		{
+			daoCache = new Dictionary<string, ICrudDao>();
 		}
 
 		#endregion
 
 		#region Interfaces implementation
 
+		public IEnumerable<string> RequiredDatabases
+		{
+			get
+			{
+				yield return DB_SOFT;
+				yield return DB_OTHERS;
+			}
+		}
+
+		private ICrudDao mainDao;
+		private readonly IDictionary<string, ICrudDao> daoCache;
+		private ICrudDao ProjectDao(string project)
+		{
+			if (!daoCache.ContainsKey(project))
+				daoCache[project] = DaoFactory.CreateProjectCrudDao(project);
+			return daoCache[project];
+		}
+
 		public void Populate()
 		{
-			var admin = _CrudDao.Find<UserModel>(q => q.Where(m => m.Email == "admin@apinet-test.com"));
+			mainDao = DaoFactory.CreateMainCrudDao();
+			var mainSession = SessionProviderRegistry.GetMainDbProvider().CurrentSession;
+
+			var admin = mainDao.Find<UserModel>(q => q.Where(m => m.Email == "admin@apinet-test.com"));
 			var context = new
 			{
 				Admin = admin,
-				Demo = CurrentSession.QueryOver<UserModel>()
+				Demo = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "demo@apinet-test.com").SingleOrDefault(),
-				User1 = CurrentSession.QueryOver<UserModel>()
+				User1 = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "user1@apinet-test.com").SingleOrDefault(),
-				User2 = CurrentSession.QueryOver<UserModel>()
+				User2 = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "user2@apinet-test.com").SingleOrDefault(),
-				User3 = CurrentSession.QueryOver<UserModel>()
+				User3 = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "user3@apinet-test.com").SingleOrDefault(),
-				Artem1 = CurrentSession.QueryOver<UserModel>()
+				Artem1 = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "artem1@twitter.com").SingleOrDefault(),
-				OlegSmith = CurrentSession.QueryOver<UserModel>()
+				OlegSmith = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "olegsmith@apinet-test.com").SingleOrDefault(),
-				AdminTags = CurrentSession.QueryOver<ProjectTagModel>()
+				AdminTags = mainSession.QueryOver<ProjectTagModel>()
 					.Where(m => m.Creator.Id == admin.Id).List(),
 				ProjectType = new ProjectTypeModel
 				{
@@ -61,26 +85,30 @@ namespace AGO.Tasks
 					context.User3 == null || context.Artem1 == null || context.OlegSmith == null)
 				throw new Exception("Test data inconsistency");
 
-			_CrudDao.Store(context.ProjectType);
+			mainDao.Store(context.ProjectType);
 
 			var projects = DoPopulateProjects(context);
-			CurrentSession.Flush();
+			mainSession.Flush();
 
 			var types = DoPopulateTaskTypes(context, projects);
 			var paramTypes = DoPopulatePropertyTypes(context, projects);
 			var tags = DoPopulateTags(context, projects);
 			DoPopulateTasks(context, projects, types, paramTypes, tags);
 			DoPopulateReports(context, projects);
+
+			SessionProviderRegistry.CloseCurrentSessions();
 		}
 
 		#endregion
 
 		#region Helper methods
 
-		private ProjectMemberModel UserToMember(ProjectModel project, UserModel user)
+		private ProjectMemberModel UserToMember(IProjectBoundModel project, UserModel user)
 		{
-			return CurrentSession.QueryOver<ProjectMemberModel>()
-				.Where(m => m.ProjectCode == project.ProjectCode && m.UserId == user.Id).SingleOrDefault();
+			return SessionProviderRegistry.GetProjectProvider(project.ProjectCode).CurrentSession
+				.QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project.ProjectCode && m.UserId == user.Id)
+				.SingleOrDefault();
 		}
 
 		protected dynamic DoPopulateProjects(dynamic context)
@@ -88,7 +116,6 @@ namespace AGO.Tasks
 			Func<ProjectModel, UserModel, string, ProjectMemberModel> addMember = (p, u, r) =>
 			{
 				var member = ProjectMemberModel.FromParameters(u, p, r);
-				_CrudDao.Store(member);
 				var membership = new ProjectMembershipModel {Project = p, User = u};
 				p.Members.Add(membership);
 				return member;
@@ -96,6 +123,10 @@ namespace AGO.Tasks
 
 			Func<string, string, string, ProjectModel> createProject = (code, name, description) =>
 			{
+				var pgcsb = new NpgsqlConnectionStringBuilder(SessionProviderRegistry.GetMainDbProvider().ConnectionString)
+				{
+					Database = DB_SOFT.Contains(code) ? DB_SOFT : DB_OTHERS
+				};
 				var project = new ProjectModel
 				{
 					Creator = context.Admin,
@@ -103,43 +134,44 @@ namespace AGO.Tasks
 					Name = name ?? "Task management project",
 					Description = description ?? "Description of task management project ",
 					Type = context.ProjectType,
-					//TODO use cs's from test config for propect->db mapping
-					ConnectionString = SessionProviderRegistry.GetMainDbProvider().ConnectionString
+					ConnectionString = pgcsb.ConnectionString
 				};
-				_CrudDao.Store(project);
+				mainDao.Store(project);
 
-				_CrudDao.Store(project.ChangeStatus(ProjectStatus.New, context.Admin));
+				mainDao.Store(project.ChangeStatus(ProjectStatus.New, context.Admin));
+				SessionProviderRegistry.GetMainDbProvider().CurrentSession.Flush();
 
-				var pcAdmin = addMember(project, context.Admin, BaseProjectRoles.Administrator);
-				pcAdmin.UserPriority = 50;
-				_CrudDao.Store(pcAdmin);
+				var pdao = ProjectDao(project.ProjectCode);
+				var pmAdmin = addMember(project, context.Admin, BaseProjectRoles.Administrator);
+				pmAdmin.UserPriority = 50;
+				pdao.Store(pmAdmin);
 
-				var pcDemo = addMember(project, context.Demo, BaseProjectRoles.Administrator);
-				pcDemo.Roles = new[] {BaseProjectRoles.Administrator, TaskProjectRoles.Manager, TaskProjectRoles.Executor};
-				pcDemo.CurrentRole = TaskProjectRoles.Manager;
-				_CrudDao.Store(pcDemo);
+				var pmDemo = addMember(project, context.Demo, BaseProjectRoles.Administrator);
+				pmDemo.Roles = new[] {BaseProjectRoles.Administrator, TaskProjectRoles.Manager, TaskProjectRoles.Executor};
+				pmDemo.CurrentRole = TaskProjectRoles.Manager;
+				pdao.Store(pmDemo);
 
-				var pcUser1 = addMember(project, context.User1, BaseProjectRoles.Administrator);
-				pcUser1.UserPriority = 25;
-				_CrudDao.Store(pcUser1);
+				var pmUser1 = addMember(project, context.User1, BaseProjectRoles.Administrator);
+				pmUser1.UserPriority = 25;
+				pdao.Store(pmUser1);
 
-				var pcUser2 = addMember(project, context.User2, TaskProjectRoles.Manager);
-				_CrudDao.Store(pcUser2);
+				var pmUser2 = addMember(project, context.User2, TaskProjectRoles.Manager);
+				pdao.Store(pmUser2);
 
-				var pcUser3 = addMember(project, context.User3, TaskProjectRoles.Executor);
-				_CrudDao.Store(pcUser3);
+				var pmUser3 = addMember(project, context.User3, TaskProjectRoles.Executor);
+				pdao.Store(pmUser3);
 
-				var pcArtem1 = addMember(project, context.Artem1, BaseProjectRoles.Administrator);
-				pcArtem1.UserPriority = 10;
-				_CrudDao.Store(pcArtem1);
+				var pmArtem1 = addMember(project, context.Artem1, BaseProjectRoles.Administrator);
+				pmArtem1.UserPriority = 10;
+				pdao.Store(pmArtem1);
 
-				var pcOlegSmith = addMember(project, context.OlegSmith, BaseProjectRoles.Administrator);
-				pcOlegSmith.UserPriority = 15;
-				_CrudDao.Store(pcOlegSmith);
+				var pmOlegSmith = addMember(project, context.OlegSmith, BaseProjectRoles.Administrator);
+				pmOlegSmith.UserPriority = 15;
+				pdao.Store(pmOlegSmith);
 
 				foreach (var tag in context.AdminTags)
 				{
-					_CrudDao.Store(new ProjectToTagModel
+					mainDao.Store(new ProjectToTagModel
 					{
 						Creator = context.Admin,
 						Project = project,
@@ -147,7 +179,7 @@ namespace AGO.Tasks
 					});
 				}
 
-				_CrudDao.Store(project);
+				mainDao.Store(project);
 				return project;
 			};
 
@@ -170,7 +202,7 @@ namespace AGO.Tasks
 					ProjectCode = proj.ProjectCode,
 					Name = name
 				};
-				_CrudDao.Store(taskType);
+				ProjectDao(proj.ProjectCode).Store(taskType);
 				return taskType;
 			};
 
@@ -218,7 +250,7 @@ namespace AGO.Tasks
 					FullName = name,
 					ValueType = type
 				};
-				_CrudDao.Store(propertyType);
+				ProjectDao(proj.ProjectCode).Store(propertyType);
 				return propertyType;
 			};
 
@@ -263,7 +295,7 @@ namespace AGO.Tasks
 								Name = name,
 								FullName = name
 			                };
-				_CrudDao.Store(tag);
+				ProjectDao(project.ProjectCode).Store(tag);
 			    return tag;
 			};
 
@@ -321,7 +353,7 @@ namespace AGO.Tasks
 					};
 					task.Executors.Add(executor);
 				}
-				_CrudDao.Store(task);
+				ProjectDao(proj.ProjectCode).Store(task);
 				return task;
 			};
 			Action<TaskModel, CustomPropertyTypeModel, object> createTaskProperty = (task, propertyType, value) =>
@@ -333,7 +365,7 @@ namespace AGO.Tasks
 					PropertyType = propertyType,
 					Value = value
 				};
-				_CrudDao.Store(taskProperty);
+				ProjectDao(propertyType.ProjectCode).Store(taskProperty);
 			};
 			Action<TaskModel, TaskTagModel> addTag = (task, tag) =>
 			{
@@ -343,7 +375,7 @@ namespace AGO.Tasks
 			                        Task = task,
 			                        Tag = tag
 			                    };
-			    _CrudDao.Store(tagLink);
+			    ProjectDao(task.ProjectCode).Store(tagLink);
 			};
 			Action<TaskModel, UserModel, decimal, string> addTime = (task, user, time, comment) =>
 			{
@@ -354,7 +386,7 @@ namespace AGO.Tasks
 					Time = time,
 					Comment = comment
 				};
-				_CrudDao.Store(entry);
+				ProjectDao(task.ProjectCode).Store(entry);
 			};
 
 // ReSharper disable UnusedVariable

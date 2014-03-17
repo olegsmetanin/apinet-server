@@ -1,4 +1,7 @@
-﻿using AGO.Core.Controllers.Security.OAuth;
+﻿using System.Collections.Generic;
+using System.Linq;
+using AGO.Core.Controllers.Security.OAuth;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 
@@ -8,9 +11,8 @@ namespace AGO.Core
 	{
 		#region Properties, fields, constructors
 
-		public TestDataService(ISessionProvider sessionProvider, ISessionProviderRegistry registry, ICrudDao crudDao)
-			:base(sessionProvider, registry, crudDao)
-
+		public TestDataService(ISessionProviderRegistry registry, DaoFactory factory)
+			:base(registry, factory)
 		{
 		}
 
@@ -18,8 +20,15 @@ namespace AGO.Core
 
 		#region Interfaces implementation
 
+		public IEnumerable<string> RequiredDatabases
+		{
+			get { return Enumerable.Empty<string>(); }
+		}
+
 		public void Populate()
 		{
+			var dao = DaoFactory.CreateMainCrudDao();
+
 			var admin = new UserModel
 			{
 				Email = "admin@apinet-test.com",
@@ -29,7 +38,7 @@ namespace AGO.Core
 				SystemRole = SystemRole.Administrator
 			};
 			admin.Creator = admin;
-			_CrudDao.Store(admin);
+			dao.Store(admin);
 
 			var demo = new UserModel
 			{
@@ -40,7 +49,7 @@ namespace AGO.Core
 				FirstName = "Demo",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(demo);
+			dao.Store(demo);
 
 			var user1 = new UserModel
 			{
@@ -51,7 +60,7 @@ namespace AGO.Core
 				FirstName = "Thomas",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(user1);
+			dao.Store(user1);
 
 			var user2 = new UserModel
 			{
@@ -62,7 +71,7 @@ namespace AGO.Core
 				FirstName = "Samuel",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(user2);
+			dao.Store(user2);
 
 			var user3 = new UserModel
 			{
@@ -73,7 +82,7 @@ namespace AGO.Core
 				FirstName = "Caroline",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(user3);
+			dao.Store(user3);
 
 			var artem1Fb = new UserModel
 			{
@@ -97,8 +106,8 @@ namespace AGO.Core
 				OAuthProvider = OAuthProvider.Twitter,
 				OAuthUserId = "1632745315"
 			};
-			_CrudDao.Store(artem1Fb);
-			_CrudDao.Store(artem1Twi);
+			dao.Store(artem1Fb);
+			dao.Store(artem1Twi);
 
 			var olegsmith = new UserModel
 			{
@@ -111,24 +120,24 @@ namespace AGO.Core
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "1640647496"
 			};
-			_CrudDao.Store(olegsmith);
+			dao.Store(olegsmith);
 
 
-			_CrudDao.Store(new ProjectTagModel
+			dao.Store(new ProjectTagModel
 			{
 				Creator = admin,
 				Name = "Urgent",
 				FullName = "Urgent",
 			});
 
-			_CrudDao.Store(new ProjectTagModel
+			dao.Store(new ProjectTagModel
 			{
 				Creator = admin,
 				Name = "Important",
 				FullName = "Important",
 			});
 
-			_CrudDao.Store(new ProjectTagModel
+			dao.Store(new ProjectTagModel
 			{
 				Creator = admin,
 				Name = "Pay attention",

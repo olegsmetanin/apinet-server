@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using AGO.Core.AutoMapping;
 using AGO.Core.Model;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using FluentMigrator.Builders.Alter;
 using FluentMigrator.Builders.Alter.Table;
@@ -626,7 +627,16 @@ namespace AGO.Core.Migration
 		}
 
 		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
-			where TModel : ISecureModel
+			where TModel : ISecureModel<UserModel>
+		{
+			return root.CoreModelTable<TModel>()
+				.WithRefColumn<TModel>(m => m.Creator)
+				.WithValueColumn<TModel>(m => m.LastChangeTime)
+				.WithRefColumn<TModel>(m => m.LastChanger);
+		}
+
+		public static ICreateTableWithColumnSyntax SecureProjectBoundModelTable<TModel>(this ICreateExpressionRoot root)
+			where TModel : ISecureModel<ProjectMemberModel>
 		{
 			return root.CoreModelTable<TModel>()
 				.WithRefColumn<TModel>(m => m.Creator)

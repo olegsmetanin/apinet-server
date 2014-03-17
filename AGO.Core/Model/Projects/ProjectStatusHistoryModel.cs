@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Projects
 {
-	public class ProjectStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus>
+	public class ProjectStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus, UserModel>
 	{
 		#region Persistent
 
@@ -28,7 +28,7 @@ namespace AGO.Core.Model.Projects
 		#endregion
 
 		[NotMapped]
-		ProjectModel IStatusHistoryRecordModel<ProjectModel, ProjectStatus>.Holder
+		ProjectModel IStatusHistoryRecordModel<ProjectModel, ProjectStatus, UserModel>.Holder
 		{
 			get { return Project; }
 			set { Project = value; }

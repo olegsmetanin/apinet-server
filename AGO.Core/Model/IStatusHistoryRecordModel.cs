@@ -8,7 +8,8 @@ namespace AGO.Core.Model
 	/// </summary>
 	/// <typeparam name="TModel">Тип объекта-владельца статуса и истории</typeparam>
 	/// <typeparam name="TStatus">Тип статуса</typeparam>
-	public interface IStatusHistoryRecordModel<TModel, TStatus>: ISecureModel
+	/// <typeparam name="TUser">Тип пользователя</typeparam>
+	public interface IStatusHistoryRecordModel<TModel, TStatus, TUser>: ISecureModel<TUser>
 	{
 		TModel Holder { get; set; }
 

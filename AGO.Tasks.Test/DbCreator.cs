@@ -12,7 +12,6 @@ namespace AGO.Tasks.Test
 		public void Recreate()
 		{
 			DoCreateDatabase();
-
 			Initialize();
 			DoPopulateDatabase();
 		}

@@ -6,7 +6,10 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Security
 {
-	public abstract class SecureModel<TIdType> : CoreModel<TIdType>, ISecureModel
+	/// <summary>
+	/// Secure model for core entities, stored in main (master) database
+	/// </summary>
+	public abstract class SecureModel<TIdType> : CoreModel<TIdType>, ISecureModel<UserModel>
 	{
 		#region Persistent
 

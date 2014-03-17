@@ -2,12 +2,12 @@
 
 namespace AGO.Core.Model.Security
 {
-	public interface ISecureModel : IIdentifiedModel
+	public interface ISecureModel<TUser> : IIdentifiedModel
 	{
-		UserModel Creator { get; set; }
+		TUser Creator { get; set; }
 
 		DateTime? LastChangeTime { get; set; }
 
-		UserModel LastChanger { get; set; }
+		TUser LastChanger { get; set; }
 	}
 }

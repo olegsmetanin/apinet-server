@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model
 {
@@ -14,14 +13,15 @@ namespace AGO.Core.Model
 	{
 		private const string DEFAULT_STATUS_PROP = "Status";
 
-		public static THistory Change<TModel, TStatus, THistory>(
+		public static THistory Change<TModel, TStatus, THistory, TUser>(
 			TModel holder,
 			TStatus newStatus,
 			ICollection<THistory> history,
-			UserModel changer = null,
+			TUser changer = null,
 			Expression<Func<TModel, object>> holderStatusProp = null)
 			where TModel : class
-			where THistory : class, IStatusHistoryRecordModel<TModel, TStatus>, new()
+			where TUser: class
+			where THistory : class, IStatusHistoryRecordModel<TModel, TStatus, TUser>, new()
 		{
 			if (holder == null)
 				throw new ArgumentNullException("holder");
@@ -35,7 +35,7 @@ namespace AGO.Core.Model
 			                     	: DEFAULT_STATUS_PROP;
 
 			var current = holder.GetMemberValue<TStatus>(statusPropName);
-			if (!ChangeNeeded<TModel, TStatus, THistory>(current, newStatus, history))
+			if (!ChangeNeeded<TModel, TStatus, THistory, TUser>(current, newStatus, history))
 				return null;
 
 			//set new status
@@ -45,7 +45,7 @@ namespace AGO.Core.Model
 			{
 				if (!record.IsOpen) continue;
 
-				record.Finish = DateTime.Now;
+				record.Finish = DateTime.UtcNow;
 				break; //only one record is current
 			}
 			//make new current history record
@@ -56,8 +56,8 @@ namespace AGO.Core.Model
 			return currentRecord;
 		}
 
-		private static bool ChangeNeeded<TModel, TStatus, THistory>(TStatus current, TStatus newStatus, IEnumerable<THistory> history)
-			where THistory : class, IStatusHistoryRecordModel<TModel, TStatus>, new()
+		private static bool ChangeNeeded<TModel, TStatus, THistory, TUser>(TStatus current, TStatus newStatus, IEnumerable<THistory> history)
+			where THistory : class, IStatusHistoryRecordModel<TModel, TStatus, TUser>, new()
 		{
 			Func<TStatus, TStatus, bool> equals = (curr, next) => typeof(TStatus).IsValueType 
 				? EqualityComparer<TStatus>.Default.Equals(current, newStatus)
