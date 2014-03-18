@@ -20,8 +20,8 @@ namespace AGO.Reporting.Tests
 
 		protected override void CreateModelHelpers()
 		{
-			FM = new ModelHelper(() => Session, () => CurrentUser);
-			M = new ModelHelper(() => Session, () => CurrentUser);
+			FM = new ModelHelper(() => MainSession, () => CurrentUser);
+			M = new ModelHelper(() => MainSession, () => CurrentUser);
 		}
 	}
 }

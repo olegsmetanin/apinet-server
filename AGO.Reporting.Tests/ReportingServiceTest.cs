@@ -37,6 +37,7 @@ namespace AGO.Reporting.Tests
 			base.SetUp();
 
 			project = M.Project(Guid.NewGuid().ToString().Replace("-", ""));
+			M.Member(project.ProjectCode, CurrentUser, BaseProjectRoles.Administrator);
 			realsvc = new ReportingService();
 			config = new Dictionary<string, string>
 			{
@@ -72,7 +73,7 @@ namespace AGO.Reporting.Tests
 
 		private ReportTaskModel WaitForState(ISession s, Guid taskId, TimeSpan waitTimeout, ReportTaskState waitState = ReportTaskState.Completed)
 		{
-			var checker = Session.CreateCriteria<ReportTaskModel>()
+			var checker = MainSession.CreateCriteria<ReportTaskModel>()
 				.SetProjection(Projections.Property<ReportTaskModel>(m => m.State))
 				.Add(Restrictions.And(
 					Restrictions.Eq("Id", taskId), Restrictions.Eq("ProjectCode", project.ProjectCode)));
@@ -107,10 +108,10 @@ namespace AGO.Reporting.Tests
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 			
 			svc.RunReport(task.Id);
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(5));
+			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(5));
 
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
 			Assert.IsNotNull(task.StartedAt);
@@ -137,20 +138,20 @@ namespace AGO.Reporting.Tests
 			JsonService.CreateSerializer().Serialize(writer, param);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, writer.ToString());
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
 
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(5));
+			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(5));
 			
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
-			var tags = Session.QueryOver<ProjectTagModel>().WhereRestrictionOn(m => m.Name).IsLike(search, MatchMode.Anywhere)
+			var tags = MainSession.QueryOver<ProjectTagModel>().WhereRestrictionOn(m => m.Name).IsLike(search, MatchMode.Anywhere)
 				.List<ProjectTagModel>();
 			var report = Encoding.UTF8.GetString(task.ResultContent);
 			foreach (var tag in tags)
 			{
 				StringAssert.Contains(tag.Id.ToString(), report);
-				StringAssert.Contains(CurrentUser.FullName, report);//was tag.Creator.FullName, but not only OwnerId exist
+				StringAssert.Contains(CurrentUser.FullName, report);//was tag.Creator.FullName, but now only OwnerId exist
 				StringAssert.Contains(tag.Name, report);
 			}
 			StringAssert.Contains(CurrentUser.FullName, report);
@@ -167,11 +168,11 @@ namespace AGO.Reporting.Tests
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
 
-			WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
@@ -197,10 +198,10 @@ namespace AGO.Reporting.Tests
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
+			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
@@ -218,10 +219,10 @@ namespace AGO.Reporting.Tests
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(4), ReportTaskState.Canceled);
+			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(4), ReportTaskState.Canceled);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
@@ -238,11 +239,11 @@ namespace AGO.Reporting.Tests
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
 
-			WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 			
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
@@ -266,25 +267,25 @@ namespace AGO.Reporting.Tests
 				typeof(FakeParameters).AssemblyQualifiedName);
 			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(Session, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 
 			var safeCounter = 0;
 			var prev = -1;
 			while (safeCounter < 200 && task.State == ReportTaskState.Running && task.DataGenerationProgress < 100)
 			{
-				Session.Clear();
-				task = Session.Load<ReportTaskModel>(task.Id);
+				MainSession.Clear();
+				task = MainSession.Load<ReportTaskModel>(task.Id);
 
 				Assert.IsTrue(task.DataGenerationProgress >= prev);
 				prev = task.DataGenerationProgress;
 				Thread.Sleep(100);
 				safeCounter++;
 			}
-			Session.Clear();
-			task = Session.Load<ReportTaskModel>(task.Id);
+			MainSession.Clear();
+			task = MainSession.Load<ReportTaskModel>(task.Id);
 			Assert.AreEqual(100, task.DataGenerationProgress);
 		}
 	}
@@ -385,7 +386,8 @@ namespace AGO.Reporting.Tests
 			{
 				var item = MakeItem(range);
 				MakeValue(item, "id", tag.Id.ToString());
-				var owner = fs.CompileFilter(fs.Filter<UserModel>().Where(m => m.Id == tag.OwnerId), typeof (ProjectTagModel))
+				var tagLocalVarCopy = tag;
+				var owner = fs.CompileFilter(fs.Filter<UserModel>().Where(m => m.Id == tagLocalVarCopy.OwnerId), typeof (UserModel))
 					.GetExecutableCriteria(sp.CurrentSession).SetMaxResults(1).List<UserModel>().Single();
 				MakeValue(item, "author", owner.FullName);
 				MakeValue(item, "name", tag.FullName);

@@ -139,7 +139,7 @@ namespace AGO.Core.Migrations
 				.WithColumn("TaskType").AsString(128).NotNullable()
 				.WithColumn("TaskId").AsGuid().NotNullable().PrimaryKey()
 				.WithColumn("Project").AsString(ProjectModel.PROJECT_CODE_SIZE).NotNullable()
-				.WithColumn("User").AsString(32).NotNullable()
+				.WithColumn("User").AsString(128).NotNullable()
 				.WithColumn("CreateDate").AsDateTime().NotNullable()
 				.WithColumn("PriorityType").AsInt32().NotNullable()
 				.WithColumn("UserPriority").AsInt32().NotNullable();
