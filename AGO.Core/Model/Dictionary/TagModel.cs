@@ -16,7 +16,7 @@ namespace AGO.Core.Model.Dictionary
 		/// <summary>
 		/// UserId of tag owner (can't use entiry, because may be used in project too)
 		/// </summary>
-		[ReadOnlyProperty, MetadataExclude]
+		[MetadataExclude]
 		public virtual Guid OwnerId { get; set; }
 
 		[JsonProperty, NotLonger(ProjectModel.PROJECT_CODE_SIZE)]
@@ -25,7 +25,7 @@ namespace AGO.Core.Model.Dictionary
 		[JsonProperty, NotLonger(128), NotEmpty]
 		public virtual string Name { get; set; }
 
-		[JsonProperty, NotLonger(1024), UniqueProperty("ProjectCode", "Creator")]
+		[JsonProperty, NotLonger(1024), UniqueProperty("ProjectCode", "OwnerId")]
 		public virtual string FullName { get; set; }
 
 		[JsonProperty]

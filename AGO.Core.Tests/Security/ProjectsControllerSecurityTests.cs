@@ -6,7 +6,6 @@ using System.Threading;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Projects;
 using AGO.Core.Filters;
-using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Security;
@@ -227,7 +226,7 @@ namespace AGO.Core.Tests.Security
 			{
 				M.Member(project.ProjectCode, user);
 			}
-			var tag = MainSession.QueryOver<ProjectTagModel>().List().Take(1).First();
+			var tag = M.ProjectTag("nunit_tag", user);
 			var link = new ProjectToTagModel
 			{
 				Project = project,
@@ -258,7 +257,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void MemberCanDetagProject()
 		{
-			DoDetagProjectTest(admin, true);
+			DoDetagProjectTest(member, true);
 		}
 
 		[Test]

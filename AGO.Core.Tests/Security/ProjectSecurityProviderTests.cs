@@ -33,20 +33,20 @@ namespace AGO.Core.Tests.Security
 
 		protected override void CreateModelHelpers()
 		{
-			FM = new ModelHelper(() => Session, () => CurrentUser);
+			FM = new ModelHelper(() => MainSession, () => CurrentUser);
 			//M = new ModelHelper(() => Session, () => CurrentUser); not needed
 		}
 
 		[Test]
 		public void AdminViewAll()
 		{
-			var filter = provider.ReadConstraint(null, admin.Id, Session);
+			var filter = provider.ReadConstraint(null, admin.Id, MainSession);
 			Assert.That(filter, Is.Null);
 		}
 
 		private void TestNotAdminReadConstraint(Guid userId)
 		{
-			var filter = provider.ReadConstraint(null, userId, Session);
+			var filter = provider.ReadConstraint(null, userId, MainSession);
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items, Is.All.AssignableTo<IFilterNode>());
 			Assert.That(filter.Items.Count(), Is.EqualTo(2));
@@ -89,25 +89,25 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void AdminCanChangeAll()
 		{
-			Assert.That(provider.CanCreate(testProject, null, admin.Id, Session), Is.True);
-			Assert.That(provider.CanUpdate(testProject, null, admin.Id, Session), Is.True);
-			Assert.That(provider.CanDelete(testProject, null, admin.Id, Session), Is.True);
+			Assert.That(provider.CanCreate(testProject, null, admin.Id, MainSession), Is.True);
+			Assert.That(provider.CanUpdate(testProject, null, admin.Id, MainSession), Is.True);
+			Assert.That(provider.CanDelete(testProject, null, admin.Id, MainSession), Is.True);
 		}
 
 		[Test]
 		public void MemberCanOnlyChange()
 		{
-			Assert.That(provider.CanCreate(testProject, null, member.Id, Session), Is.False);
-			Assert.That(provider.CanUpdate(testProject, null, member.Id, Session), Is.True);
-			Assert.That(provider.CanDelete(testProject, null, member.Id, Session), Is.False);
+			Assert.That(provider.CanCreate(testProject, null, member.Id, MainSession), Is.False);
+			Assert.That(provider.CanUpdate(testProject, null, member.Id, MainSession), Is.True);
+			Assert.That(provider.CanDelete(testProject, null, member.Id, MainSession), Is.False);
 		}
 
 		[Test]
 		public void NotMemberCanNotChangeAny()
 		{
-			Assert.That(provider.CanCreate(testProject, null, notMember.Id, Session), Is.False);
-			Assert.That(provider.CanUpdate(testProject, null, notMember.Id, Session), Is.False);
-			Assert.That(provider.CanDelete(testProject, null, notMember.Id, Session), Is.False);
+			Assert.That(provider.CanCreate(testProject, null, notMember.Id, MainSession), Is.False);
+			Assert.That(provider.CanUpdate(testProject, null, notMember.Id, MainSession), Is.False);
+			Assert.That(provider.CanDelete(testProject, null, notMember.Id, MainSession), Is.False);
 		}
 	}
 }

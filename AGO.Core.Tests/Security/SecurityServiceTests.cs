@@ -40,7 +40,7 @@ namespace AGO.Core.Tests.Security
 
 		protected override void CreateModelHelpers()
 		{
-			FM = new ModelHelper(() => Session, () => CurrentUser);
+			FM = new ModelHelper(() => MainSession, () => CurrentUser);
 			//M = ... not used
 		}
 
@@ -63,7 +63,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void ServiceReturnEmptyRestrictionsWithoutProviders()
 		{
-			var filter = ss.ApplyReadConstraint<ProjectModel>(null, admin.Id, Session);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(null, admin.Id, MainSession);
 
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items, Is.Empty);
@@ -79,7 +79,7 @@ namespace AGO.Core.Tests.Security
 			mock.ReadConstraint(null, Guid.Empty, null).ReturnsForAnyArgs(testFilter);
 			ss.RegisterProvider(mock);
 			//act
-			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, Session);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, MainSession);
 			//assert
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items.Count(), Is.EqualTo(1));
@@ -100,7 +100,7 @@ namespace AGO.Core.Tests.Security
 			ss.RegisterProvider(mock);
 			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == testProject.ProjectCode);
 			//act
-			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, Session, criteria);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, MainSession, criteria);
 			//assert
 			Assert.That(filter, Is.Not.Null);
 			Assert.That(filter.Items.Count(), Is.EqualTo(2));
@@ -131,7 +131,7 @@ namespace AGO.Core.Tests.Security
 			var criteria = fs.Filter<ProjectModel>().Where(m => m.ProjectCode == testProject.ProjectCode);
 
 			//act
-			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, Session, criteria);
+			var filter = ss.ApplyReadConstraint<ProjectModel>(testProject.ProjectCode, admin.Id, MainSession, criteria);
 
 			//assert
 			Assert.That(filter, Is.Not.Null);
@@ -149,8 +149,8 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void ServiceDemandDoesNotThrowWithoutProviders()
 		{
-			Assert.That(() => ss.DemandUpdate(testProject, testProject.ProjectCode, admin.Id, Session), Throws.Nothing);
-			Assert.That(() => ss.DemandDelete(testProject, testProject.ProjectCode, admin.Id, Session), Throws.Nothing);
+			Assert.That(() => ss.DemandUpdate(testProject, testProject.ProjectCode, admin.Id, MainSession), Throws.Nothing);
+			Assert.That(() => ss.DemandDelete(testProject, testProject.ProjectCode, admin.Id, MainSession), Throws.Nothing);
 		}
 
 		[Test]

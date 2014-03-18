@@ -8,8 +8,8 @@ namespace AGO.Core.Tests
 	{
 		protected override void CreateModelHelpers()
 		{
-			FM = new ModelHelper(() => Session, () => CurrentUser);
-			M = new ModelHelper(() => Session, () => CurrentUser);
+			FM = new ModelHelper(() => MainSession, () => CurrentUser);
+			M = new ModelHelper(() => MainSession, () => CurrentUser);
 		}
 
 		public override void TearDown()
@@ -45,9 +45,9 @@ namespace AGO.Core.Tests
 			p1.ConnectionString = pgb.ConnectionString;
 			pgb.ApplicationName = "p2";
 			p2.ConnectionString = pgb.ConnectionString;
-			Session.Update(p1);
-			Session.Update(p2);
-			Session.Flush();
+			MainSession.Update(p1);
+			MainSession.Update(p2);
+			MainSession.Flush();
 
 			var p1Connection = SessionProviderRegistry.GetProjectProvider("p1");
 			var p2Connection = SessionProviderRegistry.GetProjectProvider("p2");
@@ -65,8 +65,8 @@ namespace AGO.Core.Tests
 			var pgb = new NpgsqlConnectionStringBuilder(ConnectionString);
 			pgb.ApplicationName = "p1";
 			p1.ConnectionString = pgb.ConnectionString;
-			Session.Update(p1);
-			Session.Flush();
+			MainSession.Update(p1);
+			MainSession.Flush();
 
 			var firstCallConnection = SessionProviderRegistry.GetProjectProvider("p1");
 			var firstCallSession = firstCallConnection.CurrentSession;
@@ -102,10 +102,10 @@ namespace AGO.Core.Tests
 			p1.ConnectionString = ConnectionString;
 			p2.ConnectionString = ConnectionString;
 			p3.ConnectionString = ConnectionString;
-			Session.Update(p1);
-			Session.Update(p2);
-			Session.Update(p3);
-			Session.Flush();
+			MainSession.Update(p1);
+			MainSession.Update(p2);
+			MainSession.Update(p3);
+			MainSession.Flush();
 
 			var mainSession = SessionProviderRegistry.GetMainDbProvider().CurrentSession;
 			var p2Session = SessionProviderRegistry.GetProjectProvider("p2").CurrentSession;
