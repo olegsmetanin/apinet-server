@@ -45,7 +45,7 @@ namespace AGO.Tasks.Test
 		{
 			var dd = new DateTime(2013, 01, 01, 0, 0, 0, DateTimeKind.Utc);
 			controller.AddAgreemer(task.Id, pIvanov.Id, dd);
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Session.Refresh(task);
 			Assert.AreEqual(1, task.Agreements.Count);
@@ -63,10 +63,10 @@ namespace AGO.Tasks.Test
 			    Task = task,
 			    Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
 			controller.AddAgreemer(task.Id, pIvanov.Id);
 		}

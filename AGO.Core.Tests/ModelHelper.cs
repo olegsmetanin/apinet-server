@@ -71,21 +71,29 @@ namespace AGO.Core.Tests
 		{
 			if (project.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("project");
+
+			var p = ProjectFromCode(project);
+			return Member(p, user, roles);
+		}
+
+		public ProjectMemberModel Member(ProjectModel project, UserModel user, params string[] roles)
+		{
+			if (project == null)
+				throw new ArgumentNullException("project");
 			if (user == null)
 				throw new ArgumentNullException("user");
 
 			return Track(() =>
 			{
-				var p = ProjectFromCode(project);
 				var membership = new ProjectMembershipModel
 				{
-					Project = p,
+					Project = project,
 					User = user
 				};
-				p.Members.Add(membership);
-				Session().Update(p);
-				roles = roles != null && roles.Length > 0 ? roles : new[] {BaseProjectRoles.Administrator};
-				var member = ProjectMemberModel.FromParameters(user, p, roles);
+				project.Members.Add(membership);
+				Session().Update(project);
+				roles = roles != null && roles.Length > 0 ? roles : new[] { BaseProjectRoles.Administrator };
+				var member = ProjectMemberModel.FromParameters(user, project, roles);
 				Session().Save(member);
 				Session().Flush();
 				return member;

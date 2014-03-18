@@ -55,14 +55,19 @@ namespace AGO.Core.Tests
 			return Session().QueryOver<ProjectModel>().Where(m => m.ProjectCode == code).SingleOrDefault();
 		}
 
+		protected virtual ISession ProjectMembersSession(string project)
+		{
+			return Session();
+		}
+
 		public IEnumerable<ProjectMemberModel> ProjectMembers(string code)
 		{
-			return Session().QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
+			return ProjectMembersSession(code).QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
 		}
 
 		public ProjectMemberModel MemberFromUser(string project, UserModel user = null)
 		{
-			return Session().QueryOver<ProjectMemberModel>()
+			return ProjectMembersSession(project).QueryOver<ProjectMemberModel>()
 				.Where(m => m.ProjectCode == project && m.UserId == (user ?? CurrentUser()).Id)
 				.SingleOrDefault();
 		}
