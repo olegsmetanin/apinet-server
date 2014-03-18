@@ -253,10 +253,10 @@ namespace AGO.Tasks.Test
 			sub = Session.Get<TaskTagModel>(sub.Id);
 			Assert.AreEqual("aaa\\bbb\\sub", sub.FullName);
 			var aaa = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Creator.Id == CurrentUser.Id && m.FullName == "aaa")
+				.Where(m => m.ProjectCode == TestProject && m.OwnerId == CurrentUser.Id && m.FullName == "aaa")
 				.SingleOrDefault();
 			var bbb = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Creator.Id == CurrentUser.Id && m.FullName == "aaa\\bbb")
+				.Where(m => m.ProjectCode == TestProject && m.OwnerId == CurrentUser.Id && m.FullName == "aaa\\bbb")
 				.SingleOrDefault();
 			
 			Assert.AreEqual(bbb.Id, sub.Parent.Id);
@@ -355,7 +355,6 @@ namespace AGO.Tasks.Test
 			var tag = M.Tag("t1");
 			var link = new TaskToTagModel
 			           	{
-			           		Creator = CurrentUser,
 			           		Task = task,
 			           		Tag = tag
 			           	};
@@ -375,13 +374,11 @@ namespace AGO.Tasks.Test
 			var tag2 = M.Tag("t2");
 			var link1 = new TaskToTagModel
 			{
-				Creator = CurrentUser,
 				Task = task1,
 				Tag = tag1
 			};
 			var link2 = new TaskToTagModel
 			{
-				Creator = CurrentUser,
 				Task = task2,
 				Tag = tag1
 			};

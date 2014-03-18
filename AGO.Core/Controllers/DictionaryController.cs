@@ -47,11 +47,6 @@ namespace AGO.Core.Controllers
 
 		private static IDictionary<string, LookupEntry[]> projectStatuses;
 
-		private UserModel CurrentUser
-		{
-			get { return _AuthController.CurrentUser(); }
-		}
-
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupProjectStatuses(string term, [InRange(0, null)] int page)
 		{
@@ -139,7 +134,7 @@ namespace AGO.Core.Controllers
 				var dao = DaoFactory.CreateMainCrudDao();
 				var tag = new ProjectTagModel
 				{
-					Creator = CurrentUser,
+					OwnerId = CurrentUser.Id,
 					Name = name.TrimSafe(),
 					Parent = !default(Guid).Equals(parentId) ? dao.Get<ProjectTagModel>(parentId, true) : null
 				};
@@ -150,7 +145,7 @@ namespace AGO.Core.Controllers
 				if (dao.Exists<ProjectTagModel>(q => q.Where(m => 
 						m.Name == tag.Name 
 						&& m.Parent == tag.Parent 
-						&& m.Creator.Id == tag.Creator.Id)))
+						&& m.OwnerId == tag.OwnerId)))
 				{
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 				}
@@ -189,7 +184,7 @@ namespace AGO.Core.Controllers
 				if (dao.Exists<ProjectTagModel>(q => q.Where(m => 
 						m.Name == tag.Name 
 						&& m.Parent == tag.Parent
-						&& m.Creator.Id == tag.Creator.Id 
+						&& m.OwnerId == tag.OwnerId 
 						&& m.Id != tag.Id)))
 				{
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
@@ -263,7 +258,7 @@ namespace AGO.Core.Controllers
 
 		protected void DoDeleteProjectTag(ICrudDao dao, ProjectTagModel tag, ISet<Guid> deletedIds)
 		{
-			if ((tag.Creator == null || !CurrentUser.Equals(tag.Creator)) && CurrentUser.SystemRole != SystemRole.Administrator)
+			if ((CurrentUser.Id != tag.OwnerId) && CurrentUser.SystemRole != SystemRole.Administrator)
 				throw new AccessForbiddenException();
 
 			foreach (var subTag in MainSession.QueryOver<ProjectTagModel>()

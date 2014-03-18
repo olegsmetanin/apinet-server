@@ -33,7 +33,6 @@ namespace AGO.Core.Tests
 				var pt = new ProjectTypeModel
 				{
 					CreationTime = DateTime.UtcNow,
-					Creator = CurrentUser(),
 					Module = "NUnit",
 					Name = name ?? "NUnit test project type"
 				};
@@ -43,7 +42,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectModel Project(string code, string type = null, string name = null, UserModel creator = null, bool pub = false)
+		public ProjectModel Project(string code, string type = null, string name = null, bool pub = false)
 		{
 			if (code.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("code");
@@ -55,14 +54,13 @@ namespace AGO.Core.Tests
 					: Session().QueryOver<ProjectTypeModel>().List().Take(1).First();
 				var p = new ProjectModel
 				{
-					Creator = creator ?? CurrentUser(),
 					CreationTime = DateTime.UtcNow,
 					ProjectCode = code,
 					Name = name ?? "NUnit project " + code,
 					Type = pt,
-					VisibleForAll = pub
+					VisibleForAll = pub,
+					ConnectionString = Session().Connection.ConnectionString //by default use main cs
 				};
-				p.ConnectionString = Session().Connection.ConnectionString; //by default use main cs
 				Session().Save(p);
 				Session().Flush();
 				return p;
@@ -100,7 +98,7 @@ namespace AGO.Core.Tests
 			{
 				var tag = new ProjectTagModel
 				{
-					Creator = owner ?? CurrentUser(),
+					OwnerId = (owner ?? CurrentUser()).Id,
 					CreationTime = DateTime.UtcNow,
 					Name = name ?? "NUnit test tag"
 				};

@@ -30,7 +30,7 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			task.ChangeStatus(TaskStatus.Doing, CurrentUser);
+			task.ChangeStatus(TaskStatus.Doing, M.MemberFromUser(task.ProjectCode, CurrentUser));
 
 			Assert.AreEqual(TaskStatus.Doing, task.Status);
 			Assert.AreEqual(2, task.StatusHistory.Count);
@@ -43,8 +43,8 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			task.ChangeStatus(TaskStatus.Doing, CurrentUser);
-			task.ChangeStatus(TaskStatus.Done, CurrentUser);
+			task.ChangeStatus(TaskStatus.Doing, M.MemberFromUser(task.ProjectCode, CurrentUser));
+			task.ChangeStatus(TaskStatus.Done, M.MemberFromUser(task.ProjectCode, CurrentUser));
 
 			Assert.AreEqual(1, task.StatusHistory.Count(h => h.Finish == null));
 		}
@@ -55,7 +55,7 @@ namespace AGO.Tasks.Test
 			var task = M.Task(1);
 			_SessionProvider.FlushCurrentSession();
 
-			task.ChangeStatus(TaskStatus.New, CurrentUser);
+			task.ChangeStatus(TaskStatus.New, M.MemberFromUser(task.ProjectCode, CurrentUser));
 
 			Assert.AreEqual(TaskStatus.New, task.Status);
 			Assert.AreEqual(1, task.StatusHistory.Count);

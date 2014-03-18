@@ -24,12 +24,12 @@ namespace AGO.Tasks.SecurityProviders
 
 		public override bool CanCreate(ProjectToTagModel model, string project, UserModel user, ISession session)
 		{
-			return IsMember(model, user) && user.Equals(model.Tag.Creator);
+			return IsMember(model, user) && user.Id == model.Tag.OwnerId;
 		}
 
 		public override bool CanDelete(ProjectToTagModel model, string project, UserModel user, ISession session)
 		{
-			return IsMember(model, user) && user.Equals(model.Tag.Creator);
+			return IsMember(model, user) && user.Id == model.Tag.OwnerId;
 		}
 	}
 }

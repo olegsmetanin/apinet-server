@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using AGO.Core;
@@ -149,7 +150,7 @@ namespace AGO.Reporting.Tests
 			foreach (var tag in tags)
 			{
 				StringAssert.Contains(tag.Id.ToString(), report);
-				StringAssert.Contains(tag.Creator.FullName, report);
+				StringAssert.Contains(CurrentUser.FullName, report);//was tag.Creator.FullName, but not only OwnerId exist
 				StringAssert.Contains(tag.Name, report);
 			}
 			StringAssert.Contains(CurrentUser.FullName, report);
@@ -384,7 +385,9 @@ namespace AGO.Reporting.Tests
 			{
 				var item = MakeItem(range);
 				MakeValue(item, "id", tag.Id.ToString());
-				MakeValue(item, "author", tag.Creator != null ? tag.Creator.FullName : "<none>");
+				var owner = fs.CompileFilter(fs.Filter<UserModel>().Where(m => m.Id == tag.OwnerId), typeof (ProjectTagModel))
+					.GetExecutableCriteria(sp.CurrentSession).SetMaxResults(1).List<UserModel>().Single();
+				MakeValue(item, "author", owner.FullName);
 				MakeValue(item, "name", tag.FullName);
 				Ticker.AddTick();
 			}

@@ -189,7 +189,7 @@ namespace AGO.Core.Controllers
 			{
 				var dao = DaoFactory.CreateProjectCrudDao(project);
 				var settings = dao.Get<ReportSettingModel>(settingsId);
-				var user = _AuthController.CurrentUser();
+				var user = CurrentUser;
 				var participant = dao.Find<ProjectMemberModel>(q => q.Where(
 					m => m.UserId == user.Id && m.ProjectCode == project));
 
@@ -198,7 +198,7 @@ namespace AGO.Core.Controllers
 				var task = new ReportTaskModel
 				           	{
 				           		CreationTime = DateTime.UtcNow,
-				           		Creator = user,
+				           		Creator = CurrentUserToMember(project),
 				           		State = ReportTaskState.NotStarted,
 				           		ReportSetting = settings,
 								ProjectCode = project,

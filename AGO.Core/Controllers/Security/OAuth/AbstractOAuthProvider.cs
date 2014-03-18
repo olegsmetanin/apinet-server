@@ -59,7 +59,6 @@ namespace AGO.Core.Controllers.Security.OAuth
 					OAuthProvider = Type,
 					OAuthUserId = userId
 				};
-				user.Creator = user;
 				s.Save(user);
 			});
 			return user;

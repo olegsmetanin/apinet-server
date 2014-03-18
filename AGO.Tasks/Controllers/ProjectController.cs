@@ -125,7 +125,6 @@ namespace AGO.Tasks.Controllers
 			var tag = _CrudDao.Get<ProjectTagModel>(tagId, true);
 			link = new ProjectToTagModel
 			{
-				Creator = CurrentUser,
 				Project = project,
 				Tag = tag
 			};

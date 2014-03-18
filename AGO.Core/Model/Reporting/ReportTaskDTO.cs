@@ -1,18 +1,15 @@
 ﻿using System;
 using AGO.Core.Localization;
-using AGO.Core.Model.Security;
 using AGO.Reporting.Common.Model;
 
 namespace AGO.Core.Model.Reporting
 {
 	public class ReportTaskDTO
 	{
-		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, string project = null, bool? hideErrorDetails = null)
+		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, string project = null, bool hideErrorDetails = false)
 		{
 			if (m == null)
 				throw new ArgumentNullException("m");
-
-			var hide = hideErrorDetails ?? m.Creator.SystemRole != SystemRole.Administrator;
 
 			return new ReportTaskDTO
 			{
@@ -29,7 +26,7 @@ namespace AGO.Core.Model.Reporting
 				DataGenerationProgress = m.DataGenerationProgress,
 				ReportGenerationProgress = m.ReportGenerationProgress,
 				ErrorMsg = m.ErrorMsg,
-				ErrorDetails = !hide ? m.ErrorDetails : null,
+				ErrorDetails = !hideErrorDetails ? m.ErrorDetails : null,
 				ResultUnread = m.ResultUnread
 			};
 		}

@@ -461,7 +461,6 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(1, executor: projExecutor);
 				var link = new TaskToTagModel
 				{
-					Creator = u,
 					Task = task,
 					Tag = t
 				};

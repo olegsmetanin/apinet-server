@@ -7,9 +7,14 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Projects
 {
-	public class ProjectStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus, UserModel>
+	public class ProjectStatusHistoryModel : CoreModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus, UserModel>
 	{
 		#region Persistent
+
+		[JsonProperty, NotNull]
+		public virtual UserModel Creator { get; set; }
+		[ReadOnlyProperty, MetadataExclude]
+		public virtual Guid? CreatorId { get; set; }
 
 		[JsonProperty, NotNull]
 		public virtual DateTime Start { get; set; }

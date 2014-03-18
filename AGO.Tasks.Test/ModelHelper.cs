@@ -24,17 +24,17 @@ namespace AGO.Tasks.Test
 			{
 				var task = new TaskModel
 				{
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, CurrentUser()),
 					ProjectCode = project,
 					InternalSeqNumber = num,
 					SeqNumber = "t0-" + num,
 					TaskType = type,
 					Content = content
 				};
-				task.ChangeStatus(status, CurrentUser());
+				task.ChangeStatus(status, MemberFromUser(project, CurrentUser()));
 				var e = new TaskExecutorModel
 				{
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, CurrentUser()),
 					Task = task,
 					Executor = MemberFromUser(project, executor)
 				};
@@ -59,7 +59,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = creator ?? agreemer ?? CurrentUser(),
+				Creator = MemberFromUser(task.ProjectCode, creator ?? agreemer ?? CurrentUser()),
 				Task = task,
 				Agreemer = MemberFromUser(project, agreemer ?? CurrentUser()),
 				Done = done,
@@ -77,7 +77,7 @@ namespace AGO.Tasks.Test
 			{
 				var m = new TaskTypeModel
 				{
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, CurrentUser()),
 					ProjectCode = project,
 					Name = name
 				};
@@ -109,7 +109,7 @@ namespace AGO.Tasks.Test
 				var p = new TaskCustomPropertyModel
 				{
 					Task = task,
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(task.ProjectCode, CurrentUser()),
 					PropertyType = paramType,
 					Value = value
 				};
@@ -128,7 +128,7 @@ namespace AGO.Tasks.Test
 				var pt = new CustomPropertyTypeModel
 				{
 					ProjectCode = project,
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, CurrentUser()),
 					Name = name,
 					FullName = name,
 					ValueType = type
@@ -147,7 +147,7 @@ namespace AGO.Tasks.Test
 				var tag = new TaskTagModel
 				{
 					ProjectCode = project,
-					Creator = owner ?? CurrentUser(),
+					OwnerId = (owner ?? CurrentUser()).Id,
 					Name = name,
 					FullName = parent != null ? parent.FullName + " \\ " + name : name,
 					Parent = parent
@@ -171,7 +171,7 @@ namespace AGO.Tasks.Test
 					Name = name,
 					ContentType = mime,
 					Size = size,
-					Creator = creator ?? CurrentUser()
+					Creator = MemberFromUser(task.ProjectCode, creator ?? CurrentUser())
 				};
 				task.Files.Add(file);
 				Session().Save(file);

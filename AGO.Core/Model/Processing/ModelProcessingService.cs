@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AGO.Core.Model.Projects;
 using NHibernate;
 using AGO.Core.Localization;
 
@@ -99,7 +100,7 @@ namespace AGO.Core.Model.Processing
 			return DoCopyModelProperties(target, source, capability);
 		}
 
-		public void AfterModelCreated(IIdentifiedModel model)
+		public void AfterModelCreated(IIdentifiedModel model, ProjectMemberModel creator = null)
 		{
 			if (!_Ready)
 				throw new ServiceNotInitializedException();
@@ -108,10 +109,10 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("model");
 
 			foreach (var postProcessor in _ModelPostProcessors.Where(v => v.Accepts(model)))
-				postProcessor.AfterModelCreated(model);
+				postProcessor.AfterModelCreated(model, creator);
 		}
 
-		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original)
+		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original, ProjectMemberModel changer = null)
 		{
 			if (!_Ready)
 				throw new ServiceNotInitializedException();
@@ -122,7 +123,7 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("original");
 
 			foreach (var postProcessor in _ModelPostProcessors.Where(v => v.Accepts(model)))
-				postProcessor.AfterModelUpdated(model, original);
+				postProcessor.AfterModelUpdated(model, original, changer);
 		}
 
 		public void RegisterModelPostProcessors(IEnumerable<IModelPostProcessor> postProcessors)

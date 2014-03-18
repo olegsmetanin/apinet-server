@@ -37,12 +37,10 @@ namespace AGO.Core
 				FirstName = "John",
 				SystemRole = SystemRole.Administrator
 			};
-			admin.Creator = admin;
 			dao.Store(admin);
 
 			var demo = new UserModel
 			{
-				Creator = admin,
 				Email = "demo@apinet-test.com",
 				Active = true,
 				LastName = "User",
@@ -53,7 +51,6 @@ namespace AGO.Core
 
 			var user1 = new UserModel
 			{
-				Creator = admin,
 				Email = "user1@apinet-test.com",
 				Active = true,
 				LastName = "Bryan",
@@ -64,7 +61,6 @@ namespace AGO.Core
 
 			var user2 = new UserModel
 			{
-				Creator = admin,
 				Email = "user2@apinet-test.com",
 				Active = true,
 				LastName = "Scoggins",
@@ -75,7 +71,6 @@ namespace AGO.Core
 
 			var user3 = new UserModel
 			{
-				Creator = admin,
 				Email = "user3@apinet-test.com",
 				Active = true,
 				LastName = "Moore",
@@ -86,7 +81,6 @@ namespace AGO.Core
 
 			var artem1Fb = new UserModel
 			{
-				Creator = admin,
 				Email = "artem1@facebook.com",
 				Active = true,
 				LastName = "Facebook",
@@ -97,7 +91,6 @@ namespace AGO.Core
 			};
 			var artem1Twi = new UserModel
 			{
-				Creator = admin,
 				Email = "artem1@twitter.com",
 				Active = true,
 				LastName = "Twitter",
@@ -111,7 +104,6 @@ namespace AGO.Core
 
 			var olegsmith = new UserModel
 			{
-				Creator = admin,
 				Email = "olegsmith@apinet-test.com",
 				Active = true,
 				LastName = "Smith",
@@ -125,21 +117,21 @@ namespace AGO.Core
 
 			dao.Store(new ProjectTagModel
 			{
-				Creator = admin,
+				OwnerId = admin.Id,
 				Name = "Urgent",
 				FullName = "Urgent",
 			});
 
 			dao.Store(new ProjectTagModel
 			{
-				Creator = admin,
+				OwnerId = admin.Id,
 				Name = "Important",
 				FullName = "Important",
 			});
 
 			dao.Store(new ProjectTagModel
 			{
-				Creator = admin,
+				OwnerId = admin.Id,
 				Name = "Pay attention",
 				FullName = "Pay attention",
 			});

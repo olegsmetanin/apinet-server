@@ -14,18 +14,17 @@ namespace AGO.Tasks.SecurityProviders
 		public override IModelFilterNode ReadConstraint(string project, ProjectMemberModel member, ISession session)
 		{
 			//all view only own tags
-			return FilteringService.Filter<TaskTagModel>().Where(m => m.Creator.Id == member.UserId);
+			return FilteringService.Filter<TaskTagModel>().Where(m => m.ProjectCode == project && m.OwnerId == member.UserId);
 		}
 
 		public bool CanManage(TaskTagModel tag, ProjectMemberModel member)
 		{
-			//TODO no links to users table, remove Creator from tags
-			return tag.Creator.Id == member.UserId;
+			return tag.OwnerId == member.UserId;
 		}
 
 		public override bool CanCreate(TaskTagModel model, string project, ProjectMemberModel member, ISession session)
 		{
-			return CanManage(model, member) && (model.Parent == null || model.Parent.Creator.Equals(model.Creator));
+			return CanManage(model, member) && (model.Parent == null || model.Parent.OwnerId == model.OwnerId);
 		}
 
 		public override bool CanUpdate(TaskTagModel model, string project, ProjectMemberModel member, ISession session)

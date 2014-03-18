@@ -112,7 +112,6 @@ namespace AGO.Tasks.Test.Security
 				
 				var link = new ProjectToTagModel
 				{
-					Creator = u,
 					Project = proj,
 					Tag = t
 				};

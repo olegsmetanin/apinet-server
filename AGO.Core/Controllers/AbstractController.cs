@@ -10,6 +10,8 @@ using AGO.Core.Filters;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
+using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using NHibernate;
 
@@ -137,6 +139,11 @@ namespace AGO.Core.Controllers
 
 		#region Helper methods
 
+		protected virtual UserModel CurrentUser
+		{
+			get { return _AuthController.CurrentUser(); }
+		}
+
 		[Obsolete("Use MainSession and ProjectSession instead")]
 		protected virtual ISession Session
 		{
@@ -151,6 +158,21 @@ namespace AGO.Core.Controllers
 		protected virtual ISession ProjectSession(string project)
 		{
 			return SessionProviderRegistry.GetProjectProvider(project).CurrentSession;
+		}
+
+		protected virtual ProjectMemberModel UserToMember(string project, Guid userId)
+		{
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("project");
+
+			return ProjectSession(project).QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project && m.UserId == userId)
+				.SingleOrDefault();
+		}
+
+		protected virtual ProjectMemberModel CurrentUserToMember(string project)
+		{
+			return CurrentUser != null ? UserToMember(project, CurrentUser.Id) : null;
 		}
 
 		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations<TModel>()

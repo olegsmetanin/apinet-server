@@ -59,7 +59,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-			    Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 			    Task = task,
 			    Agreemer = pIvanov
 			};
@@ -74,7 +74,7 @@ namespace AGO.Tasks.Test
 		[Test, ExpectedException(typeof(CanNotAddAgreemerToClosedTaskException))]
 		public void AddAgreementToClosedThrow()
 		{
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
@@ -88,7 +88,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
@@ -121,13 +121,13 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
 			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
@@ -142,7 +142,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
@@ -170,7 +170,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
@@ -197,13 +197,13 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
 			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 
@@ -225,7 +225,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov,
 				Done = true,
@@ -254,7 +254,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov,
 				Done = true,
@@ -284,7 +284,7 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov,
 				Done = true,
@@ -293,7 +293,7 @@ namespace AGO.Tasks.Test
 			};
 			_CrudDao.Store(agr);
 			task.Agreements.Add(agr);
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
 			_CrudDao.Store(task);
 			_SessionProvider.FlushCurrentSession();
 

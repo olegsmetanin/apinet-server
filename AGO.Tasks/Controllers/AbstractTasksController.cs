@@ -136,8 +136,9 @@ namespace AGO.Tasks.Controllers
 				var secureModel = m as ISecureModel;
 				if (secureModel != null)
 				{
-					secureModel.Creator = _AuthController.CurrentUser();
-					secureModel.LastChanger = CurrentUser;
+					var member = CurrentUserToMember(project);
+					secureModel.Creator = member;
+					secureModel.LastChanger = member;
 					secureModel.LastChangeTime = DateTime.UtcNow;
 				}
 				var projectBoundModel = m as IProjectBoundModel;
@@ -151,7 +152,7 @@ namespace AGO.Tasks.Controllers
 				var secureModel = model as ISecureModel;
 				if (secureModel != null)
 				{
-					secureModel.LastChanger = CurrentUser;
+					secureModel.LastChanger = CurrentUserToMember(project);
 					secureModel.LastChangeTime = DateTime.UtcNow;
 				}
 

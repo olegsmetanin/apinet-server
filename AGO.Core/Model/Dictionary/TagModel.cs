@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using AGO.Core.Model.Projects;
-using AGO.Core.Model.Security;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -10,9 +9,15 @@ using Newtonsoft.Json;
 namespace AGO.Core.Model.Dictionary
 {
 	[TablePerSubclass("ModelType")]
-	public class TagModel : SecureModel<Guid>, IHierarchicalDictionaryItemModel
+	public class TagModel : CoreModel<Guid>, IHierarchicalDictionaryItemModel
 	{
 		#region Persistent
+
+		/// <summary>
+		/// UserId of tag owner (can't use entiry, because may be used in project too)
+		/// </summary>
+		[ReadOnlyProperty, MetadataExclude]
+		public virtual Guid OwnerId { get; set; }
 
 		[JsonProperty, NotLonger(ProjectModel.PROJECT_CODE_SIZE)]
 		public virtual string ProjectCode { get; set; }

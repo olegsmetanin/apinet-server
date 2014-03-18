@@ -245,7 +245,7 @@ namespace AGO.Tasks.Controllers
 			    			break;
 			    		case "Status":
 			    			var newStatus = (TaskStatus) Enum.Parse(typeof (TaskStatus), (string) data.Value);
-			    			task.ChangeStatus(newStatus, _AuthController.CurrentUser());
+			    			task.ChangeStatus(newStatus, CurrentUserToMember(project));
 			    			break;
 			    		case "TaskType":
 			    			task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
@@ -274,7 +274,7 @@ namespace AGO.Tasks.Controllers
 			    			{
 			    				var executor = new TaskExecutorModel
 			    				{
-			    					Creator = _AuthController.CurrentUser(),
+			    					Creator = CurrentUserToMember(project),
 			    					Task = task,
 			    					Executor = added
 			    				};
@@ -375,7 +375,7 @@ namespace AGO.Tasks.Controllers
 
 			var agreement = new TaskAgreementModel
 			{
-				Creator = _AuthController.CurrentUser(),
+				Creator = CurrentUserToMember(task.ProjectCode),
 				Task = task,
 				Agreemer = member,
 				DueDate = dueDate
@@ -475,7 +475,6 @@ namespace AGO.Tasks.Controllers
 			var tag = _CrudDao.Get<TaskTagModel>(tagId, true);
 			link = new TaskToTagModel
 			{
-				Creator = CurrentUser,
 				Task = task,
 				Tag = tag
 			};
@@ -540,7 +539,7 @@ namespace AGO.Tasks.Controllers
 				TaskViewAdapter.ParamToDTO,
 				() => new TaskCustomPropertyModel
 				{
-					Creator = CurrentUser,
+					Creator = CurrentUserToMember(task.ProjectCode),
 					Task = task,
 					PropertyType = _CrudDao.Get<CustomPropertyTypeModel>(model.Type.Id, true)
 				});
@@ -613,7 +612,7 @@ namespace AGO.Tasks.Controllers
 					{
 						taskFile = new TaskFileModel
 						{
-							Creator = CurrentUser,
+							Creator = CurrentUserToMember(project),
 							CreationTime = DateTime.UtcNow,
 							ContentType = file.ContentType,
 							Size = content.Length,
@@ -622,7 +621,7 @@ namespace AGO.Tasks.Controllers
 						task.Files.Add(taskFile);
 					}
 					taskFile.Name = fileName;
-					taskFile.LastChanger = CurrentUser;
+					taskFile.LastChanger = CurrentUserToMember(project);
 					taskFile.LastChangeTime = DateTime.UtcNow;
 
 					SecurityService.DemandUpdate(taskFile, project, CurrentUser.Id, Session);
@@ -788,7 +787,7 @@ namespace AGO.Tasks.Controllers
 
 			entry.Time = time;
 			entry.Comment = comment;
-			entry.LastChanger = CurrentUser;
+			entry.LastChanger = CurrentUserToMember(project);
 			entry.LastChangeTime = DateTime.UtcNow;
 			_CrudDao.Store(entry);
 

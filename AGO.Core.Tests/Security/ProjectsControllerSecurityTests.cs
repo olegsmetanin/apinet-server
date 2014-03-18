@@ -230,7 +230,6 @@ namespace AGO.Core.Tests.Security
 			var tag = MainSession.QueryOver<ProjectTagModel>().List().Take(1).First();
 			var link = new ProjectToTagModel
 			{
-				Creator = user,
 				Project = project,
 				Tag = tag
 			};

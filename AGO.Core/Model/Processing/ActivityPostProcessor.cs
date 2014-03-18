@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using AGO.Core.Model.Activity;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Processing
 {
 	public abstract class ActivityPostProcessor<TModel> : IModelPostProcessor
-		where TModel : SecureModel<Guid>, new()
+		where TModel : IdentifiedModel<Guid>, new()
 	{
 		#region Properties, fields, constructors
 
@@ -36,17 +37,17 @@ namespace AGO.Core.Model.Processing
 			return model is TModel;
 		}
 
-		public void AfterModelCreated(IIdentifiedModel model)
+		public void AfterModelCreated(IIdentifiedModel model, ProjectMemberModel creator = null)
 		{
 			ProcessUpdate(model as TModel, new TModel());
 		}
 
-		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original)
+		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original, ProjectMemberModel changer = null)
 		{
 			ProcessUpdate(model as TModel, original as TModel);
 		}
 
-		public void AfterModelDeleted(IIdentifiedModel model)
+		public void AfterModelDeleted(IIdentifiedModel model, ProjectMemberModel deleter = null)
 		{
 			if (model == null)
 				return;
@@ -73,12 +74,17 @@ namespace AGO.Core.Model.Processing
 			return new List<ActivityRecordModel>();
 		}
 
-		protected virtual ActivityRecordModel PopulateActivityRecord(TModel model, ActivityRecordModel record)
+		protected virtual ActivityRecordModel PopulateActivityRecord(TModel model, ActivityRecordModel record, ProjectMemberModel member = null)
 		{
+			if (member == null && model is ISecureModel)
+			{
+				member = ((ISecureModel) model).LastChanger;
+			}
+
 			record.ItemType = model.GetType().Name;
 			record.ItemName = model.ToStringSafe();
 			record.ItemId = model.Id;
-			record.Creator = model.LastChanger;
+			record.Creator = member;
 
 			return record;
 		}

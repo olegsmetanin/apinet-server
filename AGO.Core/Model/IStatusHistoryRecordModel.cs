@@ -1,5 +1,4 @@
 ﻿using System;
-using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model
 {
@@ -9,8 +8,10 @@ namespace AGO.Core.Model
 	/// <typeparam name="TModel">Тип объекта-владельца статуса и истории</typeparam>
 	/// <typeparam name="TStatus">Тип статуса</typeparam>
 	/// <typeparam name="TUser">Тип пользователя</typeparam>
-	public interface IStatusHistoryRecordModel<TModel, TStatus, TUser>: ISecureModel<TUser>
+	public interface IStatusHistoryRecordModel<TModel, TStatus, TUser>
 	{
+		TUser Creator { get; set; }
+
 		TModel Holder { get; set; }
 
 		TStatus Status { get; set; }

@@ -125,7 +125,7 @@ namespace AGO.Core.Tests.Security
 			var tag = (ProjectTagModel)response;
 			M.Track(() => tag);
 			Assert.That(tag.FullName, Is.EqualTo("nunit"));
-			Assert.That(tag.Creator, Is.EqualTo(user));
+			Assert.That(tag.OwnerId, Is.EqualTo(user.Id));
 		}
 
 		[Test]
@@ -166,7 +166,7 @@ namespace AGO.Core.Tests.Security
 				var tag = (ProjectTagModel)response;
 				M.Track(() => tag);
 				Assert.That(tag.FullName, Is.EqualTo("nunit parent / nunit child"));
-				Assert.That(tag.Creator, Is.EqualTo(current));
+				Assert.That(tag.OwnerId, Is.EqualTo(current.Id));
 			}
 		}
 

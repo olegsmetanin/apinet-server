@@ -19,11 +19,11 @@ namespace AGO.Core.Model.Processing
 
 		#region Template methods
 
-		protected override ActivityRecordModel PopulateActivityRecord(ProjectModel model, ActivityRecordModel record)
+		protected override ActivityRecordModel PopulateActivityRecord(ProjectModel model, ActivityRecordModel record, ProjectMemberModel member = null)
 		{
 			record.ProjectCode = model.ProjectCode;
 
-			return base.PopulateActivityRecord(model, record);
+			return base.PopulateActivityRecord(model, record, member);
 		}
 
 		protected override IList<ActivityRecordModel> RecordsForUpdate(ProjectModel model, ProjectModel original)

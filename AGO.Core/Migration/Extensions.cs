@@ -627,16 +627,7 @@ namespace AGO.Core.Migration
 		}
 
 		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
-			where TModel : ISecureModel<UserModel>
-		{
-			return root.CoreModelTable<TModel>()
-				.WithRefColumn<TModel>(m => m.Creator)
-				.WithValueColumn<TModel>(m => m.LastChangeTime)
-				.WithRefColumn<TModel>(m => m.LastChanger);
-		}
-
-		public static ICreateTableWithColumnSyntax SecureProjectBoundModelTable<TModel>(this ICreateExpressionRoot root)
-			where TModel : ISecureModel<ProjectMemberModel>
+			where TModel : ISecureModel
 		{
 			return root.CoreModelTable<TModel>()
 				.WithRefColumn<TModel>(m => m.Creator)

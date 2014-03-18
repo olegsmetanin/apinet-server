@@ -75,7 +75,7 @@ namespace AGO.Reporting.Tests
 					ReportSetting = setting,
 					Parameters = param,
 					State = ReportTaskState.NotStarted,
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, CurrentUser()),
 					CreationTime = DateTime.UtcNow
 				};
 				Session().Save(task);

@@ -1,13 +1,14 @@
 ﻿using System;
+using AGO.Core.Model.Projects;
 
 namespace AGO.Core.Model.Security
 {
-	public interface ISecureModel<TUser> : IIdentifiedModel
+	public interface ISecureModel : IIdentifiedModel
 	{
-		TUser Creator { get; set; }
+		ProjectMemberModel Creator { get; set; }
 
 		DateTime? LastChangeTime { get; set; }
 
-		TUser LastChanger { get; set; }
+		ProjectMemberModel LastChanger { get; set; }
 	}
 }

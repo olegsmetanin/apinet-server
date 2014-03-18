@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Security
 {
-	public class UserModel : SecureModel<Guid>
+	public class UserModel : CoreModel<Guid>
 	{
 		private const int EMAIL_SIZE_CONST = 64;
 		private const int NAME_SIZE = 64;

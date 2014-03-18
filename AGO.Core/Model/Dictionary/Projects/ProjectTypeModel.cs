@@ -1,12 +1,11 @@
 ﻿using System;
 using AGO.Core.Attributes.Mapping;
-using AGO.Core.Model.Security;
 using AGO.Core.Attributes.Constraints;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Dictionary.Projects
 {
-	public class ProjectTypeModel : SecureModel<Guid>, IDictionaryItemModel
+	public class ProjectTypeModel : CoreModel<Guid>, IDictionaryItemModel
 	{
 		#region Persistent
 

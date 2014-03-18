@@ -72,10 +72,9 @@ namespace AGO.Tasks
 				OlegSmith = mainSession.QueryOver<UserModel>()
 					.Where(m => m.Email == "olegsmith@apinet-test.com").SingleOrDefault(),
 				AdminTags = mainSession.QueryOver<ProjectTagModel>()
-					.Where(m => m.Creator.Id == admin.Id).List(),
+					.Where(m => m.OwnerId == admin.Id).List(),
 				ProjectType = new ProjectTypeModel
 				{
-					Creator = admin,
 					Name = "Task management project",
 					Module = ModuleDescriptor.MODULE_CODE
 				}
@@ -129,7 +128,6 @@ namespace AGO.Tasks
 				};
 				var project = new ProjectModel
 				{
-					Creator = context.Admin,
 					ProjectCode = code ?? "tasks",
 					Name = name ?? "Task management project",
 					Description = description ?? "Description of task management project ",
@@ -173,13 +171,13 @@ namespace AGO.Tasks
 				{
 					mainDao.Store(new ProjectToTagModel
 					{
-						Creator = context.Admin,
 						Project = project,
 						Tag = tag
 					});
 				}
 
 				mainDao.Store(project);
+				SessionProviderRegistry.GetProjectProvider(project.ProjectCode).CurrentSession.Flush();
 				return project;
 			};
 
@@ -198,7 +196,7 @@ namespace AGO.Tasks
 			{
 				var taskType = new TaskTypeModel
 				{
-					Creator = context.Admin,
+					Creator = UserToMember(proj, context.Admin),
 					ProjectCode = proj.ProjectCode,
 					Name = name
 				};
@@ -245,7 +243,7 @@ namespace AGO.Tasks
 				var propertyType = new CustomPropertyTypeModel
 				{
 					ProjectCode = proj.ProjectCode,
-					Creator = context.Admin,
+					Creator = UserToMember(proj, context.Admin),
 					Name = name,
 					FullName = name,
 					ValueType = type
@@ -291,7 +289,7 @@ namespace AGO.Tasks
 			    var tag = new TaskTagModel
 			                {
 			                    ProjectCode = project.ProjectCode,
-								Creator = owner,
+								OwnerId = owner.Id,
 								Name = name,
 								FullName = name
 			                };
@@ -332,7 +330,7 @@ namespace AGO.Tasks
 			{
 				var task = new TaskModel
 				{
-					Creator = context.Admin,
+					Creator = UserToMember(proj, context.Admin),
 					ProjectCode = proj.ProjectCode,
 					InternalSeqNumber = num,
 					SeqNumber = "t0-" + num,
@@ -342,12 +340,12 @@ namespace AGO.Tasks
 					TaskType = type,
 					EstimatedTime = estimate
 				};
-				task.ChangeStatus(status, context.Admin);
+				task.ChangeStatus(status, UserToMember(proj, context.Admin));
 				foreach (var user in users)
 				{
 					var executor = new TaskExecutorModel
 					{
-					    Creator = context.Admin,
+					    Creator = UserToMember(proj, context.Admin),
 					    Task = task,
 					    Executor = UserToMember(proj, user)
 					};
@@ -361,7 +359,7 @@ namespace AGO.Tasks
 				var taskProperty = new TaskCustomPropertyModel
 				{
 					Task = task,
-					Creator = context.Admin,
+					Creator = UserToMember(task, context.Admin),
 					PropertyType = propertyType,
 					Value = value
 				};
@@ -371,7 +369,7 @@ namespace AGO.Tasks
 			{
 			    var tagLink = new TaskToTagModel
 			                    {
-			                        Creator = context.Admin,
+									Creator = UserToMember(task, context.Admin),
 			                        Task = task,
 			                        Tag = tag
 			                    };
