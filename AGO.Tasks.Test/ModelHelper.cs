@@ -11,30 +11,37 @@ namespace AGO.Tasks.Test
 	public class ModelHelper: Core.Tests.ModelHelper
 	{
 		private readonly string project;
+		private readonly Func<ISession> projSession;
 
-		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser, string project)
+		public ModelHelper(Func<ISession> session, Func<ISession> projSession, Func<UserModel> currentUser, string project)
 			:base(session, currentUser)
 		{
 			this.project = project;
+			this.projSession = projSession;
 		}
 
-		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New, UserModel executor = null)
+		protected override ISession ProjectSession(string project)
+		{
+			return projSession();
+		}
+
+		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New, UserModel creator = null, UserModel executor = null)
 		{
 			return Track(() =>
 			{
 				var task = new TaskModel
 				{
-					Creator = MemberFromUser(project, CurrentUser()),
+					Creator = MemberFromUser(project, creator ?? CurrentUser()),
 					ProjectCode = project,
 					InternalSeqNumber = num,
 					SeqNumber = "t0-" + num,
 					TaskType = type,
 					Content = content
 				};
-				task.ChangeStatus(status, MemberFromUser(project, CurrentUser()));
+				task.ChangeStatus(status, MemberFromUser(project, creator ?? CurrentUser()));
 				var e = new TaskExecutorModel
 				{
-					Creator = MemberFromUser(project, CurrentUser()),
+					Creator = MemberFromUser(project, creator ?? CurrentUser()),
 					Task = task,
 					Executor = MemberFromUser(project, executor)
 				};
@@ -47,12 +54,12 @@ namespace AGO.Tasks.Test
 			});
 		}
 
-		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New, UserModel executor = null)
+		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New, UserModel creator = null, UserModel executor = null)
 		{
 			var typeModel = Session().QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault() ?? TaskType(type);
 
-			return Task(num, typeModel, content, status, executor);
+			return Task(num, typeModel, content, status, creator, executor);
 		}
 
 		public TaskAgreementModel Agreement(TaskModel task, UserModel agreemer = null, UserModel creator = null, bool done = false)
@@ -71,13 +78,13 @@ namespace AGO.Tasks.Test
 			return agr;
 		}
 
-		public TaskTypeModel TaskType(string name = "TestTaskType")
+		public TaskTypeModel TaskType(string name = "TestTaskType", UserModel creator = null)
 		{
 			return Track(() =>
 			{
 				var m = new TaskTypeModel
 				{
-					Creator = MemberFromUser(project, CurrentUser()),
+					Creator = MemberFromUser(project, ( creator ?? CurrentUser())),
 					ProjectCode = project,
 					Name = name
 				};

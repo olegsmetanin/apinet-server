@@ -22,6 +22,7 @@ namespace AGO.Core.Tests
 				{
 					Session().Delete(member);
 				}
+				DeleteProjectActivity(project.ProjectCode);
 			}
 			base.InternalDelete(model);
 		}

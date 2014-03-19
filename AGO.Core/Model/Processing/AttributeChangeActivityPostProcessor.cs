@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 
 namespace AGO.Core.Model.Processing
@@ -10,9 +11,9 @@ namespace AGO.Core.Model.Processing
 		#region Properties, fields, constructors
 
 		protected AttributeChangeActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
-			: base(crudDao, sessionProvider)
+			DaoFactory factory,
+			ISessionProviderRegistry providerRegistry)
+			: base(factory, providerRegistry)
 		{
 		}
 

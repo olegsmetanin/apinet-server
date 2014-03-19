@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AGO.Core.Model;
+using AGO.Core.Model.Activity;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using NHibernate;
@@ -55,21 +56,32 @@ namespace AGO.Core.Tests
 			return Session().QueryOver<ProjectModel>().Where(m => m.ProjectCode == code).SingleOrDefault();
 		}
 
-		protected virtual ISession ProjectMembersSession(string project)
+		protected virtual ISession ProjectSession(string project)
 		{
 			return Session();
 		}
 
 		public IEnumerable<ProjectMemberModel> ProjectMembers(string code)
 		{
-			return ProjectMembersSession(code).QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
+			return ProjectSession(code).QueryOver<ProjectMemberModel>().Where(m => m.ProjectCode == code).List();
 		}
 
 		public ProjectMemberModel MemberFromUser(string project, UserModel user = null)
 		{
-			return ProjectMembersSession(project).QueryOver<ProjectMemberModel>()
+			return ProjectSession(project).QueryOver<ProjectMemberModel>()
 				.Where(m => m.ProjectCode == project && m.UserId == (user ?? CurrentUser()).Id)
 				.SingleOrDefault();
+		}
+
+		public void DeleteProjectActivity(string project, ISession session = null)
+		{
+			session = session ?? Session();
+			var activities = session.QueryOver<ActivityRecordModel>()
+				.Where(m => m.ProjectCode == project).List();
+			foreach (var record in activities)
+			{
+				session.Delete(record);
+			}
 		}
 	}
 }

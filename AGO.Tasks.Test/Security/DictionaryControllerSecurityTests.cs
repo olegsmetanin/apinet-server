@@ -127,7 +127,7 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyProjectAdminOrManagerCanEditTaskType()
 		{
-			var tt = M.TaskType("aaa");
+			var tt = M.TaskType("aaa", projManager);
 
 			Func<UserModel, UpdateResult<TaskTypeDTO>> action = u =>
 			{
@@ -153,7 +153,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var tt = M.TaskType("for delete");
 				Login(u.Email);
-				return controller.DeleteTaskType(tt.Id);
+				return controller.DeleteTaskType(TestProject, tt.Id);
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();

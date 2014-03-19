@@ -22,13 +22,6 @@ namespace AGO.Tasks.Test
 			controller = IocContainer.GetInstance<TasksController>();
 		}
 
-		public override void SetUp()
-		{
-			base.SetUp();
-
-			LoginAdmin();
-		}
-
 		[Test]
 		public void GetTasksReturnAllRecords()
 		{
@@ -116,7 +109,7 @@ namespace AGO.Tasks.Test
 		}
 
 		[Test, ExpectedException(typeof(NoSuchEntityException))]
-		public void GetTaskdetailsByInvalidNumberThrow()
+		public void GetTaskDetailsByInvalidNumberThrow()
 		{
 			controller.GetTaskDetails(TestProject, "not existing number");
 		}
@@ -143,7 +136,7 @@ namespace AGO.Tasks.Test
 			var model = new CreateTaskDTO();
 
 			var vr = controller.CreateTask(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "TaskType").Value.Any());
@@ -155,7 +148,7 @@ namespace AGO.Tasks.Test
 			var model = new CreateTaskDTO { TaskType = Guid.NewGuid(), Executors = new [] { Guid.NewGuid()}};
 
 			var vr = controller.CreateTask(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "TaskType").Value.Any());
@@ -168,7 +161,7 @@ namespace AGO.Tasks.Test
 			var model = new CreateTaskDTO {TaskType = tt.Id};
 
 			var vr = controller.CreateTask(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Executors").Value.Any());
@@ -176,7 +169,7 @@ namespace AGO.Tasks.Test
 			model.Executors = new Guid[0];
 
 			vr = controller.CreateTask(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Executors").Value.Any());
@@ -189,7 +182,6 @@ namespace AGO.Tasks.Test
 			var model = new CreateTaskDTO { TaskType = tt.Id, Executors = new [] { Guid.NewGuid() } };
 
 			var vr = controller.CreateTask(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Executors").Value.Any());
@@ -210,7 +202,7 @@ namespace AGO.Tasks.Test
 			            		Priority = TaskPriority.Low
 			            	};
 			var vr = controller.CreateTask(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
 			Assert.IsTrue(vr.Success);
 			var task = Session.QueryOver<TaskModel>().Where(m => m.ProjectCode == TestProject).Take(1).SingleOrDefault();
@@ -221,7 +213,7 @@ namespace AGO.Tasks.Test
 			Assert.AreEqual(1, task.InternalSeqNumber);
 			Assert.AreEqual(tt.Id, task.TaskType.Id);
 			Assert.IsTrue(task.Executors.Any(e => e.Executor.Id == member.Id));
-			Assert.AreEqual(new DateTime(2013, 01, 01).ToUniversalTime(), task.DueDate);
+			Assert.AreEqual(new DateTime(2013, 01, 01), task.DueDate);
 			Assert.AreEqual("test task", task.Content);
 			Assert.AreEqual(TaskPriority.Low, task.Priority);
 		}
@@ -232,7 +224,7 @@ namespace AGO.Tasks.Test
 			var t = M.Task(1);
 
 			var res = controller.DeleteTask(TestProject, t.Id);
-			_SessionProvider.FlushCurrentSession(!res);
+			Session.Flush();
 
 			Assert.IsTrue(res);
 			t = Session.Get<TaskModel>(t.Id);
@@ -247,7 +239,7 @@ namespace AGO.Tasks.Test
 			var t3 = M.Task(3);
 
 			var res = controller.DeleteTasks(TestProject, new [] { t1.Id, t3.Id});
-			_SessionProvider.FlushCurrentSession(!res);
+			Session.Flush();
 
 			Assert.IsTrue(res);
 			t1 = Session.Get<TaskModel>(t1.Id);
@@ -275,7 +267,7 @@ namespace AGO.Tasks.Test
 
 			var inf = new PropChangeDTO(Guid.NewGuid(), t.ModelVersion, "Content", "bla bla");
 			var ur = controller.UpdateTask(TestProject, inf);
-			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+			Session.Flush();
 
 			Assert.IsFalse(ur.Validation.Success);
 			Assert.IsTrue(ur.Validation.Errors.Any());
@@ -288,7 +280,7 @@ namespace AGO.Tasks.Test
 
 			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", new {a = 1});
 			var ur = controller.UpdateTask(TestProject, inf);
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.IsFalse(ur.Validation.Success);
 			Assert.IsTrue(ur.Validation.FieldErrors.First(e => e.Key == "Content").Value.Any());
@@ -301,7 +293,7 @@ namespace AGO.Tasks.Test
 
 			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", "some test string");
 			var ur = controller.UpdateTask(TestProject, inf);
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.IsTrue(ur.Validation.Success);
 			t = Session.Get<TaskModel>(t.Id);

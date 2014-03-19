@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Projects;
 
@@ -9,9 +10,9 @@ namespace AGO.Core.Model.Processing
 		#region Properties, fields, constructors
 
 		public ProjectAttributesActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
-			: base(crudDao, sessionProvider)
+			DaoFactory factory,
+			ISessionProviderRegistry providerRegistry)
+			: base(factory, providerRegistry)
 		{
 		}
 

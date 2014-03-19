@@ -1,4 +1,5 @@
-﻿using AGO.Core.Model.Security;
+﻿using AGO.Core.Model.Projects;
+using AGO.Core.Model.Security;
 
 namespace AGO.Tasks.Test.Security
 {
@@ -12,15 +13,21 @@ namespace AGO.Tasks.Test.Security
 
 		protected override void SetupTestProject()
 		{
+			base.SetupTestProject();
+
 			admin = LoginToUser("admin@apinet-test.com");
 			projAdmin = LoginToUser("user1@apinet-test.com");
 			projManager = LoginToUser("user2@apinet-test.com");
 			projExecutor = LoginToUser("user3@apinet-test.com");
 			notMember = LoginToUser("artem1@facebook.com");
-			FM.Project(TestProject);
-			FM.Member(TestProject, projAdmin, BaseProjectRoles.Administrator);
-			FM.Member(TestProject, projManager, TaskProjectRoles.Manager);
-			FM.Member(TestProject, projExecutor, TaskProjectRoles.Executor);
+
+			var project = MainSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == TestProject).SingleOrDefault();
+			//remove member, added in base class
+			FPM.DropCreated();
+			//and add needed members
+			FPM.Member(project, projAdmin, BaseProjectRoles.Administrator);
+			FPM.Member(project, projManager, TaskProjectRoles.Manager);
+			FPM.Member(project, projExecutor, TaskProjectRoles.Executor);
 		}
 	}
 }

@@ -36,11 +36,10 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public object Configuration([NotEmpty] string project)
 		{
-			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
-			if (p == null)
+			if (!DaoFactory.CreateMainCrudDao().Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
-			var user = _AuthController.CurrentUser();
-			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == user.Id));
+
+			var member = CurrentUserToMember(project);
 			if (member == null)
 				throw new NoSuchProjectMemberException();
 

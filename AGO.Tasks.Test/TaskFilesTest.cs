@@ -236,7 +236,7 @@ namespace AGO.Tasks.Test
 		public void DeleteFileWithInvalidProjectThrow()
 		{
 			Assert.That(() => controller.DeleteFile("bla bla proj", Guid.Empty),
-				Throws.Exception.TypeOf<ObjectNotFoundException>());
+				Throws.Exception.TypeOf<NoSuchProjectException>());
 		}
 
 		[Test]
@@ -280,6 +280,7 @@ namespace AGO.Tasks.Test
 			var f3 = M.File(task, "3.txt");
 			Session.Clear();
 
+// ReSharper disable once AccessToModifiedClosure
 			Assert.That(() => controller.DeleteFiles(TestProject, new[] {f1.Id, Guid.NewGuid()}),
 				Throws.Exception.TypeOf<ObjectNotFoundException>());
 			Session.Clear();

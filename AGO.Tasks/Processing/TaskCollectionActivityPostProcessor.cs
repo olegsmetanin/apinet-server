@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using AGO.Core;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
@@ -12,9 +13,9 @@ namespace AGO.Tasks.Processing
 		#region Properties, fields, constructors
 
 		public TaskCollectionActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
-			: base(crudDao, sessionProvider)
+			DaoFactory factory,
+			ISessionProviderRegistry providerRegistry)
+			: base(factory, providerRegistry)
 		{
 		}
 
@@ -22,15 +23,19 @@ namespace AGO.Tasks.Processing
 
 		#region Template methods
 
+		private CollectionChangeActivityRecordModel FromTask(TaskModel task)
+		{
+			return new CollectionChangeActivityRecordModel {ProjectCode = task.ProjectCode};
+		}
+
 		protected override IList<ActivityRecordModel> RecordsForInsertion(TaskModel model)
 		{
 			var result = new List<ActivityRecordModel>();
 			
-			var project = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-				.Where(m => m.ProjectCode == model.ProjectCode).Take(1).SingleOrDefault();
+			var project = SessionProviderRegistry.GetMainDbProvider().CurrentSession.QueryOver<ProjectModel>()
+				.Where(m => m.ProjectCode == model.ProjectCode).SingleOrDefault();
 			if(project != null)
-					result.Add(PopulateCollectionActivityRecord(model, project,
-				new CollectionChangeActivityRecordModel { ProjectCode = model.ProjectCode}, ChangeType.Insert));
+				result.Add(PopulateCollectionActivityRecord(model, project, FromTask(model), ChangeType.Insert));
 
 			return result;
 		} 
@@ -39,11 +44,10 @@ namespace AGO.Tasks.Processing
 		{
 			var result = new List<ActivityRecordModel>();
 
-			var project = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
-				.Where(m => m.ProjectCode == model.ProjectCode).Take(1).SingleOrDefault();
+			var project = SessionProviderRegistry.GetMainDbProvider().CurrentSession.QueryOver<ProjectModel>()
+				.Where(m => m.ProjectCode == model.ProjectCode).SingleOrDefault();
 			if (project != null)
-					result.Add(PopulateCollectionActivityRecord(model, project,
-				new CollectionChangeActivityRecordModel { ProjectCode = model.ProjectCode }, ChangeType.Delete));
+				result.Add(PopulateCollectionActivityRecord(model, project, FromTask(model), ChangeType.Delete));
 
 			return result;
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using NHibernate;
 using NHibernate.Criterion;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Model;
@@ -11,21 +12,13 @@ namespace AGO.Core.Model.Processing
 	{
 		#region Properties, fields, constructors
 
-		protected readonly ILocalizationService _LocalizationService;
+		protected readonly ILocalizationService localizationService;
 
-		protected readonly ISessionProvider _SessionProvider;
-
-		public AttributeValidatingModelValidator(
-			ILocalizationService localizationService,
-			ISessionProvider sessionProvider)
+		public AttributeValidatingModelValidator(ILocalizationService localizationService)
 		{
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
-			_LocalizationService = localizationService;
-
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
+			this.localizationService = localizationService;
 		}
 
 		#endregion
@@ -42,6 +35,7 @@ namespace AGO.Core.Model.Processing
 		public void ValidateModelSaving(
 			IIdentifiedModel model, 
 			ValidationResult validation,
+			ISession session,
 			object capability = null)
 		{
 			if (model == null)
@@ -49,12 +43,13 @@ namespace AGO.Core.Model.Processing
 			if (validation == null)
 				throw new ArgumentNullException("validation");
 
-			DoValidateModelSaving(model, validation, capability, null);
+			DoValidateModelSaving(model, validation, session, capability, null);
 		}
 
 		public void ValidateModelDeletion(
 			IIdentifiedModel model,
 			ValidationResult validation,
+			ISession session,
 			object capability = null)
 		{
 		}
@@ -66,6 +61,7 @@ namespace AGO.Core.Model.Processing
 		protected virtual void DoValidateModelSaving(
 			object model,
 			ValidationResult validation,
+			ISession session,
 			object capability,
 			string namePrefix)
 		{
@@ -87,7 +83,7 @@ namespace AGO.Core.Model.Processing
 					var component = value as IComponent;
 					if (component != null)
 					{
-						DoValidateModelSaving(component, validation, capabilityObj, propertyInfo.Name);
+						DoValidateModelSaving(component, validation, session, capabilityObj, propertyInfo.Name);
 						continue;
 					}
 
@@ -102,7 +98,7 @@ namespace AGO.Core.Model.Processing
 					var uniquePropertyAttribute = propertyInfo.FirstAttribute<UniquePropertyAttribute>(true);
 					if (uniquePropertyAttribute != null)
 					{
-						var criteria = _SessionProvider.CurrentSession.CreateCriteria(model.GetType())
+						var criteria = session.CreateCriteria(model.GetType())
 							.Add(value != null 
 								? Restrictions.Eq(propertyInfo.Name, value)
 								: Restrictions.IsNull(propertyInfo.Name))
@@ -161,7 +157,7 @@ namespace AGO.Core.Model.Processing
 				}
 				catch (Exception e)
 				{
-					var msg = _LocalizationService.MessageForException(e);
+					var msg = localizationService.MessageForException(e);
 					validation.AddFieldErrors(string.Format("{0}{1}", namePrefix, propertyInfo.Name), msg);
 				}
 			}

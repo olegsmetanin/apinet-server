@@ -125,7 +125,7 @@ namespace AGO.Core.Controllers
 					ConnectionString = MainSession.Connection.ConnectionString
 				};
 
-				_ModelProcessingService.ValidateModelSaving(newProject, validation);
+				_ModelProcessingService.ValidateModelSaving(newProject, validation, MainSession);
 				if (!validation.Success)
 					return validation;
 

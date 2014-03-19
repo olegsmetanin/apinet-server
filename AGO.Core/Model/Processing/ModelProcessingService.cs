@@ -56,7 +56,7 @@ namespace AGO.Core.Model.Processing
 
 		#region Interfaces implementation
 
-		public void ValidateModelSaving(IIdentifiedModel model, ValidationResult validation, object capability = null)
+		public void ValidateModelSaving(IIdentifiedModel model, ValidationResult validation, ISession session, object capability = null)
 		{
 			if (!_Ready)
 				throw new ServiceNotInitializedException();
@@ -67,10 +67,10 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("validation");
 
 			foreach (var validator in _ModelValidators.OrderBy(m => m.Priority).Where(v => v.Accepts(model)))
-				validator.ValidateModelSaving(model, validation, capability);
+				validator.ValidateModelSaving(model, validation, session, capability);
 		}
 
-		public void ValidateModelDeletion(IIdentifiedModel model, ValidationResult validation, object capability = null)
+		public void ValidateModelDeletion(IIdentifiedModel model, ValidationResult validation, ISession session, object capability = null)
 		{
 			if (!_Ready)
 				throw new ServiceNotInitializedException();
@@ -81,7 +81,7 @@ namespace AGO.Core.Model.Processing
 				throw new ArgumentNullException("validation");
 
 			foreach (var validator in _ModelValidators.OrderBy(m => m.Priority).Where(v => v.Accepts(model)))
-				validator.ValidateModelDeletion(model, validation, capability);
+				validator.ValidateModelDeletion(model, validation, session, capability);
 		}
 
 		public void RegisterModelValidators(IEnumerable<IModelValidator> validators)

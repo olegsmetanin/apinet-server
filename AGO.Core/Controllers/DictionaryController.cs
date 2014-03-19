@@ -150,7 +150,7 @@ namespace AGO.Core.Controllers
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 				}
 
-				_ModelProcessingService.ValidateModelSaving(tag, validation);
+				_ModelProcessingService.ValidateModelSaving(tag, validation, MainSession);
 				if (!validation.Success)
 					return validation;
 
@@ -190,7 +190,7 @@ namespace AGO.Core.Controllers
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 				}
 
-				_ModelProcessingService.ValidateModelSaving(tag, validation);
+				_ModelProcessingService.ValidateModelSaving(tag, validation, MainSession);
 				if (!validation.Success)
 					return validation;
 

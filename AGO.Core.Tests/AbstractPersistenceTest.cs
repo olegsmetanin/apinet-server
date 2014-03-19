@@ -20,12 +20,6 @@ namespace AGO.Core.Tests
 			get { return typeof (NoopNotificationService); }
 		}
 
-		[Obsolete("Use MainSession or ProjectSession(project) instead")]
-		protected ISession Session
-		{
-			get { return _SessionProvider.CurrentSession; }
-		}
-
 		protected ISession MainSession
 		{
 			get { return SessionProviderRegistry.GetMainDbProvider().CurrentSession; }
@@ -71,9 +65,8 @@ namespace AGO.Core.Tests
 		{
 			if (M != null)
 				M.DropCreated();
-			Logout();
-			_SessionProvider.CloseCurrentSession();
 			SessionProviderRegistry.CloseCurrentSessions();
+			Logout();
 		}
 
 		protected abstract void CreateModelHelpers();

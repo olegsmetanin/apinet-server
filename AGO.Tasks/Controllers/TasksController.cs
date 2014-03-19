@@ -108,7 +108,7 @@ namespace AGO.Tasks.Controllers
 			var predicate = MakeTasksPredicate(project, filter, predefined);
 			var adapter = new TaskListItemAdapter(_LocalizationService, _AuthController.CurrentUser());
 
-			return _FilteringDao.List<TaskModel>(predicate, page, sorters)
+			return DaoFactory.CreateProjectFilteringDao(project).List<TaskModel>(predicate, page, sorters)
 				.Select(adapter.Fill)
 				.ToArray();
 		}
@@ -120,25 +120,23 @@ namespace AGO.Tasks.Controllers
 			TaskPredefinedFilter predefined)
     	{
     		var predicate = MakeTasksPredicate(project, filter, predefined);
-    		return _FilteringDao.RowCount<TaskModel>(predicate);
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<TaskModel>(predicate);
     	}
 
 		private IModelFilterNode MakeTasksPredicate(string project, IEnumerable<IModelFilterNode> filter, TaskPredefinedFilter predefined)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskModel>().Where(m => m.ProjectCode == project);
 			var predefinedPredicate = predefined.ToFilter(_FilteringService.Filter<TaskModel>());
-			var predicate = SecurityService.ApplyReadConstraint<TaskModel>(project, CurrentUser.Id, Session, 
-				filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray());
+			var predicate = ApplyReadConstraint<TaskModel>(project, filter.Concat(new[] { projectPredicate, predefinedPredicate }).ToArray());
 			return predicate;
 		}
 
 	    private TaskModel FindTaskByProjectAndNumber(string project, string numpp)
 	    {
 			var fb = _FilteringService.Filter<TaskModel>();
-			var predicate = SecurityService.ApplyReadConstraint<TaskModel>(project, CurrentUser.Id, Session,
-				fb.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
+			var predicate = ApplyReadConstraint<TaskModel>(project, fb.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
 
-			var task = _FilteringDao.Find<TaskModel>(predicate);
+			var task = DaoFactory.CreateProjectFilteringDao(project).Find<TaskModel>(predicate);
 
 			if (task == null)
 				throw new NoSuchEntityException();
@@ -165,9 +163,6 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public UpdateResult<string> CreateTask([NotEmpty] string project, [NotNull] CreateTaskDTO model)
 		{
-			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
-				throw new NoSuchProjectException();
-
 			return Edit<TaskModel, string>(default(Guid), project, (task, vr) =>
 				{
 					if (model.TaskType == default(Guid))
@@ -178,15 +173,16 @@ namespace AGO.Tasks.Controllers
 						return;
 
 			        //FIXME: это надо переделать на sequence или свой аналог
-					var num = Session.QueryOver<TaskModel>()
+					var num = ProjectSession(project).QueryOver<TaskModel>()
 						.Where(m => m.ProjectCode == project)
 						.UnderlyingCriteria
 						.SetProjection(Projections.Max<TaskModel>(m => m.InternalSeqNumber))
 						.UniqueResult<long?>().GetValueOrDefault(0) + 1;
+					var dao = DaoFactory.CreateProjectCrudDao(project);
 
 			        task.InternalSeqNumber = num;
 			        task.SeqNumber = "t0-" + num;
-			        task.TaskType = _CrudDao.Get<TaskTypeModel>(model.TaskType);
+			        task.TaskType = dao.Get<TaskTypeModel>(model.TaskType);
 			        task.DueDate = model.DueDate;
 			        task.Content = model.Content;
 			        task.Priority = model.Priority;
@@ -195,7 +191,7 @@ namespace AGO.Tasks.Controllers
 
 			        foreach (var id in model.Executors ?? Enumerable.Empty<Guid>())
 			        {
-			            var member = _CrudDao.Get<ProjectMemberModel>(id);
+			            var member = dao.Get<ProjectMemberModel>(id);
 			            if (member == null)
 			            {
 			                vr.AddFieldErrors("Executors", _LocalizationService.MessageForException(new NoSuchProjectMemberException()));
@@ -221,9 +217,6 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public UpdateResult<TaskViewDTO> UpdateTask([NotEmpty] string project, [NotNull] PropChangeDTO data)
 		{
-			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
-				throw new NoSuchProjectException();
-
 			return Edit<TaskModel, TaskViewDTO>(data.Id, project, (task, vr) =>
 			{
 				if (data.Prop.IsNullOrWhiteSpace())
@@ -233,6 +226,7 @@ namespace AGO.Tasks.Controllers
 
 			    try
 			    {
+				    var dao = DaoFactory.CreateProjectCrudDao(project);
 			    	switch (data.Prop)
 			    	{
 			    		case "Content":
@@ -249,7 +243,7 @@ namespace AGO.Tasks.Controllers
 			    			task.ChangeStatus(newStatus, CurrentUserToMember(project));
 			    			break;
 			    		case "TaskType":
-			    			task.TaskType = _CrudDao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
+			    			task.TaskType = dao.Get<TaskTypeModel>(data.Value.ConvertSafe<Guid>(), true);
 			    			break;
 			    		case "DueDate":
 			    			var dd = data.Value.ConvertSafe<DateTime?>();
@@ -264,12 +258,12 @@ namespace AGO.Tasks.Controllers
 			    				.Select(id => id.ConvertSafe<Guid>()).ToArray();
 			    			var toRemove = task.Executors.Where(e => !ids.Contains(e.Executor.Id)).ToArray();
 			    			var toAdd = ids.Where(id => task.Executors.All(e => !e.Executor.Id.Equals(id)))
-			    				.Select(id => _CrudDao.Get<ProjectMemberModel>(id, true));
+			    				.Select(id => dao.Get<ProjectMemberModel>(id, true));
 
 			    			foreach (var removed in toRemove)
 			    			{
 			    				task.Executors.Remove(removed);
-			    				_CrudDao.Delete(removed);
+			    				dao.Delete(removed);
 			    			}
 			    			foreach (var added in toAdd)
 			    			{
@@ -280,7 +274,7 @@ namespace AGO.Tasks.Controllers
 			    					Executor = added
 			    				};
 			    				task.Executors.Add(executor);
-			    				_CrudDao.Store(executor);
+			    				dao.Store(executor);
 			    			}
 			    			break;
 			    		case "EstimatedTime":
@@ -314,13 +308,14 @@ namespace AGO.Tasks.Controllers
 			() => { throw new TaskCreationNotSupportedException(); });
 		}
 
-		private void InternalDeleteTask(string project, Guid id)
+		private void InternalDeleteTask(string project, Guid id, ICrudDao dao = null)
 		{
 			var task = SecureFind<TaskModel>(project, id);
 
 			DemandDelete(task, task.ProjectCode);
 
-			_CrudDao.Delete(task);
+			dao = dao ?? DaoFactory.CreateProjectCrudDao(project);
+			dao.Delete(task);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -334,12 +329,13 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public bool DeleteTasks([NotEmpty] string project, [NotNull] ICollection<Guid> ids)
 		{
-			var s = _SessionProvider.CurrentSession;
+			var s = ProjectSession(project);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
 			var trn = s.BeginTransaction();
 			try
 			{
 				foreach (var id in ids)
-					InternalDeleteTask(project, id);
+					InternalDeleteTask(project, id, dao);
 
 				trn.Commit();
 			}
@@ -466,45 +462,48 @@ namespace AGO.Tasks.Controllers
 
 		[JsonEndpoint, RequireAuthorization]
 		public bool TagTask(
+			[NotEmpty] string project,
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var task = _CrudDao.Get<TaskModel>(modelId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var task = SecureFind<TaskModel>(project, modelId);
+			DemandUpdate(task, task.ProjectCode);
 
 			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
 
 			if (link != null)
 				return false;
 
-			var tag = _CrudDao.Get<TaskTagModel>(tagId, true);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var tag = dao.Get<TaskTagModel>(tagId, true);
 			link = new TaskToTagModel
 			{
 				Task = task,
 				Tag = tag
 			};
-			SecurityService.DemandUpdate(link, task.ProjectCode, CurrentUser.Id, Session);
+			DemandUpdate(link, task.ProjectCode);
 			task.Tags.Add(link);
-			_CrudDao.Store(link);
+			dao.Store(link);
 
 			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public bool DetagTask(
+			[NotEmpty] string project,
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var task = _CrudDao.Get<TaskModel>(modelId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var task = SecureFind<TaskModel>(project, modelId);
+			DemandUpdate(task, task.ProjectCode);
 
 			var link = task.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
 			if (link == null)
 				return false;
 
-			SecurityService.DemandDelete(link, task.ProjectCode, CurrentUser.Id, Session);
+			DemandDelete(link, task.ProjectCode);
 			task.Tags.Remove(link);
-			_CrudDao.Delete(link);
+			DaoFactory.CreateProjectCrudDao(task.ProjectCode).Delete(link);
 
 			return true;
 		}
@@ -534,10 +533,11 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UpdateResult<CustomParameterDTO> EditParam([NotEmpty] Guid taskId, [NotNull] CustomParameterDTO model)
+		public UpdateResult<CustomParameterDTO> EditParam([NotEmpty] string project, [NotEmpty] Guid taskId, [NotNull] CustomParameterDTO model)
 		{
-			var task = _CrudDao.Get<TaskModel>(taskId);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var task = SecureFind<TaskModel>(project, taskId);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			DemandUpdate(task, task.ProjectCode);
 
 			return Edit(model.Id, task.ProjectCode,
 				(param, vr) => { param.Value = model.Value; },
@@ -546,22 +546,21 @@ namespace AGO.Tasks.Controllers
 				{
 					Creator = CurrentUserToMember(task.ProjectCode),
 					Task = task,
-					PropertyType = _CrudDao.Get<CustomPropertyTypeModel>(model.Type.Id, true)
+					PropertyType = dao.Get<CustomPropertyTypeModel>(model.Type.Id, true)
 				});
 		}
 			
 		[JsonEndpoint, RequireAuthorization]
-		public bool DeleteParam([NotEmpty] Guid paramId)
+		public bool DeleteParam([NotEmpty] string project, [NotEmpty] Guid paramId)
 		{
-			var param = _CrudDao.Get<TaskCustomPropertyModel>(paramId, true);
-			if (param == null)
-				throw new NoSuchEntityException();
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var param = dao.Get<TaskCustomPropertyModel>(paramId, true);
 
 			var task = param.Task;
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			DemandUpdate(task, task.ProjectCode);
 
 			task.CustomProperties.Remove(param);
-			_CrudDao.Delete(param);
+			dao.Delete(param);
 			return true;
 		}
 
@@ -587,14 +586,13 @@ namespace AGO.Tasks.Controllers
 
 		    var fb = _FilteringService.Filter<TaskModel>();
 		    IModelFilterNode predicate = fb.Where(m => m.ProjectCode == project && m.SeqNumber == numpp);
-			var securedPredicate = SecurityService.ApplyReadConstraint<TaskModel>(
-			    project, CurrentUser.Id, Session, predicate);
+			var securedPredicate = ApplyReadConstraint<TaskModel>(project, predicate);
 
-		    var task = _FilteringDao.Find<TaskModel>(securedPredicate);
+		    var task = DaoFactory.CreateProjectFilteringDao(project).Find<TaskModel>(securedPredicate);
 			if (task == null)
 				throw new NoSuchEntityException();
 			
-			SecurityService.DemandUpdate(task, project, CurrentUser.Id, Session);
+			DemandUpdate(task, project);
 
 		    var result = new UploadResult<FileDTO>[files.Count];
 		    var adapter = new FileAdapter();
@@ -629,9 +627,9 @@ namespace AGO.Tasks.Controllers
 					taskFile.LastChanger = CurrentUserToMember(project);
 					taskFile.LastChangeTime = DateTime.UtcNow;
 
-					SecurityService.DemandUpdate(taskFile, project, CurrentUser.Id, Session);
+					DemandUpdate(taskFile, project);
 
-					_CrudDao.Store(taskFile);//must be called before store-need's file id for file name
+					DaoFactory.CreateProjectCrudDao(project).Store(taskFile);//must be called before store-need's file id for file name
 
 					var relativeFilePath = taskFile.Path;
 					if (relativeFilePath.IsNullOrWhiteSpace())
@@ -672,8 +670,7 @@ namespace AGO.Tasks.Controllers
 	    {
 			var fb = _FilteringService.Filter<TaskFileModel>();
 			IModelFilterNode ownerPredicate = fb.Where(m => m.Owner.ProjectCode == project && m.Owner.SeqNumber == numpp);
-			return SecurityService.ApplyReadConstraint<TaskFileModel>(
-				project, CurrentUser.Id, Session, filters.Concat(new [] { ownerPredicate }).ToArray());
+			return ApplyReadConstraint<TaskFileModel>(project, filters.Concat(new [] { ownerPredicate }).ToArray());
 	    }
 
 		[JsonEndpoint, RequireAuthorization]
@@ -687,7 +684,7 @@ namespace AGO.Tasks.Controllers
 		    var securedPredicate = MakeFilesPredicate(project, ownerId, filter);
 		    var adapter = new FileAdapter();
 
-		    return _FilteringDao.List<TaskFileModel>(securedPredicate, page, sorters)
+		    return DaoFactory.CreateProjectFilteringDao(project).List<TaskFileModel>(securedPredicate, page, sorters)
 			    .Select(adapter.Fill)
 				.ToArray();
 	    }
@@ -699,25 +696,26 @@ namespace AGO.Tasks.Controllers
 			[NotNull] ICollection<IModelFilterNode> filter)
 		{
 			var securedPredicate = MakeFilesPredicate(project, ownerId, filter);
-			return _FilteringDao.RowCount<TaskFileModel>(securedPredicate);
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<TaskFileModel>(securedPredicate);
 		}
 		
 		[JsonEndpoint, RequireAuthorization]
 	    public void DeleteFile([NotEmpty] string project, [NotEmpty] Guid fileId)
-	    {
-			var file = _CrudDao.Get<TaskFileModel>(fileId, true);
+		{
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var file = dao.Get<TaskFileModel>(fileId, true);
 
-			SecurityService.DemandUpdate(file.Owner, project, CurrentUser.Id, Session);
-			SecurityService.DemandDelete(file, project, CurrentUser.Id, Session);
+			DemandUpdate(file.Owner, project);
+			DemandDelete(file, project);
 
 			file.Owner.Files.Remove(file);
-			_CrudDao.Delete(file);
+			dao.Delete(file);
 	    }
 
 		[JsonEndpoint, RequireAuthorization]
 	    public void DeleteFiles([NotEmpty] string project, [NotEmpty] ICollection<Guid> ids)
 	    {
-			var trn = Session.BeginTransaction();
+			var trn = ProjectSession(project).BeginTransaction();
 			try
 			{
 				foreach (var id in ids)
@@ -774,7 +772,7 @@ namespace AGO.Tasks.Controllers
 
 			var entry = task.TrackTime(CurrentUser, time, comment);
 			DemandUpdate(entry, project);
-			_CrudDao.Store(entry);
+			DaoFactory.CreateProjectCrudDao(project).Store(entry);
 
 			return TaskViewAdapter.ToTimelog(entry);
 		}
@@ -786,7 +784,8 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty, InRange(0, null, false)] decimal time,
 			string comment)
 		{
-			var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var entry = dao.Get<TaskTimelogEntryModel>(timeId, true);
 			DemandUpdate(entry.Task, project);
 			DemandUpdate(entry, project);
 
@@ -794,7 +793,7 @@ namespace AGO.Tasks.Controllers
 			entry.Comment = comment;
 			entry.LastChanger = CurrentUserToMember(project);
 			entry.LastChangeTime = DateTime.UtcNow;
-			_CrudDao.Store(entry);
+			dao.Store(entry);
 
 			return TaskViewAdapter.ToTimelog(entry);
 		}
@@ -802,13 +801,14 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 	    public void DeleteTime([NotEmpty] string project, [NotEmpty] Guid timeId)
 	    {
-		    var entry = _CrudDao.Get<TaskTimelogEntryModel>(timeId, true);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+		    var entry = dao.Get<TaskTimelogEntryModel>(timeId, true);
 
 			DemandUpdate(entry.Task, project);
 			DemandDelete(entry, project);
 
 		    entry.Task.Timelog.Remove(entry);
-			_CrudDao.Delete(entry);
+			dao.Delete(entry);
 	    }
 
 		#endregion

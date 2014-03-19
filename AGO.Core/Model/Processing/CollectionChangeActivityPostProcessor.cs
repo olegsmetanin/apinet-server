@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
@@ -13,9 +14,9 @@ namespace AGO.Core.Model.Processing
 		#region Properties, fields, constructors
 
 		protected CollectionChangeActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
-			: base(crudDao, sessionProvider)
+			DaoFactory factory,
+			ISessionProviderRegistry providerRegistry)
+			: base(factory, providerRegistry)
 		{
 		}
 

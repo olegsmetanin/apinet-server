@@ -1,8 +1,6 @@
 ﻿using System.Linq;
 using System.Xml;
-using AGO.Core.DataAccess;
 using AGO.Core.Filters;
-using AGO.Core.Localization;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
 using AGO.Tasks.Reports;
@@ -67,8 +65,7 @@ namespace AGO.Tasks.Test
 
 		private SimpleTaskListDataGenerator MakeSimpleGenerator()
 		{
-			return new SimpleTaskListDataGenerator(
-				IocContainer.GetInstance<IFilteringService>(), IocContainer.GetInstance<DaoFactory>());
+			return new SimpleTaskListDataGenerator(_FilteringService, DaoFactory);
 		}
 
 		[Test]
@@ -110,9 +107,7 @@ namespace AGO.Tasks.Test
 		private DetailedTaskListWithCustomPropsDataGenerator MakePropsDataGenerator()
 		{
 			return new DetailedTaskListWithCustomPropsDataGenerator(
-				IocContainer.GetInstance<IFilteringService>(), 
-				IocContainer.GetInstance<DaoFactory>(),
-				IocContainer.GetInstance<ILocalizationService>());
+				_FilteringService, DaoFactory, LocalizationService);
 		}
 
 		[Test]

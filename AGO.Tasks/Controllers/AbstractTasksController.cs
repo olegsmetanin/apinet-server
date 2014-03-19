@@ -37,11 +37,6 @@ namespace AGO.Tasks.Controllers
 		{
 		}
 
-		protected virtual UserModel CurrentUser
-		{
-			get { return _AuthController.CurrentUser(); }
-		}
-
 		protected ICriteria PrepareLookup<TModel>(string project, string term, int page,
 			Expression<Func<TModel, string>> textProperty,
 			Expression<Func<TModel, string>> searchProperty = null,
@@ -57,9 +52,9 @@ namespace AGO.Tasks.Controllers
 					.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
 			}
 			//concat with security predicates
-			var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
+			var filter = ApplyReadConstraint<TModel>(project, projectFilter, termFilter);
 			//get executable criteria
-			var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
+			var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(ProjectSession(project));
 			//add needed sorting
 			var objTextProp = textProperty.Cast<TModel, string, object>();
 			if (sorters == null || !sorters.Any())
@@ -74,7 +69,7 @@ namespace AGO.Tasks.Controllers
 				}
 			}
 
-			return _CrudDao.PagedCriteria(criteria, page);
+			return DaoFactory.CreateProjectCrudDao(project).PagedCriteria(criteria, page);
 		}
 
 		protected IEnumerable<LookupEntry> Lookup<TModel>(string project, string term, int page,
@@ -95,9 +90,9 @@ namespace AGO.Tasks.Controllers
 						.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
 				}
 				//concat with security predicates
-				var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
+				var filter = ApplyReadConstraint<TModel>(project, projectFilter, termFilter);
 				//get executable criteria
-				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
+				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(ProjectSession(project));
 				//add needed sorting
 				var objTextProp = textProperty.Cast<TModel, string, object>();
 				if (sorters == null || !sorters.Any())
@@ -161,9 +156,11 @@ namespace AGO.Tasks.Controllers
 
 			try
 			{
+				var dao = DaoFactory.CreateProjectCrudDao(project);
+
 				var persistentModel = default(Guid).Equals(id)
 										? postFactory((factory ?? defaultFactory)())
-				                      	: _CrudDao.Get<TModel>(id);
+				                      	: dao.Get<TModel>(id);
 				if (persistentModel == null)
 					throw new NoSuchEntityException();
 
@@ -173,13 +170,13 @@ namespace AGO.Tasks.Controllers
 
 				update(persistentModel, result.Validation);
 				//validate model
-				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation, ProjectSession(project));
 				if (!result.Validation.Success)
 					return result;
 				//test permissions
-				SecurityService.DemandUpdate(persistentModel, project, _AuthController.CurrentUser().Id, Session);
+				DemandUpdate(persistentModel, project);
 				//persist
-				_CrudDao.Store(persistentModel);
+				dao.Store(persistentModel);
 
 				if (original != null)
 					_ModelProcessingService.AfterModelUpdated(persistentModel, original);
@@ -218,7 +215,7 @@ namespace AGO.Tasks.Controllers
 			var fb = _FilteringService.Filter<TModel>();
 			var predicate = ApplyReadConstraint<TModel>(project, fb.Where(m => 
 				m.ProjectCode == project && m.Id == id));
-			var model = _FilteringDao.Find<TModel>(predicate);
+			var model = DaoFactory.CreateProjectFilteringDao(project).Find<TModel>(predicate);
 			if (model == null)
 				throw new NoSuchEntityException();
 

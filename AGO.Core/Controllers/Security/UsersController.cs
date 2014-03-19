@@ -68,6 +68,7 @@ namespace AGO.Core.Controllers.Security
 			return filterModel != null ? JToken.Parse(filterModel.Filter) : null;
 		}
 
+		//TODO refactoring: where stored userfilter???
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult SaveFilter(
 			[NotEmpty] string name,
@@ -91,7 +92,7 @@ namespace AGO.Core.Controllers.Security
 					};
 				persistentModel.Filter = filter.ToString();
 
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation, _SessionProvider.CurrentSession);
 				if (!validation.Success)
 					return validation;
 

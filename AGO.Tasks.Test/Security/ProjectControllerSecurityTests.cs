@@ -47,7 +47,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, bool> action = u =>
 			{
 				Login(u.Email);
-				var proj = M.ProjectFromCode(TestProject);
+				var proj = FM.ProjectFromCode(TestProject);
 				var ur = controller.UpdateProject(TestProject,
 					new PropChangeDTO
 					{
@@ -74,7 +74,7 @@ namespace AGO.Tasks.Test.Security
 			var admTag = M.ProjectTag("adm", projAdmin);
 			var mgrTag = M.ProjectTag("mgr", projManager);
 			var execTag = M.ProjectTag("exec", projExecutor);
-			var proj = M.ProjectFromCode(TestProject);
+			var proj = FM.ProjectFromCode(TestProject);
 
 			Func<UserModel, ProjectTagModel, bool> action = (u, t) =>
 			{
@@ -105,7 +105,7 @@ namespace AGO.Tasks.Test.Security
 			var admTag = M.ProjectTag("adm", projAdmin);
 			var mgrTag = M.ProjectTag("mgr", projManager);
 			var execTag = M.ProjectTag("exec", projExecutor);
-			var proj = M.ProjectFromCode(TestProject);
+			var proj = FM.ProjectFromCode(TestProject);
 
 			Func<UserModel, ProjectTagModel, bool> action = (u, t) =>
 			{
@@ -192,7 +192,7 @@ namespace AGO.Tasks.Test.Security
 				}
 				finally
 				{
-					var proj = M.ProjectFromCode(TestProject);
+					var proj = FM.ProjectFromCode(TestProject);
 					var testMembership = proj.Members.FirstOrDefault(m => m.User.Id == mb.Id);
 					var testMember = M.MemberFromUser(TestProject, mb);
 					if (testMembership != null)
@@ -210,7 +210,7 @@ namespace AGO.Tasks.Test.Security
 			};
 			ReusableConstraint granted = Is.Not.Null;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<CreationDeniedException>();
-			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<ChangeDeniedException>();
 
 			Assert.That(() => action(admin, notMember), denied);
 			Assert.That(action(projAdmin, notMember), granted);
@@ -231,13 +231,13 @@ namespace AGO.Tasks.Test.Security
 					Session.Clear();
 
 					Login(u.Email);
-					controller.RemoveMember(newMember.Id);
+					controller.RemoveMember(TestProject, newMember.Id);
 					Session.Flush();
 					Session.Clear();
 				}
 				finally
 				{
-					var proj = M.ProjectFromCode(TestProject);
+					var proj = FM.ProjectFromCode(TestProject);
 					var testMembership = proj.Members.FirstOrDefault(m => m.User.Id == mb.Id);
 					var testMember = M.MemberFromUser(TestProject, mb);
 					if (testMembership != null)
@@ -271,7 +271,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var member = M.MemberFromUser(TestProject, mb);
 				Login(u.Email);
-				var ur = controller.ChangeMemberRoles(member.Id, member.Roles);
+				var ur = controller.ChangeMemberRoles(TestProject, member.Id, member.Roles);
 				return ur.Validation.Success;
 			};
 			ReusableConstraint granted = Is.True;
@@ -291,7 +291,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				var member = M.MemberFromUser(TestProject, mb);
 				Login(u.Email);
-				var ur = controller.ChangeMemberCurrentRole(member.Id, member.CurrentRole);
+				var ur = controller.ChangeMemberCurrentRole(TestProject, member.Id, member.CurrentRole);
 				return ur.Validation.Success;
 			};
 			ReusableConstraint granted = Is.True;
