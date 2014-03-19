@@ -52,7 +52,8 @@ namespace AGO.Tasks.Controllers
 			ISessionProviderRegistry registry,
 			DaoFactory factory)
             : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
-        {	
+        {
+	        p2m = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE, registry.GetMainDbProvider().SessionFactory);
         }
 
 		protected override void DoSetConfigProperty(string key, string value)
@@ -361,11 +362,12 @@ namespace AGO.Tasks.Controllers
 		#region Agreements
 
 		[JsonEndpoint, RequireAuthorization]
-		public Agreement AddAgreemer([NotEmpty] Guid taskId, [NotEmpty] Guid participantId, DateTime? dueDate = null)
+		public Agreement AddAgreemer([NotEmpty] string project, [NotEmpty] Guid taskId, [NotEmpty] Guid participantId, DateTime? dueDate = null)
 		{
-			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
-			var member = _CrudDao.Get<ProjectMemberModel>(participantId, true);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = dao.Get<TaskModel>(taskId, true);
+			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, ProjectSession(task.ProjectCode));
+			var member = dao.Get<ProjectMemberModel>(participantId, true);
 
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotAddAgreemerToClosedTaskException();
@@ -380,45 +382,47 @@ namespace AGO.Tasks.Controllers
 				Agreemer = member,
 				DueDate = dueDate
 			};
-			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, Session);
+			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, ProjectSession(task.ProjectCode));
 			task.Agreements.Add(agreement);
 
-			_CrudDao.Store(agreement);
-			_CrudDao.Store(task);
+			dao.Store(agreement);
+			dao.Store(task);
 
 			return TaskViewAdapter.ToAgreement(agreement);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public bool RemoveAgreement([NotEmpty] Guid taskId, [NotEmpty] Guid agreementId)
+		public bool RemoveAgreement([NotEmpty] string project, [NotEmpty] Guid taskId, [NotEmpty] Guid agreementId)
 		{
-			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = dao.Get<TaskModel>(taskId, true);
+			DemandUpdate(task, task.ProjectCode);
 			
 			var agreement = task.Agreements.FirstOrDefault(a => a.Id == agreementId);
 			if (agreement == null) return false;
-			SecurityService.DemandDelete(agreement, task.ProjectCode, CurrentUser.Id, Session);
+			DemandDelete(agreement, task.ProjectCode);
 			
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotRemoveAgreemerFromClosedTaskException();
 					
 			task.Agreements.Remove(agreement);
 
-			_CrudDao.Store(task);
+			dao.Store(task);
 
 			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public Agreement AgreeTask([NotEmpty] Guid taskId, string comment)
+		public Agreement AgreeTask([NotEmpty] string project, [NotEmpty] Guid taskId, string comment)
 		{
-			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = dao.Get<TaskModel>(taskId, true);
+			DemandUpdate(task, task.ProjectCode);
 			
 			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == CurrentUser.Id);
 			if (agreement == null)
 				throw new CurrentUserIsNotAgreemerInTaskException();
-			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, Session);
+			DemandUpdate(agreement, task.ProjectCode);
 			
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotAgreeClosedTaskException();
@@ -427,21 +431,22 @@ namespace AGO.Tasks.Controllers
 			agreement.AgreedAt = DateTime.UtcNow;
 			agreement.Comment = comment;
 
-			_CrudDao.Store(agreement);
+			dao.Store(agreement);
 
 			return TaskViewAdapter.ToAgreement(agreement);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public Agreement RevokeAgreement([NotEmpty] Guid taskId)
+		public Agreement RevokeAgreement([NotEmpty] string project, [NotEmpty] Guid taskId)
 		{
-			var task = _CrudDao.Get<TaskModel>(taskId, true);
-			SecurityService.DemandUpdate(task, task.ProjectCode, CurrentUser.Id, Session);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = dao.Get<TaskModel>(taskId, true);
+			DemandUpdate(task, task.ProjectCode);
 
 			var agreement = task.Agreements.FirstOrDefault(a => a.Agreemer.UserId == CurrentUser.Id);
 			if (agreement == null)
 				throw new CurrentUserIsNotAgreemerInTaskException();
-			SecurityService.DemandUpdate(agreement, task.ProjectCode, CurrentUser.Id, Session);
+			DemandUpdate(agreement, task.ProjectCode);
 
 			if (task.Status == TaskStatus.Closed)
 				throw new CanNotRevokeAgreementFromClosedTaskException();
@@ -450,7 +455,7 @@ namespace AGO.Tasks.Controllers
 			agreement.AgreedAt = null;
 			agreement.Comment = null;
 
-			_CrudDao.Store(agreement);
+			dao.Store(agreement);
 
 			return TaskViewAdapter.ToAgreement(agreement);
 		}
@@ -735,18 +740,18 @@ namespace AGO.Tasks.Controllers
 
 		#region IFileResourceStorage implementation
 
-		private readonly ProjectToModuleCache p2m = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE);
+		private readonly ProjectToModuleCache p2m;
 
 		public IFileResource FindFile(string project, Guid fileId)
 		{
-			if (!p2m.IsProjectInHandledModule(project, Session)) 
+			if (!p2m.IsProjectInHandledModule(project)) 
 				return null;
 
 			var fb = _FilteringService.Filter<TaskFileModel>();
 			IModelFilterNode predicate = fb.Where(m => m.Owner.ProjectCode == project && m.Id == fileId);
-			predicate = SecurityService.ApplyReadConstraint<TaskFileModel>(project, CurrentUser.Id, Session, predicate);
+			predicate = ApplyReadConstraint<TaskFileModel>(project, predicate);
 
-			var file = _FilteringDao.Find<TaskFileModel>(predicate);
+			var file = DaoFactory.CreateProjectFilteringDao(project).Find<TaskFileModel>(predicate);
 			return file != null ? new TaskFileWrapper(fileStoreRoot, file) : null;
 		}
 

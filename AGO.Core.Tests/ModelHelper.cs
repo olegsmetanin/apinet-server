@@ -73,7 +73,9 @@ namespace AGO.Core.Tests
 				throw new ArgumentNullException("project");
 
 			var p = ProjectFromCode(project);
-			return Member(p, user, roles);
+			var member = Member(p, user, roles);
+			Session().Update(p);
+			return member;
 		}
 
 		public ProjectMemberModel Member(ProjectModel project, UserModel user, params string[] roles)
@@ -91,7 +93,6 @@ namespace AGO.Core.Tests
 					User = user
 				};
 				project.Members.Add(membership);
-				Session().Update(project);
 				roles = roles != null && roles.Length > 0 ? roles : new[] { BaseProjectRoles.Administrator };
 				var member = ProjectMemberModel.FromParameters(user, project, roles);
 				Session().Save(member);

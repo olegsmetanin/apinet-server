@@ -61,6 +61,7 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			var dto = base.Fill(model);
 
+			dto.ProjectCode = model.ProjectCode;
 			dto.SeqNumber = model.SeqNumber;
 			dto.TaskType = (model.TaskType != null ? model.TaskType.Name : string.Empty);
 			dto.Content = model.Content;

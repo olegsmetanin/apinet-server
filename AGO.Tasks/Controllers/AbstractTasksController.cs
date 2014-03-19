@@ -200,17 +200,17 @@ namespace AGO.Tasks.Controllers
 
 		protected IModelFilterNode ApplyReadConstraint<TModel>(string project, params IModelFilterNode[] filter)
 		{
-			return SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, filter);
+			return SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, ProjectSession(project), filter);
 		}
 
 		protected void DemandUpdate(IdentifiedModel model, string project)
 		{
-			SecurityService.DemandUpdate(model, project, CurrentUser.Id, Session);
+			SecurityService.DemandUpdate(model, project, CurrentUser.Id, ProjectSession(project));
 		}
 
 		protected void DemandDelete(IdentifiedModel model, string project)
 		{
-			SecurityService.DemandDelete(model, project, CurrentUser.Id, Session);
+			SecurityService.DemandDelete(model, project, CurrentUser.Id, ProjectSession(project));
 		}
 
 		protected TModel SecureFind<TModel>(string project, Guid id) where TModel : class, IProjectBoundModel, IIdentifiedModel<Guid>

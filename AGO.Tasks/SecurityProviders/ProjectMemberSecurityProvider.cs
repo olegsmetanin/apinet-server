@@ -1,4 +1,5 @@
-﻿using AGO.Core.Filters;
+﻿using AGO.Core;
+using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using NHibernate;
@@ -7,7 +8,8 @@ namespace AGO.Tasks.SecurityProviders
 {
 	public class ProjectMemberSecurityProvider: ModuleSecurityProvider<ProjectMemberModel>
 	{
-		public ProjectMemberSecurityProvider(IFilteringService filteringService) : base(filteringService)
+		public ProjectMemberSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry)
+			: base(filteringService, providerRegistry)
 		{
 		}
 

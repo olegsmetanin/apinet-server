@@ -2,6 +2,7 @@ using System;
 using AGO.Core;
 using AGO.Core.Tests;
 using NHibernate;
+using Npgsql;
 
 namespace AGO.Tasks.Test
 {
@@ -9,9 +10,11 @@ namespace AGO.Tasks.Test
 	{
 		protected string TestProject { get; private set; }
 
+		protected ModelHelper FPM { get; private set; }
+
 		public override void FixtureSetUp()
 		{
-			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);//user in creating model helpers
+			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);
 			
 			base.FixtureSetUp();
 
@@ -20,23 +23,38 @@ namespace AGO.Tasks.Test
 			ProjDao = DaoFactory.CreateProjectCrudDao(TestProject);
 		}
 
+		public override void FixtureTearDown()
+		{
+			if (FPM != null)
+				FPM.DropCreated();
+			base.FixtureTearDown();
+		}
+
 		protected virtual void SetupTestProject()
 		{
 			var admin = LoginAdmin();
+
+			//Test project resides in master db, as in prod
+			FM = new ModelHelper(() => MainSession, () => CurrentUser, TestProject);
 			var proj = FM.Project(TestProject);
-			M.Member(proj, admin, TaskProjectRoles.Manager);
+			proj.ConnectionString = ProjectSession("hd").Connection.ConnectionString;//hd project stored in db with personal and crm projects
+			MainSession.Update(proj);
+			MainSession.Flush();
+			//but static members for all tests resides in project db, so, introduce additional fixture-level helper
+			FPM = new ModelHelper(() => Session, () => CurrentUser, TestProject);
+			FPM.Member(proj, admin, TaskProjectRoles.Manager);
+			
+			//test project data stored in db with 3 demo projects (see TestDataService), that will be test
+			//project code restriction correctness in queries
+			M = new ModelHelper(() => Session, () => CurrentUser, TestProject);
 		}
 
 		protected override void CreateModelHelpers()
 		{
-			//Test project resides in master db, as in prod
-			FM = new ModelHelper(() => MainSession, () => CurrentUser, TestProject);
-			//and test project stored in db with 3 demo projects (see TestDataService), that will be test
-			//project code restriction correctness in queries
-			M = new ModelHelper(() => ProjectSession("hd"), () => CurrentUser, TestProject);
+			//moved to other place, because part of helpers dependen from test project
 		}
 
-		protected virtual ISession Session
+		protected new virtual ISession Session
 		{
 			get { return ProjectSession(TestProject); }
 		}

@@ -247,7 +247,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				Login(u.Email);
 				var task = M.Task(1, executor: projExecutor);
-				return controller.AddAgreemer(task.Id, agreemerId);
+				return controller.AddAgreemer(TestProject, task.Id, agreemerId);
 			};
 			ReusableConstraint granted = Is.Not.Null;
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
@@ -269,7 +269,7 @@ namespace AGO.Tasks.Test.Security
 
 				Login(u.Email);
 
-				return controller.RemoveAgreement(task.Id, agreement.Id);
+				return controller.RemoveAgreement(task.ProjectCode, task.Id, agreement.Id);
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
@@ -295,7 +295,7 @@ namespace AGO.Tasks.Test.Security
 
 				Login(u.Email);
 
-				return controller.AgreeTask(task.Id, "nunit").Done;
+				return controller.AgreeTask(task.ProjectCode, task.Id, "nunit").Done;
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint incorrect = Throws.Exception.TypeOf<CurrentUserIsNotAgreemerInTaskException>();
@@ -322,7 +322,7 @@ namespace AGO.Tasks.Test.Security
 
 				Login(u.Email);
 
-				return controller.RevokeAgreement(task.Id).Done;
+				return controller.RevokeAgreement(task.ProjectCode, task.Id).Done;
 			};
 			ReusableConstraint granted = Is.False;
 			ReusableConstraint incorrect = Throws.Exception.TypeOf<CurrentUserIsNotAgreemerInTaskException>();

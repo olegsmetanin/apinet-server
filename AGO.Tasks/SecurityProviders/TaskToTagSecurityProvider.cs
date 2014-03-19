@@ -1,4 +1,5 @@
-﻿using AGO.Core.Filters;
+﻿using AGO.Core;
+using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Task;
 using NHibernate;
@@ -7,7 +8,8 @@ namespace AGO.Tasks.SecurityProviders
 {
 	public class TaskToTagSecurityProvider: ModuleSecurityProvider<TaskToTagModel>
 	{
-		public TaskToTagSecurityProvider(IFilteringService filteringService) : base(filteringService)
+		public TaskToTagSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry)
+			: base(filteringService, providerRegistry)
 		{
 		}
 

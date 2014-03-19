@@ -15,14 +15,16 @@ namespace AGO.Core.Security
 	{
 		private readonly ProjectToModuleCache p2m;
 
-		protected AbstractModuleSecurityConstraintsProvider(IFilteringService filteringService)
+		protected AbstractModuleSecurityConstraintsProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry)
 		{
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
 
 			FilteringService = filteringService;
 // ReSharper disable once DoNotCallOverridableMethodsInConstructor
-			p2m = new ProjectToModuleCache(Module);
+			p2m = new ProjectToModuleCache(Module, providerRegistry.GetMainDbProvider().SessionFactory);
 		}
 
 		protected IFilteringService FilteringService { get; private set; }
@@ -39,7 +41,7 @@ namespace AGO.Core.Security
 		
 		public virtual bool AcceptRead(Type modelType, string project, ISession session)
 		{
-			return typeof (TModel).IsAssignableFrom(modelType) && p2m.IsProjectInHandledModule(project, session);
+			return typeof (TModel).IsAssignableFrom(modelType) && p2m.IsProjectInHandledModule(project);
 		}
 
 		public virtual bool AcceptChange(IIdentifiedModel model, string project, ISession session)

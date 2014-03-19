@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using AGO.Core;
 using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
@@ -9,7 +10,8 @@ namespace AGO.Tasks.SecurityProviders
 {
 	public class TaskSecurityProvider: ModuleSecurityProvider<TaskModel>
 	{
-		public TaskSecurityProvider(IFilteringService filteringService) : base(filteringService)
+		public TaskSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry)
+			: base(filteringService, providerRegistry)
 		{
 		}
 
