@@ -25,16 +25,13 @@ namespace AGO.Tasks.Controllers
 		protected AbstractTasksController(
 			IJsonService jsonService, 
 			IFilteringService filteringService, 
-			ICrudDao crudDao, 
-			IFilteringDao filteringDao, 
-			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
 			ISecurityService securityService,
 			ISessionProviderRegistry registry,
 			DaoFactory factory) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 		}
 
@@ -157,8 +154,8 @@ namespace AGO.Tasks.Controllers
 
 			try
 			{
-				ICrudDao dao = null;
-				ISession session = null;
+				ICrudDao dao;
+				ISession session;
 				if (typeof (ProjectModel).IsAssignableFrom(typeof (TModel)))
 				{
 					dao = DaoFactory.CreateMainCrudDao();

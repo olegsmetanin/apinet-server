@@ -1,17 +1,24 @@
 ﻿using System;
-using AGO.Core.Model;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
-using AGO.Core.Model.Security;
+using AGO.Core.Model.Projects;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Security
 {
+	/// <summary>
+	/// Stored filter
+	/// May be used in core context (for projects filter, ex.) or in project, so, ProjectCode is nullable
+	/// and user OwnerId instead of direct UserModel ref
+	/// </summary>
 	[MetadataExclude]
-	public class UserFilterModel : CoreModel<Guid>
+	public class UserFilterModel : CoreModel<Guid>, IProjectBoundModel
 	{
 		#region Persistent
+
+		[JsonProperty, NotLonger(ProjectModel.PROJECT_CODE_SIZE)]
+		public virtual string ProjectCode { get; set; }
 
 		[NotLonger(64), JsonProperty, NotEmpty]
 		public virtual string Name { get; set; }
@@ -23,9 +30,7 @@ namespace AGO.Core.Model.Security
 		public virtual string Filter { get; set; }
 
 		[JsonProperty, NotNull]
-		public virtual UserModel User { get; set; }
-		[ReadOnlyProperty, MetadataExclude]
-		public virtual Guid? UserId { get; set; }
+		public virtual Guid OwnerId { get; set; }
 
 		#endregion
 
@@ -33,7 +38,7 @@ namespace AGO.Core.Model.Security
 
 		public override string ToString()
 		{
-			return Name;
+			return Name + (!ProjectCode.IsNullOrEmpty() ? "(" + ProjectCode + ")" : string.Empty);
 		}
 
 		#endregion

@@ -25,16 +25,7 @@ namespace AGO.Core.Controllers
 
 		protected readonly IFilteringService _FilteringService;
 
-		[Obsolete("Use DaoFactory.CreateXXX instead")]
-		protected readonly ICrudDao _CrudDao;
-
-		[Obsolete("Use DaoFactory.CreateXXX instead")]
-		protected readonly IFilteringDao _FilteringDao;
-
 		protected readonly DaoFactory DaoFactory;
-
-		[Obsolete("Use SessionProviderRegistry instead")]
-		protected readonly ISessionProvider _SessionProvider;
 
 		protected readonly ISessionProviderRegistry SessionProviderRegistry;
 
@@ -49,9 +40,6 @@ namespace AGO.Core.Controllers
 		protected AbstractController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
@@ -66,18 +54,6 @@ namespace AGO.Core.Controllers
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
 			_FilteringService = filteringService;
-
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
-
-			if (filteringDao == null)
-				throw new ArgumentNullException("filteringDao");
-			_FilteringDao = filteringDao;
-
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
 
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
@@ -120,18 +96,6 @@ namespace AGO.Core.Controllers
 			if (initializable != null)
 				initializable.Initialize();
 
-			initializable = _CrudDao as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
-			initializable = _FilteringDao as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
-			initializable = _SessionProvider as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
 			_AuthController.Initialize();
 		}
 
@@ -142,12 +106,6 @@ namespace AGO.Core.Controllers
 		protected virtual UserModel CurrentUser
 		{
 			get { return _AuthController.CurrentUser(); }
-		}
-
-		[Obsolete("Use MainSession and ProjectSession instead")]
-		protected virtual ISession Session
-		{
-			get { return _SessionProvider.CurrentSession; }
 		}
 
 		protected virtual ISession MainSession
@@ -215,25 +173,6 @@ namespace AGO.Core.Controllers
 			foreach (var modelProperty in metadata.ModelProperties)
 				ProcessMetadata(project, modelProperty.PropertyType, result, processedTypes);
 		}
-
-		//TODO remove??? (artem1 2014-03-16)
-//		protected TModel GetModel<TModel, TId>(TId id, bool dontFetchReferences)
-//			where TModel : class, IIdentifiedModel<TId>
-//		{
-//			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-//			filter.AddItem(new ValueFilterNode
-//			{
-//				Path = "Id",
-//				Operator = ValueFilterOperators.Eq,
-//				Operand = id.ToStringSafe()
-//			});
-//
-//			return _FilteringDao.List<TModel>(new[] { filter }, new FilteringOptions
-//			{
-//				PageSize = 1,
-//				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
-//			}).FirstOrDefault();
-//		}
 
 		protected IEnumerable<LookupEntry> LookupEnum<TEnum>(
 			string term,

@@ -36,9 +36,6 @@ namespace AGO.Core.Controllers
 		public ProjectsController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
@@ -46,7 +43,7 @@ namespace AGO.Core.Controllers
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
 			IEnumerable<IProjectFactory> projFactories)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			this.projFactories = (projFactories ?? Enumerable.Empty<IProjectFactory>()).ToArray();
 		}

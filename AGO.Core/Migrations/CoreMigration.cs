@@ -33,10 +33,11 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<TwitterOAuthDataModel>(m => m.TokenSecret);
 
 			Create.CoreModelTable<UserFilterModel>()
+				.WithValueColumn<UserFilterModel>(m => m.ProjectCode)
 				.WithValueColumn<UserFilterModel>(m => m.Name)
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)
 				.WithValueColumn<UserFilterModel>(m => m.Filter)
-				.WithRefColumn<UserFilterModel>(m => m.User);
+				.WithValueColumn<UserFilterModel>(m => m.OwnerId);
 
 			Create.CoreModelTable<TagModel>()
 				.WithValueColumn<TagModel>(m => m.OwnerId)

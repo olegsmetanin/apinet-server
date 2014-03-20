@@ -9,7 +9,6 @@ using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
 using AGO.Core.Filters;
 using AGO.Core.Json;
-using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using NHibernate;
 
@@ -25,9 +24,6 @@ namespace AGO.Core.Controllers
 		public AbstractActivityController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
@@ -35,7 +31,7 @@ namespace AGO.Core.Controllers
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
 			IEnumerable<IActivityViewProcessor> activityViewProcessors)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			if (activityViewProcessors == null)
 				throw new ArgumentNullException("activityViewProcessors");
@@ -45,11 +41,6 @@ namespace AGO.Core.Controllers
 		#endregion
 
 		#region Template methods
-		
-		protected virtual UserModel CurrentUser
-		{
-			get { return _AuthController.CurrentUser(); }
-		}
 
 		protected virtual ActivityView ActivityViewFromRecord(ActivityRecordModel record)
 		{
@@ -84,9 +75,12 @@ namespace AGO.Core.Controllers
 		
 		protected ICriteria MakeActivityCriteria(string project, IEnumerable<IModelFilterNode> filter, ActivityPredefinedFilter predefined)
 		{
-			return _FilteringService.CompileFilter(SecurityService.ApplyReadConstraint<ActivityRecordModel>(project, CurrentUser.Id, Session,
-				filter.Concat(new[] { predefined.ToFilter(_FilteringService.Filter<ActivityRecordModel>()) }).ToArray()), typeof(ActivityRecordModel))
-				.GetExecutableCriteria(Session);
+			var psess = ProjectSession(project);
+			var securedPridicate = SecurityService.ApplyReadConstraint<ActivityRecordModel>(
+				project, CurrentUser.Id, psess,
+				filter.Concat(new[] {predefined.ToFilter(_FilteringService.Filter<ActivityRecordModel>())}).ToArray());
+
+			return _FilteringService.CompileFilter(securedPridicate, typeof(ActivityRecordModel)).GetExecutableCriteria(psess);
 		}
 
 		protected IList<ActivityView> ActivityViewsFromRecords(IEnumerable<ActivityRecordModel> records)

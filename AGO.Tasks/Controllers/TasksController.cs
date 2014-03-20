@@ -42,16 +42,13 @@ namespace AGO.Tasks.Controllers
         public TasksController(
             IJsonService jsonService, 
             IFilteringService filteringService,
-            ICrudDao crudDao, 
-            IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
 			ISecurityService securityService,
 			ISessionProviderRegistry registry,
 			DaoFactory factory)
-            : base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
+            : base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
         {
 	        p2m = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE, registry.GetMainDbProvider().SessionFactory);
         }

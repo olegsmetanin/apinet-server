@@ -33,9 +33,6 @@ namespace AGO.Core.Controllers.Security
 		public UsersController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
@@ -43,7 +40,7 @@ namespace AGO.Core.Controllers.Security
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
 			IStateStorage<string> clientStateStorage)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			if (clientStateStorage == null)
 				throw new ArgumentNullException("clientStateStorage");
@@ -56,13 +53,14 @@ namespace AGO.Core.Controllers.Security
 
 		[JsonEndpoint, RequireAuthorization]
 		public JToken LoadFilter(
+			[NotEmpty] string project,
 			[NotEmpty] string name,
 			[NotEmpty] string group)
 		{
-			var currentUser = _AuthController.CurrentUser();
+			var s = project.IsNullOrWhiteSpace() ? MainSession : ProjectSession(project);
 
-			var filterModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
-				.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
+			var filterModel = s.QueryOver<UserFilterModel>()
+				.Where(m => m.Name == name && m.GroupName == group && m.OwnerId == CurrentUser.Id)
 				.Take(1).List().FirstOrDefault();
 
 			return filterModel != null ? JToken.Parse(filterModel.Filter) : null;
@@ -71,32 +69,34 @@ namespace AGO.Core.Controllers.Security
 		//TODO refactoring: where stored userfilter???
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult SaveFilter(
+			[NotEmpty] string project,
 			[NotEmpty] string name,
 			[NotEmpty] string group,
 			[NotNull] JToken filter)
 		{
 			var validation = new ValidationResult();
+			var s = project.IsNullOrWhiteSpace() ? MainSession : ProjectSession(project);
+			var dao = project.IsNullOrWhiteSpace() ? DaoFactory.CreateMainCrudDao() : DaoFactory.CreateProjectCrudDao(project);
 
 			try
 			{
 				//TODO: Валидации длины
-				var currentUser = _AuthController.CurrentUser();
 
-				var persistentModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
-					.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
+				var persistentModel = s.QueryOver<UserFilterModel>()
+					.Where(m => m.Name == name && m.GroupName == group && m.OwnerId == CurrentUser.Id)
 					.Take(1).List().FirstOrDefault() ?? new UserFilterModel
 					{
 						Name = name,
 						GroupName = group,
-						User = currentUser
+						OwnerId = CurrentUser.Id
 					};
 				persistentModel.Filter = filter.ToString();
 
-				_ModelProcessingService.ValidateModelSaving(persistentModel, validation, _SessionProvider.CurrentSession);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, validation, s);
 				if (!validation.Success)
 					return validation;
 
-				_CrudDao.Store(persistentModel);
+				dao.Store(persistentModel);
 			}
 			catch (Exception e)
 			{
@@ -108,34 +108,40 @@ namespace AGO.Core.Controllers.Security
 
 		[JsonEndpoint, RequireAuthorization]
 		public bool DeleteFilter(
+			[NotEmpty] string project,
 			[NotEmpty] string name,
 			[NotEmpty] string group)
 		{
-			var currentUser = _AuthController.CurrentUser();
+			var s = project.IsNullOrWhiteSpace() ? MainSession : ProjectSession(project);
+			var dao = project.IsNullOrWhiteSpace() ? DaoFactory.CreateMainCrudDao() : DaoFactory.CreateProjectCrudDao(project);
 
-			var filterModel = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
-				.Where(m => m.Name == name && m.GroupName == group && m.User == currentUser)
+			var filterModel = s.QueryOver<UserFilterModel>()
+				.Where(m => m.Name == name && m.GroupName == group && m.OwnerId == CurrentUser.Id)
 				.Take(1).List().FirstOrDefault();
 			if (filterModel != null)
-				_CrudDao.Delete(filterModel);
+				dao.Delete(filterModel);
 
 			return true;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupFilterNames(
+			[NotEmpty] string project,
 			[NotEmpty] string group,
 			[InRange(0, null)] int page,
 			string term)
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<UserFilterModel>()
-				.Where(m => m.GroupName == group && m.User == _AuthController.CurrentUser())
+			var s = project.IsNullOrWhiteSpace() ? MainSession : ProjectSession(project);
+			var dao = project.IsNullOrWhiteSpace() ? DaoFactory.CreateMainCrudDao() : DaoFactory.CreateProjectCrudDao(project);
+
+			var query = s.QueryOver<UserFilterModel>()
+				.Where(m => m.GroupName == group && m.OwnerId == CurrentUser.Id)
 				.OrderBy(m => m.Name).Asc
 				.Select(m => m.Name);
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
 
-			return _CrudDao.PagedQuery(query, page).LookupList(m => m.Name, m => m.Name, false);
+			return dao.PagedQuery(query, page).LookupList(m => m.Name, m => m.Name, false);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -164,20 +170,14 @@ namespace AGO.Core.Controllers.Security
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupUsers(string term, [InRange(0, null)] int page)
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<UserModel>()
+			var query = MainSession.QueryOver<UserModel>()
 				.Where(m => m.Active)
 				.OrderBy(m => m.FullName).Asc;
 
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term, MatchMode.Anywhere);
 
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
-		}
-			
-		[JsonEndpoint, RequireAuthorization]
-		public string GetRole()
-		{
-			return string.Empty;
+			return DaoFactory.CreateMainCrudDao().PagedQuery(query, page).LookupModelsList(m => m.FullName);
 		}
 
 		#endregion

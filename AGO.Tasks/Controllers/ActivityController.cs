@@ -25,9 +25,6 @@ namespace AGO.Tasks.Controllers
 		public ActivityController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
@@ -37,7 +34,7 @@ namespace AGO.Tasks.Controllers
 			IEnumerable<IActivityViewProcessor> activityViewProcessors,
 			TaskCollectionActivityViewProcessor taskCollectionProcessor,
 			TaskAttributeActivityViewProcessor taskAttributeProcessor)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory, activityViewProcessors)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory, activityViewProcessors)
 		{
 			_ActivityViewProcessors.Add(taskCollectionProcessor);
 			_ActivityViewProcessors.Add(taskAttributeProcessor);
@@ -54,8 +51,9 @@ namespace AGO.Tasks.Controllers
 			ActivityPredefinedFilter predefined)
 		{
 			var criteria = MakeActivityCriteria(project, filter, predefined);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
 
-			return ActivityViewsFromRecords(_CrudDao.Future<ActivityRecordModel>(criteria, new FilteringOptions 
+			return ActivityViewsFromRecords(dao.Future<ActivityRecordModel>(criteria, new FilteringOptions 
 			{ 
 				Page = 0,
 				PageSize = 0,

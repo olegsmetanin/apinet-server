@@ -33,6 +33,7 @@ namespace AGO.Core.Controllers
 {
 	public class ReportingController: AbstractController
 	{
+		private const string PROJECT_FORM_KEY = "project";
 		private const string TEMPLATE_ID_FORM_KEY = "templateId";
 		private string uploadPath;
 		private readonly INotificationService bus;
@@ -41,9 +42,6 @@ namespace AGO.Core.Controllers
 		public ReportingController(
 			IJsonService jsonService, 
 			IFilteringService filteringService, 
-			ICrudDao crudDao, 
-			IFilteringDao filteringDao, 
-			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
@@ -52,7 +50,7 @@ namespace AGO.Core.Controllers
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
 			IWorkQueue workQueue) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, registry, factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 			if (notificationService == null)
 				throw new ArgumentNullException("notificationService");
@@ -87,21 +85,18 @@ namespace AGO.Core.Controllers
 			
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ReportTemplateModel> GetTemplates(
+			[NotEmpty] string project,
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			//TODO templates for system, module, project, project member
-
-			return _FilteringDao.List<ReportTemplateModel>(filter, page, sorters);
+			return DaoFactory.CreateProjectFilteringDao(project).List<ReportTemplateModel>(filter, page, sorters);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public int GetTemplatesCount([NotNull] ICollection<IModelFilterNode> filter)
+		public int GetTemplatesCount([NotNull] string project, [NotNull] ICollection<IModelFilterNode> filter)
 		{
-			//TODO templates for system, module, project, project member
-
-			return _FilteringDao.RowCount<ReportTemplateModel>(filter);
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<ReportTemplateModel>(filter);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -115,26 +110,32 @@ namespace AGO.Core.Controllers
 				Debug.Assert(file != null);
 				var sTemplateId = request.Form[TEMPLATE_ID_FORM_KEY];
 				var templateId = !sTemplateId.IsNullOrWhiteSpace() ? new Guid(sTemplateId) : (Guid?) null;
+				var project = request[PROJECT_FORM_KEY];
+				if (project.IsNullOrWhiteSpace())
+					throw new ArgumentException("Not found project code in upload request", "request");
 				new Uploader(uploadPath).HandleRequest(request, file, 
 					(fileName, buffer) =>
 						{
 
-							var checkQuery = _SessionProvider.CurrentSession.QueryOver<ReportTemplateModel>();
+							var checkQuery = ProjectSession(project).QueryOver<ReportTemplateModel>();
 							checkQuery = templateId.HasValue
-							             	? checkQuery.Where(m => m.Name == fileName && m.Id != templateId)
-							             	: checkQuery.Where(m => m.Name == fileName);
+							             	? checkQuery.Where(m => m.ProjectCode == project && m.Name == fileName && m.Id != templateId)
+											: checkQuery.Where(m => m.ProjectCode == project && m.Name == fileName);
 							var count = checkQuery.ToRowCountQuery().UnderlyingCriteria.UniqueResult<int>();
 							if (count > 0)
 								throw new MustBeUniqueException();
 
+							var dao = DaoFactory.CreateProjectCrudDao(project);
 							var template = templateId.HasValue 
-								? _CrudDao.Get<ReportTemplateModel>(templateId)
-								: new ReportTemplateModel { CreationTime = DateTime.UtcNow };
+								? dao.Get<ReportTemplateModel>(templateId)
+								: new ReportTemplateModel { ProjectCode = project, CreationTime = DateTime.UtcNow };
 							template.Name = fileName;
 							template.LastChange = DateTime.UtcNow;
 							template.Content = buffer;
 
-							_CrudDao.Store(template);
+							SecurityService.DemandUpdate(template, template.ProjectCode, CurrentUser.Id, ProjectSession(project));
+
+							dao.Store(template);
 
 							result[idx] = new UploadResult<ReportTemplateModel>
 							{
@@ -151,14 +152,17 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteTemplate([NotEmpty]Guid templateId)
+		public void DeleteTemplate([NotEmpty] string project, [NotEmpty]Guid templateId)
 		{
-			var template = _CrudDao.Get<ReportTemplateModel>(templateId);
-			//TODO security checks
-			if (_CrudDao.Exists<ReportSettingModel>(q => q.Where(m => m.ReportTemplate.Id == template.Id)))
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var template = dao.Get<ReportTemplateModel>(templateId);
+			
+			SecurityService.DemandDelete(template, template.ProjectCode, CurrentUser.Id, ProjectSession(template.ProjectCode));
+
+			if (dao.Exists<ReportSettingModel>(q => q.Where(m => m.ReportTemplate.Id == template.Id)))
 				throw new CannotDeleteReferencedItemException();
 
-			_CrudDao.Delete(template);
+			dao.Delete(template);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -252,7 +256,8 @@ namespace AGO.Core.Controllers
 			Action<Action<ISession>> doInSessionContext = action =>
 			{
 				//separate session - don't use CurrentSession, that binded to request thread
-				using (var session = _SessionProvider.SessionFactory.OpenSession())
+				//TODO FIXME
+				using (var session = ((ISessionFactory)null).OpenSession())
 				{
 					action(session);
 					session.Close();
@@ -311,9 +316,9 @@ namespace AGO.Core.Controllers
 			};
 		}
 
-		private ReportTaskModel PrepareForCancelReport(Guid taskId)
+		private ReportTaskModel PrepareForCancelReport(Guid taskId, ICrudDao dao)
 		{
-			var task = _CrudDao.Get<ReportTaskModel>(taskId);
+			var task = dao.Get<ReportTaskModel>(taskId);
 			//emit event for reporting service (interrupt task if running)
 			bus.EmitCancelReport(task.Id);
 
@@ -326,45 +331,47 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void CancelReport([NotEmpty] Guid id)
+		public void CancelReport([NotEmpty] string project, [NotEmpty] Guid id)
 		{
-			var task = PrepareForCancelReport(id);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = PrepareForCancelReport(id, dao);
 
 			task.State = ReportTaskState.Canceled;
 			task.CompletedAt = DateTime.Now;
 			task.ErrorMsg = "Canceled by user request";
-			_CrudDao.Store(task);
+			dao.Store(task);
 
 			//emit event for client (about his task is canceled)
 			var dto = ReportTaskToDTO(task);
 			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Id.ToString(), dto);
-			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
+			if (task.Creator != null && CurrentUser.Id != task.Creator.Id)
 			{
 				//and to creator, if another person cancel task (admin, for example)
 				bus.EmitReportChanged(ReportEvents.CANCELED, task.AuthorLogin, dto);
 			}
 
-			_SessionProvider.FlushCurrentSession();
+			ProjectSession(project).Flush();
 		}
 
 
 		[JsonEndpoint, RequireAuthorization]
-		public void DeleteReport([NotEmpty] Guid id)
+		public void DeleteReport([NotEmpty] string project, [NotEmpty] Guid id)
 		{
-			var task = PrepareForCancelReport(id);
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = PrepareForCancelReport(id, dao);
 			
 			var dto = ReportTaskToDTO(task);
-			_CrudDao.Delete(task);
+			dao.Delete(task);
 
 			//emit event for client (about his task is successfully deleted)
 			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Id.ToString(), dto);
-			if (task.Creator != null && !_AuthController.CurrentUser().Equals(task.Creator))
+			if (task.Creator != null && CurrentUser.Id != task.Creator.Id)
 			{
 				//and to creator, if another person delete task (admin, for example)
 				bus.EmitReportChanged(ReportEvents.DELETED, task.AuthorLogin, dto);
 			}
 
-			_SessionProvider.FlushCurrentSession();
+			ProjectSession(project).Flush();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -381,7 +388,8 @@ namespace AGO.Core.Controllers
 				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator.Id == user.Id));
 			}
 
-			return _FilteringDao.List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
+			//TODO FIXME
+			return ((IFilteringDao)null).List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -394,7 +402,8 @@ namespace AGO.Core.Controllers
 				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator.Id == user.Id));
 			}
 
-			return _FilteringDao.RowCount<ReportTaskModel>(filter);
+			//TODO FIXME
+			return ((IFilteringDao)null).RowCount<ReportTaskModel>(filter);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

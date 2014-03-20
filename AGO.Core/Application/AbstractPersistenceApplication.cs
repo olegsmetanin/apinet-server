@@ -22,11 +22,6 @@ namespace AGO.Core.Application
 	{
 		#region Properties, fields, constructors
 
-		[Obsolete("Replace with SessionProviderRegistry when it will be implemented")]
-		protected ISessionProvider _SessionProvider;
-		[Obsolete("Replace with SessionProviderRegistry when it will be implemented")]
-		public ISessionProvider SessionProvider { get { return _SessionProvider; } }
-
 		public ISessionProviderRegistry SessionProviderRegistry { get; private set; }
 
 		protected IFilteringService _FilteringService;
@@ -157,7 +152,6 @@ namespace AGO.Core.Application
 
 		protected virtual void DoInitializePersistence()
 		{
-			_SessionProvider = IocContainer.GetInstance<ISessionProvider>();
 			SessionProviderRegistry = IocContainer.GetInstance<ISessionProviderRegistry>();
 			_FilteringService = IocContainer.GetInstance<IFilteringService>();
 			DaoFactory = IocContainer.GetInstance<DaoFactory>();
@@ -342,27 +336,16 @@ namespace AGO.Core.Application
 				masterConnection.Close();
 			}
 
-			
-
-//			DoMigrateUp();
-
 			DoExecutePopulateDatabaseScript();
 
-			_SessionProvider.CloseCurrentSession();
+			SessionProviderRegistry.CloseCurrentSessions();
 		}
-
-//		protected virtual void DoMigrateUp()
-//		{
-//			var now = DateTime.Now;
-//			_MigrationService.MigrateUp(new Version(now.Year, now.Month, now.Day, 99));
-//		}
 
 		protected virtual void DoExecutePopulateDatabaseScript()
 		{
 			foreach (var service in IocContainer.GetAllInstances<ITestDataService>())
 			{
 				service.Populate();
-				_SessionProvider.FlushCurrentSession();
 				SessionProviderRegistry.CloseCurrentSessions();
 			}
 		}
