@@ -11,6 +11,7 @@ using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using Common.Logging;
@@ -156,7 +157,18 @@ namespace AGO.Tasks.Controllers
 
 			try
 			{
-				var dao = DaoFactory.CreateProjectCrudDao(project);
+				ICrudDao dao = null;
+				ISession session = null;
+				if (typeof (ProjectModel).IsAssignableFrom(typeof (TModel)))
+				{
+					dao = DaoFactory.CreateMainCrudDao();
+					session = MainSession;
+				}
+				else
+				{
+					dao = DaoFactory.CreateProjectCrudDao(project);
+					session = ProjectSession(project);
+				}
 
 				var persistentModel = default(Guid).Equals(id)
 										? postFactory((factory ?? defaultFactory)())
@@ -170,7 +182,7 @@ namespace AGO.Tasks.Controllers
 
 				update(persistentModel, result.Validation);
 				//validate model
-				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation, ProjectSession(project));
+				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation, session);
 				if (!result.Validation.Success)
 					return result;
 				//test permissions

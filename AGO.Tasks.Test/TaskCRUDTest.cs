@@ -122,12 +122,12 @@ namespace AGO.Tasks.Test
 			controller.GetTaskDetails("not existing project", "t0-1");
 		}
 
-		[Test, ExpectedException(typeof(NoSuchProjectException))]
+		[Test]
 		public void CreateTaskWithoutProjectThrow()
 		{
 			var model = new CreateTaskDTO();
 
-			controller.CreateTask("not existed project", model);
+			Assert.That(controller.CreateTask("not existed project", model).Validation.Success, Is.False);
 		}
 
 		[Test]
@@ -251,13 +251,13 @@ namespace AGO.Tasks.Test
 		}
 
 		//TODO Test editing
-		[Test, ExpectedException(typeof(NoSuchProjectException))]
+		[Test]
 		public void UpdateWithInvalidProjectReturnError()
 		{
 			var t = M.Task(1);
 
 			var inf = new PropChangeDTO(t.Id, t.ModelVersion, "Content", "bla bla");
-			controller.UpdateTask("not existing proj", inf);
+			Assert.That(controller.UpdateTask("not existing proj", inf).Validation.Success, Is.False);
 		}
 
 		[Test]

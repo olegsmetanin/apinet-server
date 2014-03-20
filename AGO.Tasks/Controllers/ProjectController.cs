@@ -111,9 +111,10 @@ namespace AGO.Tasks.Controllers
 		{
 			var dao = DaoFactory.CreateMainCrudDao();
 			var project = dao.Get<ProjectModel>(modelId, true);
-			SecurityService.DemandUpdate(project, project.ProjectCode, CurrentUser.Id, MainSession);
 
-			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			//strange, but true :) if we found tag by id, but called from other user, not tag owner,
+			//this will found link and return false. so, additional check added
+			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId && l.Tag.OwnerId == CurrentUser.Id);
 
 			if (link != null)
 				return false;
@@ -124,7 +125,7 @@ namespace AGO.Tasks.Controllers
 				Project = project,
 				Tag = tag
 			};
-			SecurityService.DemandUpdate(link, project.ProjectCode, CurrentUser.Id, MainSession);
+			DemandUpdate(link, project.ProjectCode);
 			project.Tags.Add(link);
 			dao.Store(link);
 
@@ -138,13 +139,13 @@ namespace AGO.Tasks.Controllers
 		{
 			var dao = DaoFactory.CreateMainCrudDao();
 			var project = dao.Get<ProjectModel>(modelId, true);
-			SecurityService.DemandUpdate(project, project.ProjectCode, CurrentUser.Id, MainSession);
 
-			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			//see TagProject
+			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId && l.Tag.OwnerId == CurrentUser.Id);
 			if (link == null)
 				return false;
 
-			SecurityService.DemandDelete(link, project.ProjectCode, CurrentUser.Id, MainSession);
+			DemandDelete(link, project.ProjectCode);
 			project.Tags.Remove(link);
 			dao.Delete(link);
 
@@ -175,7 +176,6 @@ namespace AGO.Tasks.Controllers
 			if (p == null)
 				throw new NoSuchProjectException();
 
-			SecurityService.DemandUpdate(p, p.ProjectCode, CurrentUser.Id, MainSession);
 			var u = mainDao.Get<UserModel>(userId, true);
 
 			if (!TaskProjectRoles.IsValid(roles))
@@ -185,13 +185,13 @@ namespace AGO.Tasks.Controllers
 			if (projDao.Exists<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == u.Id)))
 				throw new UserAlreadyProjectMemberException();
 
-			var membership = new ProjectMembershipModel { Project = p, User = u };
-			p.Members.Add(membership);
-			mainDao.Store(membership);
-
 			var member = ProjectMemberModel.FromParameters(u, p, roles);
 			DemandUpdate(member, project);
 			projDao.Store(member);
+
+			var membership = new ProjectMembershipModel { Project = p, User = u };
+			p.Members.Add(membership);
+			mainDao.Store(membership);
 			
 			return new ProjectMemberAdapter(_LocalizationService).Fill(member);
 		}

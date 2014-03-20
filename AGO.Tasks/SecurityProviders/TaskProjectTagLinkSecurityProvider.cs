@@ -14,7 +14,8 @@ namespace AGO.Tasks.SecurityProviders
 	{
 		private readonly ProjectToModuleCache p2m;
 
-		public TaskProjectTagLinkSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry) : base(filteringService)
+		public TaskProjectTagLinkSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry) 
+			: base(filteringService, providerRegistry)
 		{
 			if (providerRegistry == null)
 				throw new ArgumentNullException("providerRegistry");

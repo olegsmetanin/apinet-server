@@ -28,6 +28,9 @@ namespace AGO.Tasks.Test.Security
 			FPM.Member(project, projAdmin, BaseProjectRoles.Administrator);
 			FPM.Member(project, projManager, TaskProjectRoles.Manager);
 			FPM.Member(project, projExecutor, TaskProjectRoles.Executor);
+			MainSession.Update(project);
+			MainSession.Flush();
+			MainSession.Clear();
 		}
 	}
 }

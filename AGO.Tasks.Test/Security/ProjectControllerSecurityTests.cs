@@ -69,11 +69,11 @@ namespace AGO.Tasks.Test.Security
 		}
 
 		[Test]
-		public void OnlyProjectAdminCanTagProjectWithOwnTag()
+		public void OnlyProjectMembersCanTagProjectWithOwnTag()
 		{
-			var admTag = M.ProjectTag("adm", projAdmin);
-			var mgrTag = M.ProjectTag("mgr", projManager);
-			var execTag = M.ProjectTag("exec", projExecutor);
+			var admTag = MM.ProjectTag("adm", projAdmin);
+			var mgrTag = MM.ProjectTag("mgr", projManager);
+			var execTag = MM.ProjectTag("exec", projExecutor);
 			var proj = FM.ProjectFromCode(TestProject);
 
 			Func<UserModel, ProjectTagModel, bool> action = (u, t) =>
@@ -82,18 +82,17 @@ namespace AGO.Tasks.Test.Security
 				return controller.TagProject(proj.Id, t.Id);
 			};
 			ReusableConstraint granted = Is.True;
-			ReusableConstraint restricted = Throws.Exception.TypeOf<CreationDeniedException>();
-			ReusableConstraint denied = Throws.Exception.TypeOf<ChangeDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<CreationDeniedException>();
 
 			Assert.That(() => action(admin, admTag), denied);
 
 			Assert.That(action(projAdmin, admTag), granted);
-			Assert.That(() => action(projAdmin, mgrTag), restricted);
+			Assert.That(() => action(projAdmin, mgrTag), denied);
 
-			Assert.That(() => action(projManager, mgrTag), denied);
+			Assert.That(action(projManager, mgrTag), granted);
 			Assert.That(()=> action(projManager, execTag), denied);
 
-			Assert.That(() => action(projExecutor, execTag), denied);
+			Assert.That(action(projExecutor, execTag), granted);
 			Assert.That(() => action(projExecutor, admTag), denied);
 
 			Assert.That(() => action(notMember, mgrTag), denied);
@@ -102,9 +101,9 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyProjectAdminCanDetagProjectWithOwnTag()
 		{
-			var admTag = M.ProjectTag("adm", projAdmin);
-			var mgrTag = M.ProjectTag("mgr", projManager);
-			var execTag = M.ProjectTag("exec", projExecutor);
+			var admTag = MM.ProjectTag("adm", projAdmin);
+			var mgrTag = MM.ProjectTag("mgr", projManager);
+			var execTag = MM.ProjectTag("exec", projExecutor);
 			var proj = FM.ProjectFromCode(TestProject);
 
 			Func<UserModel, ProjectTagModel, bool> action = (u, t) =>
@@ -116,29 +115,28 @@ namespace AGO.Tasks.Test.Security
 					Tag = t
 				};
 				proj.Tags.Add(link);
-				Session.Save(link);
-				Session.Flush();
-				Session.Clear();
+				MainSession.Save(link);
+				MainSession.Flush();
+				MainSession.Clear();
 				
 				Login(u.Email);
 				return controller.DetagProject(proj.Id, t.Id);
 			};
 			ReusableConstraint granted = Is.True;
-			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
-			ReusableConstraint denied = Throws.Exception.TypeOf<ChangeDeniedException>();
+			ReusableConstraint rejected = Is.False;
 
-			Assert.That(() => action(admin, admTag), denied);
+			Assert.That(() => action(admin, admTag), rejected);
 
 			Assert.That(action(projAdmin, admTag), granted);
-			Assert.That(() => action(projAdmin, mgrTag), restricted);
+			Assert.That(action(projAdmin, mgrTag), rejected);
 
-			Assert.That(() => action(projManager, mgrTag), denied);
-			Assert.That(() => action(projManager, execTag), denied);
+			Assert.That(action(projManager, mgrTag), granted);
+			Assert.That(action(projManager, execTag), rejected);
 
-			Assert.That(() => action(projExecutor, execTag), denied);
-			Assert.That(() => action(projExecutor, admTag), denied);
+			Assert.That(action(projExecutor, execTag), granted);
+			Assert.That(action(projExecutor, admTag), rejected);
 
-			Assert.That(() => action(notMember, mgrTag), denied);
+			Assert.That(() => action(notMember, mgrTag), rejected);
 		}
 
 		[Test]
@@ -185,32 +183,39 @@ namespace AGO.Tasks.Test.Security
 				try
 				{
 					Login(u.Email);
+
 					var dto = controller.AddMember(TestProject, mb.Id, new[] {TaskProjectRoles.Executor});
+
+					MainSession.Flush();
 					Session.Flush();
-					Session.Clear();
 					return dto;
 				}
 				finally
 				{
+					MainSession.Clear();
+					Session.Clear();
+
 					var proj = FM.ProjectFromCode(TestProject);
 					var testMembership = proj.Members.FirstOrDefault(m => m.User.Id == mb.Id);
 					var testMember = M.MemberFromUser(TestProject, mb);
 					if (testMembership != null)
 					{
 						proj.Members.Remove(testMembership);
-						Session.Delete(testMembership);
+						MainSession.Delete(testMembership);
 					}
 					if (testMember != null)
 					{
 						Session.Delete(testMember);
 					}
+					MainSession.Flush();
 					Session.Flush();
+					MainSession.Clear();
 					Session.Clear();
 				}
 			};
 			ReusableConstraint granted = Is.Not.Null;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<CreationDeniedException>();
-			ReusableConstraint denied = Throws.Exception.TypeOf<ChangeDeniedException>();
+			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
 
 			Assert.That(() => action(admin, notMember), denied);
 			Assert.That(action(projAdmin, notMember), granted);
@@ -227,29 +232,40 @@ namespace AGO.Tasks.Test.Security
 			{
 				try
 				{
-					var newMember = M.Member(TestProject, mb);
+					var proj = FM.ProjectFromCode(TestProject);
+					var newMember = M.Member(proj, mb);
+					MainSession.Update(proj);
+					MainSession.Flush();
+					MainSession.Clear();
 					Session.Clear();
 
 					Login(u.Email);
+
 					controller.RemoveMember(TestProject, newMember.Id);
+
+					MainSession.Flush();
 					Session.Flush();
-					Session.Clear();
 				}
 				finally
 				{
+					MainSession.Clear();
+					Session.Clear();
+
 					var proj = FM.ProjectFromCode(TestProject);
 					var testMembership = proj.Members.FirstOrDefault(m => m.User.Id == mb.Id);
 					var testMember = M.MemberFromUser(TestProject, mb);
 					if (testMembership != null)
 					{
 						proj.Members.Remove(testMembership);
-						Session.Delete(testMembership);
+						MainSession.Delete(testMembership);
 					}
 					if (testMember != null)
 					{
 						Session.Delete(testMember);
 					}
+					MainSession.Flush();
 					Session.Flush();
+					MainSession.Clear();
 					Session.Clear();
 				}
 			};

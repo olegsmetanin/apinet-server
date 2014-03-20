@@ -11,6 +11,8 @@ namespace AGO.Tasks.Test
 
 		protected ModelHelper FPM { get; private set; }
 
+		protected ModelHelper MM { get; private set; }
+
 		public override void FixtureSetUp()
 		{
 			TestProject = Guid.NewGuid().ToString().Replace("-", string.Empty);
@@ -31,8 +33,12 @@ namespace AGO.Tasks.Test
 
 		public override void TearDown()
 		{
+			if (MM != null)
+				MM.DropCreated();
+
 			M.DeleteProjectActivity(TestProject, Session);
 			Session.Flush();
+
 			base.TearDown();
 		}
 
@@ -53,6 +59,8 @@ namespace AGO.Tasks.Test
 			//test project data stored in db with 3 demo projects (see TestDataService), that will be test
 			//project code restriction correctness in queries
 			M = new ModelHelper(() => Session, () => Session, () => CurrentUser, TestProject);
+			//but in some tests used entities from master db. for him this helper
+			MM = new ModelHelper(() => MainSession, () => Session, () => CurrentUser, TestProject);
 		}
 
 		protected override void CreateModelHelpers()
