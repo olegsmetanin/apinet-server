@@ -200,7 +200,7 @@ namespace AGO.Core.Controllers
 				var task = new ReportTaskModel
 				           	{
 				           		CreationTime = DateTime.UtcNow,
-				           		Creator = CurrentUserToMember(project),
+				           		Creator = member,
 				           		State = ReportTaskState.NotStarted,
 				           		ReportSetting = settings,
 								ProjectCode = project,
@@ -300,7 +300,7 @@ namespace AGO.Core.Controllers
 				Expression<Func<ReportTaskModel, bool>>, 
 				IQueryOver<ReportTaskModel, ReportTaskModel>> buildQuery = (s, predicate) =>
 			{
-				var q = s.QueryOver<ReportTaskModel>();
+				var q = s.QueryOver<ReportTaskModel>().Where(m => m.ProjectCode == project);
 				if (predicate != null)
 					q = q.Where(predicate);
 				if (user.SystemRole != SystemRole.Administrator)
@@ -435,6 +435,12 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<IModelMetadata> ArchivedReportMetadata()
+		{
+			return MetadataForModelAndRelations<ReportArchiveRecordModel>();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<WorkQueueWatchService.ReportQueuePosition> GetReportQueuePositions()
 		{
 			var login = _AuthController.CurrentUser().Id.ToString();
@@ -447,7 +453,7 @@ namespace AGO.Core.Controllers
 			var p = MainSession.QueryOver<ProjectModel>()
 				.Where(m => m.ProjectCode == task.ProjectCode).SingleOrDefault();
 			var project = p != null ? p.Name : null;
-			return ReportTaskDTO.FromTask(task, _LocalizationService, project, _AuthController.CurrentUser().SystemRole != SystemRole.Administrator);
+			return ReportTaskDTO.FromTask(task, _LocalizationService, project, CurrentUser.SystemRole != SystemRole.Administrator);
 		}
 	}
 }

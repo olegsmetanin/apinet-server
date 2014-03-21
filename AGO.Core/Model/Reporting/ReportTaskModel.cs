@@ -76,6 +76,6 @@ namespace AGO.Core.Model.Reporting
 		}
 
 		[NotMapped, MetadataExclude]
-		public virtual Guid AuthorId { get { return Creator.Id; /*fail fast*/ } }
+		public virtual Guid AuthorId { get { return Creator.UserId; /*fail fast*/ } }
 	}
 }

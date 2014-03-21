@@ -10,7 +10,7 @@ namespace AGO.Core.Model.Reporting
 	/// </summary>
 	public class ReportArchiveRecordModel: CoreModel<Guid>, IProjectBoundModel
 	{
-		[NotEmpty, UniqueProperty]
+		[NotEmpty, UniqueProperty, JsonProperty]
 		public virtual Guid ReportTaskId { get; set; }
 
 		[NotEmpty, NotLonger(ProjectModel.PROJECT_CODE_SIZE), JsonProperty]
