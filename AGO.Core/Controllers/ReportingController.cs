@@ -193,9 +193,7 @@ namespace AGO.Core.Controllers
 			{
 				var dao = DaoFactory.CreateProjectCrudDao(project);
 				var settings = dao.Get<ReportSettingModel>(settingsId);
-				var user = CurrentUser;
-				var participant = dao.Find<ProjectMemberModel>(q => q.Where(
-					m => m.UserId == user.Id && m.ProjectCode == project));
+				var member = CurrentUserToMember(project);
 
 				var name = (!resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : settings.Name)
 				           + " " + DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -213,19 +211,18 @@ namespace AGO.Core.Controllers
 								Culture = CultureInfo.CurrentUICulture.Name
 				           	};
 				dao.Store(task);
-				//_SessionProvider.FlushCurrentSession();
 
 				//Add task to system shared work queue, so one of workers can grab and execute it
-				var qi = new QueueItem("Report", task.Id, project, user.Id.ToString())
+				var qi = new QueueItem("Report", task.Id, project, CurrentUser.Id.ToString())
 				{
 					PriorityType = priority,
-					UserPriority = participant != null ? participant.UserPriority : 0
+					UserPriority = member != null ? member.UserPriority : 0
 				};
 				workQueue.Add(qi);
 				//emit event for reporting service (about new task to work)
 				bus.EmitRunReport(task.Id);
 				//emit event for client (about his task in queue and start soon)
-				bus.EmitReportChanged(ReportEvents.CREATED, user.Id.ToString(),  ReportTaskToDTO(task));
+				bus.EmitReportChanged(ReportEvents.CREATED, CurrentUser.Id.ToString(),  ReportTaskToDTO(task));
 			}
 			catch (Exception ex)
 			{
@@ -234,10 +231,68 @@ namespace AGO.Core.Controllers
 			}
 		}
 
+		private ReportTaskModel PrepareForCancelReport(Guid taskId, ICrudDao dao)
+		{
+			var task = dao.Get<ReportTaskModel>(taskId);
+			//emit event for reporting service (interrupt task if running)
+			bus.EmitCancelReport(task.Id);
+
+			if (task.State == ReportTaskState.NotStarted)
+			{
+				//task may be in work queue, if not started yet, remove
+				workQueue.Remove(task.Id);
+			}
+			return task;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public void CancelReport([NotEmpty] string project, [NotEmpty] Guid id)
+		{
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = PrepareForCancelReport(id, dao);
+
+			task.State = ReportTaskState.Canceled;
+			task.CompletedAt = DateTime.Now;
+			task.ErrorMsg = "Canceled by user request";
+			dao.Store(task);
+
+			//emit event for client (about his task is canceled)
+			var dto = ReportTaskToDTO(task);
+			bus.EmitReportChanged(ReportEvents.CANCELED, CurrentUser.Id.ToString(), dto);
+			if (task.Creator != null && CurrentUser.Id != task.Creator.Id)
+			{
+				//and to creator, if another person cancel task (admin, for example)
+				bus.EmitReportChanged(ReportEvents.CANCELED, task.AuthorId.ToString(), dto);
+			}
+
+			ProjectSession(project).Flush();
+		}
+
+
+		[JsonEndpoint, RequireAuthorization]
+		public void DeleteReport([NotEmpty] string project, [NotEmpty] Guid id)
+		{
+			var dao = DaoFactory.CreateProjectCrudDao(project);
+			var task = PrepareForCancelReport(id, dao);
+			
+			var dto = ReportTaskToDTO(task);
+			dao.Delete(task);
+
+			//emit event for client (about his task is successfully deleted)
+			bus.EmitReportChanged(ReportEvents.DELETED, CurrentUser.Id.ToString(), dto);
+			if (task.Creator != null && CurrentUser.Id != task.Creator.Id)
+			{
+				//and to creator, if another person delete task (admin, for example)
+				bus.EmitReportChanged(ReportEvents.DELETED, task.AuthorId.ToString(), dto);
+			}
+
+			ProjectSession(project).Flush();
+		}
+
 		private const int TOP_REPORTS = 10;
 
 		[JsonEndpoint, RequireAuthorization]
-		public object GetTopLastReports()
+		public object GetTopLastReports([NotEmpty] string project)
 		{
 			var user = _AuthController.CurrentUser();
 
@@ -253,11 +308,11 @@ namespace AGO.Core.Controllers
 				return q;
 			};
 
+			var projSessionFactory = SessionProviderRegistry.GetProjectProvider(project).SessionFactory;
 			Action<Action<ISession>> doInSessionContext = action =>
 			{
 				//separate session - don't use CurrentSession, that binded to request thread
-				//TODO FIXME
-				using (var session = ((ISessionFactory)null).OpenSession())
+				using (var session = projSessionFactory.OpenSession())
 				{
 					action(session);
 					session.Close();
@@ -316,94 +371,61 @@ namespace AGO.Core.Controllers
 			};
 		}
 
-		private ReportTaskModel PrepareForCancelReport(Guid taskId, ICrudDao dao)
-		{
-			var task = dao.Get<ReportTaskModel>(taskId);
-			//emit event for reporting service (interrupt task if running)
-			bus.EmitCancelReport(task.Id);
-
-			if (task.State == ReportTaskState.NotStarted)
-			{
-				//task may be in work queue, if not started yet, remove
-				workQueue.Remove(task.Id);
-			}
-			return task;
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public void CancelReport([NotEmpty] string project, [NotEmpty] Guid id)
-		{
-			var dao = DaoFactory.CreateProjectCrudDao(project);
-			var task = PrepareForCancelReport(id, dao);
-
-			task.State = ReportTaskState.Canceled;
-			task.CompletedAt = DateTime.Now;
-			task.ErrorMsg = "Canceled by user request";
-			dao.Store(task);
-
-			//emit event for client (about his task is canceled)
-			var dto = ReportTaskToDTO(task);
-			bus.EmitReportChanged(ReportEvents.CANCELED, _AuthController.CurrentUser().Id.ToString(), dto);
-			if (task.Creator != null && CurrentUser.Id != task.Creator.Id)
-			{
-				//and to creator, if another person cancel task (admin, for example)
-				bus.EmitReportChanged(ReportEvents.CANCELED, task.AuthorLogin, dto);
-			}
-
-			ProjectSession(project).Flush();
-		}
-
-
-		[JsonEndpoint, RequireAuthorization]
-		public void DeleteReport([NotEmpty] string project, [NotEmpty] Guid id)
-		{
-			var dao = DaoFactory.CreateProjectCrudDao(project);
-			var task = PrepareForCancelReport(id, dao);
-			
-			var dto = ReportTaskToDTO(task);
-			dao.Delete(task);
-
-			//emit event for client (about his task is successfully deleted)
-			bus.EmitReportChanged(ReportEvents.DELETED, _AuthController.CurrentUser().Id.ToString(), dto);
-			if (task.Creator != null && CurrentUser.Id != task.Creator.Id)
-			{
-				//and to creator, if another person delete task (admin, for example)
-				bus.EmitReportChanged(ReportEvents.DELETED, task.AuthorLogin, dto);
-			}
-
-			ProjectSession(project).Flush();
-		}
-
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable GetReports(
+			[NotEmpty] string project,
 			[InRange(0, null)] int page,
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			//TODO templates for system, module, project, project member
-
-			var user = _AuthController.CurrentUser();
-			if (user.SystemRole != SystemRole.Administrator)
+			var fb = _FilteringService.Filter<ReportTaskModel>();
+			filter.Add(fb.Where(m => m.ProjectCode == project));
+			if (CurrentUser.SystemRole != SystemRole.Administrator)
 			{
-				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator.Id == user.Id));
+				filter.Add(fb.Where(m => m.Creator.Id == CurrentUser.Id));
 			}
 
-			//TODO FIXME
-			return ((IFilteringDao)null).List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
+			return DaoFactory.CreateProjectFilteringDao(project).List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public int GetReportsCount([NotNull] ICollection<IModelFilterNode> filter)
+		public int GetReportsCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
 		{
-			//TODO templates for system, module, project, project member
-			var user = _AuthController.CurrentUser();
-			if (user.SystemRole != SystemRole.Administrator)
+			var fb = _FilteringService.Filter<ReportTaskModel>();
+			filter.Add(fb.Where(m => m.ProjectCode == project));
+			if (CurrentUser.SystemRole != SystemRole.Administrator)
 			{
-				filter.Add(_FilteringService.Filter<ReportTaskModel>().Where(m => m.Creator.Id == user.Id));
+				filter.Add(fb.Where(m => m.Creator.Id == CurrentUser.Id));
 			}
 
-			//TODO FIXME
-			return ((IFilteringDao)null).RowCount<ReportTaskModel>(filter);
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<ReportTaskModel>(filter);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable GetArchivedReports(
+			[InRange(0, null)] int page,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters)
+		{
+			var fb = _FilteringService.Filter<ReportArchiveRecordModel>();
+			if (CurrentUser.SystemRole != SystemRole.Administrator)
+			{
+				filter.Add(fb.Where(m => m.UserId == CurrentUser.Id));
+			}
+
+			return DaoFactory.CreateMainFilteringDao().List<ReportArchiveRecordModel>(filter, page, sorters).ToList();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetArchivedReportsCount([NotNull] ICollection<IModelFilterNode> filter)
+		{
+			var fb = _FilteringService.Filter<ReportArchiveRecordModel>();
+			if (CurrentUser.SystemRole != SystemRole.Administrator)
+			{
+				filter.Add(fb.Where(m => m.UserId == CurrentUser.Id));
+			}
+
+			return DaoFactory.CreateMainFilteringDao().RowCount<ReportArchiveRecordModel>(filter);
 		}
 
 		[JsonEndpoint, RequireAuthorization]

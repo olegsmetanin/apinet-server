@@ -66,7 +66,6 @@ namespace AGO.Core.Controllers.Security
 			return filterModel != null ? JToken.Parse(filterModel.Filter) : null;
 		}
 
-		//TODO refactoring: where stored userfilter???
 		[JsonEndpoint, RequireAuthorization]
 		public ValidationResult SaveFilter(
 			[NotEmpty] string project,

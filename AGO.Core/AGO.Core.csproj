@@ -160,6 +160,7 @@
     <Compile Include="Model\Projects\ProjectStatus.cs" />
     <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
     <Compile Include="Model\Projects\ProjectToTagModel.cs" />
+    <Compile Include="Model\Reporting\ReportArchiveRecordModel.cs" />
     <Compile Include="Model\Reporting\ReportingRepository.cs" />
     <Compile Include="Model\Reporting\ReportSettingModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />

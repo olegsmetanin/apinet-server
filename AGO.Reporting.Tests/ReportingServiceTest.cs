@@ -118,6 +118,12 @@ namespace AGO.Reporting.Tests
 			Assert.IsNotNull(task.CompletedAt);
 			Assert.Greater(task.CompletedAt, task.StartedAt);
 			StringAssert.AreEqualIgnoringCase("\"1\",\"zxc\"", Encoding.UTF8.GetString(task.ResultContent));
+
+			var archiveRecord = MainSession.QueryOver<ReportArchiveRecordModel>()
+				.Where(m => m.ReportTaskId == task.Id).SingleOrDefault();
+			Assert.IsNotNull(archiveRecord);
+			M.Track(archiveRecord);
+			Assert.AreEqual(task.ResultName, archiveRecord.Name);
 		}
 
 		[Test]

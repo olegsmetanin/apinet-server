@@ -128,6 +128,15 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportTaskModel>(m => m.ResultName)
 				.WithValueColumn<ReportTaskModel>(m => m.ResultContentType)
 				.WithValueColumn<ReportTaskModel>(m => m.ResultUnread);
+			Create.CoreModelTable<ReportArchiveRecordModel>()
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.ReportTaskId)
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.ProjectCode)
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.ProjectName)
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.ProjectType)
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.Name)
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.SettingsName)
+				.WithValueColumn<ReportArchiveRecordModel>(m => m.UserId);
+				
 			//Hash token:login, that will be used in socket.io for sending messages
 			//to particulat user
 			Create.Table("TokenToLogin").InSchema(MODULE_SCHEMA)
