@@ -6,7 +6,6 @@ using System.Threading;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Projects;
 using AGO.Core.Filters;
-using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Security;
@@ -34,8 +33,8 @@ namespace AGO.Core.Tests.Security
 
 		protected override void CreateModelHelpers()
 		{
-			FM = new ModelHelper(() => Session, () => CurrentUser);
-			M = new ModelHelper(() => Session, () => CurrentUser);
+			FM = new ModelHelper(() => MainSession, () => CurrentUser);
+			M = new ModelHelper(() => MainSession, () => CurrentUser);
 		}
 
 		private dynamic MakeProjectsForTest()
@@ -151,7 +150,7 @@ namespace AGO.Core.Tests.Security
 				};
 				LoginAdmin();
 				var response = controller.CreateProject(data, new HashSet<Guid>());
-				Session.Flush();
+				MainSession.Flush();
 				return response as ProjectModel;
 			});
 
@@ -172,7 +171,7 @@ namespace AGO.Core.Tests.Security
 			Login(member.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 			var response = controller.CreateProject(data, new HashSet<Guid>());
-			Session.Clear();//rollback as in action executor
+			MainSession.Clear();//rollback as in action executor
 			
 			Assert.That(response, Is.Not.Null);
 			Assert.That(response, Is.TypeOf<ValidationResult>());
@@ -190,14 +189,13 @@ namespace AGO.Core.Tests.Security
 				M.Member(project.ProjectCode, user);
 			}
 			var tag = M.ProjectTag(user.Email, user);
-				//Session.QueryOver<ProjectTagModel>().List().Take(1).First();
 
 			Login(user.Email);
 			var response = controller.TagProject(project.Id, tag.Id);
-			Session.Flush();
+			MainSession.Flush();
 
 			Assert.That(response, Is.True);
-			Session.Refresh(project);
+			MainSession.Refresh(project);
 			Assert.That(project.Tags, Has.Exactly(1).Matches<ProjectToTagModel>(l => l.Tag.Id == tag.Id));
 		}
 
@@ -228,25 +226,25 @@ namespace AGO.Core.Tests.Security
 			{
 				M.Member(project.ProjectCode, user);
 			}
-			var tag = Session.QueryOver<ProjectTagModel>().List().Take(1).First();
+			var tag = M.ProjectTag("nunit_tag", user);
 			var link = new ProjectToTagModel
 			{
-				Creator = user,
 				Project = project,
 				Tag = tag
 			};
 			project.Tags.Add(link);
-			Session.Save(link);
-			Session.Save(project);
-			Session.Flush();
-			Session.Clear();//if omit this, will be exception "object will be re-saved on cascade", can't fix other way
+			MainSession.Save(link);
+			MainSession.Save(project);
+			MainSession.Flush();
+			MainSession.Clear();//if omit this, will be exception "object will be re-saved on cascade", can't fix other way
 
 			Login(user.Email);
 			var response = controller.DetagProject(project.Id, tag.Id);
-			Session.Flush();
+			MainSession.Flush();
+			MainSession.Clear();
 
 			Assert.That(response, Is.True);
-			project = Session.Get<ProjectModel>(project.Id);
+			project = MainSession.Get<ProjectModel>(project.Id);
 			Assert.That(project.Tags, Is.Empty);
 		}
 
@@ -259,7 +257,7 @@ namespace AGO.Core.Tests.Security
 		[Test]
 		public void MemberCanDetagProject()
 		{
-			DoDetagProjectTest(admin, true);
+			DoDetagProjectTest(member, true);
 		}
 
 		[Test]

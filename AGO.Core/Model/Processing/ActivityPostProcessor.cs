@@ -1,30 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Processing
 {
 	public abstract class ActivityPostProcessor<TModel> : IModelPostProcessor
-		where TModel : SecureModel<Guid>, new()
+		where TModel : IdentifiedModel<Guid>, new()
 	{
 		#region Properties, fields, constructors
 
-		protected readonly ICrudDao _CrudDao;
+		protected readonly DaoFactory DaoFactory;
 
-		protected readonly ISessionProvider _SessionProvider;
+		protected readonly ISessionProviderRegistry SessionProviderRegistry;
 
-		protected ActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
+		protected ActivityPostProcessor(DaoFactory factory, ISessionProviderRegistry providerRegistry)
 		{
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
+			if (factory == null)
+				throw new ArgumentNullException("factory");
+			DaoFactory = factory;
 
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
+			SessionProviderRegistry = providerRegistry;
 		}
 
 		#endregion
@@ -36,17 +36,17 @@ namespace AGO.Core.Model.Processing
 			return model is TModel;
 		}
 
-		public void AfterModelCreated(IIdentifiedModel model)
+		public void AfterModelCreated(IIdentifiedModel model, ProjectMemberModel creator = null)
 		{
-			ProcessUpdate(model as TModel, new TModel());
+			ProcessUpdate(model as TModel, new TModel(), creator);
 		}
 
-		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original)
+		public void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original, ProjectMemberModel changer = null)
 		{
-			ProcessUpdate(model as TModel, original as TModel);
+			ProcessUpdate(model as TModel, original as TModel, changer);
 		}
 
-		public void AfterModelDeleted(IIdentifiedModel model)
+		public void AfterModelDeleted(IIdentifiedModel model, ProjectMemberModel deleter = null)
 		{
 			if (model == null)
 				return;
@@ -56,7 +56,28 @@ namespace AGO.Core.Model.Processing
 				return;
 
 			foreach (var record in records)
-				_CrudDao.Store(record);
+				DaoForModel(model, deleter).Store(record);
+		}
+
+		protected virtual ICrudDao DaoForModel(IIdentifiedModel model, ProjectMemberModel changer)
+		{
+			if (changer == null && model is ISecureModel)
+			{
+				changer = ((ISecureModel) model).LastChanger;
+			}
+
+			if (changer != null)
+			{
+				return DaoFactory.CreateProjectCrudDao(changer.ProjectCode);
+			}
+
+			var pm = model as IProjectBoundModel;
+			if (pm != null)
+			{
+				return DaoFactory.CreateProjectCrudDao(pm.ProjectCode);
+			}
+
+			throw new InvalidOperationException("Can not determine project code for storing activity record");
 		}
 
 		#endregion
@@ -73,12 +94,17 @@ namespace AGO.Core.Model.Processing
 			return new List<ActivityRecordModel>();
 		}
 
-		protected virtual ActivityRecordModel PopulateActivityRecord(TModel model, ActivityRecordModel record)
+		protected virtual ActivityRecordModel PopulateActivityRecord(TModel model, ActivityRecordModel record, ProjectMemberModel member = null)
 		{
+			if (member == null && model is ISecureModel)
+			{
+				member = ((ISecureModel) model).LastChanger;
+			}
+
 			record.ItemType = model.GetType().Name;
 			record.ItemName = model.ToStringSafe();
 			record.ItemId = model.Id;
-			record.Creator = model.LastChanger;
+			record.Creator = member;
 
 			return record;
 		}
@@ -87,7 +113,7 @@ namespace AGO.Core.Model.Processing
 
 		#region Helper methods
 
-		protected void ProcessUpdate(TModel model, TModel original)
+		protected void ProcessUpdate(TModel model, TModel original, ProjectMemberModel changer)
 		{
 			if (model == null || original == null)
 				return;
@@ -97,7 +123,7 @@ namespace AGO.Core.Model.Processing
 				return;
 
 			foreach (var record in records)
-				_CrudDao.Store(record);
+				DaoForModel(model, changer).Store(record);
 		}
 
 		#endregion

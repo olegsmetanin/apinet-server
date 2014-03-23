@@ -67,6 +67,7 @@ namespace AGO.Tasks.Test
 			var time = M.Time(task, admin);
 			Session.Clear();
 
+// ReSharper disable once AccessToModifiedClosure
 			Assert.That(() => controller.DeleteTime(TestProject, time.Id),
 				Throws.Nothing);
 

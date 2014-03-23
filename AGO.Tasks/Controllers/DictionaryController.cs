@@ -6,13 +6,13 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Processing;
-using AGO.Core.Model.Projects;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers.DTO;
@@ -31,14 +31,13 @@ namespace AGO.Tasks.Controllers
         public DictionaryController(
             IJsonService jsonService, 
             IFilteringService filteringService,
-            ICrudDao crudDao, 
-            IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
-			ISecurityService securityService)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 		}
 
@@ -74,11 +73,11 @@ namespace AGO.Tasks.Controllers
 			[InRange(0, null)] int page)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
-			var predicate = SecurityService.ApplyReadConstraint<TaskTypeModel>(project, CurrentUser.Id, Session,
-				filter.Concat(new[] {projectPredicate}).ToArray());
+			var predicate = ApplyReadConstraint<TaskTypeModel>(project, filter.Concat(new[] {projectPredicate}).ToArray());
 			var adapter = new TaskTypeAdapter();
 
-			return _FilteringDao.List<TaskTypeModel>(predicate, page, sorters)
+			return DaoFactory.CreateProjectFilteringDao(project)
+				.List<TaskTypeModel>(predicate, page, sorters)
 				.Select(adapter.Fill)
 				.ToArray();
 		}
@@ -87,10 +86,9 @@ namespace AGO.Tasks.Controllers
 		public int GetTaskTypesCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTypeModel>().Where(m => m.ProjectCode == project);
-			var predicate = SecurityService.ApplyReadConstraint<TaskTypeModel>(project, CurrentUser.Id, Session,
-				filter.Concat(new[] { projectPredicate }).ToArray());
+			var predicate = ApplyReadConstraint<TaskTypeModel>(project, filter.Concat(new[] { projectPredicate }).ToArray());
 
-			return _FilteringDao.RowCount<TaskTypeModel>(predicate);
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<TaskTypeModel>(predicate);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -101,22 +99,23 @@ namespace AGO.Tasks.Controllers
 				taskType => new TaskTypeAdapter().Fill(taskType));
 		}
 
-    	private void InternalDeleteTaskType(Guid id)
+    	private void InternalDeleteTaskType(string project, Guid id, ICrudDao dao = null)
     	{
-    		var taskType = _CrudDao.Get<TaskTypeModel>(id, true);
+    		dao = dao ?? DaoFactory.CreateProjectCrudDao(project);
+    		var taskType = SecureFind<TaskTypeModel>(project, id);
 
-			SecurityService.DemandDelete(taskType, taskType.ProjectCode, CurrentUser.Id, Session);
+			DemandDelete(taskType, taskType.ProjectCode);
 
-    		if (_CrudDao.Exists<TaskModel>(q => q.Where(m => m.TaskType.Id == taskType.Id)))
+    		if (dao.Exists<TaskModel>(q => q.Where(m => m.TaskType.Id == taskType.Id)))
     			throw new CannotDeleteReferencedItemException();
 
-    		_CrudDao.Delete(taskType);
+    		dao.Delete(taskType);
     	}
 
 		[JsonEndpoint, RequireAuthorization]
-		public bool DeleteTaskType([NotEmpty] Guid id)
+		public bool DeleteTaskType([NotEmpty] string project, [NotEmpty] Guid id)
 		{
-			InternalDeleteTaskType(id);
+			InternalDeleteTaskType(project, id);
 
 			return true;
 		}
@@ -127,14 +126,14 @@ namespace AGO.Tasks.Controllers
 			if (replacementTypeId.HasValue && ids.Contains(replacementTypeId.Value))
 				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
 
-    		var s = _SessionProvider.CurrentSession;
+    		var s = ProjectSession(project);
     		var trn = s.BeginTransaction();
     		try
     		{
     			const string hqlUpdate =
     				"update versioned TaskModel set TaskTypeId = :newTypeId where ProjectCode = :project and TaskTypeId = :oldTypeId";
     			var updateQuery = s.CreateQuery(hqlUpdate);
-
+    			var dao = DaoFactory.CreateProjectCrudDao(project);
     			foreach (var id in ids)
     			{
     				if (replacementTypeId.HasValue)
@@ -146,7 +145,7 @@ namespace AGO.Tasks.Controllers
     						.ExecuteUpdate();
     				}
 
-					InternalDeleteTaskType(id);
+					InternalDeleteTaskType(project, id, dao);
     			}
 
     			trn.Commit();
@@ -160,9 +159,9 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> TaskTypeMetadata()
+		public IEnumerable<IModelMetadata> TaskTypeMetadata([NotEmpty] string project)
 		{
-			return MetadataForModelAndRelations<TaskTypeModel>();
+			return MetadataForModelAndRelations<TaskTypeModel>(project);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -182,31 +181,32 @@ namespace AGO.Tasks.Controllers
 			[InRange(0, null)] int page)
 		{
 			var projectPredicate = _FilteringService.Filter<TaskTagModel>().Where(m => m.ProjectCode == project);
-			var predicate = SecurityService.ApplyReadConstraint<TaskTagModel>(project, CurrentUser.Id, Session,
-				filter.Concat(new[] { projectPredicate }).ToArray());
+			var predicate = ApplyReadConstraint<TaskTagModel>(project, filter.Concat(new[] { projectPredicate }).ToArray());
 			var adapter = new TaskTagAdapter();
 
-			return _FilteringDao.List<TaskTagModel>(predicate, page, sorters)
+			return DaoFactory.CreateProjectFilteringDao(project)
+				.List<TaskTagModel>(predicate, page, sorters)
 				.Select(adapter.Fill)
 				.ToArray();
 		}
 
 		private TaskTagModel FindOrCreate(string project, string[] path, ref List<TaskTagModel> created)
 		{
-			var parent = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == project && m.Creator.Id == CurrentUser.Id && 
+			var parent = ProjectSession(project).QueryOver<TaskTagModel>()
+				.Where(m => m.ProjectCode == project && m.OwnerId == CurrentUser.Id && 
 					m.FullName == string.Join("\\", path))
 				.SingleOrDefault();
 			if (parent != null) return parent; //already exists
 
 			string currentPath = null;
 			TaskTagModel currentParent = null;
+			var dao = DaoFactory.CreateProjectCrudDao(project);
 			for(var i = 0; i < path.Length; i++)
 			{
 				currentPath = i == 0 ? path[i].TrimSafe() : currentPath + "\\" + path[i].TrimSafe();
 				var cpath = currentPath;
-				parent = Session.QueryOver<TaskTagModel>()
-					.Where(m => m.ProjectCode == project && m.Creator.Id == CurrentUser.Id)
+				parent = ProjectSession(project).QueryOver<TaskTagModel>()
+					.Where(m => m.ProjectCode == project && m.OwnerId == CurrentUser.Id)
 					.Where(m => m.FullName == cpath).SingleOrDefault();
 				
 				if (parent == null)
@@ -214,12 +214,12 @@ namespace AGO.Tasks.Controllers
 					parent = new TaskTagModel
 					                	{
 					                		ProjectCode = project,
-					                		Creator = _AuthController.CurrentUser(),
+					                		OwnerId = CurrentUser.Id,
 											Parent = currentParent,
 											Name = path[i].TrimSafe(),
 					                		FullName = currentPath
 					                	};
-					_CrudDao.Store(parent);
+					dao.Store(parent);
 					created.Add(parent);
 				}
 				currentParent = parent;
@@ -253,7 +253,7 @@ namespace AGO.Tasks.Controllers
 			var res = Edit<TaskTagModel, TaskTagDTO>(model.Id, project,
 				(tag, vr) =>
 					{
-						tag.Creator = _AuthController.CurrentUser();
+						tag.OwnerId = CurrentUser.Id;
 						createdParents = UpdateTagNameAndParent(project, model, tag);
 					},
 				adapter.Fill);
@@ -294,13 +294,14 @@ namespace AGO.Tasks.Controllers
 			{
 				//same algorithm to obtain the hierarchy, which is widely used in sql
 				var forUpdate = updatedTag.Children.ToList();
+				var dao = DaoFactory.CreateProjectCrudDao(project);
 				while (forUpdate.Any())
 				{
 					//recalc full name for current hierarchy level
 					foreach (var tag in forUpdate)
 					{
 						tag.FullName = tag.Parent.FullName + "\\" + tag.Name;
-						_CrudDao.Store(tag);
+						dao.Store(tag);
 						forUpdateOnClient.Add(tag);
 					}
 					//grab next hierarchy level
@@ -327,19 +328,17 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<Guid> DeleteTags([NotEmpty] string project, ICollection<Guid> ids, Guid? replacementTagId = null, ICollection<Guid> viewed = null)
 		{
-			//Check project existing
-			if (!_CrudDao.Exists<ProjectModel>(query => query.Where(m => m.ProjectCode == project)))
-				throw new NoSuchProjectException();
+			var dao = DaoFactory.CreateProjectCrudDao(project);
 
 			foreach (var tagId in ids)
 			{
-				var tag = _CrudDao.Get<TaskTagModel>(tagId);
-				SecurityService.DemandDelete(tag, project, CurrentUser.Id, Session);
+				var tag = dao.Get<TaskTagModel>(tagId);
+				DemandDelete(tag, project);
 			}
 
 			//collect all tags with childs
 			var forDelete = new List<TagModel>();
-			var childs = ids.Select(id => _CrudDao.Get<TaskTagModel>(id)).Where(tag => tag != null).Cast<TagModel>().ToList();
+			var childs = ids.Select(id => dao.Get<TaskTagModel>(id)).Where(tag => tag != null).Cast<TagModel>().ToList();
 			while(childs.Count > 0)
 			{
 				forDelete.AddRange(childs);
@@ -351,7 +350,7 @@ namespace AGO.Tasks.Controllers
 			if (replacementTagId.HasValue && forDelete.Any(tag => tag.Id == replacementTagId.Value))
 				throw new CanNotReplaceWithItemThatWillBeDeletedTo();
 
-			var s = _SessionProvider.CurrentSession;
+			var s = ProjectSession(project);
 			var trn = s.BeginTransaction();
 			try
 			{
@@ -370,12 +369,12 @@ namespace AGO.Tasks.Controllers
 					}
 				}
 
-				if (_CrudDao.Exists<TaskToTagModel>(q => q.Where(m => m.Tag.IsIn(forDelete))))
+				if (dao.Exists<TaskToTagModel>(q => q.Where(m => m.Tag.IsIn(forDelete))))
 						throw new CannotDeleteReferencedItemException();
 				//remove leaf first, because of foreign key in db
 				foreach (var tag in forDelete.OrderByDescending(tag => tag.Level))
 				{
-					_CrudDao.Delete(tag);
+					dao.Delete(tag);
 				}
 
 				trn.Commit();

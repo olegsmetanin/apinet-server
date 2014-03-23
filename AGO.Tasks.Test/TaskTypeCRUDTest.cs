@@ -84,9 +84,9 @@ namespace AGO.Tasks.Test
 			var model = new TaskTypeDTO {Name = "TestTaskType"};
 
 			var vr = Controller.EditTaskType(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
-			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
+			var tt = Session.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == TestProject && m.Name == "TestTaskType")
 				.SingleOrDefault();
 			Assert.IsNotNull(tt);
@@ -102,9 +102,8 @@ namespace AGO.Tasks.Test
 			var model = new TaskTypeDTO { Name = string.Empty };
 
 			var vr = Controller.EditTaskType(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
 
-			var tt = _SessionProvider.CurrentSession.QueryOver<TaskTypeModel>()
+			var tt = Session.QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == TestProject && m.Name == string.Empty)
 				.SingleOrDefault();
 			Assert.IsNull(tt);
@@ -120,9 +119,9 @@ namespace AGO.Tasks.Test
 
 			var model = new TaskTypeDTO {Id = testTaskType.Id, Name = "NewName"};
 			var vr = Controller.EditTaskType(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
-			testTaskType = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
+			testTaskType = Session.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.AreEqual("NewName", testTaskType.Name);
 			Assert.IsTrue(vr.Success);
 		}
@@ -134,9 +133,9 @@ namespace AGO.Tasks.Test
 
 			var model = new TaskTypeDTO { Id = tt.Id, Name = string.Empty };
 			var vr = Controller.EditTaskType(TestProject, model).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
 
 			Assert.IsFalse(vr.Success);
+			Session.Clear();
 			tt = Session.Get<TaskTypeModel>(tt.Id);
 			Assert.AreEqual("aaa", tt.Name);
 			Assert.IsTrue(vr.FieldErrors.First(e => e.Key == "Name").Value.Any());
@@ -147,10 +146,11 @@ namespace AGO.Tasks.Test
 		{
 			var testTaskType = M.TaskType();
 
-			Controller.DeleteTaskType(testTaskType.Id);
-			_SessionProvider.FlushCurrentSession();
+			Controller.DeleteTaskType(TestProject, testTaskType.Id);
+			Session.Flush();
+			Session.Clear();
 
-			var notExisted = _SessionProvider.CurrentSession.Get<TaskTypeModel>(testTaskType.Id);
+			var notExisted = Session.Get<TaskTypeModel>(testTaskType.Id);
 			Assert.IsNull(notExisted);
 		}
 
@@ -159,8 +159,8 @@ namespace AGO.Tasks.Test
 		{
 			var testTaskType = M.TaskType();
 			M.Task(1, testTaskType);
-			
-			Controller.DeleteTaskType(testTaskType.Id);
+
+			Controller.DeleteTaskType(TestProject, testTaskType.Id);
 		}
 	}
 }

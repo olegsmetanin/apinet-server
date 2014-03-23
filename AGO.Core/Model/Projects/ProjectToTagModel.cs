@@ -2,13 +2,12 @@
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
-using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Projects
 {
-	public class ProjectToTagModel : SecureModel<Guid>
+	public class ProjectToTagModel : CoreModel<Guid>
 	{
 		[JsonProperty, NotNull]
 		public virtual ProjectModel Project { get; set; }

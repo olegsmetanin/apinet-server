@@ -1,9 +1,8 @@
 ﻿using System;
-using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Dictionary
 {
-	public interface IDictionaryItemModel : ISecureModel, IProjectBoundModel
+	public interface IDictionaryItemModel : IProjectBoundModel
 	{
 		Guid Id { get; set; }
 

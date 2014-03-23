@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Filters;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
+using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using NHibernate;
 
@@ -22,11 +25,9 @@ namespace AGO.Core.Controllers
 
 		protected readonly IFilteringService _FilteringService;
 
-		protected readonly ICrudDao _CrudDao;
+		protected readonly DaoFactory DaoFactory;
 
-		protected readonly IFilteringDao _FilteringDao;
-
-		protected readonly ISessionProvider _SessionProvider;
+		protected readonly ISessionProviderRegistry SessionProviderRegistry;
 
 		protected readonly ILocalizationService _LocalizationService;
 
@@ -39,13 +40,12 @@ namespace AGO.Core.Controllers
 		protected AbstractController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
-			ISecurityService securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry providerRegistry,
+			DaoFactory factory)
 		{
 			if (jsonService == null)
 				throw new ArgumentNullException("jsonService");
@@ -54,18 +54,6 @@ namespace AGO.Core.Controllers
 			if (filteringService == null)
 				throw new ArgumentNullException("filteringService");
 			_FilteringService = filteringService;
-
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
-
-			if (filteringDao == null)
-				throw new ArgumentNullException("filteringDao");
-			_FilteringDao = filteringDao;
-
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
 
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
@@ -82,16 +70,19 @@ namespace AGO.Core.Controllers
 			if (securityService == null)
 				throw new ArgumentNullException("securityService");
 			SecurityService = securityService;
+
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
+			SessionProviderRegistry = providerRegistry;
+
+			if (factory == null)
+				throw new ArgumentNullException("factory");
+			DaoFactory = factory;
 		}
 
 		#endregion
 
 		#region Template methods
-
-		protected virtual ISession Session
-		{
-			get { return _SessionProvider.CurrentSession; }
-		}
 
 		protected override void DoInitialize()
 		{
@@ -105,18 +96,6 @@ namespace AGO.Core.Controllers
 			if (initializable != null)
 				initializable.Initialize();
 
-			initializable = _CrudDao as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
-			initializable = _FilteringDao as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
-			initializable = _SessionProvider as IInitializable;
-			if (initializable != null)
-				initializable.Initialize();
-
 			_AuthController.Initialize();
 		}
 
@@ -124,28 +103,67 @@ namespace AGO.Core.Controllers
 
 		#region Helper methods
 
+		protected virtual UserModel CurrentUser
+		{
+			get { return _AuthController.CurrentUser(); }
+		}
+
+		protected virtual ISession MainSession
+		{
+			get { return SessionProviderRegistry.GetMainDbProvider().CurrentSession; }
+		}
+
+		protected virtual ISession ProjectSession(string project)
+		{
+			return SessionProviderRegistry.GetProjectProvider(project).CurrentSession;
+		}
+
+		protected virtual ProjectMemberModel UserToMember(string project, Guid userId)
+		{
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("project");
+
+			return ProjectSession(project).QueryOver<ProjectMemberModel>()
+				.Where(m => m.ProjectCode == project && m.UserId == userId)
+				.SingleOrDefault();
+		}
+
+		protected virtual ProjectMemberModel CurrentUserToMember(string project)
+		{
+			return CurrentUser != null ? UserToMember(project, CurrentUser.Id) : null;
+		}
+
 		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations<TModel>()
 			where TModel : IIdentifiedModel
 		{
-			return MetadataForModelAndRelations(typeof (TModel));
+			return MetadataForModelAndRelations(null, typeof (TModel));
 		}
 
-		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations(Type modelType)
+		protected IEnumerable<IModelMetadata> MetadataForModelAndRelations<TModel>(string project)
+			where TModel : IIdentifiedModel
+		{
+			return MetadataForModelAndRelations(project, typeof(TModel));
+		}
+
+		private IEnumerable<IModelMetadata> MetadataForModelAndRelations(string project, Type modelType)
 		{
 			var result = new List<IModelMetadata>();
 			var processedTypes = new HashSet<Type>();
 
-			ProcessMetadata(modelType, result, processedTypes);
+			ProcessMetadata(project, modelType, result, processedTypes);
 
 			return result;
 		}
 
-		private void ProcessMetadata(Type modelType, ICollection<IModelMetadata> result, ICollection<Type> processedTypes)
+		private void ProcessMetadata(string project, Type modelType, ICollection<IModelMetadata> result, ICollection<Type> processedTypes)
 		{
 			if (modelType == null || processedTypes.Contains(modelType))
 				return;
 
-			var metadata = _SessionProvider.ModelMetadata(modelType);
+			var sp = project == null
+				? SessionProviderRegistry.GetMainDbProvider()
+				: SessionProviderRegistry.GetProjectProvider(project);
+			var metadata = sp.ModelMetadata(modelType);
 			if (metadata == null)
 				return;
 
@@ -153,25 +171,7 @@ namespace AGO.Core.Controllers
 			processedTypes.Add(modelType);
 
 			foreach (var modelProperty in metadata.ModelProperties)
-				ProcessMetadata(modelProperty.PropertyType, result, processedTypes);
-		}
-
-		protected TModel GetModel<TModel, TId>(TId id, bool dontFetchReferences)
-			where TModel : class, IIdentifiedModel<TId>
-		{
-			var filter = new ModelFilterNode { Operator = ModelFilterOperators.And };
-			filter.AddItem(new ValueFilterNode
-			{
-				Path = "Id",
-				Operator = ValueFilterOperators.Eq,
-				Operand = id.ToStringSafe()
-			});
-
-			return _FilteringDao.List<TModel>(new[] { filter }, new FilteringOptions
-			{
-				PageSize = 1,
-				FetchStrategy = dontFetchReferences ? FetchStrategy.DontFetchReferences : FetchStrategy.Default
-			}).FirstOrDefault();
+				ProcessMetadata(project, modelProperty.PropertyType, result, processedTypes);
 		}
 
 		protected IEnumerable<LookupEntry> LookupEnum<TEnum>(

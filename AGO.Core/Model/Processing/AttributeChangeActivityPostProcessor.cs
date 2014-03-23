@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
-using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Processing
 {
 	public abstract class AttributeChangeActivityPostProcessor<TModel> : ActivityPostProcessor<TModel>
-		where TModel : SecureModel<Guid>, new()
+		where TModel : IdentifiedModel<Guid>, new()
 	{
 		#region Properties, fields, constructors
 
 		protected AttributeChangeActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
-			: base(crudDao, sessionProvider)
+			DaoFactory factory,
+			ISessionProviderRegistry providerRegistry)
+			: base(factory, providerRegistry)
 		{
 		}
 

@@ -161,7 +161,7 @@ namespace AGO.Tasks.Model.Task
 
 		#endregion
 
-		public virtual TaskStatusHistoryModel ChangeStatus(TaskStatus newStatus, UserModel changer)
+		public virtual TaskStatusHistoryModel ChangeStatus(TaskStatus newStatus, ProjectMemberModel changer)
 		{
 			return StatusChangeHelper.Change(this, newStatus, StatusHistory, changer);
 		}
@@ -194,7 +194,7 @@ namespace AGO.Tasks.Model.Task
 
 		    var entry = new TaskTimelogEntryModel
 		    {
-				Creator = user,
+				Creator = executor.Executor,
 				CreationTime = DateTime.UtcNow,
 			    Task = this,
 			    Member = executor.Executor,

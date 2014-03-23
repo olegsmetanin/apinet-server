@@ -6,18 +6,16 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Activity;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
-using AGO.Core.Model.Projects;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers.Activity;
-using AGO.Tasks.Model.Task;
-using NHibernate.Criterion;
 
 
 namespace AGO.Tasks.Controllers
@@ -29,17 +27,16 @@ namespace AGO.Tasks.Controllers
 		public ActivityController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
 			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory,
 			IEnumerable<IActivityViewProcessor> activityViewProcessors,
 			TaskCollectionActivityViewProcessor taskCollectionProcessor,
 			TaskAttributeActivityViewProcessor taskAttributeProcessor)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService, activityViewProcessors)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory, activityViewProcessors)
 		{
 			_ActivityViewProcessors.Add(taskCollectionProcessor);
 			_ActivityViewProcessors.Add(taskAttributeProcessor);
@@ -57,24 +54,10 @@ namespace AGO.Tasks.Controllers
 			ActivityPredefinedFilter predefined,
 			DateTime specificDate)
 		{
-			var projectModel = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
-			if (projectModel == null)
-				throw new NoSuchProjectException();
-
-			var user = _AuthController.CurrentUser();
-			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == projectModel.ProjectCode && m.UserId == user.Id));
-			if (member == null)
-				throw new NoSuchProjectMemberException();
-
 			var criteria = MakeActivityCriteria(project, filter, itemId, predefined, specificDate);
-			if (TaskProjectRoles.Executor.Equals(member.CurrentRole))
-			{
-				criteria.Add(Subqueries.PropertyIn("ItemId", DetachedCriteria.For<TaskExecutorModel>()
-					.Add(Restrictions.Eq("ExecutorId", member.Id))
-					.SetProjection(Projections.Property("TaskId"))));
-			}
+			var dao = DaoFactory.CreateProjectCrudDao(project);
 
-			return ActivityViewsFromRecords(_CrudDao.Future<ActivityRecordModel>(criteria, new FilteringOptions 
+			return ActivityViewsFromRecords(dao.Future<ActivityRecordModel>(criteria, new FilteringOptions 
 			{ 
 				Page = 0,
 				PageSize = 0,

@@ -1,4 +1,5 @@
-﻿using AGO.Core.Filters;
+﻿using AGO.Core;
+using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Task;
 using NHibernate;
@@ -8,7 +9,8 @@ namespace AGO.Tasks.SecurityProviders
 	//TODO what logic should be there?
 	public class TaskFileSecurityProvider: ModuleSecurityProvider<TaskFileModel>
 	{
-		public TaskFileSecurityProvider(IFilteringService filteringService) : base(filteringService)
+		public TaskFileSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry)
+			: base(filteringService, providerRegistry)
 		{
 		}
 

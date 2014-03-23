@@ -1,5 +1,7 @@
-﻿using AGO.Core.Controllers.Security.OAuth;
-using AGO.Core.Model.Reporting;
+﻿using System.Collections.Generic;
+using System.Linq;
+using AGO.Core.Controllers.Security.OAuth;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 
@@ -9,9 +11,8 @@ namespace AGO.Core
 	{
 		#region Properties, fields, constructors
 
-		public TestDataService(ISessionProvider sessionProvider, ICrudDao crudDao)
-			:base(sessionProvider, crudDao)
-
+		public TestDataService(ISessionProviderRegistry registry, DaoFactory factory)
+			:base(registry, factory)
 		{
 		}
 
@@ -19,8 +20,15 @@ namespace AGO.Core
 
 		#region Interfaces implementation
 
+		public IEnumerable<string> RequiredDatabases
+		{
+			get { return Enumerable.Empty<string>(); }
+		}
+
 		public void Populate()
 		{
+			var dao = DaoFactory.CreateMainCrudDao();
+
 			var admin = new UserModel
 			{
 				Email = "admin@apinet-test.com",
@@ -29,56 +37,50 @@ namespace AGO.Core
 				FirstName = "John",
 				SystemRole = SystemRole.Administrator
 			};
-			admin.Creator = admin;
-			_CrudDao.Store(admin);
+			dao.Store(admin);
 
 			var demo = new UserModel
 			{
-				Creator = admin,
 				Email = "demo@apinet-test.com",
 				Active = true,
 				LastName = "User",
 				FirstName = "Demo",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(demo);
+			dao.Store(demo);
 
 			var user1 = new UserModel
 			{
-				Creator = admin,
 				Email = "user1@apinet-test.com",
 				Active = true,
 				LastName = "Bryan",
 				FirstName = "Thomas",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(user1);
+			dao.Store(user1);
 
 			var user2 = new UserModel
 			{
-				Creator = admin,
 				Email = "user2@apinet-test.com",
 				Active = true,
 				LastName = "Scoggins",
 				FirstName = "Samuel",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(user2);
+			dao.Store(user2);
 
 			var user3 = new UserModel
 			{
-				Creator = admin,
 				Email = "user3@apinet-test.com",
 				Active = true,
 				LastName = "Moore",
 				FirstName = "Caroline",
 				SystemRole = SystemRole.Member
 			};
-			_CrudDao.Store(user3);
+			dao.Store(user3);
 
 			var artem1Fb = new UserModel
 			{
-				Creator = admin,
 				Email = "artem1@facebook.com",
 				Active = true,
 				LastName = "Facebook",
@@ -89,7 +91,6 @@ namespace AGO.Core
 			};
 			var artem1Twi = new UserModel
 			{
-				Creator = admin,
 				Email = "artem1@twitter.com",
 				Active = true,
 				LastName = "Twitter",
@@ -98,12 +99,11 @@ namespace AGO.Core
 				OAuthProvider = OAuthProvider.Twitter,
 				OAuthUserId = "1632745315"
 			};
-			_CrudDao.Store(artem1Fb);
-			_CrudDao.Store(artem1Twi);
+			dao.Store(artem1Fb);
+			dao.Store(artem1Twi);
 
 			var olegsmith = new UserModel
 			{
-				Creator = admin,
 				Email = "olegsmith@apinet-test.com",
 				Active = true,
 				LastName = "Smith",
@@ -112,42 +112,28 @@ namespace AGO.Core
 				OAuthProvider = OAuthProvider.Facebook,
 				OAuthUserId = "1640647496"
 			};
-			_CrudDao.Store(olegsmith);
+			dao.Store(olegsmith);
 
 
-			_CrudDao.Store(new ProjectTagModel
+			dao.Store(new ProjectTagModel
 			{
-				Creator = admin,
+				OwnerId = admin.Id,
 				Name = "Urgent",
 				FullName = "Urgent",
 			});
 
-			_CrudDao.Store(new ProjectTagModel
+			dao.Store(new ProjectTagModel
 			{
-				Creator = admin,
+				OwnerId = admin.Id,
 				Name = "Important",
 				FullName = "Important",
 			});
 
-			_CrudDao.Store(new ProjectTagModel
+			dao.Store(new ProjectTagModel
 			{
-				Creator = admin,
+				OwnerId = admin.Id,
 				Name = "Pay attention",
 				FullName = "Pay attention",
-			});
-
-			_CrudDao.Store(new ReportingServiceDescriptorModel
-			{
-			    Name = "Default",
-				EndPoint = "http://localhost:36652",
-				LongRunning = false
-			});
-
-			_CrudDao.Store(new ReportingServiceDescriptorModel
-			{
-				Name = "Long-runnign reports",
-				EndPoint = "http://localhost:36652",
-				LongRunning = true
 			});
 		}
 

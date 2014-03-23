@@ -13,8 +13,8 @@ namespace AGO.Reporting.Service
 				service = new ReportingService();
 				service.Initialize();
 
-				Console.WriteLine("Reporting service {0} is running. Servicing projects '{1}'. Press Enter for stop", 
-					service.ServiceName, service.ServicedProjects);
+				Console.WriteLine("Reporting service is running. Servicing projects '{0}'. Press Enter for stop", 
+					service.ServicedProjects);
 				Console.ReadLine();
 
 				service.Dispose();

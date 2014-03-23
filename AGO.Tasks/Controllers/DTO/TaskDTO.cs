@@ -7,6 +7,8 @@ namespace AGO.Tasks.Controllers.DTO
 {
 	public class BaseTaskDTO : ModelDTO
 	{
+		public string ProjectCode { get; set; }
+
 		public string SeqNumber { get; set; }
 
 		public string TaskType { get; set; }

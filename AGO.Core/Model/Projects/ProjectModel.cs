@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
+using AGO.Core.Model.Security;
 using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Projects
 {
-	public class ProjectModel : SecureModel<Guid>, IProjectBoundModel
+
+	public class ProjectModel : CoreModel<Guid>, IProjectBoundModel
 	{
 		public const int PROJECT_CODE_SIZE = 32;
 
@@ -49,6 +50,18 @@ namespace AGO.Core.Model.Projects
 		[PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
 		public virtual ISet<ProjectMembershipModel> Members { get { return members; } set { members = value; } }
 		private ISet<ProjectMembershipModel> members = new HashSet<ProjectMembershipModel>();
+
+		#region Technical info
+
+		/// <summary>
+		/// Connection string to project database
+		/// </summary>
+		/// <remarks>May be empty, if project data stored in main db with projects and users. 
+		/// Situation mostly for development and test.</remarks>
+		[MetadataExclude, NotLonger(512)]
+		public virtual string ConnectionString { get; set; }
+
+		#endregion
 
 		#endregion
 

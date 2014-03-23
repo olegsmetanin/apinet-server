@@ -5,6 +5,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Task;
 
@@ -60,6 +61,7 @@ namespace AGO.Tasks.Controllers.DTO
 		{
 			var dto = base.Fill(model);
 
+			dto.ProjectCode = model.ProjectCode;
 			dto.SeqNumber = model.SeqNumber;
 			dto.TaskType = (model.TaskType != null ? model.TaskType.Name : string.Empty);
 			dto.Content = model.Content;
@@ -76,7 +78,7 @@ namespace AGO.Tasks.Controllers.DTO
 	/// </summary>
 	public class TaskListItemAdapter: TaskAdapter<TaskListItemDTO>
 	{
-		private UserModel currentUser;
+		private readonly UserModel currentUser;
 
 		public TaskListItemAdapter(ILocalizationService localizationService, UserModel currentUser) : base(localizationService)
 		{
@@ -89,9 +91,9 @@ namespace AGO.Tasks.Controllers.DTO
 		public override TaskListItemDTO Fill(TaskModel task)
 		{
 			var dto = base.Fill(task);
-			//Только общие или свои персональные теги
-			var allowed = task.Tags.Where(tl => tl.Tag.Creator != null && tl.Tag.Creator.Id == currentUser.Id);
-			dto.Tags = allowed.OrderBy(tl => tl.Tag.Creator).ThenBy(tl => tl.Tag.FullName).Select(ToTag).ToArray();
+			//Только свои персональные теги
+			var allowed = task.Tags.Where(tl => tl.Tag.OwnerId == currentUser.Id);
+			dto.Tags = allowed.OrderBy(tl => tl.Tag.FullName).Select(ToTag).ToArray();
 			return dto;
 		}
 	}
@@ -110,10 +112,10 @@ namespace AGO.Tasks.Controllers.DTO
 		private AgreementView ToAgreement(TaskAgreementModel agreement)
 		{
 			return new AgreementView
-			       	{
-			       		Agreemer = agreement.Agreemer.FullName,
-			       		Done = agreement.Done
-			       	};
+			{
+				Agreemer = agreement.Agreemer.FullName,
+				Done = agreement.Done
+			};
 		}
 
 		private LookupEntry ToFile(TaskFileModel file)
@@ -128,15 +130,15 @@ namespace AGO.Tasks.Controllers.DTO
 		public TaskListItemDetailsDTO Fill(TaskModel task)
 		{
 			return new TaskListItemDetailsDTO
-			       	{
-			       		Priority = (lc.MessageForType(typeof(TaskPriority), task.Priority) ?? task.Priority.ToString()),
-			       		Content = task.Content,
-						EstimatedTime = task.EstimatedTime,
-						SpentTime = task.CalculateSpentTime(),
-			       		Note = task.Note,
-			       		Agreements = task.Agreements.Select(ToAgreement).ToArray(),
-			       		Files = task.Files.OrderBy(f => f.CreationTime).Take(5).Select(ToFile).ToArray()
-			       	};
+			{
+				Priority = (lc.MessageForType(typeof (TaskPriority), task.Priority) ?? task.Priority.ToString()),
+				Content = task.Content,
+				EstimatedTime = task.EstimatedTime,
+				SpentTime = task.CalculateSpentTime(),
+				Note = task.Note,
+				Agreements = task.Agreements.Select(ToAgreement).ToArray(),
+				Files = task.Files.OrderBy(f => f.CreationTime).Take(5).Select(ToFile).ToArray()
+			};
 		}
 	}
 
@@ -180,7 +182,7 @@ namespace AGO.Tasks.Controllers.DTO
 		}
 
 		private StatusHistoryDTO.StatusHistoryItemDTO[] ToHistory<TStatus>(
-			IEnumerable<IStatusHistoryRecordModel<TaskModel, TStatus>> history,
+			IEnumerable<IStatusHistoryRecordModel<TaskModel, TStatus, ProjectMemberModel>> history,
 			Func<TStatus, LookupEntry?> status)
 		{
 			return history
@@ -190,7 +192,7 @@ namespace AGO.Tasks.Controllers.DTO
 				             		Status = status(h.Status).GetValueOrDefault(),
 				             		Start = h.Start,
 				             		Finish = h.Finish,
-				             		Author = ToAuthor(h)
+				             		Author = h.Creator.FullName
 				             	})
 				.ToArray();
 		}

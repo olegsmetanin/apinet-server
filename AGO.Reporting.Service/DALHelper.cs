@@ -12,11 +12,13 @@ namespace AGO.Reporting.Service
 	/// </summary>
 	internal static class DALHelper
 	{
-		internal static void Do(ISessionProvider provider, Action<ISession> action)
+		internal static void Do(ISessionProviderRegistry registry, string project, Action<ISession, ISession> action)
 		{
+			var mainProvider = registry.GetMainDbProvider();
+			var projProvider = registry.GetProjectProvider(project);
 			try
 			{
-				action(provider.CurrentSession);
+				action(mainProvider.CurrentSession, projProvider.CurrentSession);
 			}
 			catch (OperationCanceledException)
 			{
@@ -28,14 +30,14 @@ namespace AGO.Reporting.Service
 			}
 			finally
 			{
-				provider.CloseCurrentSession();
+				registry.CloseCurrentSessions();
 			}
 		}
 
-		internal static TResult Do<TResult>(ISessionProvider provider, Func<ISession, TResult> action)
+		internal static TResult Do<TResult>(ISessionProviderRegistry registry, string project, Func<ISession, ISession, TResult> action)
 		{
 			var result = default(TResult);
-			Do(provider, s => { result = action(s); });
+			Do(registry, project, (ms, ps) => { result = action(ms, ps); });
 			return result;
 		}
 	}

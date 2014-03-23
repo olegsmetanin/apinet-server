@@ -16,22 +16,16 @@ namespace AGO.Core.Migrations
 
 		public override void Up()
 		{
-			Create.CoreModelTable<UserModel>();
-
-			Alter.ModelTable<UserModel>()
-				.AddRefColumn<UserModel>(m => m.Creator)
-				.AddValueColumn<UserModel>(m => m.LastChangeTime)
-				.AddRefColumn<UserModel>(m => m.LastChanger)
-
-				.AddValueColumn<UserModel>(m => m.Email)
-				.AddValueColumn<UserModel>(m => m.Active)
-				.AddValueColumn<UserModel>(m => m.FirstName)
-				.AddValueColumn<UserModel>(m => m.LastName)
-				.AddValueColumn<UserModel>(m => m.FullName)
-				.AddValueColumn<UserModel>(m => m.SystemRole)
-				.AddValueColumn<UserModel>(m => m.AvatarUrl)
-				.AddValueColumn<UserModel>(m => m.OAuthProvider)
-				.AddValueColumn<UserModel>(m => m.OAuthUserId);
+			Create.CoreModelTable<UserModel>()
+				.WithValueColumn<UserModel>(m => m.Email)
+				.WithValueColumn<UserModel>(m => m.Active)
+				.WithValueColumn<UserModel>(m => m.FirstName)
+				.WithValueColumn<UserModel>(m => m.LastName)
+				.WithValueColumn<UserModel>(m => m.FullName)
+				.WithValueColumn<UserModel>(m => m.SystemRole)
+				.WithValueColumn<UserModel>(m => m.AvatarUrl)
+				.WithValueColumn<UserModel>(m => m.OAuthProvider)
+				.WithValueColumn<UserModel>(m => m.OAuthUserId);
 
 			Create.CoreModelTable<OAuthDataModel>()
 				.WithValueColumn<OAuthDataModel>(m => m.RedirectUrl)
@@ -39,50 +33,40 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<TwitterOAuthDataModel>(m => m.TokenSecret);
 
 			Create.CoreModelTable<UserFilterModel>()
+				.WithValueColumn<UserFilterModel>(m => m.ProjectCode)
 				.WithValueColumn<UserFilterModel>(m => m.Name)
 				.WithValueColumn<UserFilterModel>(m => m.GroupName)
 				.WithValueColumn<UserFilterModel>(m => m.Filter)
-				.WithRefColumn<UserFilterModel>(m => m.User);
+				.WithValueColumn<UserFilterModel>(m => m.OwnerId);
 
-			Create.SecureModelTable<CustomPropertyTypeModel>()
-				.WithValueColumn<CustomPropertyTypeModel>(m => m.ProjectCode)
-				.WithValueColumn<CustomPropertyTypeModel>(m => m.Name)
-				.WithValueColumn<CustomPropertyTypeModel>(m => m.FullName)
-				.WithValueColumn<CustomPropertyTypeModel>(m => m.Format)
-				.WithValueColumn<CustomPropertyTypeModel>(m => m.ValueType)
-				.WithRefColumn<CustomPropertyTypeModel, CustomPropertyTypeModel>(m => m.Parent);
-
-			Create.SecureModelTable<CustomPropertyInstanceModel>()
-				.WithRefColumn<CustomPropertyInstanceModel,CustomPropertyTypeModel>(m => m.PropertyType)
-				.WithValueColumn<CustomPropertyInstanceModel>(m => m.StringValue)
-				.WithValueColumn<CustomPropertyInstanceModel>(m => m.NumberValue)
-				.WithValueColumn<CustomPropertyInstanceModel>(m => m.DateValue);
-
-			Create.SecureModelTable<TagModel>()
+			Create.CoreModelTable<TagModel>()
+				.WithValueColumn<TagModel>(m => m.OwnerId)
 				.WithValueColumn<TagModel>(m => m.ProjectCode)
 				.WithValueColumn<TagModel>(m => m.Name)
 				.WithValueColumn<TagModel>(m => m.FullName)
 				.WithRefColumn<TagModel>(m => m.Parent);
 
-			Create.SecureModelTable<ProjectTypeModel>()
+			Create.CoreModelTable<ProjectTypeModel>()
 				.WithValueColumn<ProjectTypeModel>(m => m.ProjectCode)
 				.WithValueColumn<ProjectTypeModel>(m => m.Name)
 				.WithValueColumn<ProjectTypeModel>(m => m.Description)
 				.WithValueColumn<ProjectTypeModel>(m => m.Module);
 
-			Create.SecureModelTable<ProjectModel>()
+			Create.CoreModelTable<ProjectModel>()
 				.WithValueColumn<ProjectModel>(m => m.ProjectCode).Unique("IX_ProjectModel_ProjectCode")
 				.WithValueColumn<ProjectModel>(m => m.Name)
 				.WithValueColumn<ProjectModel>(m => m.Description)
 				.WithRefColumn<ProjectModel>(m => m.Type)
 				.WithValueColumn<ProjectModel>(m => m.VisibleForAll)
-				.WithValueColumn<ProjectModel>(m => m.Status);
+				.WithValueColumn<ProjectModel>(m => m.Status)
+				.WithValueColumn<ProjectModel>(m => m.ConnectionString);
 
 			Create.CoreModelTable<ProjectMembershipModel>()
 				.WithRefColumn<ProjectMembershipModel>(pm => pm.Project)
 				.WithRefColumn<ProjectMembershipModel>(m => m.User);
 
-			Create.SecureModelTable<ProjectStatusHistoryModel>()
+			Create.CoreModelTable<ProjectStatusHistoryModel>()
+				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Creator)
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Start)
 				.WithValueColumn<ProjectStatusHistoryModel>(m => m.Finish)
 				.WithRefColumn<ProjectStatusHistoryModel>(m => m.Project)
@@ -96,19 +80,31 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ProjectMemberModel>(m => m.CurrentRole)
 				.WithValueColumn<ProjectMemberModel>(m => m.UserPriority);
 
-			Create.SecureModelTable<ProjectToTagModel>()
+			Create.CoreModelTable<ProjectToTagModel>()
 				.WithRefColumn<ProjectToTagModel>(m => m.Project)
 				.WithRefColumn<ProjectToTagModel>(m => m.Tag);
 
-			Create.CoreModelTable<ReportingServiceDescriptorModel>()
-				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.Name)
-				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.EndPoint)
-				.WithValueColumn<ReportingServiceDescriptorModel>(m => m.LongRunning);
+			Create.SecureModelTable<CustomPropertyTypeModel>()
+				.WithValueColumn<CustomPropertyTypeModel>(m => m.ProjectCode)
+				.WithValueColumn<CustomPropertyTypeModel>(m => m.Name)
+				.WithValueColumn<CustomPropertyTypeModel>(m => m.FullName)
+				.WithValueColumn<CustomPropertyTypeModel>(m => m.Format)
+				.WithValueColumn<CustomPropertyTypeModel>(m => m.ValueType)
+				.WithRefColumn<CustomPropertyTypeModel, CustomPropertyTypeModel>(m => m.Parent);
+
+			Create.SecureModelTable<CustomPropertyInstanceModel>()
+				.WithRefColumn<CustomPropertyInstanceModel, CustomPropertyTypeModel>(m => m.PropertyType)
+				.WithValueColumn<CustomPropertyInstanceModel>(m => m.StringValue)
+				.WithValueColumn<CustomPropertyInstanceModel>(m => m.NumberValue)
+				.WithValueColumn<CustomPropertyInstanceModel>(m => m.DateValue);
+
 			Create.CoreModelTable<ReportTemplateModel>()
+				.WithValueColumn<ReportTemplateModel>(m => m.ProjectCode)
 				.WithValueColumn<ReportTemplateModel>(m => m.Name)
 				.WithBinaryColumn<ReportTemplateModel>(m => m.Content)
 				.WithValueColumn<ReportTemplateModel>(m => m.LastChange);
 			Create.CoreModelTable<ReportSettingModel>()
+				.WithValueColumn<ReportTemplateModel>(m => m.ProjectCode)
 				.WithValueColumn<ReportSettingModel>(m => m.Name)
 				.WithValueColumn<ReportSettingModel>(m => m.TypeCode)
 				.WithValueColumn<ReportSettingModel>(m => m.GeneratorType)
@@ -116,7 +112,7 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportSettingModel>(m => m.ReportParameterType)
 				.WithRefColumn<ReportSettingModel>(m => m.ReportTemplate);
 			Create.SecureModelTable<ReportTaskModel>()
-				.WithValueColumn<ReportTaskModel>(m => m.Project)
+				.WithValueColumn<ReportTaskModel>(m => m.ProjectCode)
 				.WithValueColumn<ReportTaskModel>(m => m.Name)
 				.WithRefColumn<ReportTaskModel>(m => m.ReportSetting)
 				.WithValueColumn<ReportTaskModel>(m => m.Parameters)
@@ -144,7 +140,7 @@ namespace AGO.Core.Migrations
 				.WithColumn("TaskType").AsString(128).NotNullable()
 				.WithColumn("TaskId").AsGuid().NotNullable().PrimaryKey()
 				.WithColumn("Project").AsString(ProjectModel.PROJECT_CODE_SIZE).NotNullable()
-				.WithColumn("User").AsString(UserModel.EMAIL_SIZE).NotNullable()
+				.WithColumn("User").AsString(128).NotNullable()
 				.WithColumn("CreateDate").AsDateTime().NotNullable()
 				.WithColumn("PriorityType").AsInt32().NotNullable()
 				.WithColumn("UserPriority").AsInt32().NotNullable();

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using AGO.Core;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
 using AGO.Tasks.Model.Task;
 
 namespace AGO.Tasks.Processing
@@ -11,9 +13,9 @@ namespace AGO.Tasks.Processing
 		#region Properties, fields, constructors
 
 		public TaskAttributesActivityPostProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider)
-			: base(crudDao, sessionProvider)
+			DaoFactory factory,
+			ISessionProviderRegistry providerRegistry)
+			: base(factory, providerRegistry)
 		{
 		}
 
@@ -21,11 +23,11 @@ namespace AGO.Tasks.Processing
 
 		#region Template methods
 
-		protected override ActivityRecordModel PopulateActivityRecord(TaskModel model, ActivityRecordModel record)
+		protected override ActivityRecordModel PopulateActivityRecord(TaskModel model, ActivityRecordModel record, ProjectMemberModel member = null)
 		{
 			record.ProjectCode = model.ProjectCode;
 
-			return base.PopulateActivityRecord(model, record);
+			return base.PopulateActivityRecord(model, record, member);
 		}
 
 		protected override IList<ActivityRecordModel> RecordsForUpdate(TaskModel model, TaskModel original)

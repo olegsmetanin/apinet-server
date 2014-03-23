@@ -8,11 +8,13 @@ using System.Linq;
 using System.Text;
 using AGO.Core.AutoMapping;
 using AGO.Core.Config;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
 using AGO.Core.Notification;
 using AGO.WorkQueue;
+using Npgsql;
 
 namespace AGO.Core.Application
 {
@@ -20,8 +22,7 @@ namespace AGO.Core.Application
 	{
 		#region Properties, fields, constructors
 
-		protected ISessionProvider _SessionProvider;
-		public ISessionProvider SessionProvider { get { return _SessionProvider; } }
+		public ISessionProviderRegistry SessionProviderRegistry { get; private set; }
 
 		protected IFilteringService _FilteringService;
 		public IFilteringService FilteringService { get { return _FilteringService; } }
@@ -31,6 +32,7 @@ namespace AGO.Core.Application
 
 		protected ICrudDao _CrudDao;
 		public ICrudDao CrudDao { get { return _CrudDao; } }
+		public DaoFactory DaoFactory { get; private set; }
 
 		protected IMigrationService _MigrationService;
 		public IMigrationService MigrationService { get { return _MigrationService; } }
@@ -64,19 +66,22 @@ namespace AGO.Core.Application
 			IocContainer.RegisterInitializer<AutoMappedSessionFactoryBuilder>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)).ApplyTo(service));
 
+			IocContainer.RegisterSingle<ISessionProviderRegistry, SessionProviderRegistry>();
+			IocContainer.RegisterInitializer<SessionProviderRegistry>(service =>
+				service.Initialize(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)));
+
 			IocContainer.RegisterSingle<IFilteringService, FilteringService>();
 			IocContainer.RegisterInitializer<FilteringService>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Filtering_(.*)", KeyValueProvider)).ApplyTo(service));
 
+			IocContainer.RegisterSingle<DaoFactory>();
+
 			IocContainer.RegisterSingle<CrudDao, CrudDao>();
-			IocContainer.RegisterInitializer<CrudDao>(service =>
-				new KeyValueConfigProvider(new RegexKeyValueProvider("^CrudDao_(.*)", KeyValueProvider)).ApplyTo(service));
+
 			IocContainer.Register<ICrudDao>(IocContainer.GetInstance<CrudDao>);
 			IocContainer.Register<IFilteringDao>(IocContainer.GetInstance<CrudDao>);
 
 			IocContainer.RegisterSingle<IMigrationService, MigrationService>();
-			IocContainer.RegisterInitializer<MigrationService>(service =>
-				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)).ApplyTo(service));
 
 			IocContainer.RegisterSingle<IModelProcessingService, ModelProcessingService>();
 			IocContainer.RegisterInitializer<ModelProcessingService>(service =>
@@ -147,8 +152,9 @@ namespace AGO.Core.Application
 
 		protected virtual void DoInitializePersistence()
 		{
-			_SessionProvider = IocContainer.GetInstance<ISessionProvider>();
+			SessionProviderRegistry = IocContainer.GetInstance<ISessionProviderRegistry>();
 			_FilteringService = IocContainer.GetInstance<IFilteringService>();
+			DaoFactory = IocContainer.GetInstance<DaoFactory>();
 			_FilteringDao = IocContainer.GetInstance<IFilteringDao>();
 			_CrudDao = IocContainer.GetInstance<ICrudDao>();
 			_MigrationService = IocContainer.GetInstance<IMigrationService>();
@@ -165,44 +171,52 @@ namespace AGO.Core.Application
 			WorkQueue = IocContainer.GetInstance<IWorkQueue>();
 		}
 
-		protected virtual void DoCreateDatabase()
+		private DbProviderFactory CreateMasterConnectionFactory(out string provider, out string cs, out string dbName, out string login, out string pwd)
 		{
 			var config = new KeyValueConfigurableDictionary();
 			new KeyValueConfigProvider(new RegexKeyValueProvider("^Persistence_(.*)", KeyValueProvider)).ApplyTo(config);
 
-			ProviderName = config.GetConfigProperty("ProviderName").TrimSafe();
-			if (ProviderName.IsNullOrEmpty())
+			provider = config.GetConfigProperty("ProviderName").TrimSafe();
+			if (provider.IsNullOrEmpty())
 				throw new Exception("ProviderName is empty");
 
-			var masterConnectionStr = config.GetConfigProperty("MasterConnectionString").TrimSafe();
-			if (masterConnectionStr.IsNullOrEmpty())
+			cs = config.GetConfigProperty("MasterConnectionString").TrimSafe();
+			if (cs.IsNullOrEmpty())
 				throw new Exception("MasterConnectionString is empty");
 
-			var databaseName = config.GetConfigProperty("DatabaseName").TrimSafe();
-			if (databaseName.IsNullOrEmpty())
+			dbName = config.GetConfigProperty("DatabaseName").TrimSafe();
+			if (dbName.IsNullOrEmpty())
 				throw new Exception("DatabaseName is empty");
 
-			var loginName = config.GetConfigProperty("LoginName").TrimSafe();
-			if (loginName.IsNullOrEmpty())
+			login = config.GetConfigProperty("LoginName").TrimSafe();
+			if (login.IsNullOrEmpty())
 				throw new Exception("LoginName is empty");
 
-			var loginPwd = config.GetConfigProperty("LoginPwd").TrimSafe();
-			if (loginPwd.IsNullOrEmpty())
+			pwd = config.GetConfigProperty("LoginPwd").TrimSafe();
+			if (pwd.IsNullOrEmpty())
 				throw new Exception("LoginPwd is empty");
 
-			var connectionFactory = DbProviderFactories.GetFactory(ProviderName);
+			return DbProviderFactories.GetFactory(provider);
+		}
+
+		protected virtual void DoCreateDatabase()
+		{
+			string provider;
+			string masterConnectionStr;
+			string databaseName;
+			string loginName;
+			string loginPwd;
+			var connectionFactory = CreateMasterConnectionFactory(out provider, out masterConnectionStr, out databaseName, out loginName, out loginPwd);
 			using (var masterConnection = connectionFactory.CreateConnection())
 			{
 				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
 
 				masterConnection.ConnectionString = masterConnectionStr;
 				masterConnection.Open();
-				DoExecuteCreateDatabaseScript(masterConnection, ProviderName, databaseName, loginName, loginPwd);
+				DoExecuteCreateDatabaseScript(masterConnection, provider, databaseName, loginName, loginPwd);
 				masterConnection.Close();
 			}
 		}
-
-		protected string ProviderName { get; private set; }
 
 		protected virtual void DoExecuteCreateDatabaseScript(
 			IDbConnection masterConnection,
@@ -224,11 +238,16 @@ namespace AGO.Core.Application
 				go
 				drop database if exists {0};
 				go
-				drop role if exists {1};
+				DO
+				$body$
+				begin
+					if not exists (select * from pg_catalog.pg_user where usename = '{1}') then
+						create role {1} login password '{2}';
+					end if;
+				end
+				$body$
 				go
 				create database {0};
-				go
-				create role {1} login password '{2}';
 				go
 				alter database {0} owner to {1}"},
 
@@ -274,17 +293,52 @@ namespace AGO.Core.Application
 
 		protected virtual void DoPopulateDatabase()
 		{
-			DoMigrateUp();
+			string provider;
+			string masterConnectionStr;
+			string tmp;
+			string loginName;
+			string loginPwd;
+			var connectionFactory = CreateMasterConnectionFactory(out provider, out masterConnectionStr, out tmp, out loginName, out loginPwd);
+
+			//Setup master db schema
+			var mainDbConnectionString = SessionProviderRegistry.GetMainDbProvider().ConnectionString;
+			var now = DateTime.Now;
+			var version = new Version(now.Year, now.Month, now.Day, 99);
+			_MigrationService.MigrateUp(
+				provider,
+				mainDbConnectionString,
+				ModuleDescriptors.Where(m => m.Alias == ModuleDescriptor.MODULE_CODE).Select(d => d.GetType().Assembly),
+				version);
+
+			using (var masterConnection = connectionFactory.CreateConnection())
+			{
+				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
+
+				masterConnection.ConnectionString = masterConnectionStr;
+				foreach (var service in IocContainer.GetAllInstances<ITestDataService>())
+				{
+					foreach (var dbName in service.RequiredDatabases)
+					{
+						masterConnection.Open();
+						DoExecuteCreateDatabaseScript(masterConnection, provider, dbName, loginName, loginPwd);
+						masterConnection.Close();
+
+						//TODO needs other logic, with custom server support
+						var pgcsb = new NpgsqlConnectionStringBuilder(mainDbConnectionString) {Database = dbName};
+
+						_MigrationService.MigrateUp(
+							provider,
+							pgcsb.ConnectionString,
+							ModuleDescriptors.Select(d => d.GetType().Assembly),
+							version);
+					}
+				}
+				masterConnection.Close();
+			}
 
 			DoExecutePopulateDatabaseScript();
 
-			_SessionProvider.CloseCurrentSession();
-		}
-
-		protected virtual void DoMigrateUp()
-		{
-			var now = DateTime.Now;
-			_MigrationService.MigrateUp(new Version(now.Year, now.Month, now.Day, 99));
+			SessionProviderRegistry.CloseCurrentSessions();
 		}
 
 		protected virtual void DoExecutePopulateDatabaseScript()
@@ -292,7 +346,7 @@ namespace AGO.Core.Application
 			foreach (var service in IocContainer.GetAllInstances<ITestDataService>())
 			{
 				service.Populate();
-				_SessionProvider.FlushCurrentSession();
+				SessionProviderRegistry.CloseCurrentSessions();
 			}
 		}
 

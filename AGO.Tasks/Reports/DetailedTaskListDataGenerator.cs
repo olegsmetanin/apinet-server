@@ -1,12 +1,13 @@
 ﻿using System.Globalization;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 
 namespace AGO.Tasks.Reports
 {
 	public class DetailedTaskListDataGenerator: SimpleTaskListDataGenerator
 	{
-		public DetailedTaskListDataGenerator(IFilteringService service, IFilteringDao fdao) 
-			: base(service, fdao)
+		public DetailedTaskListDataGenerator(IFilteringService service, DaoFactory factory) 
+			: base(service, factory)
 		{
 		}
 

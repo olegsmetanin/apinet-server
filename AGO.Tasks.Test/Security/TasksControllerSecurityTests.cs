@@ -165,7 +165,7 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyMembersCanGetTask()
 		{
-			var task = M.Task(1, executor: projExecutor);
+			var task = M.Task(1, creator: projManager, executor: projExecutor);
 
 			Func<UserModel, TaskViewDTO> action = u =>
 			{
@@ -215,7 +215,7 @@ namespace AGO.Tasks.Test.Security
 		[Test]
 		public void OnlyMembersCanEditTask()
 		{
-			var task = M.Task(1, executor:projExecutor);
+			var task = M.Task(1, creator: projManager, executor:projExecutor);
 			Func<UserModel, bool> action = u =>
 			{
 				Login(u.Email);
@@ -247,7 +247,7 @@ namespace AGO.Tasks.Test.Security
 			{
 				Login(u.Email);
 				var task = M.Task(1, executor: projExecutor);
-				return controller.AddAgreemer(task.Id, agreemerId);
+				return controller.AddAgreemer(TestProject, task.Id, agreemerId);
 			};
 			ReusableConstraint granted = Is.Not.Null;
 			ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
@@ -269,7 +269,7 @@ namespace AGO.Tasks.Test.Security
 
 				Login(u.Email);
 
-				return controller.RemoveAgreement(task.Id, agreement.Id);
+				return controller.RemoveAgreement(task.ProjectCode, task.Id, agreement.Id);
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint restricted = Throws.Exception.TypeOf<DeleteDeniedException>();
@@ -295,7 +295,7 @@ namespace AGO.Tasks.Test.Security
 
 				Login(u.Email);
 
-				return controller.AgreeTask(task.Id, "nunit").Done;
+				return controller.AgreeTask(task.ProjectCode, task.Id, "nunit").Done;
 			};
 			ReusableConstraint granted = Is.True;
 			ReusableConstraint incorrect = Throws.Exception.TypeOf<CurrentUserIsNotAgreemerInTaskException>();
@@ -322,7 +322,7 @@ namespace AGO.Tasks.Test.Security
 
 				Login(u.Email);
 
-				return controller.RevokeAgreement(task.Id).Done;
+				return controller.RevokeAgreement(task.ProjectCode, task.Id).Done;
 			};
 			ReusableConstraint granted = Is.False;
 			ReusableConstraint incorrect = Throws.Exception.TypeOf<CurrentUserIsNotAgreemerInTaskException>();
@@ -390,7 +390,7 @@ namespace AGO.Tasks.Test.Security
 			Func<UserModel, bool> action = u =>
 			{
 				Login(u.Email);
-				var ur1 = controller.EditParam(task.Id,
+				var ur1 = controller.EditParam(TestProject, task.Id,
 					new CustomParameterDTO
 					{
 						Type = new CustomParameterTypeDTO {Id = pt.Id},
@@ -399,9 +399,9 @@ namespace AGO.Tasks.Test.Security
 				Session.Flush();
 				var dto = ur1.Model;
 				dto.Value = "nunit changed";
-				var ur2 = controller.EditParam(task.Id, dto);
+				var ur2 = controller.EditParam(TestProject, task.Id, dto);
 				Session.Flush();
-				var r3 = controller.DeleteParam(ur2.Model.Id);
+				var r3 = controller.DeleteParam(TestProject, ur2.Model.Id);
 				Session.Flush();
 				return ur1.Validation.Success && ur2.Validation.Success && r3;
 			};
@@ -426,7 +426,7 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(1, executor: projExecutor);
 				
 				Login(u.Email);
-				var result = controller.TagTask(task.Id, t.Id);
+				var result = controller.TagTask(TestProject, task.Id, t.Id);
 				Session.Flush();
 				return result;
 			};
@@ -461,7 +461,6 @@ namespace AGO.Tasks.Test.Security
 				var task = M.Task(1, executor: projExecutor);
 				var link = new TaskToTagModel
 				{
-					Creator = u,
 					Task = task,
 					Tag = t
 				};
@@ -471,7 +470,7 @@ namespace AGO.Tasks.Test.Security
 				Session.Clear();//needs for cascade operation
 
 				Login(u.Email);
-				var result = controller.DetagTask(task.Id, t.Id);
+				var result = controller.DetagTask(TestProject, task.Id, t.Id);
 				Session.Flush();
 				return result;
 			};

@@ -18,7 +18,7 @@ namespace AGO.Tasks.Test
 		private UserModel ivanov;
 		private UserModel petrov;
 		private ProjectMemberModel pIvanov;
-		private ProjectMemberModel pPetrov;
+//		private ProjectMemberModel pPetrov;
 
 		public override void FixtureSetUp()
 		{
@@ -28,8 +28,9 @@ namespace AGO.Tasks.Test
 
 			ivanov = LoginToUser("user1@apinet-test.com");
 			petrov = LoginToUser("user2@apinet-test.com");
-			pIvanov = FM.Member(TestProject, ivanov, TaskProjectRoles.Manager);
-			pPetrov = FM.Member(TestProject, petrov, TaskProjectRoles.Manager);
+			var project = FM.ProjectFromCode(TestProject);
+			pIvanov = FPM.Member(project, ivanov, TaskProjectRoles.Manager);
+			/*pPetrov = */FPM.Member(project, petrov, TaskProjectRoles.Manager);//need member, but implicitly (and manager, not executor, see AgreeFromOtherPersonThrow test)
 		}
 
 		public override void SetUp()
@@ -44,8 +45,8 @@ namespace AGO.Tasks.Test
 		public void AddAgreementReturnSuccess()
 		{
 			var dd = new DateTime(2013, 01, 01, 0, 0, 0, DateTimeKind.Utc);
-			controller.AddAgreemer(task.Id, pIvanov.Id, dd);
-			_SessionProvider.FlushCurrentSession();
+			controller.AddAgreemer(TestProject, task.Id, pIvanov.Id, dd);
+			Session.Flush();
 
 			Session.Refresh(task);
 			Assert.AreEqual(1, task.Agreements.Count);
@@ -59,27 +60,26 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-			    Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 			    Task = task,
 			    Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
-			controller.AddAgreemer(task.Id, pIvanov.Id);
+			controller.AddAgreemer(TestProject, task.Id, pIvanov.Id);
 		}
 		//can't add to closed
 		[Test, ExpectedException(typeof(CanNotAddAgreemerToClosedTaskException))]
 		public void AddAgreementToClosedThrow()
 		{
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
+			ProjDao.Store(task);
+			Session.Flush();
 
-			controller.AddAgreemer(task.Id, pIvanov.Id);
-			_SessionProvider.FlushCurrentSession();
+			controller.AddAgreemer(TestProject, task.Id, pIvanov.Id);
 		}
 
 		//remove
@@ -88,18 +88,18 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(ivanov.Email);
-			var res = controller.RemoveAgreement(task.Id, agr.Id);
-			_SessionProvider.FlushCurrentSession();
+			var res = controller.RemoveAgreement(task.ProjectCode, task.Id, agr.Id);
+			Session.Flush();
 
 			Assert.IsTrue(res);
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
@@ -110,8 +110,8 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void RemoveNonExistingReturnFalse()
 		{
-			var res = controller.RemoveAgreement(task.Id, Guid.NewGuid());
-			_SessionProvider.FlushCurrentSession();
+			var res = controller.RemoveAgreement(task.ProjectCode, task.Id, Guid.NewGuid());
+			Session.Flush();
 
 			Assert.IsFalse(res);
 		}
@@ -121,19 +121,18 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(ivanov.Email);
-			controller.RemoveAgreement(task.Id, agr.Id);
-			_SessionProvider.FlushCurrentSession();
+			controller.RemoveAgreement(task.ProjectCode, task.Id, agr.Id);
 		}
 
 		//agree (with comment)
@@ -142,18 +141,18 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(ivanov.Email);
-			controller.AgreeTask(task.Id, "good job, bro");
-			_SessionProvider.FlushCurrentSession();
+			controller.AgreeTask(task.ProjectCode, task.Id, "good job, bro");
+			Session.Flush();
 
 			LoginAdmin();
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
@@ -170,20 +169,19 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(petrov.Email);
 			try
 			{
-				controller.AgreeTask(task.Id, "good job, bro");
-				_SessionProvider.FlushCurrentSession();
+				controller.AgreeTask(task.ProjectCode, task.Id, "good job, bro");
 			}
 			finally
 			{
@@ -197,21 +195,20 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(ivanov.Email);
 			try
 			{
-				controller.AgreeTask(task.Id, "good job, bro");
-				_SessionProvider.FlushCurrentSession();
+				controller.AgreeTask(task.ProjectCode, task.Id, "good job, bro");
 			}
 			finally
 			{
@@ -225,21 +222,21 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov,
 				Done = true,
 				AgreedAt = DateTime.Now,
 				Comment = "good job, bro"
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(ivanov.Email);
-			controller.RevokeAgreement(task.Id);
-			_SessionProvider.FlushCurrentSession();
+			controller.RevokeAgreement(task.ProjectCode, task.Id);
+			Session.Flush();
 			
 			LoginAdmin();
 			agr = Session.Get<TaskAgreementModel>(agr.Id);
@@ -254,23 +251,22 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov,
 				Done = true,
 				AgreedAt = DateTime.Now,
 				Comment = "good job, bro"
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(petrov.Email);
 			try
 			{
-				controller.RevokeAgreement(task.Id);
-				_SessionProvider.FlushCurrentSession();
+				controller.RevokeAgreement(task.ProjectCode, task.Id);
 			}
 			finally
 			{
@@ -284,24 +280,23 @@ namespace AGO.Tasks.Test
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = CurrentUser,
+				Creator = M.MemberFromUser(task.ProjectCode, CurrentUser),
 				Task = task,
 				Agreemer = pIvanov,
 				Done = true,
 				AgreedAt = DateTime.Now,
 				Comment = "good job, bro"
 			};
-			_CrudDao.Store(agr);
+			ProjDao.Store(agr);
 			task.Agreements.Add(agr);
-			task.ChangeStatus(TaskStatus.Closed, CurrentUser);
-			_CrudDao.Store(task);
-			_SessionProvider.FlushCurrentSession();
+			task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
+			ProjDao.Store(task);
+			Session.Flush();
 
 			Login(ivanov.Email);
 			try
 			{
-				controller.RevokeAgreement(task.Id);
-				_SessionProvider.FlushCurrentSession();
+				controller.RevokeAgreement(task.ProjectCode, task.Id);
 			}
 			finally
 			{

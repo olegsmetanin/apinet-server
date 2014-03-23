@@ -13,6 +13,8 @@ namespace AGO.Core.Execution
 
 		protected readonly ISessionProvider _SessionProvider;
 
+		private readonly ISessionProviderRegistry providerRegistry;
+
 		protected readonly IList<IActionParameterResolver> _Resolvers;
 
 		protected readonly IList<IActionParameterTransformer> _Transformers;
@@ -21,6 +23,7 @@ namespace AGO.Core.Execution
 
 		public ActionExecutor(
 			ISessionProvider sessionProvider,
+			ISessionProviderRegistry registry,
 			IEnumerable<IActionParameterResolver> resolvers,
 			IEnumerable<IActionParameterTransformer> transformers,
 			IEnumerable<IActionResultTransformer> resultTransformers)
@@ -28,6 +31,10 @@ namespace AGO.Core.Execution
 			if (sessionProvider == null)
 				throw new ArgumentNullException("sessionProvider");
 			_SessionProvider = sessionProvider;
+
+			if (registry == null)
+				throw new ArgumentNullException("registry");
+			providerRegistry = registry;
 
 			if (resolvers == null)
 				throw new ArgumentNullException("resolvers");
@@ -108,12 +115,14 @@ namespace AGO.Core.Execution
 				}
 
 				_SessionProvider.CloseCurrentSession();
+				providerRegistry.CloseCurrentSessions();
 
 				return result;
 			}
 			catch (Exception e)
 			{
 				_SessionProvider.FlushCurrentSession(true);
+				providerRegistry.CloseCurrentSessions(true);
 
 				if (!logged)
 					LogException(e);

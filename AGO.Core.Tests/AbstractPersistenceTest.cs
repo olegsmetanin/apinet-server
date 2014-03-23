@@ -1,6 +1,8 @@
-﻿using AGO.Core.Application;
+﻿using System;
+using AGO.Core.Application;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Model.Security;
+using AGO.Core.Notification;
 using NHibernate;
 using NUnit.Framework;
 
@@ -13,9 +15,19 @@ namespace AGO.Core.Tests
 	public abstract class AbstractPersistenceTest<TModelHelper>: AbstractControllersApplication
 		where TModelHelper: AbstractModelHelper
 	{
-		protected ISession Session
+		protected override Type NotificationServiceType
 		{
-			get { return _SessionProvider.CurrentSession; }
+			get { return typeof (NoopNotificationService); }
+		}
+
+		protected ISession MainSession
+		{
+			get { return SessionProviderRegistry.GetMainDbProvider().CurrentSession; }
+		}
+
+		protected ISession ProjectSession(string project)
+		{
+			return SessionProviderRegistry.GetProjectProvider(project).CurrentSession;
 		}
 
 		/// <summary>
@@ -53,15 +65,15 @@ namespace AGO.Core.Tests
 		{
 			if (M != null)
 				M.DropCreated();
+			SessionProviderRegistry.CloseCurrentSessions();
 			Logout();
-			_SessionProvider.CloseCurrentSession();
 		}
 
 		protected abstract void CreateModelHelpers();
 
 		public UserModel LoginToUser(string login)
 		{
-			return Session.QueryOver<UserModel>().Where(m => m.Email == login).SingleOrDefault();
+			return MainSession.QueryOver<UserModel>().Where(m => m.Email == login).SingleOrDefault();
 		}
 
 		protected UserModel Login(string email)

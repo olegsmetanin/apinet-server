@@ -49,8 +49,8 @@ namespace AGO.Tasks.Controllers.DTO
 			dto.VisibleForAll = model.VisibleForAll;
 
 			dto.Tags = (from ptt in model.Tags
-				where ptt.Tag.CreatorId != null && ptt.Tag.CreatorId == user.Id
-				orderby ptt.Tag.CreatorId, ptt.Tag.FullName
+				where ptt.Tag.OwnerId == user.Id
+				orderby ptt.Tag.FullName
 				select new LookupEntry { Id = ptt.Tag.Id.ToString(), Text = ptt.Tag.FullName })
 				.ToArray();
 

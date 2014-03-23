@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using AGO.Reporting.Common;
 using AGO.Core;
 using AGO.Reporting.Common.Model;
 
@@ -9,25 +8,16 @@ namespace AGO.Reporting.Service
 {
 	public class TemplateResolver
 	{
-		private readonly IReportingRepository repository;
 		private readonly string templatesCacheDirectory;
 		private readonly ReaderWriterLockSlim tlock;
 
-		public TemplateResolver(IReportingRepository repository, string templatesPath)
+		public TemplateResolver(string templatesPath)
 		{
-			if (repository == null)
-				throw new ArgumentNullException("repository");
 			if (templatesPath.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("templatesPath");
 
-			this.repository = repository;
 			templatesCacheDirectory = templatesPath;
 			tlock = new ReaderWriterLockSlim();
-		}
-
-		public string Resolve(Guid templateId)
-		{
-			return Resolve(repository.GetTemplate(templateId));
 		}
 
 		public string Resolve(IReportTemplate template)

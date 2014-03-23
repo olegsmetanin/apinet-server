@@ -8,6 +8,11 @@ namespace AGO.Reporting.Common.Model
 	public interface IReportingModel
 	{
 		/// <summary>
+		/// Код проекта
+		/// </summary>
+		string ProjectCode { get; }
+
+		/// <summary>
 		/// Идентификатор
 		/// </summary>
 		Guid Id { get; }

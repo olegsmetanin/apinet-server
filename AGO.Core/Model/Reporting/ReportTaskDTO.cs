@@ -1,23 +1,21 @@
 ﻿using System;
 using AGO.Core.Localization;
-using AGO.Core.Model.Security;
 using AGO.Reporting.Common.Model;
 
 namespace AGO.Core.Model.Reporting
 {
 	public class ReportTaskDTO
 	{
-		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, string project = null, bool? hideErrorDetails = null)
+		public static ReportTaskDTO FromTask(ReportTaskModel m, ILocalizationService ls, string project = null, bool hideErrorDetails = false)
 		{
 			if (m == null)
 				throw new ArgumentNullException("m");
 
-			var hide = hideErrorDetails ?? m.Creator.SystemRole != SystemRole.Administrator;
-
 			return new ReportTaskDTO
 			{
 				Id = m.Id,
-				Project = project ?? m.Project,
+				Project = project ?? m.ProjectCode,
+				ProjectCode = m.ProjectCode,
 				Name = m.Name,
 				State = m.State.ToString(),
 				StateName = ls.MessageForType(typeof(ReportTaskState), m.State) ?? m.State.ToString(),
@@ -28,7 +26,7 @@ namespace AGO.Core.Model.Reporting
 				DataGenerationProgress = m.DataGenerationProgress,
 				ReportGenerationProgress = m.ReportGenerationProgress,
 				ErrorMsg = m.ErrorMsg,
-				ErrorDetails = !hide ? m.ErrorDetails : null,
+				ErrorDetails = !hideErrorDetails ? m.ErrorDetails : null,
 				ResultUnread = m.ResultUnread
 			};
 		}
@@ -36,6 +34,8 @@ namespace AGO.Core.Model.Reporting
 		public Guid Id { get; set; }
 
 		public string Project { get; set; }
+
+		public string ProjectCode { get; set; }
 
 		public string Name { get; set; }
 

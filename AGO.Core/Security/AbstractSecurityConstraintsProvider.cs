@@ -33,7 +33,7 @@ namespace AGO.Core.Security
 			return model != null && AcceptRead(model.GetType(), project, session);
 		}
 
-		private UserModel UserFromId(Guid userId, ISession session)
+		protected virtual UserModel UserFromId(Guid userId, ISession session)
 		{
 			var user = session.Get<UserModel>(userId);
 			if (user == null)

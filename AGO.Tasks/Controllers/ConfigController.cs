@@ -3,6 +3,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
@@ -19,25 +20,23 @@ namespace AGO.Tasks.Controllers
 		public ConfigController(
 			IJsonService jsonService, 
 			IFilteringService filteringService, 
-			ICrudDao crudDao, 
-			IFilteringDao filteringDao, 
-			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
-			ISecurityService securityService) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory) 
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public object Configuration([NotEmpty] string project)
 		{
-			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
-			if (p == null)
+			if (!DaoFactory.CreateMainCrudDao().Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
 				throw new NoSuchProjectException();
-			var user = _AuthController.CurrentUser();
-			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == user.Id));
+
+			var member = CurrentUserToMember(project);
 			if (member == null)
 				throw new NoSuchProjectMemberException();
 

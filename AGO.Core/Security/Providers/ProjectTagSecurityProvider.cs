@@ -14,18 +14,18 @@ namespace AGO.Core.Security.Providers
 		public override IModelFilterNode ReadConstraint(string project, UserModel user, ISession session)
 		{
 			//all can see only own project tags
-			return FilteringService.Filter<ProjectTagModel>().Where(m => m.Creator.Id == user.Id);
+			return FilteringService.Filter<ProjectTagModel>().Where(m => m.OwnerId == user.Id);
 		}
 
 		private bool CanManage(ProjectTagModel tag, UserModel u)
 		{
 			//all manage only own tags (create, update or delete - no restrictions)
-			return u.Equals(tag.Creator);
+			return u.Id == tag.OwnerId;
 		}
 
 		public override bool CanCreate(ProjectTagModel model, string project, UserModel user, ISession session)
 		{
-			return CanManage(model, user) && (model.Parent == null || user.Equals(model.Parent.Creator));
+			return CanManage(model, user) && (model.Parent == null || user.Id == model.Parent.OwnerId);
 		}
 
 		public override bool CanUpdate(ProjectTagModel model, string project, UserModel user, ISession session)

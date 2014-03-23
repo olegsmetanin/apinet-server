@@ -22,6 +22,7 @@ namespace AGO.Core.Tests
 				{
 					Session().Delete(member);
 				}
+				DeleteProjectActivity(project.ProjectCode);
 			}
 			base.InternalDelete(model);
 		}
@@ -33,7 +34,6 @@ namespace AGO.Core.Tests
 				var pt = new ProjectTypeModel
 				{
 					CreationTime = DateTime.UtcNow,
-					Creator = CurrentUser(),
 					Module = "NUnit",
 					Name = name ?? "NUnit test project type"
 				};
@@ -43,7 +43,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectModel Project(string code, string type = null, string name = null, UserModel creator = null, bool pub = false)
+		public ProjectModel Project(string code, string type = null, string name = null, bool pub = false)
 		{
 			if (code.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("code");
@@ -55,12 +55,12 @@ namespace AGO.Core.Tests
 					: Session().QueryOver<ProjectTypeModel>().List().Take(1).First();
 				var p = new ProjectModel
 				{
-					Creator = creator ?? CurrentUser(),
 					CreationTime = DateTime.UtcNow,
 					ProjectCode = code,
 					Name = name ?? "NUnit project " + code,
 					Type = pt,
-					VisibleForAll = pub
+					VisibleForAll = pub,
+					ConnectionString = Session().Connection.ConnectionString //by default use main cs
 				};
 				Session().Save(p);
 				Session().Flush();
@@ -72,34 +72,43 @@ namespace AGO.Core.Tests
 		{
 			if (project.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("project");
+
+			var p = ProjectFromCode(project);
+			var member = Member(p, user, roles);
+			Session().Update(p);
+			return member;
+		}
+
+		public ProjectMemberModel Member(ProjectModel project, UserModel user, params string[] roles)
+		{
+			if (project == null)
+				throw new ArgumentNullException("project");
 			if (user == null)
 				throw new ArgumentNullException("user");
 
 			return Track(() =>
 			{
-				var p = ProjectFromCode(project);
 				var membership = new ProjectMembershipModel
 				{
-					Project = p,
+					Project = project,
 					User = user
 				};
-				p.Members.Add(membership);
-				Session().Update(p);
-				roles = roles != null && roles.Length > 0 ? roles : new[] {BaseProjectRoles.Administrator};
-				var member = ProjectMemberModel.FromParameters(user, p, roles);
+				project.Members.Add(membership);
+				roles = roles != null && roles.Length > 0 ? roles : new[] { BaseProjectRoles.Administrator };
+				var member = ProjectMemberModel.FromParameters(user, project, roles);
 				Session().Save(member);
 				Session().Flush();
 				return member;
 			});
 		}
 
-		public ProjectTagModel ProjectTag(string name = null, UserModel user = null)
+		public ProjectTagModel ProjectTag(string name = null, UserModel owner = null)
 		{
 			return Track(() =>
 			{
 				var tag = new ProjectTagModel
 				{
-					Creator = user ?? CurrentUser(),
+					OwnerId = (owner ?? CurrentUser()).Id,
 					CreationTime = DateTime.UtcNow,
 					Name = name ?? "NUnit test tag"
 				};

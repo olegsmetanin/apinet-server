@@ -99,9 +99,9 @@ namespace AGO.Tasks.Test
 		{
 			var param = new TaskTagDTO {Name = "abc"};
 			var vr = Controller.CreateTag(TestProject, param).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
-			var abc = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
+			var abc = Session.QueryOver<TaskTagModel>()
 				.Where(m => m.ProjectCode == TestProject && m.FullName == "abc")
 				.SingleOrDefault();
 			Assert.IsNotNull(abc);
@@ -112,9 +112,9 @@ namespace AGO.Tasks.Test
 
 			param.Name = "grp";
 			vr = Controller.CreateTag(TestProject, param).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
-			var grp = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
+			var grp = Session.QueryOver<TaskTagModel>()
 				.Where(m => m.ProjectCode == TestProject && m.FullName == "grp")
 				.SingleOrDefault();
 			Assert.IsNotNull(grp);
@@ -125,15 +125,15 @@ namespace AGO.Tasks.Test
 
 			param.Name = "parent\\child\\subchild";
 			vr = Controller.CreateTag(TestProject, param).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
-			var parent = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
+			var parent = Session.QueryOver<TaskTagModel>()
 				.Where(m => m.ProjectCode == TestProject && m.FullName == "parent")
 				.SingleOrDefault();
-			var child = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
+			var child = Session.QueryOver<TaskTagModel>()
 				.Where(m => m.ProjectCode == TestProject && m.FullName == "parent\\child")
 				.SingleOrDefault();
-			var subchild = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
+			var subchild = Session.QueryOver<TaskTagModel>()
 				.Where(m => m.ProjectCode == TestProject && m.FullName == "parent\\child\\subchild")
 				.SingleOrDefault();
 			Assert.IsNotNull(parent);
@@ -156,9 +156,9 @@ namespace AGO.Tasks.Test
 
 			param.Name = "parent\\child2";
 			vr = Controller.CreateTag(TestProject, param).Validation;
-			_SessionProvider.FlushCurrentSession(!vr.Success);
+			Session.Flush();
 
-			var child2 = _SessionProvider.CurrentSession.QueryOver<TaskTagModel>()
+			var child2 = Session.QueryOver<TaskTagModel>()
 				.Where(m => m.ProjectCode == TestProject && m.FullName == "parent\\child2")
 				.SingleOrDefault();
 			Assert.IsNotNull(child2);
@@ -188,7 +188,6 @@ namespace AGO.Tasks.Test
 
 			var param = new TaskTagDTO { Name = "t1" };
 			var vr = Controller.CreateTag(TestProject, param);
-			_SessionProvider.FlushCurrentSession(!vr.Validation.Success);
 
 			Assert.IsFalse(vr.Validation.Success);
 			Assert.IsTrue(vr.Validation.FieldErrors.Any(fe => fe.Key == "FullName"));
@@ -201,7 +200,7 @@ namespace AGO.Tasks.Test
 
 			var param = new TaskTagDTO { Id = t1.Id, ModelVersion = t1.ModelVersion, Name = "t22" };
 			var res = Controller.EditTag(TestProject, param);
-			_SessionProvider.FlushCurrentSession(!res.Validation.Success);
+			Session.Flush();
 
 			Assert.IsTrue(res.Validation.Success);
 			t1 = Session.Get<TaskTagModel>(t1.Id);
@@ -217,7 +216,8 @@ namespace AGO.Tasks.Test
 
 			var param = new TaskTagDTO { Id = sub.Id, ModelVersion = sub.ModelVersion, Name = "new parent\\sub2" };
 			var res = Controller.EditTag(TestProject, param);
-			_SessionProvider.FlushCurrentSession(!res.Validation.Success);
+			Session.Flush();
+			Session.Clear();
 
 			Assert.IsTrue(res.Validation.Success);
 			Assert.AreEqual(1, res.Model.Length);
@@ -240,7 +240,8 @@ namespace AGO.Tasks.Test
 
 			var param = new TaskTagDTO { Id = sub.Id, ModelVersion = sub.ModelVersion, Name = "aaa\\bbb\\sub" };
 			var res = Controller.EditTag(TestProject, param);
-			_SessionProvider.FlushCurrentSession(!res.Validation.Success);
+			Session.Flush();
+			Session.Clear();
 
 			Assert.IsTrue(res.Validation.Success);
 			Assert.AreEqual(3, res.Model.Length);
@@ -253,10 +254,10 @@ namespace AGO.Tasks.Test
 			sub = Session.Get<TaskTagModel>(sub.Id);
 			Assert.AreEqual("aaa\\bbb\\sub", sub.FullName);
 			var aaa = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Creator.Id == CurrentUser.Id && m.FullName == "aaa")
+				.Where(m => m.ProjectCode == TestProject && m.OwnerId == CurrentUser.Id && m.FullName == "aaa")
 				.SingleOrDefault();
 			var bbb = Session.QueryOver<TaskTagModel>()
-				.Where(m => m.ProjectCode == TestProject && m.Creator.Id == CurrentUser.Id && m.FullName == "aaa\\bbb")
+				.Where(m => m.ProjectCode == TestProject && m.OwnerId == CurrentUser.Id && m.FullName == "aaa\\bbb")
 				.SingleOrDefault();
 			
 			Assert.AreEqual(bbb.Id, sub.Parent.Id);
@@ -275,7 +276,7 @@ namespace AGO.Tasks.Test
 
 			var param = new TaskTagDTO { Id = child.Id, ModelVersion = child.ModelVersion, Name = "new parent\\child2" };
 			var res = Controller.EditTag(TestProject, param, new [] { sub1.Id });
-			_SessionProvider.FlushCurrentSession(!res.Validation.Success);
+			Session.Flush();
 
 			Assert.IsTrue(res.Validation.Success);
 			Assert.AreEqual(3, res.Model.Length);
@@ -291,7 +292,7 @@ namespace AGO.Tasks.Test
 			var t1 = M.Tag("t1");
 
 			var res = Controller.DeleteTags(TestProject, new[] {t1.Id}).ToArray();
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.IsNotNull(res);
 			Assert.AreEqual(1, res.Length);
@@ -308,7 +309,7 @@ namespace AGO.Tasks.Test
 			var sub = M.Tag("sub", child);
 
 			var res = Controller.DeleteTags(TestProject, new[] {parent.Id}, null, new [] { child.Id, sub.Id }).ToArray();
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.AreEqual(3, res.Length);
 			Assert.IsTrue(res.Contains(parent.Id));
@@ -327,7 +328,7 @@ namespace AGO.Tasks.Test
 			var sub = M.Tag("sub", child);
 
 			var res = Controller.DeleteTags(TestProject, new[] { child.Id, parent.Id }, null, new [] { sub.Id }).ToArray();
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.AreEqual(3, res.Length);
 			Assert.IsTrue(res.Contains(parent.Id));
@@ -355,13 +356,12 @@ namespace AGO.Tasks.Test
 			var tag = M.Tag("t1");
 			var link = new TaskToTagModel
 			           	{
-			           		Creator = CurrentUser,
 			           		Task = task,
 			           		Tag = tag
 			           	};
 			Session.Save(link);
 			Session.Flush();
-			_SessionProvider.CloseCurrentSession();
+			Session.Clear();
 
 			Controller.DeleteTags(TestProject, new[] { tag.Id });
 		}
@@ -375,23 +375,21 @@ namespace AGO.Tasks.Test
 			var tag2 = M.Tag("t2");
 			var link1 = new TaskToTagModel
 			{
-				Creator = CurrentUser,
 				Task = task1,
 				Tag = tag1
 			};
 			var link2 = new TaskToTagModel
 			{
-				Creator = CurrentUser,
 				Task = task2,
 				Tag = tag1
 			};
 			Session.Save(link1);
 			Session.Save(link2);
 			Session.Flush();
-			_SessionProvider.CloseCurrentSession();
+			Session.Clear();
 
 			var res = Controller.DeleteTags(TestProject, new[] { tag1.Id }, tag2.Id).ToArray();
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.AreEqual(1, res.Length);
 			Assert.AreEqual(tag1.Id, res[0]);
@@ -411,7 +409,7 @@ namespace AGO.Tasks.Test
 			M.Tag("sub2", child);
 
 			var res = Controller.DeleteTags(TestProject, new[] { child.Id }, null, new [] { sub1.Id }).ToArray();
-			_SessionProvider.FlushCurrentSession();
+			Session.Flush();
 
 			Assert.AreEqual(2, res.Length);
 			Assert.IsTrue(res.Contains(child.Id));

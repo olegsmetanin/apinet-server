@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Xml;
 using AGO.Core.Filters;
-using AGO.Core.Localization;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Model.Task;
 using AGO.Tasks.Reports;
@@ -66,8 +65,7 @@ namespace AGO.Tasks.Test
 
 		private SimpleTaskListDataGenerator MakeSimpleGenerator()
 		{
-			return new SimpleTaskListDataGenerator(
-				IocContainer.GetInstance<IFilteringService>(), IocContainer.GetInstance<IFilteringDao>());
+			return new SimpleTaskListDataGenerator(_FilteringService, DaoFactory);
 		}
 
 		[Test]
@@ -77,7 +75,6 @@ namespace AGO.Tasks.Test
 			var tt2 = M.TaskType("bbb");
 			var t1 = M.Task(1, tt1);
 			var t2 = M.Task(2, tt2);
-			_SessionProvider.FlushCurrentSession();
 
 			var gen = MakeSimpleGenerator();
 
@@ -90,8 +87,8 @@ namespace AGO.Tasks.Test
 			Assert.IsNotNull(items);
 			Assert.AreEqual(2, items.Count);
 
-			t1 = Session.Load<TaskModel>(t1.Id);
-			t2 = Session.Load<TaskModel>(t2.Id);
+			t1 = ProjectSession(TestProject).Load<TaskModel>(t1.Id);
+			t2 = ProjectSession(TestProject).Load<TaskModel>(t2.Id);
 
 // ReSharper disable PossibleNullReferenceException
 			Assert.AreEqual(t2.SeqNumber, items[0].SelectSingleNode("value[@name=\"num\"]").FirstChild.Value);
@@ -110,9 +107,7 @@ namespace AGO.Tasks.Test
 		private DetailedTaskListWithCustomPropsDataGenerator MakePropsDataGenerator()
 		{
 			return new DetailedTaskListWithCustomPropsDataGenerator(
-				IocContainer.GetInstance<IFilteringService>(), 
-				IocContainer.GetInstance<IFilteringDao>(),
-				IocContainer.GetInstance<ILocalizationService>());
+				_FilteringService, DaoFactory, LocalizationService);
 		}
 
 		[Test]

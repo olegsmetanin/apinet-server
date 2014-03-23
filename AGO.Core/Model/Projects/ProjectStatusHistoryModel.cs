@@ -7,9 +7,14 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Model.Projects
 {
-	public class ProjectStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus>
+	public class ProjectStatusHistoryModel : CoreModel<Guid>, IStatusHistoryRecordModel<ProjectModel, ProjectStatus, UserModel>
 	{
 		#region Persistent
+
+		[JsonProperty, NotNull]
+		public virtual UserModel Creator { get; set; }
+		[ReadOnlyProperty, MetadataExclude]
+		public virtual Guid? CreatorId { get; set; }
 
 		[JsonProperty, NotNull]
 		public virtual DateTime Start { get; set; }
@@ -28,7 +33,7 @@ namespace AGO.Core.Model.Projects
 		#endregion
 
 		[NotMapped]
-		ProjectModel IStatusHistoryRecordModel<ProjectModel, ProjectStatus>.Holder
+		ProjectModel IStatusHistoryRecordModel<ProjectModel, ProjectStatus, UserModel>.Holder
 		{
 			get { return Project; }
 			set { Project = value; }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Xml;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Reporting.Common;
 using AGO.Tasks.Controllers;
@@ -11,17 +12,17 @@ namespace AGO.Tasks.Reports
 	public class SimpleTaskListDataGenerator: BaseReportDataGenerator
 	{
 		private readonly IFilteringService fs;
-		private readonly IFilteringDao dao;
+		private readonly DaoFactory daoFactory;
 
-		public SimpleTaskListDataGenerator(IFilteringService service, IFilteringDao fdao)
+		public SimpleTaskListDataGenerator(IFilteringService service, DaoFactory factory)
 		{
 			if (service == null)
 				throw new ArgumentNullException("service");
-			if (fdao == null)
-				throw new ArgumentNullException("fdao");
+			if (factory == null)
+				throw new ArgumentNullException("factory");
 
 			fs = service;
-			dao = fdao;
+			daoFactory = factory;
 		}
 
 		protected override void FillReportData(object parameters)
@@ -30,6 +31,7 @@ namespace AGO.Tasks.Reports
 			if (param == null)
 				throw new ArgumentException("parameters is not " + typeof(TaskListReportParameters).Name, "parameters");
 
+			var dao = daoFactory.CreateProjectFilteringDao(param.Project);
 			var filter = fs.ParseFilterSetFromJson(param.Filter);
 
 			var projectPredicate = fs.Filter<TaskModel>().Where(m => m.ProjectCode == param.Project);

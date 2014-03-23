@@ -3,6 +3,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Model;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using Newtonsoft.Json;
 
@@ -11,7 +12,7 @@ namespace AGO.Tasks.Model.Task
     /// <summary>
     /// Запись в истории изменения статусов задачи
     /// </summary>
-	public class TaskStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<TaskModel, TaskStatus>, ITasksModel
+	public class TaskStatusHistoryModel : SecureModel<Guid>, IStatusHistoryRecordModel<TaskModel, TaskStatus, ProjectMemberModel>, ITasksModel
     {
         #region Persistent
 
@@ -46,7 +47,7 @@ namespace AGO.Tasks.Model.Task
         #endregion
 
 		[NotMapped]
-		TaskModel IStatusHistoryRecordModel<TaskModel, TaskStatus>.Holder
+		TaskModel IStatusHistoryRecordModel<TaskModel, TaskStatus, ProjectMemberModel>.Holder
 		{
 			get { return Task; }
 			set { Task = value; }

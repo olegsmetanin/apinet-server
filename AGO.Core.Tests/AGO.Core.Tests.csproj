@@ -88,6 +88,7 @@
     <Compile Include="Security\ProjectsControllerSecurityTests.cs" />
     <Compile Include="Security\ProjectSecurityProviderTests.cs" />
     <Compile Include="Security\SecurityServiceTests.cs" />
+    <Compile Include="SessionProviderRegistryTest.cs" />
     <Compile Include="UserNameCalculationTests.cs" />
     <Compile Include="WorkQueueWatcherTest.cs" />
   </ItemGroup>

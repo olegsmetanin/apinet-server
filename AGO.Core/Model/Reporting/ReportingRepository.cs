@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using AGO.Core.Localization;
 using AGO.Core.Model.Projects;
 using AGO.Reporting.Common;
 using AGO.Reporting.Common.Model;
+using NHibernate;
 
 namespace AGO.Core.Model.Reporting
 {
 	/// <summary>
 	/// Репозиторий для доступа к данным сервиса отчетов
 	/// </summary>
-	public class ReportingRepository: AbstractDao, IReportingRepository
+	public class ReportingRepository: IReportingRepository
 	{
 		private readonly ILocalizationService ls;
 
-		public ReportingRepository(ISessionProvider sessionProvider, ILocalizationService ls) : base(sessionProvider)
+		public ReportingRepository(ILocalizationService ls)
 		{
 			if (ls == null)
 				throw new ArgumentNullException("ls");
@@ -22,37 +22,20 @@ namespace AGO.Core.Model.Reporting
 			this.ls = ls;
 		}
 
-		public IEnumerable<IReportingServiceDescriptor> GetAllDescriptors()
+		public IReportTask GetTask(ISession session, Guid taskId)
 		{
-			return CurrentSession.QueryOver<ReportingServiceDescriptorModel>().List<IReportingServiceDescriptor>();
+			return session.Load<ReportTaskModel>(taskId);
 		}
 
-		public IReportingServiceDescriptor GetDescriptor(string name)
+		public IReportTemplate GetTemplate(ISession session, Guid templateId)
 		{
-			if (name.IsNullOrWhiteSpace())
-				throw new ArgumentNullException("name");
-
-			var descriptor = CurrentSession.QueryOver<ReportingServiceDescriptorModel>()
-				.Where(m => m.Name == name).SingleOrDefault();
-			if (descriptor == null)
-				throw new NoSuchEntityException();
-			return descriptor;
+			return session.Load<ReportTemplateModel>(templateId);
 		}
 
-		public IReportTask GetTask(Guid taskId)
+		public object GetTaskAsDTO(ISession mainDbSession, ISession projectDbSession, Guid taskId)
 		{
-			return CurrentSession.Load<ReportTaskModel>(taskId);
-		}
-
-		public IReportTemplate GetTemplate(Guid templateId)
-		{
-			return CurrentSession.Load<ReportTemplateModel>(templateId);
-		}
-
-		public object GetTaskAsDTO(Guid taskId)
-		{
-			var task = CurrentSession.Load<ReportTaskModel>(taskId);
-			var proj = CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == task.Project).SingleOrDefault();
+			var task = projectDbSession.Load<ReportTaskModel>(taskId);
+			var proj = mainDbSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == task.ProjectCode).SingleOrDefault();
 			return ReportTaskDTO.FromTask(task, ls, proj != null ? proj.Name : null);
 		}
 	}

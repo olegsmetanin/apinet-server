@@ -11,30 +11,37 @@ namespace AGO.Tasks.Test
 	public class ModelHelper: Core.Tests.ModelHelper
 	{
 		private readonly string project;
+		private readonly Func<ISession> projSession;
 
-		public ModelHelper(Func<ISession> session, Func<UserModel> currentUser, string project)
+		public ModelHelper(Func<ISession> session, Func<ISession> projSession, Func<UserModel> currentUser, string project)
 			:base(session, currentUser)
 		{
 			this.project = project;
+			this.projSession = projSession;
 		}
 
-		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New, UserModel executor = null)
+		protected override ISession ProjectSession(string project)
+		{
+			return projSession();
+		}
+
+		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New, UserModel creator = null, UserModel executor = null)
 		{
 			return Track(() =>
 			{
 				var task = new TaskModel
 				{
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, creator ?? CurrentUser()),
 					ProjectCode = project,
 					InternalSeqNumber = num,
 					SeqNumber = "t0-" + num,
 					TaskType = type,
 					Content = content
 				};
-				task.ChangeStatus(status, CurrentUser());
+				task.ChangeStatus(status, MemberFromUser(project, creator ?? CurrentUser()));
 				var e = new TaskExecutorModel
 				{
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, creator ?? CurrentUser()),
 					Task = task,
 					Executor = MemberFromUser(project, executor)
 				};
@@ -47,19 +54,19 @@ namespace AGO.Tasks.Test
 			});
 		}
 
-		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New, UserModel executor = null)
+		public TaskModel Task(int num, string type = "testType", string content = null, TaskStatus status = TaskStatus.New, UserModel creator = null, UserModel executor = null)
 		{
 			var typeModel = Session().QueryOver<TaskTypeModel>()
 				.Where(m => m.ProjectCode == project && m.Name == type).SingleOrDefault() ?? TaskType(type);
 
-			return Task(num, typeModel, content, status, executor);
+			return Task(num, typeModel, content, status, creator, executor);
 		}
 
 		public TaskAgreementModel Agreement(TaskModel task, UserModel agreemer = null, UserModel creator = null, bool done = false)
 		{
 			var agr = new TaskAgreementModel
 			{
-				Creator = creator ?? agreemer ?? CurrentUser(),
+				Creator = MemberFromUser(task.ProjectCode, creator ?? agreemer ?? CurrentUser()),
 				Task = task,
 				Agreemer = MemberFromUser(project, agreemer ?? CurrentUser()),
 				Done = done,
@@ -71,13 +78,13 @@ namespace AGO.Tasks.Test
 			return agr;
 		}
 
-		public TaskTypeModel TaskType(string name = "TestTaskType")
+		public TaskTypeModel TaskType(string name = "TestTaskType", UserModel creator = null)
 		{
 			return Track(() =>
 			{
 				var m = new TaskTypeModel
 				{
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, ( creator ?? CurrentUser())),
 					ProjectCode = project,
 					Name = name
 				};
@@ -109,7 +116,7 @@ namespace AGO.Tasks.Test
 				var p = new TaskCustomPropertyModel
 				{
 					Task = task,
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(task.ProjectCode, CurrentUser()),
 					PropertyType = paramType,
 					Value = value
 				};
@@ -128,7 +135,7 @@ namespace AGO.Tasks.Test
 				var pt = new CustomPropertyTypeModel
 				{
 					ProjectCode = project,
-					Creator = CurrentUser(),
+					Creator = MemberFromUser(project, CurrentUser()),
 					Name = name,
 					FullName = name,
 					ValueType = type
@@ -147,7 +154,7 @@ namespace AGO.Tasks.Test
 				var tag = new TaskTagModel
 				{
 					ProjectCode = project,
-					Creator = owner ?? CurrentUser(),
+					OwnerId = (owner ?? CurrentUser()).Id,
 					Name = name,
 					FullName = parent != null ? parent.FullName + " \\ " + name : name,
 					Parent = parent
@@ -171,7 +178,7 @@ namespace AGO.Tasks.Test
 					Name = name,
 					ContentType = mime,
 					Size = size,
-					Creator = creator ?? CurrentUser()
+					Creator = MemberFromUser(task.ProjectCode, creator ?? CurrentUser())
 				};
 				task.Files.Add(file);
 				Session().Save(file);

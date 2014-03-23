@@ -68,8 +68,8 @@ namespace AGO.Tasks.Test
 			            		Value = "123"
 			            	};
 
-			var ur = controller.EditParam(task.Id, model);
-			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+			var ur = controller.EditParam(TestProject, task.Id, model);
+			Session.Flush();
 			
 			Assert.IsTrue(ur.Validation.Success);
 			Assert.IsNotNull(ur.Model);
@@ -93,8 +93,8 @@ namespace AGO.Tasks.Test
 				Value = "456"
 			};
 
-			var ur = controller.EditParam(task.Id, model);
-			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+			var ur = controller.EditParam(TestProject, task.Id, model);
+			Session.Flush();
 
 			Assert.IsTrue(ur.Validation.Success);
 			Assert.IsNotNull(ur.Model);
@@ -116,8 +116,8 @@ namespace AGO.Tasks.Test
 				Value = "12.2"
 			};
 
-			var ur = controller.EditParam(task.Id, model);
-			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+			var ur = controller.EditParam(TestProject, task.Id, model);
+			Session.Flush();
 
 			Assert.IsTrue(ur.Validation.Success);
 			Assert.IsNotNull(ur.Model);
@@ -140,8 +140,8 @@ namespace AGO.Tasks.Test
 				Value = "11/09/2013 14:16"
 			};
 
-			var ur = controller.EditParam(task.Id, model);
-			_SessionProvider.FlushCurrentSession(!ur.Validation.Success);
+			var ur = controller.EditParam(TestProject, task.Id, model);
+			Session.Flush();
 
 			Assert.IsTrue(ur.Validation.Success);
 			Assert.IsNotNull(ur.Model);
@@ -158,8 +158,8 @@ namespace AGO.Tasks.Test
 			var p = M.Param(task, "s1", "spv");
 			Session.Clear();
 
-			var res = controller.DeleteParam(p.Id);
-			_SessionProvider.FlushCurrentSession(!res);
+			var res = controller.DeleteParam(TestProject, p.Id);
+			Session.Flush();
 
 			Assert.IsTrue(res);
 			p = Session.Get<TaskCustomPropertyModel>(p.Id);

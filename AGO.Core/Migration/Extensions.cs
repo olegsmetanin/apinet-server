@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using AGO.Core.AutoMapping;
 using AGO.Core.Model;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using FluentMigrator.Builders.Alter;
 using FluentMigrator.Builders.Alter.Table;

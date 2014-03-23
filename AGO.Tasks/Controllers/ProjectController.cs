@@ -7,6 +7,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
@@ -27,14 +28,13 @@ namespace AGO.Tasks.Controllers
 		public ProjectController(
 			IJsonService jsonService, 
 			IFilteringService filteringService, 
-			ICrudDao crudDao, 
-			IFilteringDao filteringDao, 
-			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
-			ISecurityService securityService) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
 		}
 
@@ -42,9 +42,8 @@ namespace AGO.Tasks.Controllers
 		public ProjectDTO GetProject([NotEmpty] string project)
 		{
 			var fb = _FilteringService.Filter<ProjectModel>();
-			var codePredicate = SecurityService.ApplyReadConstraint<ProjectModel>(project, CurrentUser.Id,
-				Session, fb.Where(m => m.ProjectCode == project));
-			var p = _FilteringDao.Find<ProjectModel>(codePredicate);
+			var codePredicate = ApplyReadConstraint<ProjectModel>(project, fb.Where(m => m.ProjectCode == project));
+			var p = DaoFactory.CreateMainFilteringDao().Find<ProjectModel>(codePredicate);
 
 			if (p == null)
 				throw new NoSuchProjectException();
@@ -56,10 +55,6 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public UpdateResult<ProjectDTO> UpdateProject([NotEmpty] string project, [NotNull] PropChangeDTO data)
 		{
-			if (!_CrudDao.Exists<ProjectModel>(q => q.Where(m => m.ProjectCode == project)))
-				throw new NoSuchProjectException();
-
-			var user = _AuthController.CurrentUser();
 			return Edit<ProjectModel, ProjectDTO>(data.Id, project, (p, vr) =>
 			{
 				if (data.Prop.IsNullOrWhiteSpace())
@@ -83,7 +78,7 @@ namespace AGO.Tasks.Controllers
 						case "Status":
 							//TODO business logic, security and other checks
 							var newStatus = data.Value.ConvertSafe<ProjectStatus>();
-							p.ChangeStatus(newStatus, _AuthController.CurrentUser());//create entity saved via cascade
+							p.ChangeStatus(newStatus, CurrentUser);//create entity saved via cascade
 							break;
 						default:
 							throw new UnsupportedPropertyForUpdateException(data.Prop);
@@ -102,7 +97,7 @@ namespace AGO.Tasks.Controllers
 					vr.AddFieldErrors(data.Prop, ex.GetBaseException().Message);
 				}
 			},
-			p => new ProjectAdapter(_LocalizationService, user).Fill(p),
+			p => new ProjectAdapter(_LocalizationService, CurrentUser).Fill(p),
 			() => { throw new ProjectCreationNotSupportedException(); });
 		}
 
@@ -111,24 +106,25 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var project = _CrudDao.Get<ProjectModel>(modelId, true);
-			SecurityService.DemandUpdate(project, project.ProjectCode, CurrentUser.Id, Session);
+			var dao = DaoFactory.CreateMainCrudDao();
+			var project = dao.Get<ProjectModel>(modelId, true);
 
-			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			//strange, but true :) if we found tag by id, but called from other user, not tag owner,
+			//this will found link and return false. so, additional check added
+			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId && l.Tag.OwnerId == CurrentUser.Id);
 
 			if (link != null)
 				return false;
 
-			var tag = _CrudDao.Get<ProjectTagModel>(tagId, true);
+			var tag = dao.Get<ProjectTagModel>(tagId, true);
 			link = new ProjectToTagModel
 			{
-				Creator = CurrentUser,
 				Project = project,
 				Tag = tag
 			};
-			SecurityService.DemandUpdate(link, project.ProjectCode, CurrentUser.Id, Session);
+			DemandUpdate(link, project.ProjectCode);
 			project.Tags.Add(link);
-			_CrudDao.Store(link);
+			dao.Store(link);
 
 			return true;
 		}
@@ -138,16 +134,17 @@ namespace AGO.Tasks.Controllers
 			[NotEmpty] Guid modelId,
 			[NotEmpty] Guid tagId)
 		{
-			var project = _CrudDao.Get<ProjectModel>(modelId, true);
-			SecurityService.DemandUpdate(project, project.ProjectCode, CurrentUser.Id, Session);
+			var dao = DaoFactory.CreateMainCrudDao();
+			var project = dao.Get<ProjectModel>(modelId, true);
 
-			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId);
+			//see TagProject
+			var link = project.Tags.FirstOrDefault(l => l.Tag.Id == tagId && l.Tag.OwnerId == CurrentUser.Id);
 			if (link == null)
 				return false;
 
-			SecurityService.DemandDelete(link, project.ProjectCode, CurrentUser.Id, Session);
+			DemandDelete(link, project.ProjectCode);
 			project.Tags.Remove(link);
-			_CrudDao.Delete(link);
+			dao.Delete(link);
 
 			return true;
 		}
@@ -171,41 +168,49 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public ProjectMemberDTO AddMember([NotEmpty] string project, [NotEmpty] Guid userId, [NotEmpty] string[] roles)
 		{
-			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
+			var mainDao = DaoFactory.CreateMainCrudDao();
+			var p = mainDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
 			if (p == null)
 				throw new NoSuchProjectException();
-			var u = _CrudDao.Get<UserModel>(userId, true);
+
+			var u = mainDao.Get<UserModel>(userId, true);
 
 			if (!TaskProjectRoles.IsValid(roles))
 				throw new ArgumentException("Not valid role(s)", "roles");
 
-			if (_CrudDao.Exists<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == u.Id)))
+			var projDao = DaoFactory.CreateProjectCrudDao(project);
+			if (projDao.Exists<ProjectMemberModel>(q => q.Where(m => m.ProjectCode == p.ProjectCode && m.UserId == u.Id)))
 				throw new UserAlreadyProjectMemberException();
 
 			var member = ProjectMemberModel.FromParameters(u, p, roles);
-			SecurityService.DemandUpdate(member, project, CurrentUser.Id, Session);
-			_CrudDao.Store(member);
+			DemandUpdate(member, project);
+			projDao.Store(member);
+
+			var membership = new ProjectMembershipModel { Project = p, User = u };
+			p.Members.Add(membership);
+			mainDao.Store(membership);
+			
 			return new ProjectMemberAdapter(_LocalizationService).Fill(member);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public void RemoveMember([NotEmpty] Guid memberId)
+		public void RemoveMember([NotEmpty] string project, [NotEmpty] Guid memberId)
 		{
-			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
+			var mainDao = DaoFactory.CreateMainCrudDao();
+			var projDao = DaoFactory.CreateProjectCrudDao(project);
+			var member = projDao.Get<ProjectMemberModel>(memberId, true);
 			
-			SecurityService.DemandDelete(member, member.ProjectCode, CurrentUser.Id, Session);
+			DemandDelete(member, member.ProjectCode);
 
-			if (_CrudDao.Exists<TaskExecutorModel>(q => q.Where(m => m.Executor.Id == member.Id)) ||
-				_CrudDao.Exists<TaskAgreementModel>(q => q.Where(m => m.Agreemer.Id == member.Id)))
+			if (projDao.Exists<TaskExecutorModel>(q => q.Where(m => m.Executor.Id == member.Id)) ||
+				projDao.Exists<TaskAgreementModel>(q => q.Where(m => m.Agreemer.Id == member.Id)))
 				throw new CannotDeleteReferencedItemException();
 
-			var project = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == member.ProjectCode));
-			var membership = _CrudDao.Find<ProjectMembershipModel>(q =>
-				q.Where(m => m.ProjectId == project.Id && m.User.Id == member.UserId));
-			_CrudDao.Delete(member);
-			//Remove from central database, other sess factory will be used and separate flush/commit needed
-			if (membership != null)
-				_CrudDao.Delete(membership);
+			var p = mainDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == member.ProjectCode));
+			var membership = mainDao.Find<ProjectMembershipModel>(q =>
+				q.Where(m => m.ProjectId == p.Id && m.User.Id == member.UserId));
+			projDao.Delete(member);
+			mainDao.Delete(membership);
 		}
 
 		private static IDictionary<string, LookupEntry[]> cache;
@@ -235,11 +240,9 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UpdateResult<ProjectMemberDTO> ChangeMemberRoles([NotEmpty] Guid memberId, [NotEmpty] string[] roles)
+		public UpdateResult<ProjectMemberDTO> ChangeMemberRoles([NotEmpty] string project, [NotEmpty] Guid memberId, [NotEmpty] string[] roles)
 		{
-			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
-
-			return Edit<ProjectMemberModel, ProjectMemberDTO>(member.Id, member.ProjectCode,
+			return Edit<ProjectMemberModel, ProjectMemberDTO>(memberId, project,
 			(model, validation) =>
 			{
 				//TODO localization
@@ -261,11 +264,9 @@ namespace AGO.Tasks.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public UpdateResult<ProjectMemberDTO> ChangeMemberCurrentRole([NotEmpty] Guid memberId, [NotEmpty] string current)
+		public UpdateResult<ProjectMemberDTO> ChangeMemberCurrentRole([NotEmpty] string project,  [NotEmpty] Guid memberId, [NotEmpty] string current)
 		{
-			var member = _CrudDao.Get<ProjectMemberModel>(memberId, true);
-
-			return Edit<ProjectMemberModel, ProjectMemberDTO>(member.Id, member.ProjectCode,
+			return Edit<ProjectMemberModel, ProjectMemberDTO>(memberId, project,
 			(model, validation) =>
 			{
 				//TODO localization
@@ -287,20 +288,20 @@ namespace AGO.Tasks.Controllers
 		}
 
 
-		//TODO needs abstraction in core, that require this method (optional, some modules may does not support role switching)
+		//TODO needs abstraction in core, that require this method (optional, some modules may not support role switching)
 		[JsonEndpoint, RequireAuthorization]
 		public bool SwitchRole([NotEmpty] string project, [NotEmpty] string current)
 		{
-			var p = _CrudDao.Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
+			var p = DaoFactory.CreateMainCrudDao().Find<ProjectModel>(q => q.Where(m => m.ProjectCode == project));
 			if (p == null)
 				throw new NoSuchProjectException();
 
-			var member = _CrudDao.Find<ProjectMemberModel>(q => q.Where(
+			var member = DaoFactory.CreateProjectCrudDao(project).Find<ProjectMemberModel>(q => q.Where(
 				m => m.ProjectCode == p.ProjectCode && m.UserId == CurrentUser.Id));
 			if (member == null)
 				throw new NoSuchProjectMemberException();
 
-			return ChangeMemberCurrentRole(member.Id, current).Validation.Success;
+			return ChangeMemberCurrentRole(member.ProjectCode, member.Id, current).Validation.Success;
 		}
 	}
 }

@@ -5,6 +5,7 @@ using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers.Projects;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
@@ -30,18 +31,21 @@ namespace AGO.Core.Controllers
 	{
 		#region Properties, fields, constructors
 
+		private readonly IProjectFactory[] projFactories;
+
 		public ProjectsController(
 			IJsonService jsonService,
 			IFilteringService filteringService,
-			ICrudDao crudDao,
-			IFilteringDao filteringDao,
-			ISessionProvider sessionProvider,
 			ILocalizationService localizationService,
 			IModelProcessingService modelProcessingService,
 			AuthController authController,
-			ISecurityService securityService)
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory,
+			IEnumerable<IProjectFactory> projFactories)
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
+			this.projFactories = (projFactories ?? Enumerable.Empty<IProjectFactory>()).ToArray();
 		}
 
 		#endregion
@@ -55,22 +59,22 @@ namespace AGO.Core.Controllers
 		{
 			var currentUser = _AuthController.CurrentUser();
 
-			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+			var projectToTag = MainSession.QueryOver<ProjectToTagModel>()
 				.Where(m => m.Project.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
 
 			if (projectToTag != null)
 				return false;
 
-			var project = _CrudDao.Get<ProjectModel>(modelId, true);
-			var tag = _CrudDao.Get<ProjectTagModel>(tagId, true);
+			var dao = DaoFactory.CreateMainCrudDao();
+			var project = dao.Get<ProjectModel>(modelId, true);
+			var tag = dao.Get<ProjectTagModel>(tagId, true);
 			var link = new ProjectToTagModel
 			{
-				Creator = currentUser,
 				Project = project,
 				Tag = tag
 			};
-			SecurityService.DemandUpdate(link, project.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
-			_CrudDao.Store(link);
+			SecurityService.DemandUpdate(link, project.ProjectCode, currentUser.Id, MainSession);
+			dao.Store(link);
 
 			return true;
 		}
@@ -82,14 +86,14 @@ namespace AGO.Core.Controllers
 		{
 			var currentUser = _AuthController.CurrentUser();
 
-			var projectToTag = _SessionProvider.CurrentSession.QueryOver<ProjectToTagModel>()
+			var projectToTag = MainSession.QueryOver<ProjectToTagModel>()
 				.Where(m => m.Project.Id == modelId && m.Tag.Id == tagId).Take(1).SingleOrDefault();
 
 			if (projectToTag == null)
 				return false;
 
-			SecurityService.DemandDelete(projectToTag, projectToTag.Project.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
-			_CrudDao.Delete(projectToTag);
+			SecurityService.DemandDelete(projectToTag, projectToTag.Project.ProjectCode, currentUser.Id, MainSession);
+			DaoFactory.CreateMainCrudDao().Delete(projectToTag);
 
 			return true;
 		}
@@ -101,50 +105,62 @@ namespace AGO.Core.Controllers
 
 			try
 			{
+				var dao = DaoFactory.CreateMainCrudDao();
 				var currentUser = _AuthController.CurrentUser();
 				var newProject = new ProjectModel
 				{
-					Creator = currentUser,
-					LastChanger = currentUser,
-					LastChangeTime = DateTime.UtcNow,
+					CreationTime = DateTime.UtcNow,
 					ProjectCode = model.ProjectCode.TrimSafe(),
 					Name = model.Name.TrimSafe(),
 					Description = model.Description.TrimSafe(),
 					Type = model.TypeId != null && !default(Guid).Equals(model.TypeId)
-						? _CrudDao.Get<ProjectTypeModel>(model.TypeId)
+						? dao.Get<ProjectTypeModel>(model.TypeId)
 						: null,
 					VisibleForAll = model.VisibleForAll,
 					Status = ProjectStatus.New,
+					//TODO replace with data from client (db + may be server)
+					ConnectionString = MainSession.Connection.ConnectionString
 				};
 
-				_ModelProcessingService.ValidateModelSaving(newProject, validation);
+				_ModelProcessingService.ValidateModelSaving(newProject, validation, MainSession);
 				if (!validation.Success)
 					return validation;
 
 				//need to call before first Store called, because after this IsNew return false
-				SecurityService.DemandUpdate(newProject, newProject.ProjectCode, currentUser.Id, _SessionProvider.CurrentSession);
+				SecurityService.DemandUpdate(newProject, newProject.ProjectCode, currentUser.Id, MainSession);
 
-				
-				_CrudDao.Store(newProject);
-				_ModelProcessingService.AfterModelCreated(newProject);
+				dao.Store(newProject);
+				MainSession.Flush();//next code find project in db
 
-				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, currentUser);
-				_CrudDao.Store(statusHistoryRow);
+				//make current user project admin and do next secure logged things as of this member
+				var membership = new ProjectMembershipModel { Project = newProject, User = CurrentUser };
+				newProject.Members.Add(membership);
+				dao.Store(newProject);
+				MainSession.Flush();//required for ProjectSession() working
 
-				foreach (var tag in tagIds.Select(id => _CrudDao.Get<ProjectTagModel>(id)))
+				var member = ProjectMemberModel.FromParameters(CurrentUser, newProject, BaseProjectRoles.Administrator);
+				DaoFactory.CreateProjectCrudDao(newProject.ProjectCode).Store(member);
+				ProjectSession(newProject.ProjectCode).Flush();
+
+				_ModelProcessingService.AfterModelCreated(newProject, member);
+
+				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, CurrentUser);
+				dao.Store(statusHistoryRow);
+
+				foreach (var tag in tagIds.Select(id => dao.Get<ProjectTagModel>(id)))
 				{
-					_CrudDao.Store(new ProjectToTagModel
+					dao.Store(new ProjectToTagModel
 					{
-						Creator = currentUser,
 						Tag = tag,
 						Project = newProject
 					});
 				}
 
-				var membership = new ProjectMembershipModel {Project = newProject, User = newProject.Creator};
-				newProject.Members.Add(membership);
-				_CrudDao.Store(newProject);
-				_CrudDao.Store(ProjectMemberModel.FromParameters(newProject.Creator, newProject, BaseProjectRoles.Administrator));
+				var projFactory = projFactories.FirstOrDefault(f => f.Accept(newProject));
+				if (projFactory != null)
+				{
+					projFactory.Handle(newProject);
+				}
 
 				return newProject;
 			}
@@ -159,15 +175,14 @@ namespace AGO.Core.Controllers
 			ICollection<IModelFilterNode> filter,
 			ProjectsRequestMode mode)
 		{
-			var currentUser = _AuthController.CurrentUser();
 			if (mode == ProjectsRequestMode.Participated)
 			{
 				var membershipFilter = _FilteringService.Filter<ProjectModel>()
-					.WhereCollection(m => m.Members).Where(m => m.User.Id == currentUser.Id);
+					.WhereCollection(m => m.Members).Where(m => m.User.Id == CurrentUser.Id);
 
 				filter.Add(membershipFilter);
 			}
-			return new [] { SecurityService.ApplyReadConstraint<ProjectModel>(null, currentUser.Id, _SessionProvider.CurrentSession, filter.ToArray())};
+			return new [] { SecurityService.ApplyReadConstraint<ProjectModel>(null, CurrentUser.Id, MainSession, filter.ToArray())};
 		}
 			
 		[JsonEndpoint, RequireAuthorization]
@@ -177,7 +192,8 @@ namespace AGO.Core.Controllers
 			[NotNull] ICollection<SortInfo> sorters,
 			ProjectsRequestMode mode)
 		{
-			var projects = _FilteringDao.List<ProjectModel>(MakeProjectsPredicate(filter, mode), new FilteringOptions
+			var projects = DaoFactory.CreateMainFilteringDao()
+				.List<ProjectModel>(MakeProjectsPredicate(filter, mode), new FilteringOptions
 			{
 				Page = page,
 				Sorters = sorters
@@ -187,12 +203,8 @@ namespace AGO.Core.Controllers
 			{
 				var viewModel = new ProjectViewModel(project);
 
-				var allowed = project.Tags.Where(m =>
-				{
-
-					return m.Tag.CreatorId != null && m.Tag.CreatorId == _AuthController.CurrentUser().Id;
-				});
-				viewModel.Tags.UnionWith(allowed.OrderBy(tl => tl.Tag.Creator).ThenBy(tl => tl.Tag.FullName).Select(m => new LookupEntry
+				var allowed = project.Tags.Where(m => m.Tag.OwnerId == CurrentUser.Id);
+				viewModel.Tags.UnionWith(allowed.OrderBy(tl => tl.Tag.FullName).Select(m => new LookupEntry
 				{
 					Id = m.Tag.Id.ToString(),
 					Text = m.Tag.FullName
@@ -205,7 +217,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public int GetProjectsCount([NotNull] ICollection<IModelFilterNode> filter, ProjectsRequestMode mode)
 		{
-			return _FilteringDao.RowCount<ProjectModel>(MakeProjectsPredicate(filter, mode));
+			return DaoFactory.CreateMainFilteringDao().RowCount<ProjectModel>(MakeProjectsPredicate(filter, mode));
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -214,13 +226,13 @@ namespace AGO.Core.Controllers
 			string term,
 			[InRange(0, null)] int page)
 		{
-			var query = _SessionProvider.CurrentSession.QueryOver<ProjectMemberModel>()
+			var query = ProjectSession(project).QueryOver<ProjectMemberModel>()
 				.Where(m => m.ProjectCode == project)
 				.OrderBy(m => m.FullName).Asc;
 			if (!term.IsNullOrWhiteSpace())
 				query = query.WhereRestrictionOn(m => m.FullName).IsLike(term.TrimSafe(), MatchMode.Anywhere);
 
-			return _CrudDao.PagedQuery(query, page).LookupModelsList(m => m.FullName);
+			return DaoFactory.CreateProjectCrudDao(project).PagedQuery(query, page).LookupModelsList(m => m.FullName);
 		}
 			
 		[JsonEndpoint, RequireAuthorization]
@@ -232,7 +244,7 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public object ProjectInfo([NotEmpty] string project)
 		{
-			var projectModel = _SessionProvider.CurrentSession.QueryOver<ProjectModel>()
+			var projectModel = MainSession.QueryOver<ProjectModel>()
 			    .Where(m => m.ProjectCode == project)
 			    .Take(1).SingleOrDefault();
 			if (projectModel == null || projectModel.Type == null)

@@ -5,11 +5,13 @@ using System.Linq.Expressions;
 using AGO.Core;
 using AGO.Core.Controllers;
 using AGO.Core.Controllers.Security;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Json;
 using AGO.Core.Localization;
 using AGO.Core.Model;
 using AGO.Core.Model.Processing;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using Common.Logging;
@@ -23,20 +25,14 @@ namespace AGO.Tasks.Controllers
 		protected AbstractTasksController(
 			IJsonService jsonService, 
 			IFilteringService filteringService, 
-			ICrudDao crudDao, 
-			IFilteringDao filteringDao, 
-			ISessionProvider sessionProvider, 
 			ILocalizationService localizationService, 
 			IModelProcessingService modelProcessingService, 
 			AuthController authController,
-			ISecurityService securityService) 
-			: base(jsonService, filteringService, crudDao, filteringDao, sessionProvider, localizationService, modelProcessingService, authController, securityService)
+			ISecurityService securityService,
+			ISessionProviderRegistry registry,
+			DaoFactory factory) 
+			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
-		}
-
-		protected virtual UserModel CurrentUser
-		{
-			get { return _AuthController.CurrentUser(); }
 		}
 
 		protected ICriteria PrepareLookup<TModel>(string project, string term, int page,
@@ -54,9 +50,9 @@ namespace AGO.Tasks.Controllers
 					.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
 			}
 			//concat with security predicates
-			var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
+			var filter = ApplyReadConstraint<TModel>(project, projectFilter, termFilter);
 			//get executable criteria
-			var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
+			var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(ProjectSession(project));
 			//add needed sorting
 			var objTextProp = textProperty.Cast<TModel, string, object>();
 			if (sorters == null || !sorters.Any())
@@ -71,7 +67,7 @@ namespace AGO.Tasks.Controllers
 				}
 			}
 
-			return _CrudDao.PagedCriteria(criteria, page);
+			return DaoFactory.CreateProjectCrudDao(project).PagedCriteria(criteria, page);
 		}
 
 		protected IEnumerable<LookupEntry> Lookup<TModel>(string project, string term, int page,
@@ -92,9 +88,9 @@ namespace AGO.Tasks.Controllers
 						.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
 				}
 				//concat with security predicates
-				var filter = SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, projectFilter, termFilter);
+				var filter = ApplyReadConstraint<TModel>(project, projectFilter, termFilter);
 				//get executable criteria
-				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(Session);
+				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(ProjectSession(project));
 				//add needed sorting
 				var objTextProp = textProperty.Cast<TModel, string, object>();
 				if (sorters == null || !sorters.Any())
@@ -133,8 +129,9 @@ namespace AGO.Tasks.Controllers
 				var secureModel = m as ISecureModel;
 				if (secureModel != null)
 				{
-					secureModel.Creator = CurrentUser;
-					secureModel.LastChanger = CurrentUser;
+					var member = CurrentUserToMember(project);
+					secureModel.Creator = member;
+					secureModel.LastChanger = member;
 					secureModel.LastChangeTime = DateTime.UtcNow;
 				}
 				var projectBoundModel = m as IProjectBoundModel;
@@ -148,7 +145,7 @@ namespace AGO.Tasks.Controllers
 				var secureModel = model as ISecureModel;
 				if (secureModel != null)
 				{
-					secureModel.LastChanger = CurrentUser;
+					secureModel.LastChanger = CurrentUserToMember(project);
 					secureModel.LastChangeTime = DateTime.UtcNow;
 				}
 
@@ -157,9 +154,23 @@ namespace AGO.Tasks.Controllers
 
 			try
 			{
-				var persistentModel = postFactory(default(Guid).Equals(id) 
-					? (factory ?? defaultFactory)() : _CrudDao.Get<TModel>(id));
-				if (persistentModel == null) 
+				ICrudDao dao;
+				ISession session;
+				if (typeof (ProjectModel).IsAssignableFrom(typeof (TModel)))
+				{
+					dao = DaoFactory.CreateMainCrudDao();
+					session = MainSession;
+				}
+				else
+				{
+					dao = DaoFactory.CreateProjectCrudDao(project);
+					session = ProjectSession(project);
+				}
+
+				var persistentModel = default(Guid).Equals(id)
+										? postFactory((factory ?? defaultFactory)())
+				                      	: dao.Get<TModel>(id);
+				if (persistentModel == null)
 					throw new NoSuchEntityException();
 
 				TModel original = null;
@@ -168,13 +179,13 @@ namespace AGO.Tasks.Controllers
 
 				update(persistentModel, result.Validation);
 				//validate model
-				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation);
+				_ModelProcessingService.ValidateModelSaving(persistentModel, result.Validation, session);
 				if (!result.Validation.Success)
 					return result;
 				//test permissions
-				SecurityService.DemandUpdate(persistentModel, project, _AuthController.CurrentUser().Id, Session);
+				DemandUpdate(persistentModel, project);
 				//persist
-				_CrudDao.Store(persistentModel);
+				dao.Store(persistentModel);
 
 				if (original != null)
 					_ModelProcessingService.AfterModelUpdated(persistentModel, original);
@@ -195,17 +206,17 @@ namespace AGO.Tasks.Controllers
 
 		protected IModelFilterNode ApplyReadConstraint<TModel>(string project, params IModelFilterNode[] filter)
 		{
-			return SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, Session, filter);
+			return SecurityService.ApplyReadConstraint<TModel>(project, CurrentUser.Id, ProjectSession(project), filter);
 		}
 
 		protected void DemandUpdate(IdentifiedModel model, string project)
 		{
-			SecurityService.DemandUpdate(model, project, CurrentUser.Id, Session);
+			SecurityService.DemandUpdate(model, project, CurrentUser.Id, ProjectSession(project));
 		}
 
 		protected void DemandDelete(IdentifiedModel model, string project)
 		{
-			SecurityService.DemandDelete(model, project, CurrentUser.Id, Session);
+			SecurityService.DemandDelete(model, project, CurrentUser.Id, ProjectSession(project));
 		}
 
 		protected TModel SecureFind<TModel>(string project, Guid id) where TModel : class, IProjectBoundModel, IIdentifiedModel<Guid>
@@ -213,7 +224,7 @@ namespace AGO.Tasks.Controllers
 			var fb = _FilteringService.Filter<TModel>();
 			var predicate = ApplyReadConstraint<TModel>(project, fb.Where(m => 
 				m.ProjectCode == project && m.Id == id));
-			var model = _FilteringDao.Find<TModel>(predicate);
+			var model = DaoFactory.CreateProjectFilteringDao(project).Find<TModel>(predicate);
 			if (model == null)
 				throw new NoSuchEntityException();
 

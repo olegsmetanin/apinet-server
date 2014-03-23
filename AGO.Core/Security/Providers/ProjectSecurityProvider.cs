@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
@@ -8,8 +9,29 @@ namespace AGO.Core.Security.Providers
 {
 	public class ProjectSecurityProvider: AbstractSecurityConstraintsProvider<ProjectModel>
 	{
-		public ProjectSecurityProvider(IFilteringService filteringService) : base(filteringService)
+		private readonly ISessionFactory mainFactory;
+
+		public ProjectSecurityProvider(IFilteringService filteringService, ISessionProviderRegistry providerRegistry) : base(filteringService)
 		{
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
+
+			mainFactory = providerRegistry.GetMainDbProvider().SessionFactory;
+		}
+
+		//because this provider mostly used in modules (in core only read and create constraints)
+		//we can't use project session to obtain user
+		protected override UserModel UserFromId(Guid userId, ISession session)
+		{
+			var s = mainFactory.OpenSession();
+			try
+			{
+				return base.UserFromId(userId, s);
+			}
+			finally
+			{
+				s.Close();
+			}
 		}
 
 		public override IModelFilterNode ReadConstraint(string project, UserModel user, ISession session)
