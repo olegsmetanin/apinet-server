@@ -105,9 +105,6 @@ namespace AGO.Core.Application
 
 		protected virtual void DoRegisterPersistence()
 		{
-			//register self
-			IocContainer.RegisterSingle<IPersistenceApplication>(this);
-
 			IocContainer.RegisterSingle<ISessionProvider, AutoMappedSessionFactoryBuilder>();
 			IocContainer.RegisterInitializer<AutoMappedSessionFactoryBuilder>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)).ApplyTo(service));

@@ -324,17 +324,22 @@ namespace AGO.Core.Controllers
 		{
 			var user = _AuthController.CurrentUser();
 
-			Func<ISession, 
-				Expression<Func<ReportTaskModel, bool>>, 
+			Func<ISession,
+				Expression<Func<ReportTaskModel, bool>>,
 				IQueryOver<ReportTaskModel, ReportTaskModel>> buildQuery = (s, predicate) =>
-			{
-				var q = s.QueryOver<ReportTaskModel>().Where(m => m.ProjectCode == project);
-				if (predicate != null)
-					q = q.Where(predicate);
-				if (user.SystemRole != SystemRole.Administrator)
-					q = q.Where(m => m.Creator.Id == user.Id);
-				return q;
-			};
+				{
+					ReportTaskModel taskAlias = null;
+					var q = s.QueryOver(() => taskAlias).Where(() => taskAlias.ProjectCode == project);
+					if (predicate != null)
+						q = q.Where(predicate);
+					if (user.SystemRole != SystemRole.Administrator)
+					{
+						ProjectMemberModel memberAlias = null;
+						q.JoinAlias(() => taskAlias.Creator, () => memberAlias);
+						q = q.Where(() => memberAlias.UserId == user.Id);
+					}
+					return q;
+				};
 
 			var projSessionFactory = SessionProviderRegistry.GetProjectProvider(project).SessionFactory;
 			Action<Action<ISession>> doInSessionContext = action =>
@@ -399,6 +404,16 @@ namespace AGO.Core.Controllers
 			};
 		}
 
+		private void AddReportsPredicate(string project, ICollection<IModelFilterNode> filters)
+		{
+			var fb = _FilteringService.Filter<ReportTaskModel>();
+			filters.Add(fb.Where(m => m.ProjectCode == project));
+			if (CurrentUser.SystemRole != SystemRole.Administrator)
+			{
+				filters.Add(fb.Where(m => m.Creator.UserId == CurrentUser.Id));
+			}
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable GetReports(
 			[NotEmpty] string project,
@@ -406,27 +421,24 @@ namespace AGO.Core.Controllers
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var fb = _FilteringService.Filter<ReportTaskModel>();
-			filter.Add(fb.Where(m => m.ProjectCode == project));
-			if (CurrentUser.SystemRole != SystemRole.Administrator)
-			{
-				filter.Add(fb.Where(m => m.Creator.Id == CurrentUser.Id));
-			}
-
+			AddReportsPredicate(project, filter);
 			return DaoFactory.CreateProjectFilteringDao(project).List<ReportTaskModel>(filter, page, sorters).Select(ReportTaskToDTO).ToList();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public int GetReportsCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
 		{
-			var fb = _FilteringService.Filter<ReportTaskModel>();
-			filter.Add(fb.Where(m => m.ProjectCode == project));
+			AddReportsPredicate(project, filter);
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<ReportTaskModel>(filter);
+		}
+
+		private void AddArchivedReportsPredicate(ICollection<IModelFilterNode> filters)
+		{
+			var fb = _FilteringService.Filter<ReportArchiveRecordModel>();
 			if (CurrentUser.SystemRole != SystemRole.Administrator)
 			{
-				filter.Add(fb.Where(m => m.Creator.Id == CurrentUser.Id));
+				filters.Add(fb.Where(m => m.UserId == CurrentUser.Id));
 			}
-
-			return DaoFactory.CreateProjectFilteringDao(project).RowCount<ReportTaskModel>(filter);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -435,24 +447,14 @@ namespace AGO.Core.Controllers
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
-			var fb = _FilteringService.Filter<ReportArchiveRecordModel>();
-			if (CurrentUser.SystemRole != SystemRole.Administrator)
-			{
-				filter.Add(fb.Where(m => m.UserId == CurrentUser.Id));
-			}
-
+			AddArchivedReportsPredicate(filter);
 			return DaoFactory.CreateMainFilteringDao().List<ReportArchiveRecordModel>(filter, page, sorters).ToList();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public int GetArchivedReportsCount([NotNull] ICollection<IModelFilterNode> filter)
 		{
-			var fb = _FilteringService.Filter<ReportArchiveRecordModel>();
-			if (CurrentUser.SystemRole != SystemRole.Administrator)
-			{
-				filter.Add(fb.Where(m => m.UserId == CurrentUser.Id));
-			}
-
+			AddArchivedReportsPredicate(filter);
 			return DaoFactory.CreateMainFilteringDao().RowCount<ReportArchiveRecordModel>(filter);
 		}
 

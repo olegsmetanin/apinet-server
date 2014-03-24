@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using AGO.Core.Application;
 using AGO.Core.Attributes.Constraints;
@@ -46,14 +47,11 @@ namespace AGO.Core.Controllers
 			ISecurityService securityService,
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
-			IEnumerable<IProjectFactory> projFactories,
-			IPersistenceApplication application)
+			IEnumerable<IProjectFactory> projFactories)
 			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
-			if (application == null)
-				throw new ArgumentNullException("application");
-
-			app = application;
+			app = AbstractApplication.Current as IPersistenceApplication;
+			Debug.Assert(app != null, "Can't grab current persistent application");
 			this.projFactories = (projFactories ?? Enumerable.Empty<IProjectFactory>()).ToArray();
 		}
 
