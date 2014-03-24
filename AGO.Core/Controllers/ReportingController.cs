@@ -98,12 +98,20 @@ namespace AGO.Core.Controllers
 			[NotNull] ICollection<IModelFilterNode> filter,
 			[NotNull] ICollection<SortInfo> sorters)
 		{
+			IModelFilterNode projectPredicate = _FilteringService.Filter<ReportTemplateModel>()
+				.Where(m => m.ProjectCode == project);
+			filter.Add(projectPredicate);
+
 			return DaoFactory.CreateProjectFilteringDao(project).List<ReportTemplateModel>(filter, page, sorters);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
 		public int GetTemplatesCount([NotNull] string project, [NotNull] ICollection<IModelFilterNode> filter)
 		{
+			IModelFilterNode projectPredicate = _FilteringService.Filter<ReportTemplateModel>()
+				.Where(m => m.ProjectCode == project);
+			filter.Add(projectPredicate);
+
 			return DaoFactory.CreateProjectFilteringDao(project).RowCount<ReportTemplateModel>(filter);
 		}
 
