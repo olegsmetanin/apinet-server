@@ -1,4 +1,5 @@
 ﻿using AGO.Core.Model.Activity;
+using AGO.Core.Model.Configuration;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Projects;
@@ -16,6 +17,10 @@ namespace AGO.Core.Migrations
 
 		public override void Up()
 		{
+			Create.CoreModelTable<DbInstanceModel>()
+				.WithValueColumn<DbInstanceModel>(m => m.Name)
+				.WithValueColumn<DbInstanceModel>(m => m.Server);
+
 			Create.CoreModelTable<UserModel>()
 				.WithValueColumn<UserModel>(m => m.Email)
 				.WithValueColumn<UserModel>(m => m.Active)

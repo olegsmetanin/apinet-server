@@ -149,7 +149,7 @@ namespace AGO.Core.Tests.Security
 					TypeId = ptype.Id
 				};
 				LoginAdmin();
-				var response = controller.CreateProject(data, new HashSet<Guid>());
+				var response = controller.CreateProject(data, Guid.Empty, new HashSet<Guid>(), true);
 				MainSession.Flush();
 				return response as ProjectModel;
 			});
@@ -170,7 +170,7 @@ namespace AGO.Core.Tests.Security
 			};
 			Login(member.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-			var response = controller.CreateProject(data, new HashSet<Guid>());
+			var response = controller.CreateProject(data, Guid.Empty, new HashSet<Guid>(), true);
 			MainSession.Clear();//rollback as in action executor
 			
 			Assert.That(response, Is.Not.Null);

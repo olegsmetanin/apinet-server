@@ -136,6 +136,7 @@
     <Compile Include="Model\Activity\CollectionChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\AttributeChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\ActivityRecordModel.cs" />
+    <Compile Include="Model\Configuration\DbInstanceModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
     <Compile Include="Model\Files\IFile.cs" />

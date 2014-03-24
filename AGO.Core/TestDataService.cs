@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.DataAccess;
+using AGO.Core.Model.Configuration;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Dictionary.Projects;
 
@@ -28,6 +30,14 @@ namespace AGO.Core
 		public void Populate()
 		{
 			var dao = DaoFactory.CreateMainCrudDao();
+
+			var localhost = new DbInstanceModel
+			{
+				CreationTime = DateTime.UtcNow,
+				Name = "Localhost",
+				Server = "localhost"
+			};
+			dao.Store(localhost);
 
 			var admin = new UserModel
 			{

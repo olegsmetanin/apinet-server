@@ -20,5 +20,7 @@ namespace AGO.Core.Application
 		IModelProcessingService ModelProcessingService { get; }
 
 		IList<Type> TestDataServices { get; }
+
+		void CreateProjectDatabase(string connectionString, string module);
 	}
 }

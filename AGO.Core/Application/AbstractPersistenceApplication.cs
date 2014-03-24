@@ -43,6 +43,49 @@ namespace AGO.Core.Application
 		protected IList<Type> _TestDataServices = new List<Type>();
 		public IList<Type> TestDataServices { get { return _TestDataServices; } }
 
+		public void CreateProjectDatabase(string connectionString, string module)
+		{
+			if (connectionString.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("connectionString");
+			if (module.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("module");
+
+			if (ModuleDescriptors.All(m => m.Alias != module))
+				throw new ArgumentException(string.Format("Invalid module code: {0}", module), "module");
+
+			var builder = new NpgsqlConnectionStringBuilder(connectionString);
+			var host = builder.Host;
+			var newDbName = builder.Database;
+			string provider;
+			string masterConnectionString;
+			string loginName;
+			string loginPwd;
+			string notUsed;
+			var connectionFactory = CreateMasterConnectionFactory(out provider, out masterConnectionString, out notUsed, out loginName, out loginPwd);
+			using (var masterConnection = connectionFactory.CreateConnection())
+			{
+				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
+
+				builder.ConnectionString = masterConnectionString;
+				builder.Host = host;
+
+				masterConnection.ConnectionString = builder.ConnectionString;
+				masterConnection.Open();
+				DoExecuteCreateDatabaseScript(masterConnection, provider, newDbName, loginName, loginPwd);
+				masterConnection.Close();
+			}
+			builder.Database = newDbName;
+			builder.UserName = loginName;
+			builder.Password = loginPwd;
+			var now = DateTime.UtcNow;
+			var version = new Version(now.Year, now.Month, now.Day, 99);
+			_MigrationService.MigrateUp(
+				provider,
+				builder.ConnectionString,
+				ModuleDescriptors.Where(m => m.Alias == ModuleDescriptor.MODULE_CODE || m.Alias == module).Select(d => d.GetType().Assembly),
+				version);
+		}
+
 		public INotificationService NotificationService { get; protected set; }
 
 		public IWorkQueue WorkQueue { get; protected set; }
@@ -62,6 +105,9 @@ namespace AGO.Core.Application
 
 		protected virtual void DoRegisterPersistence()
 		{
+			//register self
+			IocContainer.RegisterSingle<IPersistenceApplication>(this);
+
 			IocContainer.RegisterSingle<ISessionProvider, AutoMappedSessionFactoryBuilder>();
 			IocContainer.RegisterInitializer<AutoMappedSessionFactoryBuilder>(service =>
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)).ApplyTo(service));
@@ -171,7 +217,7 @@ namespace AGO.Core.Application
 			WorkQueue = IocContainer.GetInstance<IWorkQueue>();
 		}
 
-		private DbProviderFactory CreateMasterConnectionFactory(out string provider, out string cs, out string dbName, out string login, out string pwd)
+		protected DbProviderFactory CreateMasterConnectionFactory(out string provider, out string cs, out string dbName, out string login, out string pwd)
 		{
 			var config = new KeyValueConfigurableDictionary();
 			new KeyValueConfigProvider(new RegexKeyValueProvider("^Persistence_(.*)", KeyValueProvider)).ApplyTo(config);
