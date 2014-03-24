@@ -78,32 +78,7 @@ namespace AGO.Tasks.Controllers
 		{
 			try
 			{
-				//project predicate
-				var projectFilter = _FilteringService.Filter<TModel>().Where(m => m.ProjectCode == project);
-				//term search predicate
-				IModelFilterNode termFilter = null;
-				if (!term.IsNullOrWhiteSpace())
-				{
-					termFilter = _FilteringService.Filter<TModel>()
-						.WhereString(searchProperty ?? textProperty).Like(term.TrimSafe(), true, true);
-				}
-				//concat with security predicates
-				var filter = ApplyReadConstraint<TModel>(project, projectFilter, termFilter);
-				//get executable criteria
-				var criteria = _FilteringService.CompileFilter(filter, typeof(TModel)).GetExecutableCriteria(ProjectSession(project));
-				//add needed sorting
 				var objTextProp = textProperty.Cast<TModel, string, object>();
-				if (sorters == null || !sorters.Any())
-				{
-					criteria.AddOrder(Order.Asc(Projections.Property(objTextProp).PropertyName));
-				}
-				else
-				{
-					foreach (var s in sorters)
-					{
-						criteria.AddOrder(Order.Asc(Projections.Property(s).PropertyName));
-					}
-				}
 
 				return PrepareLookup(project, term, page, textProperty, searchProperty, sorters)
 					.LookupModelsList(objTextProp);

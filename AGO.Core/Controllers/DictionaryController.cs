@@ -85,6 +85,19 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupProjectTypesByName(
+			[InRange(0, null)] int page,
+			string term)
+		{
+			var query = MainSession.QueryOver<ProjectTypeModel>()
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return DaoFactory.CreateMainCrudDao().PagedQuery(query, page).LookupList(m => m.Name, null, false);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
 			[NotEmpty] string project,
 			[InRange(0, null)] int page,

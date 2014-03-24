@@ -28,6 +28,7 @@ using AGO.Reporting.Common.Model;
 using AGO.WorkQueue;
 using Newtonsoft.Json.Linq;
 using NHibernate;
+using NHibernate.Criterion;
 
 namespace AGO.Core.Controllers
 {
@@ -82,7 +83,14 @@ namespace AGO.Core.Controllers
 			if (uploadPath.IsNullOrWhiteSpace())
 				uploadPath = System.IO.Path.GetTempPath();
 		}
-			
+
+		private static IDictionary<string, LookupEntry[]> statesCache = new Dictionary<string, LookupEntry[]>();
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupStates(string term, [InRange(0, null)] int page)
+		{
+			return LookupEnum<ReportTaskState>(term, page, ref statesCache);
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<ReportTemplateModel> GetTemplates(
 			[NotEmpty] string project,
@@ -181,6 +189,18 @@ namespace AGO.Core.Controllers
 				.UnderlyingCriteria.List<ReportSettingModel>();
 		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupSettings([NotEmpty] string project, string term, [InRange(0, null)] int page)
+		{
+			var query = ProjectSession(project).QueryOver<ReportSettingModel>()
+				.Where(m => m.ProjectCode == project)
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
+
+			return DaoFactory.CreateProjectCrudDao(project).PagedQuery(query, page).LookupModelsList(m => m.Name);
+		}
+		
 		[JsonEndpoint, RequireAuthorization]
 		public void RunReport(
 			[NotEmpty] string project,

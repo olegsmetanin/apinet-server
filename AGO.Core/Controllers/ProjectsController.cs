@@ -221,6 +221,24 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupProjects(string term, [InRange(0, null)] int page)
+		{
+			var fb = _FilteringService.Filter<ProjectModel>();
+			IModelFilterNode termFilter = null;
+			if (!term.IsNullOrWhiteSpace())
+			{
+				termFilter = fb.Or()
+					.WhereString(m => m.ProjectCode).Like(term.TrimSafe(), true, true)
+					.WhereString(m => m.Name).Like(term.TrimSafe(), true, true);
+			}
+			var filter = SecurityService.ApplyReadConstraint<ProjectModel>(null, CurrentUser.Id, MainSession, termFilter);
+			var criteria = _FilteringService.CompileFilter(filter, typeof (ProjectModel)).GetExecutableCriteria(MainSession);
+			criteria.AddOrder(Order.Asc(Projections.Property<ProjectModel>(m => m.Name).PropertyName));
+
+			return DaoFactory.CreateMainCrudDao().PagedCriteria(criteria, page).LookupList<ProjectModel>(m => m.ProjectCode, m => m.Name);
+		}
+			
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupParticipant(
 			[NotEmpty] string project,
 			string term,
