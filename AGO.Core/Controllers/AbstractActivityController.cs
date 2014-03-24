@@ -43,7 +43,7 @@ namespace AGO.Core.Controllers
 
 		protected virtual ActivityView ActivityViewFromRecord(ActivityRecordModel record, bool grouping)
 		{
-			return new ActivityView(record.ItemId, record.ItemType, grouping);
+			return new ActivityView(record.ItemId, record.ItemType, record.ItemName);
 		}
 
 		protected virtual ActivityItemView ActivityItemViewFromRecord(ActivityRecordModel record, bool grouping)
@@ -99,19 +99,17 @@ namespace AGO.Core.Controllers
 		#region Helper methods
 		
 		protected ICriteria MakeActivityCriteria(
-			string project, 
+			string project,
 			IEnumerable<IModelFilterNode> filter,
 			Guid itemId,
 			ActivityPredefinedFilter predefined,
 			DateTime specificDate)
 		{
-			var session = ProjectSession(project);
-
-			return _FilteringService.CompileFilter(SecurityService.ApplyReadConstraint<ActivityRecordModel>(project, CurrentUser.Id, session, filter.Concat(new[]
+			return _FilteringService.CompileFilter(SecurityService.ApplyReadConstraint<ActivityRecordModel>(project, CurrentUser.Id, MainSession, filter.Concat(new[]
 			{
-				predefined.ToFilter(specificDate, _FilteringService.Filter<ActivityRecordModel>()),
+				default(Guid).Equals(itemId) ? predefined.ToFilter(specificDate, _FilteringService.Filter<ActivityRecordModel>()) : null,
 				!default(Guid).Equals(itemId) ? _FilteringService.Filter<ActivityRecordModel>().Where(m => m.ItemId == itemId) : null
-			}).ToArray()), typeof(ActivityRecordModel)).GetExecutableCriteria(session);
+			}).ToArray()), typeof(ActivityRecordModel)).GetExecutableCriteria(ProjectSession(project));
 		}
 
 		protected IList<ActivityView> ActivityViewsFromRecords(IEnumerable<ActivityRecordModel> records, bool grouping)

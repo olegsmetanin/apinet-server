@@ -16,6 +16,7 @@ using AGO.Core.Model.Processing;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers.Activity;
+using AGO.Tasks.Model.Task;
 
 
 namespace AGO.Tasks.Controllers
@@ -50,10 +51,17 @@ namespace AGO.Tasks.Controllers
 		public IEnumerable<ActivityView> GetActivities(
 			[NotEmpty] string project,
 			[NotNull] ICollection<IModelFilterNode> filter,
-			Guid itemId,
+			string taskNum,			
 			ActivityPredefinedFilter predefined,
 			DateTime specificDate)
 		{
+			var session = ProjectSession(project);
+
+			var itemId = default(Guid);
+			if(!taskNum.IsNullOrWhiteSpace())
+					itemId = session.QueryOver<TaskModel>().Where(m => m.SeqNumber == taskNum && m.ProjectCode == project)
+				.Select(m => m.Id).Take(1).SingleOrDefault<Guid>();
+
 			var criteria = MakeActivityCriteria(project, filter, itemId, predefined, specificDate);
 			var dao = DaoFactory.CreateProjectCrudDao(project);
 

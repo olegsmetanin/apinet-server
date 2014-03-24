@@ -10,6 +10,10 @@ namespace AGO.Core.Controllers.Activity
 		[JsonProperty]
 		public Guid ItemId { get; private set; }
 
+		[JsonProperty]
+		public string ItemName { get; private set; }
+		
+		[JsonProperty]
 		public string ItemType { get; private set; }
 
 		[JsonProperty]
@@ -19,16 +23,13 @@ namespace AGO.Core.Controllers.Activity
 		public string ActivityItem { get; set; }
 
 		[JsonProperty]
-		public bool HasDetails { get; set; }
-
-		[JsonProperty]
 		public IList<ActivityItemView> Items { get; set; }
 
-		public ActivityView(Guid itemId, string itemType, bool hasDetails)
+		public ActivityView(Guid itemId, string itemType, string itemName)
 		{
 			ItemId = itemId;
 			ItemType = itemType;
-			HasDetails = hasDetails;
+			ItemName = itemName;
 			Items = new List<ActivityItemView>();
 		}
 	}
