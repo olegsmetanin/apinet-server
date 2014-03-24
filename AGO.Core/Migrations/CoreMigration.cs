@@ -157,10 +157,10 @@ namespace AGO.Core.Migrations
 				.AddValueColumn<AttributeChangeActivityRecordModel>(m => m.NewValue);
 
 			Alter.ModelTable<ActivityRecordModel>()
-				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.RelatedItemType)
-				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.RelatedItemName)
-				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.RelatedItemId)
-				.AddValueColumn<CollectionChangeActivityRecordModel>(m => m.ChangeType);
+				.AddValueColumn<RelatedChangeActivityRecordModel>(m => m.RelatedItemType)
+				.AddValueColumn<RelatedChangeActivityRecordModel>(m => m.RelatedItemName)
+				.AddValueColumn<RelatedChangeActivityRecordModel>(m => m.RelatedItemId)
+				.AddValueColumn<RelatedChangeActivityRecordModel>(m => m.ChangeType);
 		}
 
 		public override void Down()

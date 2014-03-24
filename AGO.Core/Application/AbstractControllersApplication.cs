@@ -43,7 +43,7 @@ namespace AGO.Core.Application
 			IocContainer.RegisterAll<IActionResultTransformer>(AllActionResultTransformers);
 			IocContainer.RegisterAll<IActivityViewProcessor>(ActivityViewProcessors);
 
-			IocContainer.RegisterSingle<CollectionChangeActivityViewProcessor, CollectionChangeActivityViewProcessor>();
+			IocContainer.RegisterSingle<RelatedChangeActivityViewProcessor, RelatedChangeActivityViewProcessor>();
 			IocContainer.RegisterSingle<AttributeChangeActivityViewProcessor, AttributeChangeActivityViewProcessor>();
 			
 			IocContainer.RegisterSingle<IActionExecutor, ActionExecutor>();

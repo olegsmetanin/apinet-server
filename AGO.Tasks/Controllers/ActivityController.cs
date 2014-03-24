@@ -35,11 +35,11 @@ namespace AGO.Tasks.Controllers
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
 			IEnumerable<IActivityViewProcessor> activityViewProcessors,
-			TaskCollectionActivityViewProcessor taskCollectionProcessor,
+			TaskChangeRelatedActivityViewProcessor taskRelatedChangeProcessor,
 			TaskAttributeActivityViewProcessor taskAttributeProcessor)
 			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory, activityViewProcessors)
 		{
-			_ActivityViewProcessors.Add(taskCollectionProcessor);
+			_ActivityViewProcessors.Add(taskRelatedChangeProcessor);
 			_ActivityViewProcessors.Add(taskAttributeProcessor);
 		} 
 

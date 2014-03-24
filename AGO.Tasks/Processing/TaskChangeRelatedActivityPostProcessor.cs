@@ -8,11 +8,11 @@ using AGO.Tasks.Model.Task;
 
 namespace AGO.Tasks.Processing
 {
-	public class TaskCollectionActivityPostProcessor : CollectionChangeActivityPostProcessor<TaskModel, ProjectModel>
+	public class TaskChangeRelatedActivityPostProcessor : RelatedChangeActivityPostProcessor<TaskModel, ProjectModel>
 	{
 		#region Properties, fields, constructors
 
-		public TaskCollectionActivityPostProcessor(
+		public TaskChangeRelatedActivityPostProcessor(
 			DaoFactory factory,
 			ISessionProviderRegistry providerRegistry)
 			: base(factory, providerRegistry)
@@ -23,9 +23,9 @@ namespace AGO.Tasks.Processing
 
 		#region Template methods
 
-		private CollectionChangeActivityRecordModel FromTask(TaskModel task)
+		private RelatedChangeActivityRecordModel FromTask(TaskModel task)
 		{
-			return new CollectionChangeActivityRecordModel {ProjectCode = task.ProjectCode};
+			return new RelatedChangeActivityRecordModel {ProjectCode = task.ProjectCode};
 		}
 
 		protected override IList<ActivityRecordModel> RecordsForInsertion(TaskModel model)

@@ -10,7 +10,7 @@ namespace AGO.Core.Model.Activity
 		Update
 	}
 
-	public class CollectionChangeActivityRecordModel : ActivityRecordModel
+	public class RelatedChangeActivityRecordModel : ActivityRecordModel
 	{
 		#region Persistent
 

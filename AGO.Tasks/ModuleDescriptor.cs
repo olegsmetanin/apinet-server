@@ -51,9 +51,9 @@ namespace AGO.Tasks
 			app.IocContainer.AppendToCollection(typeof(IFileResourceStorage), fileResRegistration);
 
 			app.IocContainer.RegisterSingle<TaskAttributesActivityPostProcessor, TaskAttributesActivityPostProcessor>();
-			app.IocContainer.RegisterSingle<TaskCollectionActivityPostProcessor, TaskCollectionActivityPostProcessor>();			
+			app.IocContainer.RegisterSingle<TaskChangeRelatedActivityPostProcessor, TaskChangeRelatedActivityPostProcessor>();			
 			app.IocContainer.RegisterSingle<TaskAttributeActivityViewProcessor, TaskAttributeActivityViewProcessor>();
-			app.IocContainer.RegisterSingle<TaskCollectionActivityViewProcessor, TaskCollectionActivityViewProcessor>();
+			app.IocContainer.RegisterSingle<TaskChangeRelatedActivityViewProcessor, TaskChangeRelatedActivityViewProcessor>();
 
 			var projFactoryRegistration = Lifestyle.Singleton.CreateRegistration(
 				typeof (IProjectFactory),
@@ -72,7 +72,7 @@ namespace AGO.Tasks
 
 			persistentApp.ModelProcessingService.RegisterModelPostProcessors(new IModelPostProcessor[]
 			{
-				app.IocContainer.GetInstance<TaskCollectionActivityPostProcessor>(),
+				app.IocContainer.GetInstance<TaskChangeRelatedActivityPostProcessor>(),
 				app.IocContainer.GetInstance<TaskAttributesActivityPostProcessor>()				
 			});
 		}

@@ -73,7 +73,7 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual void DoProcess(ActivityView view, TModel model)
 		{
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("D", CultureInfo.CurrentUICulture);
+			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
 			view.ActivityItem = model.ItemName;
 		}
 
@@ -87,7 +87,7 @@ namespace AGO.Core.Controllers.Activity
 				return;
 			}
 
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("t", CultureInfo.CurrentUICulture) + ", ";
+			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
 			view.User = model.Creator.ToStringSafe();
 		}
 

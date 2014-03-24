@@ -48,11 +48,11 @@ namespace AGO.Tasks.Controllers.Activity
 		{
 			if (!"TaskModel".Equals(view.ItemType) || typeof(AttributeChangeActivityRecordModel) != view.RecordType)
 				return;
-			base.DoPostProcessItem(view);
 
 			if ("DueDate".Equals(view.Action))
 				TransformDateValues(view);
 
+			base.DoPostProcessItem(view);
 			LocalizeAction<TaskModel>(view);
 		}
 

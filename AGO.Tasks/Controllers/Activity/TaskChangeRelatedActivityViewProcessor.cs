@@ -5,10 +5,10 @@ using AGO.Core.Model.Activity;
 
 namespace AGO.Tasks.Controllers.Activity
 {
-	public class TaskCollectionActivityViewProcessor : CollectionChangeActivityViewProcessor
+	public class TaskChangeRelatedActivityViewProcessor : RelatedChangeActivityViewProcessor
 	{
 		#region Properties, fields, constructors
-		public TaskCollectionActivityViewProcessor(
+		public TaskChangeRelatedActivityViewProcessor(
 			ICrudDao crudDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService)
@@ -22,11 +22,11 @@ namespace AGO.Tasks.Controllers.Activity
 
 		protected override void DoPostProcessItem(ActivityItemView view)
 		{
-			if (!"TaskModel".Equals(view.ItemType) || typeof(CollectionChangeActivityRecordModel) != view.RecordType)
+			if (!"TaskModel".Equals(view.ItemType) || typeof(RelatedChangeActivityRecordModel) != view.RecordType)
 				return;
 			base.DoPostProcessItem(view);
 
-			LocalizeRelatedActivityItem<TaskCollectionActivityViewProcessor>(view);
+			LocalizeRelatedActivityItem<TaskChangeRelatedActivityViewProcessor>(view);
 		}
 
 		#endregion

@@ -85,7 +85,7 @@ namespace AGO.Core.Controllers
 				if (record is AttributeChangeActivityRecordModel && ChangeType.Update.ToString().Equals(groupedView.Action))
 					return groupedView;
 
-				var collectionChangeRecord = record as CollectionChangeActivityRecordModel;
+				var collectionChangeRecord = record as RelatedChangeActivityRecordModel;
 				if (collectionChangeRecord != null && collectionChangeRecord.ChangeType.ToString().Equals(groupedView.Action) &&
 						collectionChangeRecord.RelatedItemType.Equals(groupedView.Before))
 					return groupedView;
