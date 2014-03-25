@@ -96,7 +96,7 @@ namespace AGO.WebApiApp.Controllers
 						HttpContext.Response.StatusCode = 500;
 						if (e is NotAuthenticatedException)
 							HttpContext.Response.StatusCode = 401;
-						if (e is AccessForbiddenException)
+						if (e is AccessForbiddenException || e is NoSuchProjectMemberException || e is NoSuchUserException)
 							HttpContext.Response.StatusCode = 403;
 					
 						var httpException = e as HttpException;
@@ -118,7 +118,12 @@ namespace AGO.WebApiApp.Controllers
 								message.Append(string.Format(" ({0})", subMessage.FirstCharToLower()));
 						}
 
-						return Json(new { message = message.ToString() });
+						return Json(new
+						{
+							message = message.ToString(),
+							invalidProject = e is NoSuchProjectException,
+							accessDenied =  e is NoSuchUserException || e is NoSuchProjectMemberException
+						});
 					}
 					catch (Exception ex)
 					{
