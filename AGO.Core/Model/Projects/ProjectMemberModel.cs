@@ -78,5 +78,10 @@ namespace AGO.Core.Model.Projects
 				CurrentRole = roles[0]
 			};
 		}
+
+		public override string ToString()
+		{
+			return FullName.IsNullOrWhiteSpace() ? base.ToString() : FullName.TrimSafe();
+		}
 	}
 }

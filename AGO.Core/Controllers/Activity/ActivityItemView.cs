@@ -8,6 +8,10 @@ namespace AGO.Core.Controllers.Activity
 	{
 		public Guid ItemId { get; private set; }
 
+		public string ItemType { get; private set; }
+
+		public Type RecordType { get; private set; }
+
 		[JsonProperty]
 		public string ActivityTime { get; set; }
 
@@ -23,9 +27,11 @@ namespace AGO.Core.Controllers.Activity
 		[JsonProperty]
 		public string After { get; set; }
 
-		public ActivityItemView(Guid itemId)
+		public ActivityItemView(Guid itemId, string itemType, Type recordType)
 		{
 			ItemId = itemId;
+			ItemType = itemType;
+			RecordType = recordType;
 		}
 	}
 }

@@ -7,7 +7,14 @@ namespace AGO.Core.Controllers.Activity
 	[JsonObject(MemberSerialization.OptIn)]
 	public class ActivityView
 	{
+		[JsonProperty]
 		public Guid ItemId { get; private set; }
+
+		[JsonProperty]
+		public string ItemName { get; private set; }
+		
+		[JsonProperty]
+		public string ItemType { get; private set; }
 
 		[JsonProperty]
 		public string ActivityTime { get; set; }
@@ -18,9 +25,11 @@ namespace AGO.Core.Controllers.Activity
 		[JsonProperty]
 		public IList<ActivityItemView> Items { get; set; }
 
-		public ActivityView(Guid itemId)
+		public ActivityView(Guid itemId, string itemType, string itemName)
 		{
 			ItemId = itemId;
+			ItemType = itemType;
+			ItemName = itemName;
 			Items = new List<ActivityItemView>();
 		}
 	}

@@ -141,7 +141,17 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Notification_(.*)", KeyValueProvider)).ApplyTo(service));
 		}
 
-		protected virtual Type NotificationServiceType { get { return typeof (NotificationService); } }
+		protected virtual Type NotificationServiceType
+		{
+			get
+			{
+#if DEBUG
+				return typeof (NoopNotificationService);
+#else
+				return typeof(NotificationService);
+#endif
+			}
+		}
 
 		protected virtual void DoRegisterWorkQueue()
 		{

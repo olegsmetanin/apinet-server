@@ -83,7 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\AbstractTasksController.cs" />
-    <Compile Include="Controllers\Activity\TaskCollectionActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\TaskChangeRelatedActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\TaskAttributeActivityViewProcessor.cs" />
     <Compile Include="Controllers\ConfigController.cs" />
     <Compile Include="Controllers\ActivityController.cs" />
@@ -122,7 +122,7 @@
     <Compile Include="Model\Task\TaskTimelogEntryModel.cs" />
     <Compile Include="Model\Task\TaskToTagModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
-    <Compile Include="Processing\TaskCollectionActivityPostProcessor.cs" />
+    <Compile Include="Processing\TaskChangeRelatedActivityPostProcessor.cs" />
     <Compile Include="Processing\TaskAttributesActivityPostProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reports\DetailedTaskListDataGenerator.cs" />
@@ -150,11 +150,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <EmbeddedResource Include="Controllers\Activity\TaskCollectionActivityViewProcessor.resx">
-      <DependentUpon>TaskCollectionActivityViewProcessor.cs</DependentUpon>
+    <EmbeddedResource Include="Controllers\Activity\TaskChangeRelatedActivityViewProcessor.resx">
+      <DependentUpon>TaskChangeRelatedActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controllers\Activity\TaskCollectionActivityViewProcessor.ru.resx">
-      <DependentUpon>TaskCollectionActivityViewProcessor.cs</DependentUpon>
+    <EmbeddedResource Include="Controllers\Activity\TaskChangeRelatedActivityViewProcessor.ru.resx">
+      <DependentUpon>TaskChangeRelatedActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controllers\Activity\TaskAttributeActivityViewProcessor.resx">
       <DependentUpon>TaskAttributeActivityViewProcessor.cs</DependentUpon>

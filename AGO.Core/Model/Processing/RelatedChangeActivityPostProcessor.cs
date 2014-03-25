@@ -7,13 +7,13 @@ using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Processing
 {
-	public abstract class CollectionChangeActivityPostProcessor<TModel, TRelatedModel> : ActivityPostProcessor<TModel>
+	public abstract class RelatedChangeActivityPostProcessor<TModel, TRelatedModel> : ActivityPostProcessor<TModel>
 		where TModel : IdentifiedModel<Guid>, new()
 		where TRelatedModel : IdentifiedModel<Guid>
 	{
 		#region Properties, fields, constructors
 
-		protected CollectionChangeActivityPostProcessor(
+		protected RelatedChangeActivityPostProcessor(
 			DaoFactory factory,
 			ISessionProviderRegistry providerRegistry)
 			: base(factory, providerRegistry)
@@ -37,7 +37,7 @@ namespace AGO.Core.Model.Processing
 		protected virtual ActivityRecordModel PopulateCollectionActivityRecord(
 			TModel model, 
 			TRelatedModel relatedModel,
-			CollectionChangeActivityRecordModel record, 
+			RelatedChangeActivityRecordModel record, 
 			ChangeType changeType,
 			ProjectMemberModel member = null)
 		{

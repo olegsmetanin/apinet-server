@@ -6,6 +6,10 @@ namespace AGO.Core.Controllers.Activity
 	{
 		void Process(ActivityView view, ActivityRecordModel model);
 
+		void PostProcess(ActivityView view);
+
 		void ProcessItem(ActivityItemView view, ActivityRecordModel model);
+
+		void PostProcessItem(ActivityItemView view);
 	}
 }

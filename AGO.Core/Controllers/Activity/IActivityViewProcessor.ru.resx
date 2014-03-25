@@ -120,4 +120,7 @@
   <data name="User" xml:space="preserve">
     <value>Пользователь "{0}"</value>
   </data>
+  <data name="Users" xml:space="preserve">
+    <value>Пользователи "{0}"</value>
+  </data>
 </root>

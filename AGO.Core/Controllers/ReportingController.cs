@@ -324,6 +324,14 @@ namespace AGO.Core.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public object GetTopLastReports([NotEmpty] string project)
 		{
+			//TODO: Remove after FIXME
+			return new
+			{
+				active = 0,
+				unread = 0,
+				reports = new object[0]
+			};
+
 			var user = _AuthController.CurrentUser();
 
 			Func<ISession,

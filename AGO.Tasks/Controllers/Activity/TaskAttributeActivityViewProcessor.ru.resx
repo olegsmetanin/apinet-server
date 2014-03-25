@@ -120,4 +120,7 @@
   <data name="ActivityItem" xml:space="preserve">
     <value>Задача "{0}"</value>
   </data>
+  <data name="Updated" xml:space="preserve">
+    <value>внес(ли) изменения в задачу</value>
+  </data>
 </root>

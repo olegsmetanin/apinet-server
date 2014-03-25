@@ -84,14 +84,14 @@
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
-    <Compile Include="Controllers\Activity\CollectionChangeActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\GroupedActivityItemView.cs" />
+    <Compile Include="Controllers\Activity\RelatedChangeActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\AttributeChangeActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\AbstractActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\IActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\ActivityItemView.cs" />
     <Compile Include="Controllers\Activity\ActivityView.cs" />
     <Compile Include="Controllers\Activity\ActivityPredefinedFilter.cs" />
-    <Compile Include="Controllers\Activity\ProjectAttributeActivityViewProcessor.cs" />
     <Compile Include="Controllers\DictionaryStateStorage.cs" />
     <Compile Include="Controllers\Downloader.cs" />
     <Compile Include="Controllers\Extensions.cs" />
@@ -133,7 +133,7 @@
     <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
-    <Compile Include="Model\Activity\CollectionChangeActivityRecordModel.cs" />
+    <Compile Include="Model\Activity\RelatedChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\AttributeChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\ActivityRecordModel.cs" />
     <Compile Include="Model\Configuration\DbInstanceModel.cs" />
@@ -146,8 +146,7 @@
     <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\IStatusHistoryRecordModel.cs" />
     <Compile Include="Model\Processing\ActivityPostProcessor.cs" />
-    <Compile Include="Model\Processing\CollectionChangeActivityPostProcessor.cs" />
-    <Compile Include="Model\Processing\ProjectAttributesActivityPostProcessor.cs" />
+    <Compile Include="Model\Processing\RelatedChangeActivityPostProcessor.cs" />
     <Compile Include="Model\Processing\AttributeChangeActivityPostProcessor.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />
     <Compile Include="Model\Processing\IModelProcessingService.cs" />
@@ -365,11 +364,11 @@
     <EmbeddedResource Include="AbstractApplicationException.ru.resx">
       <DependentUpon>AbstractApplicationException.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controllers\Activity\CollectionChangeActivityViewProcessor.resx">
-      <DependentUpon>CollectionChangeActivityViewProcessor.cs</DependentUpon>
+    <EmbeddedResource Include="Controllers\Activity\RelatedChangeActivityViewProcessor.resx">
+      <DependentUpon>RelatedChangeActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controllers\Activity\CollectionChangeActivityViewProcessor.ru.resx">
-      <DependentUpon>CollectionChangeActivityViewProcessor.cs</DependentUpon>
+    <EmbeddedResource Include="Controllers\Activity\RelatedChangeActivityViewProcessor.ru.resx">
+      <DependentUpon>RelatedChangeActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controllers\Activity\AttributeChangeActivityViewProcessor.resx">
       <DependentUpon>AttributeChangeActivityViewProcessor.cs</DependentUpon>
@@ -382,12 +381,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controllers\Activity\IActivityViewProcessor.ru.resx">
       <DependentUpon>IActivityViewProcessor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controllers\Activity\ProjectAttributeActivityViewProcessor.resx">
-      <DependentUpon>ProjectAttributeActivityViewProcessor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controllers\Activity\ProjectAttributeActivityViewProcessor.ru.resx">
-      <DependentUpon>ProjectAttributeActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Execution\AbstractExecutionException.resx">
       <DependentUpon>AbstractExecutionException.cs</DependentUpon>

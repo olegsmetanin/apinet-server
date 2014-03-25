@@ -1,15 +1,13 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using AGO.Core.Localization;
-using AGO.Core.Model;
 using AGO.Core.Model.Activity;
 
 namespace AGO.Core.Controllers.Activity
 {
-	public class CollectionChangeActivityViewProcessor : AbstractActivityViewProcessor<CollectionChangeActivityRecordModel>
+	public class RelatedChangeActivityViewProcessor : AbstractActivityViewProcessor<RelatedChangeActivityRecordModel>
 	{
 		#region Properties, fields, constructors
-		public CollectionChangeActivityViewProcessor(
+		public RelatedChangeActivityViewProcessor(
 			ICrudDao crudDao,
 			ISessionProvider sessionProvider,
 			ILocalizationService localizationService)
@@ -21,23 +19,30 @@ namespace AGO.Core.Controllers.Activity
 
 		#region Template methods
 
-		protected override void DoProcessItem(ActivityItemView view, CollectionChangeActivityRecordModel model)
+		protected override void DoProcessItem(ActivityItemView view, RelatedChangeActivityRecordModel model)
 		{
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("t", CultureInfo.CurrentUICulture);
-			view.User = model.Creator.ToStringSafe();
+			base.DoProcessItem(view, model);
+
 			view.Action = model.ChangeType.ToString();
 			view.Before = model.RelatedItemName;
+		}
 
-			LocalizeUser(view);
+		protected override void DoPostProcessItem(ActivityItemView view)
+		{
+			base.DoPostProcessItem(view);
+			if (typeof(RelatedChangeActivityRecordModel) != view.RecordType)
+				return;
+
 			LocalizeAction(view);
 		}
+
 
 		protected virtual void LocalizeAction(ActivityItemView view)
 		{
 			if (view.Action.IsNullOrWhiteSpace())
 				return;
 
-			view.Action = _LocalizationService.MessageForType(typeof(CollectionChangeActivityViewProcessor), 
+			view.Action = _LocalizationService.MessageForType(typeof(RelatedChangeActivityViewProcessor), 
 				"Action" + view.Action, CultureInfo.CurrentUICulture);
 		}
 

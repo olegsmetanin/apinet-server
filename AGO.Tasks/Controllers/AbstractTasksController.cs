@@ -142,9 +142,9 @@ namespace AGO.Tasks.Controllers
 					session = ProjectSession(project);
 				}
 
-				var persistentModel = default(Guid).Equals(id)
-										? postFactory((factory ?? defaultFactory)())
-				                      	: dao.Get<TModel>(id);
+				var persistentModel = postFactory(default(Guid).Equals(id)
+					? (factory ?? defaultFactory)()
+				    : dao.Get<TModel>(id));
 				if (persistentModel == null)
 					throw new NoSuchEntityException();
 

@@ -13,7 +13,7 @@ namespace AGO.Core.Model.Activity
 		[NotEmpty]
 		public virtual Guid ItemId { get; set; }
 
-		[NotEmpty, NotLonger(128)]
+		[NotEmpty, NotLonger(128), MetadataExclude]
 		public virtual string ItemType { get; set; }
 
 		[NotEmpty]

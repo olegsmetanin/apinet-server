@@ -13,6 +13,7 @@ namespace AGO.Core.Model.Security
 
 		[NotNull]
 		public virtual ProjectMemberModel Creator { get; set; }
+
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? CreatorId { get; set; }
 

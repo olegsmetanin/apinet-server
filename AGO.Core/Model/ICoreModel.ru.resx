@@ -264,4 +264,28 @@
   <data name="ReportTemplateModel.LastChange" xml:space="preserve">
     <value>Изменен</value>
   </data>
+  <data name="ActivityRecordModel.ItemId" xml:space="preserve">
+    <value>Идентификатор элемента активности</value>
+  </data>
+  <data name="ActivityRecordModel.ItemName" xml:space="preserve">
+    <value>Наименование элемента активности</value>
+  </data>
+  <data name="AttributeChangeActivityRecordModel.Attribute" xml:space="preserve">
+    <value>Наименование атрибута</value>
+  </data>
+  <data name="AttributeChangeActivityRecordModel.NewValue" xml:space="preserve">
+    <value>Новое значение</value>
+  </data>
+  <data name="AttributeChangeActivityRecordModel.OldValue" xml:space="preserve">
+    <value>Старое значение</value>
+  </data>
+  <data name="RelatedChangeActivityRecordModel.RelatedItemId" xml:space="preserve">
+    <value>Идентификатор связанного элемента</value>
+  </data>
+  <data name="RelatedChangeActivityRecordModel.RelatedItemName" xml:space="preserve">
+    <value>Наименование связанного элемента</value>
+  </data>
+  <data name="RelatedChangeActivityRecordModel.ChangeType" xml:space="preserve">
+    <value>Тип изменения</value>
+  </data>
 </root>

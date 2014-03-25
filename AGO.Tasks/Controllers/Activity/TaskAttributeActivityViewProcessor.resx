@@ -120,4 +120,7 @@
   <data name="ActivityItem" xml:space="preserve">
     <value>Task "{0}"</value>
   </data>
+  <data name="Updated" xml:space="preserve">
+    <value>commited changes to task</value>
+  </data>
 </root>
