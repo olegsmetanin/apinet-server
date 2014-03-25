@@ -267,4 +267,28 @@
   <data name="ProjectMemberModel.FullName" xml:space="preserve">
     <value>Full name</value>
   </data>
+  <data name="ActivityRecordModel.ItemId" xml:space="preserve">
+    <value>Activity item identifier</value>
+  </data>
+  <data name="ActivityRecordModel.ItemName" xml:space="preserve">
+    <value>Activity item name</value>
+  </data>
+  <data name="AttributeChangeActivityRecordModel.Attribute" xml:space="preserve">
+    <value>Attribute name</value>
+  </data>
+  <data name="AttributeChangeActivityRecordModel.NewValue" xml:space="preserve">
+    <value>New attribute value</value>
+  </data>
+  <data name="AttributeChangeActivityRecordModel.OldValue" xml:space="preserve">
+    <value>Old attribute value</value>
+  </data>
+  <data name="RelatedChangeActivityRecordModel.RelatedItemId" xml:space="preserve">
+    <value>Related item identifier</value>
+  </data>
+  <data name="RelatedChangeActivityRecordModel.RelatedItemName" xml:space="preserve">
+    <value>Related item name</value>
+  </data>
+  <data name="RelatedChangeActivityRecordModel.ChangeType" xml:space="preserve">
+    <value>Change type</value>
+  </data>
 </root>

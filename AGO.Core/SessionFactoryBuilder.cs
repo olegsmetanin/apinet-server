@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Context;
-using NHibernate.Metadata;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Model;
+using NHibernate.Metadata;
+using NHibernate.Type;
 
 namespace AGO.Core
 {
@@ -239,49 +241,70 @@ namespace AGO.Core
 		{
 			_AllModelsMetadata.Clear();
 
-			foreach (var pair in _SessionFactory.GetAllClassMetadata())
-			{
-				var internalClassMeta = pair.Value;
-				var mappedClass = internalClassMeta.GetMappedClass(EntityMode.Poco);
-				if (mappedClass == null)
-					continue;
-
-				var excludeAttribute = mappedClass.FirstAttribute<MetadataExcludeAttribute>(false);
-				if (excludeAttribute != null)
-					continue;
-				
-				var classMeta = new ModelMetadata
-				{
-					Name = pair.Key,
-					ModelType = mappedClass
-				};
-				_AllModelsMetadata.Add(classMeta);
-
-				
-				for (var i = 0; i < internalClassMeta.PropertyNames.Length; i++)
-				{
-					if (internalClassMeta.IsVersioned && i == internalClassMeta.VersionProperty)
-						continue;
-					AddPropertyMeta(classMeta, internalClassMeta, mappedClass, internalClassMeta.PropertyNames[i]);				
-				}
-
-				if (internalClassMeta.HasIdentifierProperty)
-					AddPropertyMeta(classMeta, internalClassMeta, mappedClass, internalClassMeta.IdentifierPropertyName);
-			}
+			foreach (var mappedClass in _SessionFactory.GetAllClassMetadata().Select(
+					pair => pair.Value.GetMappedClass(EntityMode.Poco)).Where(mappedClass => mappedClass != null))
+				PopulateClassMeta(mappedClass);
 		}
 
 		#endregion
 
 		#region Helper methods
 
-		internal void AddPropertyMeta(ModelMetadata classMeta, IClassMetadata internalClassMeta, Type mappedClass, string propertyName)
-		{
-			var internalPropertyMeta = internalClassMeta.GetPropertyType(propertyName);
-			if (internalPropertyMeta == null)
-				return;
+		internal void PopulateClassMeta(Type mappedClass)
+		{			
+			var currentClass = mappedClass;
+			IClassMetadata internalClassMeta = null;
 
-			var propertyInfo = mappedClass.GetProperty(propertyName);
-			if (propertyInfo == null)
+			while (currentClass != null)
+			{
+				var currentClassMeta = _SessionFactory.GetClassMetadata(currentClass);
+				if (currentClassMeta == null)
+					break;
+				internalClassMeta = internalClassMeta ?? currentClassMeta;
+
+				var excludeAttribute = currentClass.FirstAttribute<MetadataExcludeAttribute>(false);
+				if (excludeAttribute != null)
+					break;
+
+				var classMeta = _AllModelsMetadata.OfType<ModelMetadata>().FirstOrDefault(m => m.ModelType == currentClass);
+				if (classMeta == null)
+				{
+					classMeta = new ModelMetadata
+					{
+						Name = currentClassMeta.EntityName,
+						ModelType = currentClass
+					};
+
+					_AllModelsMetadata.Add(classMeta);
+				}
+
+				for (var i = 0; i < internalClassMeta.PropertyNames.Length; i++)
+				{
+					if (internalClassMeta.IsVersioned && i == internalClassMeta.VersionProperty)
+						continue;
+
+					var propertyInfo = mappedClass.GetProperty(internalClassMeta.PropertyNames[i]);
+					if (propertyInfo == null)
+						continue;
+
+					if (currentClass != mappedClass && currentClass.GetProperty(internalClassMeta.PropertyNames[i]) != null)
+						continue;
+
+					AddPropertyMeta(classMeta, internalClassMeta.GetPropertyType(internalClassMeta.PropertyNames[i]), propertyInfo,
+						currentClass == mappedClass ? internalClassMeta.PropertyNames[i] : mappedClass.Name + "." + internalClassMeta.PropertyNames[i]);
+				}
+
+				if (currentClass == mappedClass && internalClassMeta.HasIdentifierProperty)
+						AddPropertyMeta(classMeta, internalClassMeta.GetPropertyType(internalClassMeta.IdentifierPropertyName), 
+					mappedClass.GetProperty(internalClassMeta.IdentifierPropertyName), internalClassMeta.IdentifierPropertyName);
+
+				currentClass = currentClass.BaseType;
+			}
+		}
+
+		internal void AddPropertyMeta(ModelMetadata classMeta, IType internalPropertyMeta, PropertyInfo propertyInfo, string propertyName)
+		{
+			if (internalPropertyMeta == null)
 				return;
 
 			var excludeAttribute = propertyInfo.FirstAttribute<MetadataExcludeAttribute>(false);

@@ -1,5 +1,6 @@
 ﻿using System;
 using AGO.Core.Attributes.Constraints;
+using AGO.Core.Attributes.Mapping;
 
 namespace AGO.Core.Model.Activity
 {
@@ -17,7 +18,7 @@ namespace AGO.Core.Model.Activity
 		[NotEmpty]
 		public virtual Guid RelatedItemId { get; set; }
 
-		[NotEmpty, NotLonger(128)]
+		[NotEmpty, NotLonger(128), MetadataExclude]
 		public virtual string RelatedItemType { get; set; }
 
 		[NotEmpty]
