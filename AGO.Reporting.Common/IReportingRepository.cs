@@ -21,5 +21,7 @@ namespace AGO.Reporting.Common
 		object GetTaskAsDTO(ISession mainDbSession, ISession projectDbSession, Guid taskId);
 
 		IReportTemplate GetTemplate(ISession session, Guid templateId);
+
+		void ArchiveReport(ISession mainDbSession, IReportTask report);
 	}
 }

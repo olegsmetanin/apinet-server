@@ -118,6 +118,7 @@ namespace AGO.Reporting.Service.Workers
 			StopProgressTracking();
 			ChangeState(rt =>
 			{
+				//Main task in project db
 			    rt.State = ReportTaskState.Completed;
 			    rt.CompletedAt = DateTime.Now;
 			    rt.DataGenerationProgress = 100; //fix generator 
@@ -128,6 +129,11 @@ namespace AGO.Reporting.Service.Workers
 				rt.ResultContent = buffer;
 			    rt.ResultName = result.GetFileName(rt.ResultName);
 			    rt.ResultContentType = result.ContentType;
+
+				//Archive record in master db
+				var mainDbSession = SessionProviderRegistry.GetMainDbProvider().CurrentSession;
+				Repository.ArchiveReport(mainDbSession, rt);
+				mainDbSession.Flush();
 			}, ReportEvents.COMPLETED);
 		}
 
@@ -262,10 +268,10 @@ namespace AGO.Reporting.Service.Workers
 						var reportTask = Repository.GetTask(projSess, TaskId);
 						action(reportTask);
 						projSess.SaveOrUpdate(reportTask);
-						var login = reportTask.AuthorLogin;//cache login, because after flush user proxy can't be loaded
+						var userId = reportTask.AuthorId.ToString();//cache user id, because after flush user proxy can't be loaded
 						projSess.Flush();
 						//Not wait for the task complete - no care if some of messages was lost
-						Bus.EmitReportChanged(type, login, Repository.GetTaskAsDTO(mainSess, projSess, reportTask.Id));
+						Bus.EmitReportChanged(type, userId, Repository.GetTaskAsDTO(mainSess, projSess, reportTask.Id));
 					}
 					finally
 					{

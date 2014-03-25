@@ -22,7 +22,7 @@ namespace AGO.Reporting.Common.Model
 		/// <summary>
 		/// Логин автора
 		/// </summary>
-		string AuthorLogin { get; }
+		Guid AuthorId { get; }
 
 		/// <summary>
 		/// Идентификатор языковых настроек, используемых при генерации отчета (названия enum-ов, числа, даты и т.п.)

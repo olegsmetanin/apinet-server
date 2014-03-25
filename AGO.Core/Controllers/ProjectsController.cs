@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using AGO.Core.Application;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers.Projects;
@@ -8,6 +10,7 @@ using AGO.Core.Controllers.Security;
 using AGO.Core.DataAccess;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
+using AGO.Core.Model.Configuration;
 using AGO.Core.Model.Security;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Dictionary.Projects;
@@ -17,6 +20,7 @@ using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using NHibernate.Criterion;
+using Npgsql;
 
 
 namespace AGO.Core.Controllers
@@ -31,6 +35,7 @@ namespace AGO.Core.Controllers
 	{
 		#region Properties, fields, constructors
 
+		private readonly IPersistenceApplication app;
 		private readonly IProjectFactory[] projFactories;
 
 		public ProjectsController(
@@ -45,6 +50,8 @@ namespace AGO.Core.Controllers
 			IEnumerable<IProjectFactory> projFactories)
 			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
 		{
+			app = AbstractApplication.Current as IPersistenceApplication;
+			Debug.Assert(app != null, "Can't grab current persistent application");
 			this.projFactories = (projFactories ?? Enumerable.Empty<IProjectFactory>()).ToArray();
 		}
 
@@ -99,38 +106,59 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization(true)]
-		public object CreateProject([NotNull] ProjectModel model, [NotNull] ISet<Guid> tagIds)
+		public IEnumerable<LookupEntry> LookupDbInstances(string term, [InRange(0, null)] int page)
+		{
+			var query = MainSession.QueryOver<DbInstanceModel>()
+				.OrderBy(m => m.Name).Asc;
+			if (!term.IsNullOrWhiteSpace())
+				query = query.WhereRestrictionOn(m => m.Name).IsLike(term.TrimSafe(), MatchMode.Anywhere);
+
+			return DaoFactory.CreateMainCrudDao().PagedQuery(query, page).LookupModelsList(m => m.Name);
+		}
+			
+		[JsonEndpoint, RequireAuthorization(true)]
+		public object CreateProject([NotNull] ProjectModel model, [NotEmpty] Guid serverId, [NotNull] ISet<Guid> tagIds, bool skipDbCreation = false)
 		{
 			var validation = new ValidationResult();
 
 			try
 			{
 				var dao = DaoFactory.CreateMainCrudDao();
-				var currentUser = _AuthController.CurrentUser();
 				var newProject = new ProjectModel
 				{
 					CreationTime = DateTime.UtcNow,
 					ProjectCode = model.ProjectCode.TrimSafe(),
 					Name = model.Name.TrimSafe(),
 					Description = model.Description.TrimSafe(),
-					Type = model.TypeId != null && !default(Guid).Equals(model.TypeId)
-						? dao.Get<ProjectTypeModel>(model.TypeId)
-						: null,
-					VisibleForAll = model.VisibleForAll,
-					Status = ProjectStatus.New,
-					//TODO replace with data from client (db + may be server)
-					ConnectionString = MainSession.Connection.ConnectionString
+					Type = dao.Get<ProjectTypeModel>(model.TypeId, true),
+					VisibleForAll = model.VisibleForAll
 				};
+				newProject.ChangeStatus(ProjectStatus.New, CurrentUser);
+
+				if (!skipDbCreation)
+				{
+					var dbinstance = dao.Get<DbInstanceModel>(serverId, true);
+					newProject.ConnectionString = BuildProjectConnectionString(newProject, dbinstance,
+						MainSession.Connection.ConnectionString);
+				}
+				else
+				{
+					newProject.ConnectionString = MainSession.Connection.ConnectionString;
+				}
 
 				_ModelProcessingService.ValidateModelSaving(newProject, validation, MainSession);
 				if (!validation.Success)
 					return validation;
 
 				//need to call before first Store called, because after this IsNew return false
-				SecurityService.DemandUpdate(newProject, newProject.ProjectCode, currentUser.Id, MainSession);
+				SecurityService.DemandUpdate(newProject, newProject.ProjectCode, CurrentUser.Id, MainSession);
 
 				dao.Store(newProject);
 				MainSession.Flush();//next code find project in db
+
+				//Make project database
+				if (!skipDbCreation)
+					app.CreateProjectDatabase(newProject.ConnectionString, newProject.Type.Module);
 
 				//make current user project admin and do next secure logged things as of this member
 				var membership = new ProjectMembershipModel { Project = newProject, User = CurrentUser };
@@ -143,9 +171,6 @@ namespace AGO.Core.Controllers
 				ProjectSession(newProject.ProjectCode).Flush();
 
 				_ModelProcessingService.AfterModelCreated(newProject, member);
-
-				var statusHistoryRow = newProject.ChangeStatus(ProjectStatus.New, CurrentUser);
-				dao.Store(statusHistoryRow);
 
 				foreach (var tag in tagIds.Select(id => dao.Get<ProjectTagModel>(id)))
 				{
@@ -169,6 +194,28 @@ namespace AGO.Core.Controllers
 				validation.AddErrors(_LocalizationService.MessageForException(e));
 				return validation;
 			}
+		}
+
+		private static string BuildProjectConnectionString(ProjectModel project, DbInstanceModel db, string template)
+		{
+			if (project == null)
+				throw new ArgumentNullException("project");
+			if (db == null)
+				throw new ArgumentNullException("db");
+
+			var builder = new NpgsqlConnectionStringBuilder(template);
+			builder.Host = db.Server;
+			builder.Database = CalculateProjectDbName(project.ProjectCode);
+
+			return builder.ConnectionString;
+		}
+
+		private static string CalculateProjectDbName(string project)
+		{
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("project");
+
+			return "ago_" + project;
 		}
 
 		private IEnumerable<IModelFilterNode> MakeProjectsPredicate(
@@ -220,6 +267,24 @@ namespace AGO.Core.Controllers
 			return DaoFactory.CreateMainFilteringDao().RowCount<ProjectModel>(MakeProjectsPredicate(filter, mode));
 		}
 
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupProjects(string term, [InRange(0, null)] int page)
+		{
+			var fb = _FilteringService.Filter<ProjectModel>();
+			IModelFilterNode termFilter = null;
+			if (!term.IsNullOrWhiteSpace())
+			{
+				termFilter = fb.Or()
+					.WhereString(m => m.ProjectCode).Like(term.TrimSafe(), true, true)
+					.WhereString(m => m.Name).Like(term.TrimSafe(), true, true);
+			}
+			var filter = SecurityService.ApplyReadConstraint<ProjectModel>(null, CurrentUser.Id, MainSession, termFilter);
+			var criteria = _FilteringService.CompileFilter(filter, typeof (ProjectModel)).GetExecutableCriteria(MainSession);
+			criteria.AddOrder(Order.Asc(Projections.Property<ProjectModel>(m => m.Name).PropertyName));
+
+			return DaoFactory.CreateMainCrudDao().PagedCriteria(criteria, page).LookupList<ProjectModel>(m => m.ProjectCode, m => m.Name);
+		}
+			
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupParticipant(
 			[NotEmpty] string project,

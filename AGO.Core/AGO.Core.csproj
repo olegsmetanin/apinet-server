@@ -136,6 +136,7 @@
     <Compile Include="Model\Activity\RelatedChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\AttributeChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\ActivityRecordModel.cs" />
+    <Compile Include="Model\Configuration\DbInstanceModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTagModel.cs" />
     <Compile Include="Model\Dictionary\Projects\ProjectTypeModel.cs" />
     <Compile Include="Model\Files\IFile.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="Model\Projects\ProjectStatus.cs" />
     <Compile Include="Model\Projects\ProjectStatusHistoryModel.cs" />
     <Compile Include="Model\Projects\ProjectToTagModel.cs" />
+    <Compile Include="Model\Reporting\ReportArchiveRecordModel.cs" />
     <Compile Include="Model\Reporting\ReportingRepository.cs" />
     <Compile Include="Model\Reporting\ReportSettingModel.cs" />
     <Compile Include="Model\Reporting\ReportTaskModel.cs" />
