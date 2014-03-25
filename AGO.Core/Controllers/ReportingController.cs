@@ -239,6 +239,8 @@ namespace AGO.Core.Controllers
 								Culture = CultureInfo.CurrentUICulture.Name
 				           	};
 				dao.Store(task);
+				ProjectSession(project).Flush();//Bug #1838 - can't reproduce, but in logs it is possible that
+				//report worker catch notification and try to run task early, than task report stored in db. Trying to fix.
 
 				//Add task to system shared work queue, so one of workers can grab and execute it
 				var qi = new QueueItem("Report", task.Id, project, CurrentUser.Id.ToString())
