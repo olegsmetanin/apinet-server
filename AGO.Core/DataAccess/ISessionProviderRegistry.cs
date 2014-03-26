@@ -1,4 +1,4 @@
-﻿namespace AGO.Core
+namespace AGO.Core.DataAccess
 {
 	/// <summary>
 	/// Registry for <see cref="ISessionProvider"/> instances, one (or pool) for cental database 

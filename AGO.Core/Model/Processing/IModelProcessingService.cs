@@ -12,8 +12,6 @@ namespace AGO.Core.Model.Processing
 
 		void RegisterModelValidators(IEnumerable<IModelValidator> validators);
 
-		bool CopyModelProperties(IIdentifiedModel target, IIdentifiedModel source, object capability = null);
-
 		void AfterModelCreated(IIdentifiedModel model, ProjectMemberModel creator = null);
 
 		void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original, ProjectMemberModel changer = null);

@@ -1,5 +1,5 @@
 ﻿using System;
-using AGO.Core;
+using AGO.Core.DataAccess;
 using Common.Logging;
 using NHibernate;
 

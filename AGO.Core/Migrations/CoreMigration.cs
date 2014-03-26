@@ -19,7 +19,8 @@ namespace AGO.Core.Migrations
 		{
 			Create.CoreModelTable<DbInstanceModel>()
 				.WithValueColumn<DbInstanceModel>(m => m.Name)
-				.WithValueColumn<DbInstanceModel>(m => m.Server);
+				.WithValueColumn<DbInstanceModel>(m => m.Server)
+				.WithValueColumn<DbInstanceModel>(m => m.Provider);
 
 			Create.CoreModelTable<UserModel>()
 				.WithValueColumn<UserModel>(m => m.Email)

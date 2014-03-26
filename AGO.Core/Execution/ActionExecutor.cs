@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AGO.Core.DataAccess;
 using Common.Logging;
 using NHibernate;
 
@@ -10,8 +11,6 @@ namespace AGO.Core.Execution
 	public class ActionExecutor : IActionExecutor
 	{
 		#region Properties, fields, constructors
-
-		protected readonly ISessionProvider _SessionProvider;
 
 		private readonly ISessionProviderRegistry providerRegistry;
 
@@ -22,16 +21,11 @@ namespace AGO.Core.Execution
 		protected readonly IList<IActionResultTransformer> _ResultTransformers;
 
 		public ActionExecutor(
-			ISessionProvider sessionProvider,
 			ISessionProviderRegistry registry,
 			IEnumerable<IActionParameterResolver> resolvers,
 			IEnumerable<IActionParameterTransformer> transformers,
 			IEnumerable<IActionResultTransformer> resultTransformers)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
-
 			if (registry == null)
 				throw new ArgumentNullException("registry");
 			providerRegistry = registry;
@@ -114,14 +108,12 @@ namespace AGO.Core.Execution
 					result = transformer.Transform(methodInfo.ReturnType, result);
 				}
 
-				_SessionProvider.CloseCurrentSession();
 				providerRegistry.CloseCurrentSessions();
 
 				return result;
 			}
 			catch (Exception e)
 			{
-				_SessionProvider.FlushCurrentSession(true);
 				providerRegistry.CloseCurrentSessions(true);
 
 				if (!logged)

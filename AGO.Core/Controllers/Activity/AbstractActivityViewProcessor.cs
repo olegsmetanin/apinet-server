@@ -11,28 +11,13 @@ namespace AGO.Core.Controllers.Activity
 	{
 		#region Properties, fields, constructors
 
-		protected readonly ICrudDao _CrudDao;
+		protected readonly ILocalizationService LocalizationService;
 
-		protected readonly ISessionProvider _SessionProvider;
-
-		protected readonly ILocalizationService _LocalizationService;
-
-		protected AbstractActivityViewProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider,
-			ILocalizationService localizationService)
+		protected AbstractActivityViewProcessor(ILocalizationService localizationService)
 		{
-			if (crudDao == null)
-				throw new ArgumentNullException("crudDao");
-			_CrudDao = crudDao;
-
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			_SessionProvider = sessionProvider;
-
 			if (localizationService == null)
 				throw new ArgumentNullException("localizationService");
-			_LocalizationService = localizationService;
+			LocalizationService = localizationService;
 		}
 
 		#endregion
@@ -109,7 +94,7 @@ namespace AGO.Core.Controllers.Activity
 			if (view.ActivityItem.IsNullOrWhiteSpace())
 				return;
 
-			view.ActivityItem = _LocalizationService.MessageForType(typeof(TType), "ActivityItem",
+			view.ActivityItem = LocalizationService.MessageForType(typeof(TType), "ActivityItem",
 				CultureInfo.CurrentUICulture, view.ActivityItem);
 		}
 		
@@ -119,15 +104,15 @@ namespace AGO.Core.Controllers.Activity
 			if (groupedView == null)
 			{
 				if (!view.User.IsNullOrWhiteSpace())
-						view.User = _LocalizationService.MessageForType(typeof(IActivityViewProcessor), "User",
+						view.User = LocalizationService.MessageForType(typeof(IActivityViewProcessor), "User",
 					CultureInfo.CurrentUICulture, view.User);
 				return;
 			}				
 
 			groupedView.User = groupedView.Users.Count > 1 
-				? _LocalizationService.MessageForType(typeof(IActivityViewProcessor), "Users", CultureInfo.CurrentUICulture,
+				? LocalizationService.MessageForType(typeof(IActivityViewProcessor), "Users", CultureInfo.CurrentUICulture,
 					groupedView.Users.Aggregate(string.Empty, (current, user) => current.IsNullOrWhiteSpace() ? user : current + ", " + user))
-				: _LocalizationService.MessageForType(typeof(IActivityViewProcessor), "User", CultureInfo.CurrentUICulture, 
+				: LocalizationService.MessageForType(typeof(IActivityViewProcessor), "User", CultureInfo.CurrentUICulture, 
 					groupedView.Users.FirstOrDefault());
 		}
 

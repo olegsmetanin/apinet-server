@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Security;
 using Newtonsoft.Json.Linq;
 
@@ -9,7 +10,8 @@ namespace AGO.Core.Controllers.Security.OAuth
 {
 	public class FacebookProvider: AbstractOAuthProvider
 	{
-		public FacebookProvider(ISessionProvider sessionProvider) : base(sessionProvider)
+		public FacebookProvider(ISessionProviderRegistry providerRegistry)
+			: base(providerRegistry)
 		{
 		}
 

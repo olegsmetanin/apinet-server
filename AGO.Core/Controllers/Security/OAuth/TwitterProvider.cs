@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Security;
 using Newtonsoft.Json.Linq;
 using Kvp = System.Tuple<string, string>;
@@ -16,7 +17,8 @@ namespace AGO.Core.Controllers.Security.OAuth
 {
 	public class TwitterProvider: AbstractOAuthProvider
 	{
-		public TwitterProvider(ISessionProvider sessionProvider):base(sessionProvider)
+		public TwitterProvider(ISessionProviderRegistry providerRegistry)
+			: base(providerRegistry)
 		{
 		}
 

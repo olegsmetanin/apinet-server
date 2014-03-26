@@ -1,5 +1,6 @@
 using System;
 using AGO.Core;
+using AGO.Core.DataAccess;
 using AGO.Core.Tests;
 using NHibernate;
 

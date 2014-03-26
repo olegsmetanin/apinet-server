@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using AGO.Core.AutoMapping;
 using AGO.Core.Config;
 using AGO.Core.Model.Projects;
 
-namespace AGO.Core
+namespace AGO.Core.DataAccess
 {
 	public class SessionProviderRegistry: AbstractService, ISessionProviderRegistry
 	{

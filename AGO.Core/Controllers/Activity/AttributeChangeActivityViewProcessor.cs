@@ -9,11 +9,8 @@ namespace AGO.Core.Controllers.Activity
 	public class AttributeChangeActivityViewProcessor : AbstractActivityViewProcessor<AttributeChangeActivityRecordModel>
 	{
 		#region Properties, fields, constructors
-		public AttributeChangeActivityViewProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider,
-			ILocalizationService localizationService)
-			: base(crudDao, sessionProvider, localizationService)
+		public AttributeChangeActivityViewProcessor(ILocalizationService localizationService)
+			: base(localizationService)
 		{		
 		}
 
@@ -48,13 +45,13 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual string GetLocalizedAttributeName(Type type, string attribute)
 		{
-			var localized = _LocalizationService.MessageForType(type, attribute);
+			var localized = LocalizationService.MessageForType(type, attribute);
 			if (localized.IsNullOrWhiteSpace())
 			{
 				var currentType = type;
 				while (currentType != null && typeof(ICoreModel).IsAssignableFrom(currentType))
 				{
-					localized = _LocalizationService.MessageForType(typeof(ICoreModel),
+					localized = LocalizationService.MessageForType(typeof(ICoreModel),
 						string.Format("{0}.{1}", currentType.Name.RemoveSuffix("`1"), attribute));
 					if (!localized.IsNullOrWhiteSpace())
 						break;
@@ -72,12 +69,12 @@ namespace AGO.Core.Controllers.Activity
 
 			if (view is GroupedActivityItemView)
 			{
-				view.Action = _LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Updated",
+				view.Action = LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Updated",
 					CultureInfo.CurrentUICulture, view.Action);
 				return;
 			}
 
-			view.Action = _LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Action", 
+			view.Action = LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Action", 
 				CultureInfo.CurrentUICulture, GetLocalizedAttributeName(typeof(TModel), view.Action));
 		}
 
@@ -91,7 +88,7 @@ namespace AGO.Core.Controllers.Activity
 				if (str.IsNullOrWhiteSpace())
 					return str;
 
-				return str.IsNullOrWhiteSpace() ? str : _LocalizationService.MessageForType(
+				return str.IsNullOrWhiteSpace() ? str : LocalizationService.MessageForType(
 					typeof(AttributeChangeActivityViewProcessor), key, CultureInfo.CurrentUICulture, str);
 			};
 

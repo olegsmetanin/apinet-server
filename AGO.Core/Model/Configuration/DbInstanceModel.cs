@@ -23,5 +23,11 @@ namespace AGO.Core.Model.Configuration
 		/// </summary>
 		[NotEmpty, NotLonger(128)]
 		public virtual string Server { get; set; }
+
+		/// <summary>
+		/// Provider name (PostgreSQL, System.Data.SqlClient only supported)
+		/// </summary>
+		[NotEmpty, NotLonger(128)]
+		public virtual string Provider { get; set; }
 	}
 }

@@ -8,6 +8,7 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers.Projects;
 using AGO.Core.Controllers.Security;
 using AGO.Core.DataAccess;
+using AGO.Core.DataAccess.DbConfigurator;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
 using AGO.Core.Model.Configuration;
@@ -20,7 +21,6 @@ using AGO.Core.Json;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using NHibernate.Criterion;
-using Npgsql;
 
 
 namespace AGO.Core.Controllers
@@ -135,11 +135,19 @@ namespace AGO.Core.Controllers
 				};
 				newProject.ChangeStatus(ProjectStatus.New, CurrentUser);
 
+				IDbConfigurator configurator;
+				string host = null;
+				string dbName = null;
 				if (!skipDbCreation)
 				{
 					var dbinstance = dao.Get<DbInstanceModel>(serverId, true);
-					newProject.ConnectionString = BuildProjectConnectionString(newProject, dbinstance,
-						MainSession.Connection.ConnectionString);
+					//TODO find master connection string in app
+					configurator = app.DbConfiguratorFactory.CreateConfigurator(dbinstance.Provider,
+						app.MasterConnectionString);
+					
+					host = dbinstance.Server;
+					dbName = CalculateProjectDbName(newProject.ProjectCode);
+					newProject.ConnectionString = configurator.MakeConnectionString(host, dbName, MainSession.Connection.ConnectionString);
 				}
 				else
 				{
@@ -158,7 +166,9 @@ namespace AGO.Core.Controllers
 
 				//Make project database
 				if (!skipDbCreation)
-					app.CreateProjectDatabase(newProject.ConnectionString, newProject.Type.Module);
+				{
+					app.CreateProjectDatabase(host, dbName, newProject.Type.Module);
+				}
 
 				//make current user project admin and do next secure logged things as of this member
 				var membership = new ProjectMembershipModel { Project = newProject, User = CurrentUser };
@@ -194,20 +204,6 @@ namespace AGO.Core.Controllers
 				validation.AddErrors(_LocalizationService.MessageForException(e));
 				return validation;
 			}
-		}
-
-		private static string BuildProjectConnectionString(ProjectModel project, DbInstanceModel db, string template)
-		{
-			if (project == null)
-				throw new ArgumentNullException("project");
-			if (db == null)
-				throw new ArgumentNullException("db");
-
-			var builder = new NpgsqlConnectionStringBuilder(template);
-			builder.Host = db.Server;
-			builder.Database = CalculateProjectDbName(project.ProjectCode);
-
-			return builder.ConnectionString;
 		}
 
 		private static string CalculateProjectDbName(string project)

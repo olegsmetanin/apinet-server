@@ -4,6 +4,7 @@ using System.Web.Mvc;
 using AGO.Core;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Controllers.Security.OAuth;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Security;
 using NHibernate;
 
@@ -66,7 +67,7 @@ namespace AGO.WebApiApp.Controllers
 						throw new ArgumentException("Provided state parameter is not convertible to guid");
 
 					var provider = Resolver.GetService<IOAuthProviderFactory>().Get(providerType);
-					data = Resolver.GetService<ICrudDao>().Get<OAuthDataModel>(dataId);
+					data = session.Get<OAuthDataModel>(dataId);
 
 					if (provider.IsCancel(Request.QueryString))
 					{
@@ -82,8 +83,8 @@ namespace AGO.WebApiApp.Controllers
 				{
 					if (data != null)
 					{
-						Resolver.GetService<ICrudDao>().Delete(data);
-						Resolver.GetService<ISessionProvider>().CloseCurrentSession();
+						session.Delete(data);
+						session.Flush();
 					}
 				}
 			}));

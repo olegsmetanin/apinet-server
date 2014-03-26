@@ -7,11 +7,8 @@ namespace AGO.Core.Controllers.Activity
 	public class RelatedChangeActivityViewProcessor : AbstractActivityViewProcessor<RelatedChangeActivityRecordModel>
 	{
 		#region Properties, fields, constructors
-		public RelatedChangeActivityViewProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider,
-			ILocalizationService localizationService)
-			: base(crudDao, sessionProvider, localizationService)
+		public RelatedChangeActivityViewProcessor(ILocalizationService localizationService)
+			: base(localizationService)
 		{		
 		}
 
@@ -42,7 +39,7 @@ namespace AGO.Core.Controllers.Activity
 			if (view.Action.IsNullOrWhiteSpace())
 				return;
 
-			view.Action = _LocalizationService.MessageForType(typeof(RelatedChangeActivityViewProcessor), 
+			view.Action = LocalizationService.MessageForType(typeof(RelatedChangeActivityViewProcessor), 
 				"Action" + view.Action, CultureInfo.CurrentUICulture);
 		}
 
@@ -50,7 +47,7 @@ namespace AGO.Core.Controllers.Activity
 		{
 			if (view.Before.IsNullOrWhiteSpace())
 				return;
-			view.Before = _LocalizationService.MessageForType(typeof(TType), "RelatedActivityItem",
+			view.Before = LocalizationService.MessageForType(typeof(TType), "RelatedActivityItem",
 				CultureInfo.CurrentUICulture, view.Before);
 		}
 

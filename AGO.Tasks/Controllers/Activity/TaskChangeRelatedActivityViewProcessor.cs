@@ -1,5 +1,4 @@
-﻿using AGO.Core;
-using AGO.Core.Controllers.Activity;
+﻿using AGO.Core.Controllers.Activity;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
 
@@ -8,11 +7,8 @@ namespace AGO.Tasks.Controllers.Activity
 	public class TaskChangeRelatedActivityViewProcessor : RelatedChangeActivityViewProcessor
 	{
 		#region Properties, fields, constructors
-		public TaskChangeRelatedActivityViewProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider,
-			ILocalizationService localizationService)
-			: base(crudDao, sessionProvider, localizationService)
+		public TaskChangeRelatedActivityViewProcessor(ILocalizationService localizationService)
+			: base(localizationService)
 		{		
 		}
 

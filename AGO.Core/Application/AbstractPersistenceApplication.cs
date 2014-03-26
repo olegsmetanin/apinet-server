@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AGO.Core.AutoMapping;
 using AGO.Core.Config;
 using AGO.Core.DataAccess;
+using AGO.Core.DataAccess.DbConfigurator;
 using AGO.Core.Filters;
 using AGO.Core.Migration;
 using AGO.Core.Model.Processing;
 using AGO.Core.Notification;
 using AGO.WorkQueue;
-using Npgsql;
 
 namespace AGO.Core.Application
 {
@@ -27,11 +24,6 @@ namespace AGO.Core.Application
 		protected IFilteringService _FilteringService;
 		public IFilteringService FilteringService { get { return _FilteringService; } }
 
-		protected IFilteringDao _FilteringDao;
-		public IFilteringDao FilteringDao { get { return _FilteringDao; } }
-
-		protected ICrudDao _CrudDao;
-		public ICrudDao CrudDao { get { return _CrudDao; } }
 		public DaoFactory DaoFactory { get; private set; }
 
 		protected IMigrationService _MigrationService;
@@ -43,45 +35,38 @@ namespace AGO.Core.Application
 		protected IList<Type> _TestDataServices = new List<Type>();
 		public IList<Type> TestDataServices { get { return _TestDataServices; } }
 
-		public void CreateProjectDatabase(string connectionString, string module)
+		public string MasterConnectionString
 		{
-			if (connectionString.IsNullOrWhiteSpace())
-				throw new ArgumentNullException("connectionString");
+			get { return KeyValueProvider.Value("Persistence_MasterConnectionString"); }
+		}
+
+		public DbConfiguratorFactory DbConfiguratorFactory { get; private set; }
+
+		public void CreateProjectDatabase(string host, string dbName, string module)
+		{
+			if (host.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("host");
+			if (dbName.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("dbName");
 			if (module.IsNullOrWhiteSpace())
 				throw new ArgumentNullException("module");
 
 			if (ModuleDescriptors.All(m => m.Alias != module))
 				throw new ArgumentException(string.Format("Invalid module code: {0}", module), "module");
 
-			var builder = new NpgsqlConnectionStringBuilder(connectionString);
-			var host = builder.Host;
-			var newDbName = builder.Database;
 			string provider;
-			string masterConnectionString;
 			string loginName;
 			string loginPwd;
 			string notUsed;
-			var connectionFactory = CreateMasterConnectionFactory(out provider, out masterConnectionString, out notUsed, out loginName, out loginPwd);
-			using (var masterConnection = connectionFactory.CreateConnection())
-			{
-				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
-
-				builder.ConnectionString = masterConnectionString;
-				builder.Host = host;
-
-				masterConnection.ConnectionString = builder.ConnectionString;
-				masterConnection.Open();
-				DoExecuteCreateDatabaseScript(masterConnection, provider, newDbName, loginName, loginPwd);
-				masterConnection.Close();
-			}
-			builder.Database = newDbName;
-			builder.UserName = loginName;
-			builder.Password = loginPwd;
+			var configurator = CreateDbConfigurator(out provider, out notUsed, out loginName, out loginPwd);
+			configurator.CreateProjectDatabase(host, dbName, loginName, loginPwd);
+			var projConnectionString = configurator.MakeConnectionString(host, dbName, 
+				SessionProviderRegistry.GetMainDbProvider().ConnectionString);//use this cs instead of master because of created schema ownership must be to ago_user, not postgres
 			var now = DateTime.UtcNow;
 			var version = new Version(now.Year, now.Month, now.Day, 99);
 			_MigrationService.MigrateUp(
 				provider,
-				builder.ConnectionString,
+				projConnectionString,
 				ModuleDescriptors.Where(m => m.Alias == ModuleDescriptor.MODULE_CODE || m.Alias == module).Select(d => d.GetType().Assembly),
 				version);
 		}
@@ -105,9 +90,7 @@ namespace AGO.Core.Application
 
 		protected virtual void DoRegisterPersistence()
 		{
-			IocContainer.RegisterSingle<ISessionProvider, AutoMappedSessionFactoryBuilder>();
-			IocContainer.RegisterInitializer<AutoMappedSessionFactoryBuilder>(service =>
-				new KeyValueConfigProvider(new RegexKeyValueProvider("^Hibernate_(.*)", KeyValueProvider)).ApplyTo(service));
+			IocContainer.RegisterSingle<DbConfiguratorFactory>();
 
 			IocContainer.RegisterSingle<ISessionProviderRegistry, SessionProviderRegistry>();
 			IocContainer.RegisterInitializer<SessionProviderRegistry>(service =>
@@ -118,11 +101,6 @@ namespace AGO.Core.Application
 				new KeyValueConfigProvider(new RegexKeyValueProvider("^Filtering_(.*)", KeyValueProvider)).ApplyTo(service));
 
 			IocContainer.RegisterSingle<DaoFactory>();
-
-			IocContainer.RegisterSingle<CrudDao, CrudDao>();
-
-			IocContainer.Register<ICrudDao>(IocContainer.GetInstance<CrudDao>);
-			IocContainer.Register<IFilteringDao>(IocContainer.GetInstance<CrudDao>);
 
 			IocContainer.RegisterSingle<IMigrationService, MigrationService>();
 
@@ -143,14 +121,7 @@ namespace AGO.Core.Application
 
 		protected virtual Type NotificationServiceType
 		{
-			get
-			{
-#if DEBUG
-				return typeof (NoopNotificationService);
-#else
-				return typeof(NotificationService);
-#endif
-			}
+			get { return typeof(NotificationService); }
 		}
 
 		protected virtual void DoRegisterWorkQueue()
@@ -168,8 +139,8 @@ namespace AGO.Core.Application
 					PriorityTypeColumn = "\"PriorityType\"",
 					UserPriorityColumn = "\"UserPriority\""
 				};
-				var sp = IocContainer.GetInstance<ISessionProvider>();
-				return new PostgreSqlWorkQueue(sp.ConnectionString, schema);
+				var spr = IocContainer.GetInstance<ISessionProviderRegistry>();
+				return new PostgreSqlWorkQueue(spr.GetMainDbProvider().ConnectionString, schema);
 			});
 		}
 
@@ -205,11 +176,10 @@ namespace AGO.Core.Application
 
 		protected virtual void DoInitializePersistence()
 		{
+			DbConfiguratorFactory = IocContainer.GetInstance<DbConfiguratorFactory>();
 			SessionProviderRegistry = IocContainer.GetInstance<ISessionProviderRegistry>();
 			_FilteringService = IocContainer.GetInstance<IFilteringService>();
 			DaoFactory = IocContainer.GetInstance<DaoFactory>();
-			_FilteringDao = IocContainer.GetInstance<IFilteringDao>();
-			_CrudDao = IocContainer.GetInstance<ICrudDao>();
 			_MigrationService = IocContainer.GetInstance<IMigrationService>();
 			_ModelProcessingService = IocContainer.GetInstance<IModelProcessingService>();
 		}
@@ -224,7 +194,7 @@ namespace AGO.Core.Application
 			WorkQueue = IocContainer.GetInstance<IWorkQueue>();
 		}
 
-		protected DbProviderFactory CreateMasterConnectionFactory(out string provider, out string cs, out string dbName, out string login, out string pwd)
+		protected IDbConfigurator CreateDbConfigurator(out string provider, out string dbName, out string login, out string pwd)
 		{
 			var config = new KeyValueConfigurableDictionary();
 			new KeyValueConfigProvider(new RegexKeyValueProvider("^Persistence_(.*)", KeyValueProvider)).ApplyTo(config);
@@ -232,10 +202,6 @@ namespace AGO.Core.Application
 			provider = config.GetConfigProperty("ProviderName").TrimSafe();
 			if (provider.IsNullOrEmpty())
 				throw new Exception("ProviderName is empty");
-
-			cs = config.GetConfigProperty("MasterConnectionString").TrimSafe();
-			if (cs.IsNullOrEmpty())
-				throw new Exception("MasterConnectionString is empty");
 
 			dbName = config.GetConfigProperty("DatabaseName").TrimSafe();
 			if (dbName.IsNullOrEmpty())
@@ -249,61 +215,23 @@ namespace AGO.Core.Application
 			if (pwd.IsNullOrEmpty())
 				throw new Exception("LoginPwd is empty");
 
-			return DbProviderFactories.GetFactory(provider);
+			//because this method may be called before initialize, check in factory already initialized
+			return (DbConfiguratorFactory ?? new DbConfiguratorFactory()).CreateConfigurator(provider, MasterConnectionString);
 		}
 
 		protected virtual void DoCreateDatabase()
 		{
 			string provider;
-			string masterConnectionStr;
 			string databaseName;
 			string loginName;
 			string loginPwd;
-			var connectionFactory = CreateMasterConnectionFactory(out provider, out masterConnectionStr, out databaseName, out loginName, out loginPwd);
-			using (var masterConnection = connectionFactory.CreateConnection())
-			{
-				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
-
-				masterConnection.ConnectionString = masterConnectionStr;
-				masterConnection.Open();
-				DoExecuteCreateDatabaseScript(masterConnection, provider, databaseName, loginName, loginPwd);
-				masterConnection.Close();
-			}
+			var configurator = CreateDbConfigurator(out provider, out databaseName, out loginName, out loginPwd);
+			configurator.CreateMasterDatabase(databaseName, loginName, loginPwd);
 		}
 
-		protected virtual void DoExecuteCreateDatabaseScript(
-			IDbConnection masterConnection,
-			string provider,
-			string databaseName,
-			string loginName,
-			string loginPwd)
-		{
-			var sql = CreateDbScripts[provider];
-			ExecuteNonQuery(string.Format(sql, databaseName, loginName, loginPwd), masterConnection);
-		}
-
+		//TODO create mssqldbconfigurator
 		private static readonly Dictionary<string, string> CreateDbScripts = new Dictionary<string, string>
 		{
-			{"PostgreSQL", @"
-				select pg_terminate_backend(pg_stat_activity.pid)
-				from pg_stat_activity
-				where datname = '{0}';
-				go
-				drop database if exists {0};
-				go
-				DO
-				$body$
-				begin
-					if not exists (select * from pg_catalog.pg_user where usename = '{1}') then
-						create role {1} login password '{2}';
-					end if;
-				end
-				$body$
-				go
-				create database {0};
-				go
-				alter database {0} owner to {1}"},
-
 			{"System.Data.SqlClient", @"
 				IF EXISTS(SELECT name FROM sys.databases WHERE name = '{0}') BEGIN
 					ALTER DATABASE [{0}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
@@ -347,11 +275,10 @@ namespace AGO.Core.Application
 		protected virtual void DoPopulateDatabase()
 		{
 			string provider;
-			string masterConnectionStr;
 			string tmp;
 			string loginName;
 			string loginPwd;
-			var connectionFactory = CreateMasterConnectionFactory(out provider, out masterConnectionStr, out tmp, out loginName, out loginPwd);
+			var configurator = CreateDbConfigurator(out provider, out tmp, out loginName, out loginPwd);
 
 			//Setup master db schema
 			var mainDbConnectionString = SessionProviderRegistry.GetMainDbProvider().ConnectionString;
@@ -362,31 +289,23 @@ namespace AGO.Core.Application
 				mainDbConnectionString,
 				ModuleDescriptors.Where(m => m.Alias == ModuleDescriptor.MODULE_CODE).Select(d => d.GetType().Assembly),
 				version);
-
-			using (var masterConnection = connectionFactory.CreateConnection())
+			
+			foreach (var service in IocContainer.GetAllInstances<ITestDataService>())
 			{
-				Debug.Assert(masterConnection != null, "connectionFactory does not create DbConnection instance");
-
-				masterConnection.ConnectionString = masterConnectionStr;
-				foreach (var service in IocContainer.GetAllInstances<ITestDataService>())
+				foreach (var dbName in service.RequiredDatabases)
 				{
-					foreach (var dbName in service.RequiredDatabases)
-					{
-						masterConnection.Open();
-						DoExecuteCreateDatabaseScript(masterConnection, provider, dbName, loginName, loginPwd);
-						masterConnection.Close();
+					//Create each project test db
+					configurator.CreateProjectDatabase(null, dbName, loginName, loginPwd);
 
-						//TODO needs other logic, with custom server support
-						var pgcsb = new NpgsqlConnectionStringBuilder(mainDbConnectionString) {Database = dbName};
-
-						_MigrationService.MigrateUp(
-							provider,
-							pgcsb.ConnectionString,
-							ModuleDescriptors.Select(d => d.GetType().Assembly),
-							version);
-					}
+					//and setup his schema
+					//use mainDb cs instead of master because of created schema ownership must be to ago_user, not postgres
+					var projConnectionString = configurator.MakeConnectionString(null, dbName, mainDbConnectionString);
+					_MigrationService.MigrateUp(
+						provider,
+						projConnectionString,
+						ModuleDescriptors.Select(d => d.GetType().Assembly),
+						version);
 				}
-				masterConnection.Close();
 			}
 
 			DoExecutePopulateDatabaseScript();

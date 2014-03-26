@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Linq;
 using AGO.Core.Attributes.Controllers;
+using AGO.Core.DataAccess;
 using AGO.Core.Localization;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
@@ -13,20 +14,20 @@ namespace AGO.Core.Controllers.Security
 	{
 		#region Properties, fields, constructors
 
-		private readonly ISessionProvider sessionProvider;
+		private readonly ISessionProviderRegistry spr;
 
 		private readonly IStateStorage<object> stateStorage;
 
 		private readonly ILocalizationService localizationService;
 
 		public AuthController(
-			ISessionProvider sessionProvider,
+			ISessionProviderRegistry providerRegistry,
 			IStateStorage<object> stateStorage,
 			ILocalizationService localizationService)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
-			this.sessionProvider = sessionProvider;
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
+			spr = providerRegistry;
 
 			if (stateStorage == null)
 				throw new ArgumentNullException("stateStorage");
@@ -46,7 +47,7 @@ namespace AGO.Core.Controllers.Security
 		{
 			var validation = new ValidationResult();
 
-			var demoUser = sessionProvider.CurrentSession.QueryOver<UserModel>()
+			var demoUser = spr.GetMainDbProvider().CurrentSession.QueryOver<UserModel>()
 				.Where(m => m.Email == "demo@apinet-test.com").Take(1).List().FirstOrDefault();
 			if (demoUser == null)
 			{
@@ -115,7 +116,7 @@ insert into ""Core"".""TokenToLogin"" (""Token"", ""Login"", ""CreatedAt"") valu
 				throw new ArgumentNullException("login");
 
 			var token = Guid.NewGuid();
-			var conn = sessionProvider.CurrentSession.Connection;
+			var conn = spr.GetMainDbProvider().CurrentSession.Connection;
 			var cmd = conn.CreateCommand();
 			cmd.CommandText = RegisterTokenCmd;
 

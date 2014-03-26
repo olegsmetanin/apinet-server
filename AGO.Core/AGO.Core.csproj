@@ -118,7 +118,18 @@
     <Compile Include="Controllers\Uploader.cs" />
     <Compile Include="Controllers\UploadResult.cs" />
     <Compile Include="DataAccess\CrudDao.cs" />
+    <Compile Include="DataAccess\CrudDaoExtensions.cs" />
     <Compile Include="DataAccess\DaoFactory.cs" />
+    <Compile Include="DataAccess\DbConfigurator\AbstractDbConfigurator.cs" />
+    <Compile Include="DataAccess\DbConfigurator\DbConfiguratorFactory.cs" />
+    <Compile Include="DataAccess\DbConfigurator\IDbConfigurator.cs" />
+    <Compile Include="DataAccess\DbConfigurator\PostgresConfigurator.cs" />
+    <Compile Include="DataAccess\ICrudDao.cs" />
+    <Compile Include="DataAccess\ISessionProvider.cs" />
+    <Compile Include="DataAccess\ISessionProviderRegistry.cs" />
+    <Compile Include="DataAccess\QueryOverExtensions.cs" />
+    <Compile Include="DataAccess\SessionFactoryBuilder.cs" />
+    <Compile Include="DataAccess\SessionProviderRegistry.cs" />
     <Compile Include="Execution\AbstractExecutionException.cs" />
     <Compile Include="Execution\ActionExecutor.cs" />
     <Compile Include="Execution\AttributeValidatingParameterTransformer.cs" />
@@ -129,7 +140,6 @@
     <Compile Include="Execution\IActionParameterTransformer.cs" />
     <Compile Include="Execution\JsonTokenParameterTransformer.cs" />
     <Compile Include="IEnvironmentService.cs" />
-    <Compile Include="ISessionProviderRegistry.cs" />
     <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
@@ -175,7 +185,6 @@
     <Compile Include="Notification\INotificationService.cs" />
     <Compile Include="Notification\NoopNotificationService.cs" />
     <Compile Include="Notification\NotificationService.cs" />
-    <Compile Include="QueryOverExtensions.cs" />
     <Compile Include="Security\AbstractModuleSecurityConstraintsProvider.cs" />
     <Compile Include="Security\AbstractSecurityConstraintsProvider.cs" />
     <Compile Include="Security\ISecurityConstraintsProvider.cs" />
@@ -187,7 +196,6 @@
     <Compile Include="Security\Providers\ProjectTagLinkSecurityProvider.cs" />
     <Compile Include="Security\Providers\ProjectTagSecurityProvider.cs" />
     <Compile Include="Security\SecurityService.cs" />
-    <Compile Include="SessionProviderRegistry.cs" />
     <Compile Include="ValidationResult.cs" />
     <Compile Include="Model\Security\SystemRole.cs" />
     <Compile Include="TestDataService.cs" />
@@ -219,7 +227,6 @@
     <Compile Include="Filters\ValueFilterBuilder.cs" />
     <Compile Include="Filters\ValueFilterOperators.cs" />
     <Compile Include="IInitializable.cs" />
-    <Compile Include="ICrudDao.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Filters\AbstractFilterNode.cs" />
@@ -230,7 +237,6 @@
     <Compile Include="AutoMapping\PropertyConvention.cs" />
     <Compile Include="AutoMapping\ReferenceConvention.cs" />
     <Compile Include="AutoMapping\SubclassConvention.cs" />
-    <Compile Include="ISessionProvider.cs" />
     <Compile Include="Json\ContractResolver.cs" />
     <Compile Include="Json\Exceptions.cs" />
     <Compile Include="Json\IdentifiedModelConverter.cs" />
@@ -295,7 +301,6 @@
     <Compile Include="AbstractService.cs" />
     <Compile Include="Json\JsonService.cs" />
     <Compile Include="Json\IJsonService.cs" />
-    <Compile Include="SessionFactoryBuilder.cs" />
     <Compile Include="Watchers\WorkQueueWatchService.cs" />
   </ItemGroup>
   <ItemGroup>

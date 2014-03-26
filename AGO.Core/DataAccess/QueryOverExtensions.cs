@@ -2,7 +2,7 @@ using System;
 using NHibernate;
 using NHibernate.Criterion;
 
-namespace AGO.Core
+namespace AGO.Core.DataAccess
 {
 	public static class QueryOverExtensions
 	{

@@ -1,5 +1,4 @@
-﻿using AGO.Core;
-using AGO.Core.Controllers.Activity;
+﻿using AGO.Core.Controllers.Activity;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
 using AGO.Tasks.Model.Task;
@@ -9,11 +8,8 @@ namespace AGO.Tasks.Controllers.Activity
 	public class TaskAttributeActivityViewProcessor : AttributeChangeActivityViewProcessor
 	{
 		#region Properties, fields, constructors
-		public TaskAttributeActivityViewProcessor(
-			ICrudDao crudDao,
-			ISessionProvider sessionProvider,
-			ILocalizationService localizationService)
-			: base(crudDao, sessionProvider, localizationService)
+		public TaskAttributeActivityViewProcessor(ILocalizationService localizationService)
+			: base(localizationService)
 		{		
 		}
 

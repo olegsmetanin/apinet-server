@@ -1,5 +1,5 @@
 ﻿using System;
-using AGO.Core;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Model;
 using AGO.Core.Model.Projects;

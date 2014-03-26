@@ -35,7 +35,8 @@ namespace AGO.Core
 			{
 				CreationTime = DateTime.UtcNow,
 				Name = "Localhost",
-				Server = "localhost"
+				Server = "localhost",
+				Provider = "PostgreSQL"
 			};
 			dao.Store(localhost);
 

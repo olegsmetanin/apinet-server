@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
+using AGO.Core.DataAccess;
 using AGO.Core.Model.Security;
 using NHibernate;
 
@@ -8,21 +9,21 @@ namespace AGO.Core.Controllers.Security.OAuth
 {
 	public abstract class AbstractOAuthProvider: AbstractService, IOAuthProvider
 	{
-		private readonly ISessionProvider sp;
+		private readonly ISessionProviderRegistry rsp;
 		protected string RedirectUrl;
 		private const string RedirectUrlConfigKey = "RedirectUrl";
 
-		protected AbstractOAuthProvider(ISessionProvider sessionProvider)
+		protected AbstractOAuthProvider(ISessionProviderRegistry providerRegistry)
 		{
-			if (sessionProvider == null)
-				throw new ArgumentNullException("sessionProvider");
+			if (providerRegistry == null)
+				throw new ArgumentNullException("providerRegistry");
 
-			sp = sessionProvider;
+			rsp = providerRegistry;
 		}
 
 		protected void DoInSession(Action<ISession> action)
 		{
-			using (var s = sp.SessionFactory.OpenSession())
+			using (var s = rsp.GetMainDbProvider().SessionFactory.OpenSession())
 			{
 				action(s);
 				s.Flush();
