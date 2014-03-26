@@ -366,12 +366,12 @@ namespace AGO.Reporting.Tests
 
 	public class ModelDataGenerator: BaseReportDataGenerator
 	{
-		private readonly ISessionProvider sp;
+		private readonly ISessionProviderRegistry spr;
 		private readonly IFilteringService fs;
 
-		public ModelDataGenerator(ISessionProvider provider, IFilteringService service)
+		public ModelDataGenerator(ISessionProviderRegistry registry, IFilteringService service)
 		{
-			sp = provider;
+			spr = registry;
 			fs = service;
 		}
 
@@ -383,8 +383,9 @@ namespace AGO.Reporting.Tests
 
 			var filter = fs.ParseFilterFromJson(param.CriteriaJson, typeof(ProjectTagModel));
 			var predicate = fs.CompileFilter(filter, typeof (ProjectTagModel));
-			var tags = predicate.GetExecutableCriteria(sp.CurrentSession).List<ProjectTagModel>();
-			var executor = sp.CurrentSession.Get<UserModel>(param.UserId);
+			var session = spr.GetMainDbProvider().CurrentSession;
+			var tags = predicate.GetExecutableCriteria(session).List<ProjectTagModel>();
+			var executor = session.Get<UserModel>(param.UserId);
 			
 			InitTicker(tags.Count + 1);
 			var range = MakeRange("data", string.Empty);
@@ -394,7 +395,7 @@ namespace AGO.Reporting.Tests
 				MakeValue(item, "id", tag.Id.ToString());
 				var tagLocalVarCopy = tag;
 				var owner = fs.CompileFilter(fs.Filter<UserModel>().Where(m => m.Id == tagLocalVarCopy.OwnerId), typeof (UserModel))
-					.GetExecutableCriteria(sp.CurrentSession).SetMaxResults(1).List<UserModel>().Single();
+					.GetExecutableCriteria(session).SetMaxResults(1).List<UserModel>().Single();
 				MakeValue(item, "author", owner.FullName);
 				MakeValue(item, "name", tag.FullName);
 				Ticker.AddTick();
