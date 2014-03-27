@@ -48,6 +48,8 @@ namespace AGO.Core.DataAccess
 			rwlock.EnterUpgradeableReadLock();
 			try
 			{
+				project = project.ToLowerInvariant();
+
 				if (projectDbProviders.ContainsKey(project))
 					return projectDbProviders[project];
 
@@ -55,8 +57,8 @@ namespace AGO.Core.DataAccess
 					.QueryOver<ProjectModel>()
 					.Where(m => m.ProjectCode == project)
 					.SingleOrDefault();
-					if (pm == null)
-						throw new NoSuchProjectException();
+				if (pm == null)
+					throw new NoSuchProjectException();
 
 				rwlock.EnterWriteLock();
 				try

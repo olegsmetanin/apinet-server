@@ -127,6 +127,8 @@
     <Compile Include="DataAccess\ICrudDao.cs" />
     <Compile Include="DataAccess\ISessionProvider.cs" />
     <Compile Include="DataAccess\ISessionProviderRegistry.cs" />
+    <Compile Include="DataAccess\NpgsqlDriverWIthCaseInsensitiveSupport.cs" />
+    <Compile Include="DataAccess\PostgreSqlCaseInsensitiveDialect.cs" />
     <Compile Include="DataAccess\QueryOverExtensions.cs" />
     <Compile Include="DataAccess\SessionFactoryBuilder.cs" />
     <Compile Include="DataAccess\SessionProviderRegistry.cs" />

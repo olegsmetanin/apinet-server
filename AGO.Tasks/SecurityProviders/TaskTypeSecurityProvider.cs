@@ -1,4 +1,5 @@
-﻿using AGO.Core.DataAccess;
+﻿using System;
+using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
@@ -16,7 +17,7 @@ namespace AGO.Tasks.SecurityProviders
 
 		public override IModelFilterNode ReadConstraint(string project, ProjectMemberModel member, ISession session)
 		{
-			if (member.ProjectCode == project) return null;
+			if (project.Equals(member.ProjectCode, StringComparison.InvariantCultureIgnoreCase)) return null;
 			return FilteringService.Filter<TaskTypeModel>().Where(m => 1 == 2);
 		}
 		private static bool CanManage(ProjectMemberModel member)

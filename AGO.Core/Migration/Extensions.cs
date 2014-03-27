@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using AGO.Core.AutoMapping;
 using AGO.Core.Model;
-using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using FluentMigrator.Builders.Alter;
 using FluentMigrator.Builders.Alter.Table;
@@ -87,8 +86,15 @@ namespace AGO.Core.Migration
 			return self.WithColumn(ColumnName(expression));
 		}
 
+		/// <summary>
+		/// Add simple value column
+		/// </summary>
+		/// <typeparam name="TModel">Model type</typeparam>
+		/// <param name="self">Extension this target</param>
+		/// <param name="expression">Expression, that return property in strongly typed manner</param>
+		/// <param name="isPostgres">Flag for postgresql (for him we add additional logic for string case insensitive props - citext extension type)</param>
 	    public static ICreateTableColumnOptionOrWithColumnSyntax WithValueColumn<TModel>(
-            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression)
+            this ICreateTableWithColumnSyntax self, Expression<Func<TModel, object>> expression, bool isPostgres = false)
 		{
 			var propertyInfo = expression.PropertyInfoFromExpression();
 			if (propertyInfo == null)
@@ -110,11 +116,16 @@ namespace AGO.Core.Migration
 			else if (typeof (bool) == propertyType)
 				next = start.AsBoolean();
 			else if (propertyType.IsEnum)
-				next = start.AsString(_DefaultEnumColumnSize);
+			{
+				//citext does not support length
+				next = !isPostgres ? start.AsString(_DefaultEnumColumnSize) : start.AsCustom("citext");
+			}
 			else if (typeof(byte) == propertyType || typeof(sbyte) == propertyType)
 				next = start.AsByte();
 			else if (typeof(char) == propertyType)
-				next = start.AsFixedLengthString(1);
+			{
+				next = !isPostgres ? start.AsFixedLengthString(1) : start.AsCustom("citext");
+			}
 			else if (typeof (Decimal) == propertyType)
 				next = start.AsDecimal();
 			else if (typeof(float) == propertyType)
@@ -129,11 +140,18 @@ namespace AGO.Core.Migration
 				next = start.AsInt64();
 			else if (typeof (string) == propertyType)
 			{
-				var length = Int32.MaxValue;
-				var notLonger = propertyInfo.FirstAttribute<NotLongerAttribute>(true);
-				if (notLonger != null)
-					length = notLonger.Limit > 0 ? notLonger.Limit : length;
-				next = start.AsString(length);
+				if (!isPostgres)
+				{
+					var length = Int32.MaxValue;
+					var notLonger = propertyInfo.FirstAttribute<NotLongerAttribute>(true);
+					if (notLonger != null)
+						length = notLonger.Limit > 0 ? notLonger.Limit : length;
+					next = start.AsString(length);
+				}
+				else
+				{
+					next = start.AsCustom("citext");
+				}
 			}
 
 			if(next == null)
@@ -282,8 +300,9 @@ namespace AGO.Core.Migration
 		}
 
 		public static IAlterTableColumnOptionOrAddColumnOrAlterColumnSyntax AddValueColumn<TModel>(
-			this IAlterTableAddColumnOrAlterColumnSyntax self, 
-			Expression<Func<TModel, object>> expression)
+			this IAlterTableAddColumnOrAlterColumnSyntax self,
+			Expression<Func<TModel, object>> expression, 
+			bool isPostgres = false)
 		{
 			var propertyInfo = expression.PropertyInfoFromExpression();
 			if (propertyInfo == null)
@@ -305,11 +324,16 @@ namespace AGO.Core.Migration
 			else if (typeof(bool) == propertyType)
 				next = start.AsBoolean();
 			else if (propertyType.IsEnum)
-				next = start.AsString(_DefaultEnumColumnSize);
+			{
+				//citext does not support length
+				next = !isPostgres ? start.AsString(_DefaultEnumColumnSize) : start.AsCustom("citext");
+			}
 			else if (typeof(byte) == propertyType || typeof(sbyte) == propertyType)
 				next = start.AsByte();
 			else if (typeof(char) == propertyType)
-				next = start.AsFixedLengthString(1);
+			{
+				next = !isPostgres ? start.AsFixedLengthString(1) : start.AsCustom("citext");
+			}
 			else if (typeof(Decimal) == propertyType)
 				next = start.AsDecimal();
 			else if (typeof(float) == propertyType)
@@ -324,11 +348,18 @@ namespace AGO.Core.Migration
 				next = start.AsInt64();
 			else if (typeof(string) == propertyType)
 			{
-				var length = Int32.MaxValue;
-				var notLonger = propertyInfo.FirstAttribute<NotLongerAttribute>(true);
-				if (notLonger != null)
-					length = notLonger.Limit > 0 ? notLonger.Limit : length;
-				next = start.AsString(length);
+				if (!isPostgres)
+				{
+					var length = Int32.MaxValue;
+					var notLonger = propertyInfo.FirstAttribute<NotLongerAttribute>(true);
+					if (notLonger != null)
+						length = notLonger.Limit > 0 ? notLonger.Limit : length;
+					next = start.AsString(length);
+				}
+				else
+				{
+					next = start.AsCustom("citext");
+				}
 			}
 
 			if (next == null)

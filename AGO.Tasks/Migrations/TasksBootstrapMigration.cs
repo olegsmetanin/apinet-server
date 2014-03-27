@@ -1,4 +1,5 @@
-﻿using AGO.Core.Migration;
+﻿using System;
+using AGO.Core.Migration;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
 using FluentMigrator;
@@ -15,19 +16,23 @@ namespace AGO.Tasks.Migrations
 
         public override void Up()
         {
+			var provider = ApplicationContext as string;
+			// ReSharper disable once InconsistentNaming
+			var use_citext = provider != null && provider.StartsWith("postgres", StringComparison.InvariantCultureIgnoreCase);
+
         	Create.SecureModelTable<TaskTypeModel>()
-        		.WithValueColumn<TaskTypeModel>(m => m.ProjectCode)
-        		.WithValueColumn<TaskTypeModel>(m => m.Name);
+        		.WithValueColumn<TaskTypeModel>(m => m.ProjectCode, use_citext)
+				.WithValueColumn<TaskTypeModel>(m => m.Name, use_citext);
 
         	Create.SecureModelTable<TaskModel>()
-        		.WithValueColumn<TaskModel>(m => m.ProjectCode)
-        		.WithValueColumn<TaskModel>(m => m.SeqNumber)
+				.WithValueColumn<TaskModel>(m => m.ProjectCode, use_citext)
+				.WithValueColumn<TaskModel>(m => m.SeqNumber, use_citext)
         		.WithValueColumn<TaskModel>(m => m.InternalSeqNumber)
         		.WithValueColumn<TaskModel>(m => m.Status)
         		.WithValueColumn<TaskModel>(m => m.Priority)
         		.WithRefColumn<TaskModel>(m => m.TaskType)
-        		.WithValueColumn<TaskModel>(m => m.Content)
-        		.WithValueColumn<TaskModel>(m => m.Note)
+				.WithValueColumn<TaskModel>(m => m.Content, use_citext)
+				.WithValueColumn<TaskModel>(m => m.Note, use_citext)
         		.WithValueColumn<TaskModel>(m => m.DueDate)
 				.WithValueColumn<TaskModel>(m => m.EstimatedTime);
 
@@ -47,7 +52,7 @@ namespace AGO.Tasks.Migrations
         		.WithValueColumn<TaskAgreementModel>(m => m.DueDate)
         		.WithValueColumn<TaskAgreementModel>(m => m.AgreedAt)
         		.WithValueColumn<TaskAgreementModel>(m => m.Done)
-        		.WithValueColumn<TaskAgreementModel>(m => m.Comment);
+				.WithValueColumn<TaskAgreementModel>(m => m.Comment, use_citext);
 
         	Create.SecureModelTable<TaskToTagModel>()
         		.WithRefColumn<TaskToTagModel>(m => m.Task)
@@ -57,8 +62,8 @@ namespace AGO.Tasks.Migrations
 				 .AddRefColumn<TaskCustomPropertyModel>(m => m.Task);
 
 	        Create.SecureModelTable<TaskFileModel>()
-		        .WithValueColumn<TaskFileModel>(m => m.Name)
-		        .WithValueColumn<TaskFileModel>(m => m.ContentType)
+				.WithValueColumn<TaskFileModel>(m => m.Name, use_citext)
+				.WithValueColumn<TaskFileModel>(m => m.ContentType, use_citext)
 		        .WithValueColumn<TaskFileModel>(m => m.Size)
 		        .WithValueColumn<TaskFileModel>(m => m.Path)
 		        .WithValueColumn<TaskFileModel>(m => m.Uploaded)
@@ -68,11 +73,13 @@ namespace AGO.Tasks.Migrations
 		        .WithRefColumn<TaskTimelogEntryModel>(m => m.Task)
 		        .WithRefColumn<TaskTimelogEntryModel>(m => m.Member)
 		        .WithValueColumn<TaskTimelogEntryModel>(m => m.Time)
-		        .WithValueColumn<TaskTimelogEntryModel>(m => m.Comment);
+				.WithValueColumn<TaskTimelogEntryModel>(m => m.Comment, use_citext);
         }
 
         public override void Down()
         {
+			Delete.ModelTable<TaskFileModel>();
+			Delete.ModelTable<TaskTimelogEntryModel>();
 			Delete.ModelTable<TaskToTagModel>();
             Delete.ModelTable<TaskStatusHistoryModel>();
 			Delete.ModelTable<TaskExecutorModel>();

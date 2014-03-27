@@ -78,7 +78,7 @@ namespace AGO.Core.Migration
 			if (assembly == null)
 				throw new ArgumentNullException("assembly");
 			var announcer = new TextWriterAnnouncer(Console.Out) { ShowSql = true };
-			var runnerContext = new RunnerContext(announcer);
+			var runnerContext = new RunnerContext(announcer){ApplicationContext = provider};//used in migrations for customize schema according to provider
 			var processorOptions = new ProcessorOptions { Timeout = 60, PreviewOnly = previewOnly };
 			var pgsqlFactory = new PostgresProcessorFactory();
 			var sqliteFactory = new SqliteProcessorFactory();

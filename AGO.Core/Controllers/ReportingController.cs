@@ -225,6 +225,7 @@ namespace AGO.Core.Controllers
 
 				var name = (!resultName.IsNullOrWhiteSpace() ? resultName.TrimSafe() : settings.Name)
 				           + " " + DateTime.UtcNow.ToString("yyyy-MM-dd");
+				project = project.ToLowerInvariant();
 				var task = new ReportTaskModel
 				           	{
 				           		CreationTime = DateTime.UtcNow,

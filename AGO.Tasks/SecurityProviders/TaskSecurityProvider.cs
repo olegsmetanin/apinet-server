@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AGO.Core.DataAccess;
 using AGO.Core.Filters;
 using AGO.Core.Model.Projects;
@@ -18,7 +19,7 @@ namespace AGO.Tasks.SecurityProviders
 		public override IModelFilterNode ReadConstraint(string project, ProjectMemberModel member, ISession session)
 		{
 			//not a members can't see project data
-			if (member.ProjectCode != project) return FilteringService.Filter<TaskModel>().Where(m => 1 == 2);
+			if (!project.Equals(member.ProjectCode, StringComparison.InvariantCultureIgnoreCase)) return FilteringService.Filter<TaskModel>().Where(m => 1 == 2);
 			//executors can see only his tasks
 			if (member.IsInRole(TaskProjectRoles.Executor))
 				return FilteringService.Filter<TaskModel>()

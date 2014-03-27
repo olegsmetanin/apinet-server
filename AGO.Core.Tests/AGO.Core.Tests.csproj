@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="AbstractModelHelper.cs" />
     <Compile Include="AbstractPersistenceTest.cs" />
+    <Compile Include="CaseInsensitiveTest.cs" />
     <Compile Include="EnumLocalizationTests.cs" />
     <Compile Include="ModelHelper.cs" />
     <Compile Include="OverridableAppSettingsKeyValueProvider.cs" />
