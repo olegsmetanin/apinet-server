@@ -1,14 +1,10 @@
-﻿using FluentMigrator.VersionTableInfo;
+using FluentMigrator.VersionTableInfo;
 
 namespace AGO.Core.Migrations
 {
-	[VersionTableMetaData]
-	public class VersionTableMetaData : IVersionTableMetaData
+	public abstract class AbstractVersionTableMetaData : IVersionTableMetaData
 	{
-		public string SchemaName
-		{
-			get { return CoreMigration.MODULE_SCHEMA; }
-		}
+		public abstract string SchemaName { get; }
 
 		public string TableName
 		{

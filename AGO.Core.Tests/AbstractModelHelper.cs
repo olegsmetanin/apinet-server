@@ -83,5 +83,65 @@ namespace AGO.Core.Tests
 				session.Delete(record);
 			}
 		}
+
+		public void DeleteProjectMembers(string project, ISession session = null)
+		{
+			session = session ?? Session();
+			foreach (var member in ProjectMembers(project))
+			{
+				session.Delete(member);
+			}
+		}
+
+		public ProjectMembershipModel Membership(string project, UserModel user)
+		{
+			return Track(() =>
+			{
+				var p = ProjectFromCode(project);
+				var membership = new ProjectMembershipModel
+				{
+					Project = p,
+					User = user
+				};
+				p.Members.Add(membership);
+				Session().Save(membership);
+				Session().Flush();
+				return membership;
+			});
+		}
+
+		public ProjectMemberModel Member(string project, UserModel user, params string[] roles)
+		{
+			if (project.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("project");
+
+			var p = ProjectFromCode(project);
+			var member = Member(p, user, roles);
+			Session().Update(p);
+			return member;
+		}
+
+		public ProjectMemberModel Member(ProjectModel project, UserModel user, params string[] roles)
+		{
+			if (project == null)
+				throw new ArgumentNullException("project");
+			if (user == null)
+				throw new ArgumentNullException("user");
+
+			return Track(() =>
+			{
+				var membership = new ProjectMembershipModel
+				{
+					Project = project,
+					User = user
+				};
+				project.Members.Add(membership);
+				roles = roles != null && roles.Length > 0 ? roles : new[] { BaseProjectRoles.Administrator };
+				var member = ProjectMemberModel.FromParameters(user, project, roles);
+				Session().Save(member);
+				Session().Flush();
+				return member;
+			});
+		}
 	}
 }

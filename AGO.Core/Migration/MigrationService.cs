@@ -26,7 +26,7 @@ namespace AGO.Core.Migration
 
 		#region Interfaces implementation
 
-		public void MigrateUp(string provider, string connectionString, IEnumerable<Assembly> assemblies, Version upToVersion = null, bool previewOnly = false)
+		public void MigrateUp(string provider, string connectionString, IEnumerable<Assembly> assemblies, string[] tags, Version upToVersion = null, bool previewOnly = false)
 		{
 			foreach (var assembly in assemblies)
 			{
@@ -34,7 +34,7 @@ namespace AGO.Core.Migration
 					assembly.GetTypes().Aggregate<Type, Type>(null, (result, current) => typeof(IVersionTableMetaData).IsAssignableFrom(current) ? current : result);
 				if (versionTableType == null)
 					continue;
-				var runner = GetMigrationRunner(provider, connectionString, assembly, previewOnly);
+				var runner = GetMigrationRunner(provider, connectionString, assembly, tags, previewOnly);
 				var currentUpToVersion = upToVersion ?? assembly.GetName().Version;
 				var version = GetMigrationVersion(currentUpToVersion);
 
@@ -44,7 +44,7 @@ namespace AGO.Core.Migration
 			}
 		}
 
-		public void MigrateDown(string provider, string connectionString, IEnumerable<Assembly> assemblies, Version downToVersion = null, bool previewOnly = false)
+		public void MigrateDown(string provider, string connectionString, IEnumerable<Assembly> assemblies, string[] tags, Version downToVersion = null, bool previewOnly = false)
 		{
 
 			foreach (var assembly in assemblies)
@@ -53,7 +53,7 @@ namespace AGO.Core.Migration
 					assembly.GetTypes().Aggregate<Type, Type>(null, (result, current) => typeof(IVersionTableMetaData).IsAssignableFrom(current) ? current : result);
 				if (versionTableType == null)
 					continue;
-				var runner = GetMigrationRunner(provider, connectionString, assembly, previewOnly);
+				var runner = GetMigrationRunner(provider, connectionString, assembly, tags, previewOnly);
 				var av = assembly.GetName().Version;
 				var currentDownToVersion = downToVersion ?? new Version(av.Major, av.Minor, av.Build - 1, av.Revision);
 				var version = GetMigrationVersion(currentDownToVersion);
@@ -73,12 +73,16 @@ namespace AGO.Core.Migration
             return MigrationVersionAttribute.CalculateVersion(version.Major, version.Minor, version.Build, version.Revision);
 		}
 
-		protected MigrationRunner GetMigrationRunner(string provider, string cs, Assembly assembly, bool previewOnly)
+		protected MigrationRunner GetMigrationRunner(string provider, string cs, Assembly assembly, string[] tags, bool previewOnly)
 		{
 			if (assembly == null)
 				throw new ArgumentNullException("assembly");
 			var announcer = new TextWriterAnnouncer(Console.Out) { ShowSql = true };
-			var runnerContext = new RunnerContext(announcer){ApplicationContext = provider};//used in migrations for customize schema according to provider
+			var runnerContext = new RunnerContext(announcer)
+			{
+				ApplicationContext = provider, //used in migrations for customize schema according to provider
+				Tags = tags //used to filter needed migrations
+			};
 			var processorOptions = new ProcessorOptions { Timeout = 60, PreviewOnly = previewOnly };
 			var pgsqlFactory = new PostgresProcessorFactory();
 			var sqliteFactory = new SqliteProcessorFactory();

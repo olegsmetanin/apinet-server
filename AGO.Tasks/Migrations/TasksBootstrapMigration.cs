@@ -9,7 +9,7 @@ namespace AGO.Tasks.Migrations
     /// <summary>
     /// Первая миграция - основные таблицы и связи
     /// </summary>
-    [MigrationVersion(2013, 09, 16, 01)]
+    [MigrationVersion(2013, 09, 16, 01), Tags(MigrationTags.ProjectDb)]
     public class TasksBootstrapMigration: Migration
     {
     	internal const string MODULE_SCHEMA = "Tasks";

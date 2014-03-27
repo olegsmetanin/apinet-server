@@ -33,14 +33,14 @@ namespace AGO.Core.Migration
 
 		#region Creation
 
-		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root)
+		public static ICreateTableWithColumnSyntax ModelTable<TModel>(this ICreateExpressionRoot root, string schema = null)
 		{
 			var type = typeof(TModel);
 
 			var withoutSchema = root.Table(TableName<TModel>());
 			var withSchema = withoutSchema as ICreateTableWithColumnSyntax;
 			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
-				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+				withSchema = withoutSchema.InSchema(schema ?? SchemaName<TModel>());
 
 			var idProperty = type.GetProperty("Id");
 			if (idProperty != null)
@@ -439,11 +439,11 @@ namespace AGO.Core.Migration
 
 		#region Deletion
 
-		public static void ModelTable<TModel>(this IDeleteExpressionRoot root)
+		public static void ModelTable<TModel>(this IDeleteExpressionRoot root, string schema = null)
 		{
 			var withSchema = root.Table(TableName<TModel>());
 			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
-				withSchema.InSchema(SchemaName<TModel>());
+				withSchema.InSchema(schema ?? SchemaName<TModel>());
 		}
 
 		public static IDeleteColumnFromTableSyntax Column<TModel>(
@@ -458,19 +458,19 @@ namespace AGO.Core.Migration
 			return self.Column(ColumnName(expression));
 		}
 
-		public static void FromModelTable<TModel>(this IDeleteColumnFromTableSyntax self)
+		public static void FromModelTable<TModel>(this IDeleteColumnFromTableSyntax self, string schema = null)
 		{
 			var withSchema = self.FromTable(TableName<TModel>());
 			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
-				withSchema.InSchema(SchemaName<TModel>());
+				withSchema.InSchema(schema ?? SchemaName<TModel>());
 		}
 
-		public static IDeleteDataSyntax FromModelTable<TModel>(this IDeleteExpressionRoot root)
+		public static IDeleteDataSyntax FromModelTable<TModel>(this IDeleteExpressionRoot root, string schema = null)
 		{
 			var withoutSchema = root.FromTable(TableName<TModel>());
 			var withSchema = withoutSchema as IDeleteDataSyntax;
 			if (!AutoMappedSessionFactoryBuilder.DisableSchemas)
-				withSchema = withoutSchema.InSchema(SchemaName<TModel>());
+				withSchema = withoutSchema.InSchema(schema ?? SchemaName<TModel>());
 
 			return withSchema;
 		}
@@ -651,16 +651,16 @@ namespace AGO.Core.Migration
 
 		#region Core
 
-		public static ICreateTableWithColumnSyntax CoreModelTable<TModel>(this ICreateExpressionRoot root)
+		public static ICreateTableWithColumnSyntax CoreModelTable<TModel>(this ICreateExpressionRoot root, string schema = null)
 			where TModel : IIdentifiedModel
 		{
-			return root.ModelTable<TModel>().WithValueColumn<TModel>(m => m.CreationTime);
+			return root.ModelTable<TModel>(schema).WithValueColumn<TModel>(m => m.CreationTime);
 		}
 
-		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root)
+		public static ICreateTableWithColumnSyntax SecureModelTable<TModel>(this ICreateExpressionRoot root, string schema = null)
 			where TModel : ISecureModel
 		{
-			return root.CoreModelTable<TModel>()
+			return root.CoreModelTable<TModel>(schema)
 				.WithRefColumn<TModel>(m => m.Creator)
 				.WithValueColumn<TModel>(m => m.LastChangeTime)
 				.WithRefColumn<TModel>(m => m.LastChanger);

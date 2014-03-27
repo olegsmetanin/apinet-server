@@ -8,7 +8,6 @@ using AGO.Core.Attributes.Controllers;
 using AGO.Core.Controllers.Projects;
 using AGO.Core.Controllers.Security;
 using AGO.Core.DataAccess;
-using AGO.Core.DataAccess.DbConfigurator;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Localization;
 using AGO.Core.Model.Configuration;
@@ -117,7 +116,12 @@ namespace AGO.Core.Controllers
 		}
 			
 		[JsonEndpoint, RequireAuthorization(true)]
-		public object CreateProject([NotNull] ProjectModel model, [NotEmpty] Guid serverId, [NotNull] ISet<Guid> tagIds, bool skipDbCreation = false)
+		public object CreateProject(
+			[NotNull] ProjectModel model, 
+			[NotEmpty] Guid serverId, 
+			[NotNull] ISet<Guid> tagIds, 
+			bool skipDbCreation = false,
+			bool skipAddMember = false)//i know that code only for test is bad design, but can't find appropriate solution now, try implement later
 		{
 			var validation = new ValidationResult();
 
@@ -135,15 +139,12 @@ namespace AGO.Core.Controllers
 				};
 				newProject.ChangeStatus(ProjectStatus.New, CurrentUser);
 
-				IDbConfigurator configurator;
 				string host = null;
 				string dbName = null;
 				if (!skipDbCreation)
 				{
 					var dbinstance = dao.Get<DbInstanceModel>(serverId, true);
-					//TODO find master connection string in app
-					configurator = app.DbConfiguratorFactory.CreateConfigurator(dbinstance.Provider,
-						app.MasterConnectionString);
+					var configurator = app.DbConfiguratorFactory.CreateConfigurator(dbinstance.Provider, app.MasterConnectionString);
 					
 					host = dbinstance.Server;
 					dbName = CalculateProjectDbName(newProject.ProjectCode);
@@ -176,11 +177,14 @@ namespace AGO.Core.Controllers
 				dao.Store(newProject);
 				MainSession.Flush();//required for ProjectSession() working
 
-				var member = ProjectMemberModel.FromParameters(CurrentUser, newProject, BaseProjectRoles.Administrator);
-				DaoFactory.CreateProjectCrudDao(newProject.ProjectCode).Store(member);
-				ProjectSession(newProject.ProjectCode).Flush();
+				if (!skipAddMember)
+				{
+					var member = ProjectMemberModel.FromParameters(CurrentUser, newProject, BaseProjectRoles.Administrator);
+					DaoFactory.CreateProjectCrudDao(newProject.ProjectCode).Store(member);
+					ProjectSession(newProject.ProjectCode).Flush();
 
-				_ModelProcessingService.AfterModelCreated(newProject, member);
+					_ModelProcessingService.AfterModelCreated(newProject, member);
+				}
 
 				foreach (var tag in tagIds.Select(id => dao.Get<ProjectTagModel>(id)))
 				{

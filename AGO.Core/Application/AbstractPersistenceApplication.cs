@@ -68,6 +68,7 @@ namespace AGO.Core.Application
 				provider,
 				projConnectionString,
 				ModuleDescriptors.Where(m => m.Alias == ModuleDescriptor.MODULE_CODE || m.Alias == module).Select(d => d.GetType().Assembly),
+				new []{MigrationTags.ProjectDb},
 				version);
 		}
 
@@ -288,6 +289,7 @@ namespace AGO.Core.Application
 				provider,
 				mainDbConnectionString,
 				ModuleDescriptors.Where(m => m.Alias == ModuleDescriptor.MODULE_CODE).Select(d => d.GetType().Assembly),
+				new[] { MigrationTags.MasterDb },
 				version);
 			
 			foreach (var service in IocContainer.GetAllInstances<ITestDataService>())
@@ -304,6 +306,7 @@ namespace AGO.Core.Application
 						provider,
 						projConnectionString,
 						ModuleDescriptors.Select(d => d.GetType().Assembly),
+						new[] { MigrationTags.ProjectDb },
 						version);
 				}
 			}

@@ -1,28 +1,14 @@
-﻿using FluentMigrator.VersionTableInfo;
+﻿using AGO.Core.Migrations;
+using FluentMigrator.VersionTableInfo;
 
 namespace AGO.Tasks.Migrations
 {
     [VersionTableMetaData]
-    public class VersionTableMetaData: IVersionTableMetaData
+    public class VersionTableMetaData: AbstractVersionTableMetaData
     {
-        public string SchemaName
+        public override string SchemaName
         {
             get { return TasksBootstrapMigration.MODULE_SCHEMA; }
-        }
-
-        public string TableName
-        {
-            get { return "VersionInfo"; }
-        }
-
-        public string ColumnName
-        {
-            get { return "Version"; }
-        }
-
-        public string UniqueIndexName
-        {
-            get { return "IX_VersionInfo_Version"; }
         }
     }
 }

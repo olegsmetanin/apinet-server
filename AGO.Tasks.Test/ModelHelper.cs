@@ -1,5 +1,6 @@
 ﻿using System;
 using AGO.Core.Model.Dictionary;
+using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
@@ -20,9 +21,20 @@ namespace AGO.Tasks.Test
 			this.projSession = projSession;
 		}
 
-		protected override ISession ProjectSession(string project)
+		protected override ISession ProjectSession(string projCode)
 		{
 			return projSession();
+		}
+
+		protected override void InternalDelete(object model)
+		{
+			var p = model as ProjectModel;
+			if (p != null)
+			{
+				DeleteProjectMembers(p.ProjectCode, projSession());
+				DeleteProjectActivity(p.ProjectCode, projSession());
+			}
+			base.InternalDelete(model);
 		}
 
 		public TaskModel Task(int num, TaskTypeModel type, string content = null, TaskStatus status = TaskStatus.New, UserModel creator = null, UserModel executor = null)

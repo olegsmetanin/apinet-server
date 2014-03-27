@@ -144,6 +144,10 @@
     <Compile Include="IEnvironmentService.cs" />
     <Compile Include="ITestDataService.cs" />
     <Compile Include="LocalEnvironmentService.cs" />
+    <Compile Include="Migrations\AbstractVersionTableMetaData.cs" />
+    <Compile Include="Migrations\CommonMigration.cs" />
+    <Compile Include="Migrations\SharedMigration.cs" />
+    <Compile Include="Migration\MigrationTags.cs" />
     <Compile Include="Migration\MigrationVersionAttribute.cs" />
     <Compile Include="Model\Activity\RelatedChangeActivityRecordModel.cs" />
     <Compile Include="Model\Activity\AttributeChangeActivityRecordModel.cs" />
@@ -260,7 +264,7 @@
     <Compile Include="Localization\ResourceManagerLocalizerByKey.cs" />
     <Compile Include="Localization\ResourceManagerTypeLocalizer.cs" />
     <Compile Include="Migrations\CoreMigration.cs" />
-    <Compile Include="Migrations\VersionTableMetadata.cs" />
+    <Compile Include="Migrations\CoreVersionTableMetaData.cs" />
     <Compile Include="Migration\Extensions.cs" />
     <Compile Include="Migration\IMigrationService.cs" />
     <Compile Include="Migration\MigrationService.cs" />

@@ -41,9 +41,9 @@ namespace AGO.Core.Tests.Security
 		{
 			var ptype = M.ProjectType();
 			var pub = M.Project("public", ptype.Name, pub: true);
-			M.Member(pub.ProjectCode, member);
+			M.Membership(pub.ProjectCode, member);
 			var priv = M.Project("private", ptype.Name);
-			M.Member(priv.ProjectCode, member);
+			M.Membership(priv.ProjectCode, member);
 
 			return new {pub, priv};
 		}
@@ -149,7 +149,7 @@ namespace AGO.Core.Tests.Security
 					TypeId = ptype.Id
 				};
 				LoginAdmin();
-				var response = controller.CreateProject(data, Guid.Empty, new HashSet<Guid>(), true);
+				var response = controller.CreateProject(data, Guid.Empty, new HashSet<Guid>(), true, true);
 				MainSession.Flush();
 				return response as ProjectModel;
 			});
@@ -170,7 +170,7 @@ namespace AGO.Core.Tests.Security
 			};
 			Login(member.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-			var response = controller.CreateProject(data, Guid.Empty, new HashSet<Guid>(), true);
+			var response = controller.CreateProject(data, Guid.Empty, new HashSet<Guid>(), true, true);
 			MainSession.Clear();//rollback as in action executor
 			
 			Assert.That(response, Is.Not.Null);
@@ -186,7 +186,7 @@ namespace AGO.Core.Tests.Security
 			var project = M.Project("NUnit_admin_proj", ptype.Name);
 			if (addAsMember)
 			{
-				M.Member(project.ProjectCode, user);
+				M.Membership(project.ProjectCode, user);
 			}
 			var tag = M.ProjectTag(user.Email, user);
 
@@ -224,7 +224,7 @@ namespace AGO.Core.Tests.Security
 			var project = M.Project("NUnit_admin_proj", ptype.Name);
 			if (addAsMember)
 			{
-				M.Member(project.ProjectCode, user);
+				M.Membership(project.ProjectCode, user);
 			}
 			var tag = M.ProjectTag("nunit_tag", user);
 			var link = new ProjectToTagModel

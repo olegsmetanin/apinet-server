@@ -31,13 +31,23 @@ namespace AGO.Reporting.Tests
 		private IReportingService svc;
 		private DictionaryKeyValueProvider provider;
 		private IDictionary<string, string> config;
+		private ModelHelper MM;
 		
 		public override void SetUp()
 		{
 			base.SetUp();
 
-			project = M.Project(Guid.NewGuid().ToString().Replace("-", ""));
-			M.Member(project.ProjectCode, CurrentUser, BaseProjectRoles.Administrator);
+			var code = Guid.NewGuid().ToString().Replace("-", "");
+			project = M.Project(code);
+			//because master db does not have report tables (moved to proj db's), patch project cs to one of out test databases
+			var dbcfg = DbConfiguratorFactory.CreateConfigurator("PostgreSQL", MasterConnectionString);
+			project.ConnectionString = dbcfg.MakeConnectionString(null, "ago_apinet_others",
+				MainSession.Connection.ConnectionString);
+			MainSession.Update(project);
+			MainSession.Flush();
+
+			MM = new ModelHelper(() => ProjectSession(code), () => CurrentUser);
+			MM.Member(project, CurrentUser, BaseProjectRoles.Administrator);
 			realsvc = new ReportingService();
 			config = new Dictionary<string, string>
 			{
@@ -48,11 +58,19 @@ namespace AGO.Reporting.Tests
 			svc = realsvc;
 		}
 
+		private ISession ProjectSession
+		{
+			get { return ProjectSession(project.ProjectCode); }
+		}
+
 		public override void TearDown()
 		{
 			project = null;
 			svc.Dispose();
 			svc = null;
+
+			MM.DropCreated();
+			MM = null;
 
 			base.TearDown();
 		}
@@ -73,7 +91,7 @@ namespace AGO.Reporting.Tests
 
 		private ReportTaskModel WaitForState(ISession s, Guid taskId, TimeSpan waitTimeout, ReportTaskState waitState = ReportTaskState.Completed)
 		{
-			var checker = MainSession.CreateCriteria<ReportTaskModel>()
+			var checker = s.CreateCriteria<ReportTaskModel>()
 				.SetProjection(Projections.Property<ReportTaskModel>(m => m.State))
 				.Add(Restrictions.And(
 					Restrictions.Eq("Id", taskId), Restrictions.Eq("ProjectCode", project.ProjectCode)));
@@ -102,16 +120,16 @@ namespace AGO.Reporting.Tests
 		{
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator, 
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator, 
 				typeof (FakeGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 			
 			svc.RunReport(task.Id);
-			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(5));
+			task = WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(5));
 
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
 			Assert.IsNotNull(task.StartedAt);
@@ -132,8 +150,8 @@ namespace AGO.Reporting.Tests
 			const string search = "en";
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$id$}\",\"{$author$}\",\"{$name$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$id$}\",\"{$author$}\",\"{$name$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(ModelDataGenerator).AssemblyQualifiedName,
 				typeof(ModelParameters).AssemblyQualifiedName);
 			var param = new ModelParameters();
@@ -142,13 +160,13 @@ namespace AGO.Reporting.Tests
 				FilteringService.Filter<ProjectTagModel>().WhereString(m => m.Name).Like(search, true, true));
 			var writer = new StringWriter();
 			JsonService.CreateSerializer().Serialize(writer, param);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, writer.ToString());
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, writer.ToString());
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
 
-			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(5));
+			task = WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(5));
 			
 			Assert.AreEqual(ReportTaskState.Completed, task.State);
 			var tags = MainSession.QueryOver<ProjectTagModel>().WhereRestrictionOn(m => m.Name).IsLike(search, MatchMode.Anywhere)
@@ -168,17 +186,17 @@ namespace AGO.Reporting.Tests
 		{
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
 
-			WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
@@ -198,16 +216,16 @@ namespace AGO.Reporting.Tests
 			config.Add("Reporting_ConcurrentWorkersTimeout", "2");//timeout 2 sec
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeCancelableGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
+			task = WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(3), ReportTaskState.Canceled);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
@@ -219,16 +237,16 @@ namespace AGO.Reporting.Tests
 			config.Add("Reporting_ConcurrentWorkersTimeout", "2");//timeout 2 sec
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(4), ReportTaskState.Canceled);
+			task = WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(4), ReportTaskState.Canceled);
 
 			Assert.AreEqual(ReportTaskState.Canceled, task.State);
 			StringAssert.Contains("timeout", task.ErrorMsg);
@@ -239,17 +257,17 @@ namespace AGO.Reporting.Tests
 		{
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeFreezengGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
 
-			WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 			
 			Thread.Sleep(100);
 			svc.CancelReport(task.Id);
@@ -267,31 +285,31 @@ namespace AGO.Reporting.Tests
 			config.Add("Reporting_TrackProgressInterval", "50");//each 50ms track state
 			realsvc.Initialize();
 
-			var tpl = M.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
-			var stg = M.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
+			var tpl = MM.Template(project.ProjectCode, "fake", Encoding.UTF8.GetBytes("<range_data>\"{$num$}\",\"{$txt$}\"</range_data>"));
+			var stg = MM.Setting(project.ProjectCode, "fake", tpl.Id, GeneratorType.CvsGenerator,
 				typeof(FakeTenIterationGenerator).AssemblyQualifiedName,
 				typeof(FakeParameters).AssemblyQualifiedName);
-			var task = M.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
+			var task = MM.Task(project.ProjectCode, "controlled", stg.Id, "{a:1, b:'zxc'}");
 			WriteTaskToQueue(task);
 			SessionProviderRegistry.CloseCurrentSessions();
 
 			svc.RunReport(task.Id);
-			task = WaitForState(MainSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
+			task = WaitForState(ProjectSession, task.Id, TimeSpan.FromSeconds(1), ReportTaskState.Running);
 
 			var safeCounter = 0;
 			var prev = -1;
 			while (safeCounter < 200 && task.State == ReportTaskState.Running && task.DataGenerationProgress < 100)
 			{
-				MainSession.Clear();
-				task = MainSession.Load<ReportTaskModel>(task.Id);
+				ProjectSession.Clear();
+				task = ProjectSession.Load<ReportTaskModel>(task.Id);
 
 				Assert.IsTrue(task.DataGenerationProgress >= prev);
 				prev = task.DataGenerationProgress;
 				Thread.Sleep(100);
 				safeCounter++;
 			}
-			MainSession.Clear();
-			task = MainSession.Load<ReportTaskModel>(task.Id);
+			ProjectSession.Clear();
+			task = ProjectSession.Load<ReportTaskModel>(task.Id);
 			Assert.AreEqual(100, task.DataGenerationProgress);
 		}
 	}

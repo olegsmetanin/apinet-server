@@ -13,20 +13,6 @@ namespace AGO.Core.Tests
 		{
 		}
 
-		protected override void InternalDelete(object model)
-		{
-			var project = model as ProjectModel;
-			if (project != null)
-			{
-				foreach (var member in ProjectMembers(project.ProjectCode))
-				{
-					Session().Delete(member);
-				}
-				DeleteProjectActivity(project.ProjectCode);
-			}
-			base.InternalDelete(model);
-		}
-
 		public ProjectTypeModel ProjectType(string name = null)
 		{
 			return Track(() =>
@@ -65,40 +51,6 @@ namespace AGO.Core.Tests
 				Session().Save(p);
 				Session().Flush();
 				return p;
-			});
-		}
-
-		public ProjectMemberModel Member(string project, UserModel user, params string[] roles)
-		{
-			if (project.IsNullOrWhiteSpace())
-				throw new ArgumentNullException("project");
-
-			var p = ProjectFromCode(project);
-			var member = Member(p, user, roles);
-			Session().Update(p);
-			return member;
-		}
-
-		public ProjectMemberModel Member(ProjectModel project, UserModel user, params string[] roles)
-		{
-			if (project == null)
-				throw new ArgumentNullException("project");
-			if (user == null)
-				throw new ArgumentNullException("user");
-
-			return Track(() =>
-			{
-				var membership = new ProjectMembershipModel
-				{
-					Project = project,
-					User = user
-				};
-				project.Members.Add(membership);
-				roles = roles != null && roles.Length > 0 ? roles : new[] { BaseProjectRoles.Administrator };
-				var member = ProjectMemberModel.FromParameters(user, project, roles);
-				Session().Save(member);
-				Session().Flush();
-				return member;
 			});
 		}
 
