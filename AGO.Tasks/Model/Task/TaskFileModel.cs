@@ -1,4 +1,5 @@
 ﻿using System;
+using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -30,5 +31,10 @@ namespace AGO.Tasks.Model.Task
 		public virtual TaskModel Owner { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? OwnerId { get; set; }
+
+		public override string ToString()
+		{
+			return Name.IsNullOrWhiteSpace() ? base.ToString() : Name;
+		}
 	}
 }

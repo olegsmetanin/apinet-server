@@ -34,13 +34,23 @@ namespace AGO.Tasks.Controllers
 			ISecurityService securityService,
 			ISessionProviderRegistry registry,
 			DaoFactory factory,
+			ProjectAttributesActivityViewProcessor projectAttributesProcessor,
+			TaskAttributesActivityViewProcessor taskAttributesProcessor,
+			TaskCustomPropertiesActivityViewProcessor taskCustomPropertiesProcessor,
 			IEnumerable<IActivityViewProcessor> activityViewProcessors,
-			TaskChangeRelatedActivityViewProcessor taskRelatedChangeProcessor,
-			TaskAttributeActivityViewProcessor taskAttributeProcessor)
+			ProjectTasksRelatedActivityViewProcessor projectTasksViewProcessor,
+			TaskAgreementsRelatedActivityViewProcessor taskAgreementsViewProcessor,
+			TaskExecutorsRelatedActivityViewProcessor taskExecutorsViewProcessor,
+			TaskFilesRelatedActivityViewProcessor taskFilesViewProcessor)
 			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory, activityViewProcessors)
 		{
-			_ActivityViewProcessors.Add(taskRelatedChangeProcessor);
-			_ActivityViewProcessors.Add(taskAttributeProcessor);
+			_ActivityViewProcessors.Add(projectAttributesProcessor);
+			_ActivityViewProcessors.Add(taskAttributesProcessor);
+			_ActivityViewProcessors.Add(taskCustomPropertiesProcessor);		
+			_ActivityViewProcessors.Add(projectTasksViewProcessor);
+			_ActivityViewProcessors.Add(taskAgreementsViewProcessor);
+			_ActivityViewProcessors.Add(taskExecutorsViewProcessor);
+			_ActivityViewProcessors.Add(taskFilesViewProcessor);
 		} 
 
 		#endregion

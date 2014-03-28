@@ -84,6 +84,7 @@
     <Compile Include="Config\RegexKeyValueProvider.cs" />
     <Compile Include="AutoMapping\AutoMappedSessionFactoryBuilder.cs" />
     <Compile Include="Controllers\AbstractController.cs" />
+    <Compile Include="Controllers\Activity\AbstractActivityView.cs" />
     <Compile Include="Controllers\Activity\GroupedActivityItemView.cs" />
     <Compile Include="Controllers\Activity\RelatedChangeActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\AttributeChangeActivityViewProcessor.cs" />
@@ -162,6 +163,7 @@
     <Compile Include="Model\IProjectBoundModel.cs" />
     <Compile Include="Model\IStatusHistoryRecordModel.cs" />
     <Compile Include="Model\Processing\ActivityPostProcessor.cs" />
+    <Compile Include="Model\Processing\CustomPropertyChangeActivityPostProcessor.cs" />
     <Compile Include="Model\Processing\RelatedChangeActivityPostProcessor.cs" />
     <Compile Include="Model\Processing\AttributeChangeActivityPostProcessor.cs" />
     <Compile Include="Model\Processing\AttributeValidatingModelValidator.cs" />

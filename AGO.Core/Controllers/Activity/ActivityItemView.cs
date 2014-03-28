@@ -3,18 +3,8 @@ using Newtonsoft.Json;
 
 namespace AGO.Core.Controllers.Activity
 {
-	[JsonObject(MemberSerialization.OptIn)]
-	public class ActivityItemView
+	public class ActivityItemView : AbstractActivityView
 	{
-		public Guid ItemId { get; private set; }
-
-		public string ItemType { get; private set; }
-
-		public Type RecordType { get; private set; }
-
-		[JsonProperty]
-		public string ActivityTime { get; set; }
-
 		[JsonProperty]
 		public string User { get; set; }
 
@@ -27,11 +17,11 @@ namespace AGO.Core.Controllers.Activity
 		[JsonProperty]
 		public string After { get; set; }
 
-		public ActivityItemView(Guid itemId, string itemType, Type recordType)
+		public string AdditionalInfo { get; set; }
+
+		public ActivityItemView(Guid itemId, string itemType, string itemName)
+			:base(itemId, itemType, itemName)
 		{
-			ItemId = itemId;
-			ItemType = itemType;
-			RecordType = recordType;
 		}
 	}
 }

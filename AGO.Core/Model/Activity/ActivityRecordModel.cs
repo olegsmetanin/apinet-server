@@ -9,12 +9,15 @@ namespace AGO.Core.Model.Activity
 	public abstract class ActivityRecordModel : SecureProjectBoundModel<Guid>
 	{
 		#region Persistent
+		
+		[NotEmpty, NotLonger(128), MetadataExclude]
+		public virtual string ItemType { get; set; }
+
+		[NotLonger(128), MetadataExclude]
+		public virtual string AdditionalInfo { get; set; }
 
 		[NotEmpty]
 		public virtual Guid ItemId { get; set; }
-
-		[NotEmpty, NotLonger(128), MetadataExclude]
-		public virtual string ItemType { get; set; }
 
 		[NotEmpty]
 		public virtual string ItemName { get; set; }

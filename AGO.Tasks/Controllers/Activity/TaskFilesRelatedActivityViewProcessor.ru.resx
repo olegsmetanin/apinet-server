@@ -117,13 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CommitedChanges" xml:space="preserve">
-    <value>commited changes</value>
+  <data name="ActivityItem" xml:space="preserve">
+    <value>Задача "{0}"</value>
   </data>
-  <data name="User" xml:space="preserve">
-    <value>User "{0}"</value>
-  </data>
-  <data name="Users" xml:space="preserve">
-    <value>Users "{0}"</value>
+  <data name="RelatedActivityItem" xml:space="preserve">
+    <value>файл "{0}"</value>
   </data>
 </root>

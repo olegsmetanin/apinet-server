@@ -5,7 +5,7 @@ using AGO.Core.Model.Activity;
 
 namespace AGO.Core.Model.Processing
 {
-	public abstract class AttributeChangeActivityPostProcessor<TModel> : ActivityPostProcessor<TModel>
+	public abstract class AttributeChangeActivityPostProcessor<TModel> : ActivityPostProcessor<TModel, AttributeChangeActivityRecordModel>
 		where TModel : IdentifiedModel<Guid>, new()
 	{
 		#region Properties, fields, constructors

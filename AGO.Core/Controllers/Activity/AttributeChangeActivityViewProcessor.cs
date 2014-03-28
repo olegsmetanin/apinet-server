@@ -18,27 +18,26 @@ namespace AGO.Core.Controllers.Activity
 
 		#region Template methods
 
-		protected override void DoProcessItem(ActivityItemView view, AttributeChangeActivityRecordModel model)
+		protected override bool DoProcessItem(ActivityItemView view, AttributeChangeActivityRecordModel model)
 		{
-			base.DoProcessItem(view, model);
-
 			var groupedView = view as GroupedActivityItemView;
 			if (groupedView != null)
 			{
 				groupedView.Action = groupedView.Action.IsNullOrWhiteSpace() ? ChangeType.Update.ToString() : groupedView.Action;
-				return;
+				return base.DoProcessItem(view, model);
 			}
 
 			view.Action = model.Attribute;
 			view.Before = model.OldValue;
-			view.After = model.NewValue;			
+			view.After = model.NewValue;
+			view.AdditionalInfo = model.AdditionalInfo;
+
+			return base.DoProcessItem(view, model);
 		}
 
 		protected override void DoPostProcessItem(ActivityItemView view)
 		{
 			base.DoPostProcessItem(view);
-			if (typeof (AttributeChangeActivityRecordModel) != view.RecordType)
-				return;
 
 			LocalizeValues(view);
 		}
@@ -62,17 +61,11 @@ namespace AGO.Core.Controllers.Activity
 			return localized.IsNullOrWhiteSpace() ? attribute : localized;
 		}
 
-		protected virtual void LocalizeAction<TModel>(ActivityItemView view)
+		protected virtual void LocalizeAttribute<TModel>(ActivityItemView view)
 		{
-			if (view.Action.IsNullOrWhiteSpace() && ChangeType.Update.ToString().Equals(view.Action))
+			base.LocalizeAction(view);
+			if (view.Action.IsNullOrWhiteSpace() || view is GroupedActivityItemView)
 				return;
-
-			if (view is GroupedActivityItemView)
-			{
-				view.Action = LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Updated",
-					CultureInfo.CurrentUICulture, view.Action);
-				return;
-			}
 
 			view.Action = LocalizationService.MessageForType(typeof(AttributeChangeActivityViewProcessor), "Action", 
 				CultureInfo.CurrentUICulture, GetLocalizedAttributeName(typeof(TModel), view.Action));
@@ -96,6 +89,15 @@ namespace AGO.Core.Controllers.Activity
 			view.After = process(view.After, "After");
 		}
 
+		protected virtual void LocalizeValuesByType<T>(ActivityItemView view)
+		{
+			if (view is GroupedActivityItemView)
+				return;
+
+			view.Before = LocalizationService.MessageForType(typeof(T), view.Before) ?? view.Before;
+			view.After = LocalizationService.MessageForType(typeof(T), view.After) ?? view.After;
+		}
+		
 		protected virtual void TransformDateValues(ActivityItemView view, bool includeTime = false)
 		{
 			if (view is GroupedActivityItemView)

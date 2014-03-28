@@ -16,27 +16,19 @@ namespace AGO.Core.Controllers.Activity
 
 		#region Template methods
 
-		protected override void DoProcessItem(ActivityItemView view, RelatedChangeActivityRecordModel model)
+		protected override bool DoProcessItem(ActivityItemView view, RelatedChangeActivityRecordModel model)
 		{
-			base.DoProcessItem(view, model);
+			view.Action = !(view is GroupedActivityItemView) ? model.ChangeType.ToString() : ChangeType.Update.ToString();
+			view.Before = !(view is GroupedActivityItemView) ? model.RelatedItemName : string.Empty;
 
-			view.Action = model.ChangeType.ToString();
-			view.Before = model.RelatedItemName;
+			return base.DoProcessItem(view, model);
 		}
-
-		protected override void DoPostProcessItem(ActivityItemView view)
+		
+		protected override void LocalizeAction(ActivityItemView view)
 		{
-			base.DoPostProcessItem(view);
-			if (typeof(RelatedChangeActivityRecordModel) != view.RecordType)
-				return;
+			base.LocalizeAction(view);
 
-			LocalizeAction(view);
-		}
-
-
-		protected virtual void LocalizeAction(ActivityItemView view)
-		{
-			if (view.Action.IsNullOrWhiteSpace())
+			if (view.Action.IsNullOrWhiteSpace() || view is GroupedActivityItemView)
 				return;
 
 			view.Action = LocalizationService.MessageForType(typeof(RelatedChangeActivityViewProcessor), 

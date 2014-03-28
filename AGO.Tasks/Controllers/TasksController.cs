@@ -261,6 +261,7 @@ namespace AGO.Tasks.Controllers
 			    			{
 			    				task.Executors.Remove(removed);
 			    				dao.Delete(removed);
+								_ModelProcessingService.AfterModelDeleted(removed);
 			    			}
 			    			foreach (var added in toAdd)
 			    			{
@@ -272,6 +273,7 @@ namespace AGO.Tasks.Controllers
 			    				};
 			    				task.Executors.Add(executor);
 			    				dao.Store(executor);
+								_ModelProcessingService.AfterModelCreated(executor);
 			    			}
 			    			break;
 			    		case "EstimatedTime":
@@ -380,6 +382,7 @@ namespace AGO.Tasks.Controllers
 
 			dao.Store(agreement);
 			dao.Store(task);
+			_ModelProcessingService.AfterModelCreated(agreement);
 
 			return TaskViewAdapter.ToAgreement(agreement);
 		}
@@ -399,8 +402,8 @@ namespace AGO.Tasks.Controllers
 				throw new CanNotRemoveAgreemerFromClosedTaskException();
 					
 			task.Agreements.Remove(agreement);
-
 			dao.Store(task);
+			_ModelProcessingService.AfterModelDeleted(agreement);
 
 			return true;
 		}
@@ -627,6 +630,7 @@ namespace AGO.Tasks.Controllers
 					DemandUpdate(taskFile, project);
 
 					DaoFactory.CreateProjectCrudDao(project).Store(taskFile);//must be called before store-need's file id for file name
+					_ModelProcessingService.AfterModelCreated(taskFile);
 
 					var relativeFilePath = taskFile.Path;
 					if (relativeFilePath.IsNullOrWhiteSpace())
@@ -707,6 +711,7 @@ namespace AGO.Tasks.Controllers
 
 			file.Owner.Files.Remove(file);
 			dao.Delete(file);
+			_ModelProcessingService.AfterModelDeleted(file);
 	    }
 
 		[JsonEndpoint, RequireAuthorization]

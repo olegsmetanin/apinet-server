@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using AGO.Core;
 using AGO.Core.Attributes.Constraints;
 using AGO.Core.Attributes.Mapping;
 using AGO.Core.Attributes.Model;
@@ -64,6 +66,12 @@ namespace AGO.Tasks.Model.Task
 		public virtual bool IsExpired
 		{
 			get { return !Done && DueDate.HasValue && DueDate.Value > DateTime.Today; }
+		}
+
+		public override string ToString()
+		{
+			return string.Format("{0}{1}", Agreemer, DueDate != null 
+				? ": " + DueDate.Value.ToString("d", CultureInfo.CurrentUICulture) : string.Empty);
 		}
 	}
 }

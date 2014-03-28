@@ -98,6 +98,18 @@ namespace AGO.Core.Model.Processing
 				postProcessor.AfterModelUpdated(model, original, changer);
 		}
 
+		public void AfterModelDeleted(IIdentifiedModel model, ProjectMemberModel deleter = null)
+		{
+			if (!_Ready)
+				throw new ServiceNotInitializedException();
+
+			if (model == null)
+				throw new ArgumentNullException("model");
+
+			foreach (var postProcessor in modelPostProcessors.Where(v => v.Accepts(model)))
+				postProcessor.AfterModelDeleted(model, deleter);
+		}
+
 		public void RegisterModelPostProcessors(IEnumerable<IModelPostProcessor> postProcessors)
 		{
 			modelPostProcessors.UnionWith(postProcessors ?? Enumerable.Empty<IModelPostProcessor>());

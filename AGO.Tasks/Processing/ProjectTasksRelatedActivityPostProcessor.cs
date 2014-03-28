@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using AGO.Core;
 using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
@@ -8,11 +7,11 @@ using AGO.Tasks.Model.Task;
 
 namespace AGO.Tasks.Processing
 {
-	public class TaskChangeRelatedActivityPostProcessor : RelatedChangeActivityPostProcessor<TaskModel, ProjectModel>
+	public class ProjectTasksRelatedActivityPostProcessor : RelatedChangeActivityPostProcessor<TaskModel, ProjectModel>
 	{
 		#region Properties, fields, constructors
 
-		public TaskChangeRelatedActivityPostProcessor(
+		public ProjectTasksRelatedActivityPostProcessor(
 			DaoFactory factory,
 			ISessionProviderRegistry providerRegistry)
 			: base(factory, providerRegistry)
@@ -35,7 +34,7 @@ namespace AGO.Tasks.Processing
 			var project = SessionProviderRegistry.GetMainDbProvider().CurrentSession.QueryOver<ProjectModel>()
 				.Where(m => m.ProjectCode == model.ProjectCode).SingleOrDefault();
 			if(project != null)
-				result.Add(PopulateCollectionActivityRecord(model, project, FromTask(model), ChangeType.Insert));
+				result.Add(PopulateRelatedActivityRecord(model, project, FromTask(model), ChangeType.Insert));
 
 			return result;
 		} 
@@ -47,7 +46,7 @@ namespace AGO.Tasks.Processing
 			var project = SessionProviderRegistry.GetMainDbProvider().CurrentSession.QueryOver<ProjectModel>()
 				.Where(m => m.ProjectCode == model.ProjectCode).SingleOrDefault();
 			if (project != null)
-				result.Add(PopulateCollectionActivityRecord(model, project, FromTask(model), ChangeType.Delete));
+				result.Add(PopulateRelatedActivityRecord(model, project, FromTask(model), ChangeType.Delete));
 
 			return result;
 		}

@@ -12,8 +12,8 @@ namespace AGO.Core.Controllers.Activity
 		[JsonProperty]
 		public int ChangeCount { get; set; }
 
-		public GroupedActivityItemView(Guid itemId, string itemType, Type recordType)
-			: base(itemId, itemType, recordType)
+		public GroupedActivityItemView(Guid itemId, string itemType, string itemName)
+			: base(itemId, itemType, itemName)
 		{			
 		}
 	}

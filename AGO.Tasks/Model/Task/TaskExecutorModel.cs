@@ -27,5 +27,10 @@ namespace AGO.Tasks.Model.Task
 		public virtual ProjectMemberModel Executor { get; set; }
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ExecutorId { get; set; }
+
+		public override string ToString()
+		{
+			return string.Format("{0}", Executor);
+		}
 	}
 }

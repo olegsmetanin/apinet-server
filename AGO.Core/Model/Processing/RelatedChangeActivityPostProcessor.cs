@@ -7,7 +7,7 @@ using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Processing
 {
-	public abstract class RelatedChangeActivityPostProcessor<TModel, TRelatedModel> : ActivityPostProcessor<TModel>
+	public abstract class RelatedChangeActivityPostProcessor<TModel, TRelatedModel> : ActivityPostProcessor<TModel, RelatedChangeActivityRecordModel>
 		where TModel : IdentifiedModel<Guid>, new()
 		where TRelatedModel : IdentifiedModel<Guid>
 	{
@@ -34,17 +34,15 @@ namespace AGO.Core.Model.Processing
 			return !original.IsNew() ? new List<ActivityRecordModel>() : RecordsForInsertion(model);
 		}
 
-		protected virtual ActivityRecordModel PopulateCollectionActivityRecord(
+		protected virtual ActivityRecordModel PopulateRelatedActivityRecord(
 			TModel model, 
 			TRelatedModel relatedModel,
 			RelatedChangeActivityRecordModel record, 
 			ChangeType changeType,
 			ProjectMemberModel member = null)
 		{
-			if (member == null && model is ISecureModel)
-			{
-				member = ((ISecureModel) model).LastChanger;
-			}
+			var relatedSecureModel = relatedModel as ISecureModel;
+			member = member ?? (relatedSecureModel != null ? relatedSecureModel.LastChanger ?? relatedSecureModel.Creator: null);
 
 			record.ItemType = relatedModel.GetType().Name;
 			record.ItemName = relatedModel.ToStringSafe();

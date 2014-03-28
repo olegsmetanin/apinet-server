@@ -14,6 +14,8 @@ namespace AGO.Core.Model.Processing
 
 		void AfterModelCreated(IIdentifiedModel model, ProjectMemberModel creator = null);
 
+		void AfterModelDeleted(IIdentifiedModel model, ProjectMemberModel deleter = null);
+
 		void AfterModelUpdated(IIdentifiedModel model, IIdentifiedModel original, ProjectMemberModel changer = null);
 
 		void RegisterModelPostProcessors(IEnumerable<IModelPostProcessor> postProcessors);

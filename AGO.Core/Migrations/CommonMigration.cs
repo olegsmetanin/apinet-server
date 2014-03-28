@@ -86,8 +86,9 @@ namespace AGO.Core.Migrations
 			Create.SecureModelTable<ActivityRecordModel>()
 				.WithValueColumn<ActivityRecordModel>(m => m.ProjectCode, use_citext)
 				.WithValueColumn<ActivityRecordModel>(m => m.ItemType, use_citext)
-				.WithValueColumn<ActivityRecordModel>(m => m.ItemName, use_citext)
-				.WithValueColumn<ActivityRecordModel>(m => m.ItemId);
+				.WithValueColumn<ActivityRecordModel>(m => m.AdditionalInfo, use_citext)
+				.WithValueColumn<ActivityRecordModel>(m => m.ItemId)
+				.WithValueColumn<ActivityRecordModel>(m => m.ItemName, use_citext);
 
 			Alter.ModelTable<ActivityRecordModel>()
 				.AddValueColumn<AttributeChangeActivityRecordModel>(m => m.Attribute, use_citext)

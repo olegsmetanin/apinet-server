@@ -28,12 +28,13 @@ namespace AGO.Core.Controllers.Activity
 		{
 			if (view == null || !(model is TModel))
 				return;
-			DoProcess(view, (TModel) model);
+			if (DoProcess(view, (TModel) model))
+				view.ApplicableProcessors.Add(this);
 		}
 
 		public void PostProcess(ActivityView view)
 		{
-			if (view == null)
+			if (view == null || !view.ApplicableProcessors.Contains(this))
 				return;
 			DoPostProcess(view);
 		}
@@ -42,12 +43,13 @@ namespace AGO.Core.Controllers.Activity
 		{
 			if (view == null || !(model is TModel))
 				return;
-			DoProcessItem(view, (TModel) model);
+			if (DoProcessItem(view, (TModel) model))
+				view.ApplicableProcessors.Add(this);
 		}
 
 		public void PostProcessItem(ActivityItemView view)
 		{
-			if (view == null)
+			if (view == null || !view.ApplicableProcessors.Contains(this))
 				return;
 			DoPostProcessItem(view);
 		}
@@ -56,24 +58,28 @@ namespace AGO.Core.Controllers.Activity
 
 		#region Template methods
 
-		protected virtual void DoProcess(ActivityView view, TModel model)
+		protected virtual bool DoProcess(ActivityView view, TModel model)
 		{
 			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
 			view.ActivityItem = model.ItemName;
+
+			return true;
 		}
 
-		protected virtual void DoProcessItem(ActivityItemView view, TModel model)
+		protected virtual bool DoProcessItem(ActivityItemView view, TModel model)
 		{
 			var groupedView = view as GroupedActivityItemView;
 			if (groupedView != null)
 			{
 				groupedView.ChangeCount++;
 				groupedView.Users.Add(model.Creator.ToStringSafe()); 
-				return;
+				return true;
 			}
 
 			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
 			view.User = model.Creator.ToStringSafe();
+
+			return true;
 		}
 
 		protected virtual void DoPostProcess(ActivityView view)
@@ -83,11 +89,21 @@ namespace AGO.Core.Controllers.Activity
 		protected virtual void DoPostProcessItem(ActivityItemView view)
 		{
 			LocalizeUser(view);
+			LocalizeAction(view);
 		}
 
 		#endregion
 		
 		#region Helper methods
+
+		protected virtual void LocalizeAction(ActivityItemView view)
+		{
+			if (view.Action.IsNullOrWhiteSpace() || !(view is GroupedActivityItemView))
+				return;
+
+			view.Action = LocalizationService.MessageForType(typeof(IActivityViewProcessor), 
+				"CommitedChanges", CultureInfo.CurrentUICulture, view.Action);
+		}
 		
 		protected virtual void LocalizeActivityItem<TType>(ActivityView view)
 		{

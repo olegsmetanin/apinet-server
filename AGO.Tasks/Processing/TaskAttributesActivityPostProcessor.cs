@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using AGO.Core;
 using AGO.Core.DataAccess;
 using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
@@ -23,7 +22,7 @@ namespace AGO.Tasks.Processing
 
 		#region Template methods
 
-		protected override ActivityRecordModel PopulateActivityRecord(TaskModel model, ActivityRecordModel record, ProjectMemberModel member = null)
+		protected override AttributeChangeActivityRecordModel PopulateActivityRecord(TaskModel model, AttributeChangeActivityRecordModel record, ProjectMemberModel member = null)
 		{
 			record.ProjectCode = model.ProjectCode;
 

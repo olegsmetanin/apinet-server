@@ -7,8 +7,9 @@ using AGO.Core.Model.Security;
 
 namespace AGO.Core.Model.Processing
 {
-	public abstract class ActivityPostProcessor<TModel> : IModelPostProcessor
+	public abstract class ActivityPostProcessor<TModel, TRecordModel> : IModelPostProcessor
 		where TModel : IdentifiedModel<Guid>, new()
+		where TRecordModel : ActivityRecordModel, new()
 	{
 		#region Properties, fields, constructors
 
@@ -63,7 +64,7 @@ namespace AGO.Core.Model.Processing
 		{
 			if (changer == null && model is ISecureModel)
 			{
-				changer = ((ISecureModel) model).LastChanger;
+				changer = ((ISecureModel)model).LastChanger ?? ((ISecureModel)model).Creator;
 			}
 
 			if (changer != null)
@@ -94,17 +95,15 @@ namespace AGO.Core.Model.Processing
 			return new List<ActivityRecordModel>();
 		}
 
-		protected virtual ActivityRecordModel PopulateActivityRecord(TModel model, ActivityRecordModel record, ProjectMemberModel member = null)
+		protected virtual TRecordModel PopulateActivityRecord(TModel model, TRecordModel record, ProjectMemberModel member = null)
 		{
 			if (member == null && model is ISecureModel)
-			{
-				member = ((ISecureModel) model).LastChanger;
-			}
+				member = ((ISecureModel)model).LastChanger ?? ((ISecureModel)model).Creator;
+			record.Creator = member;
 
 			record.ItemType = model.GetType().Name;
 			record.ItemName = model.ToStringSafe();
-			record.ItemId = model.Id;
-			record.Creator = member;
+			record.ItemId = model.Id;		
 
 			return record;
 		}

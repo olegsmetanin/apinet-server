@@ -49,8 +49,8 @@ namespace AGO.Core.Controllers
 		protected virtual ActivityItemView ActivityItemViewFromRecord(ActivityRecordModel record, bool grouping)
 		{
 			return !grouping
-				? new ActivityItemView(record.ItemId, record.ItemType, record.GetType()) 
-				: new GroupedActivityItemView(record.ItemId, record.ItemType, record.GetType());
+				? new ActivityItemView(record.ItemId, record.ItemType, record.ItemName) 
+				: new GroupedActivityItemView(record.ItemId, record.ItemType, record.ItemName);
 		}
 
 		protected virtual bool IsNewActivityViewRequired(
@@ -78,20 +78,8 @@ namespace AGO.Core.Controllers
 			if (!grouping || currentView == null)
 				return null;
 
-			foreach (var groupedView in currentView.Items.OfType<GroupedActivityItemView>())
-			{
-				if (!groupedView.ItemId.Equals(record.ItemId))
-					continue;			
-				if (record is AttributeChangeActivityRecordModel && ChangeType.Update.ToString().Equals(groupedView.Action))
-					return groupedView;
-
-				var collectionChangeRecord = record as RelatedChangeActivityRecordModel;
-				if (collectionChangeRecord != null && collectionChangeRecord.ChangeType.ToString().Equals(groupedView.Action) &&
-						collectionChangeRecord.RelatedItemType.Equals(groupedView.Before))
-					return groupedView;
-			}
-
-			return null;
+			return currentView.Items.OfType<GroupedActivityItemView>()
+				.FirstOrDefault(groupedView => groupedView.ItemId.Equals(record.ItemId));
 		}
 		
 		#endregion
@@ -121,16 +109,25 @@ namespace AGO.Core.Controllers
 				if (view == null)
 					return;
 
-				foreach (var processor in _ActivityViewProcessors)
+				foreach (var processor in view.ApplicableProcessors)
 					processor.PostProcess(view);
 				
 				foreach (var item in view.Items)
 				{
-					foreach (var processor in _ActivityViewProcessors)
+					foreach (var processor in item.ApplicableProcessors)
 						processor.PostProcessItem(item);
 				}
 
 				view.Items = view.Items.Reverse().ToList();
+
+				var prevUser = string.Empty;
+				foreach (var item in view.Items)
+				{
+					if (string.Equals(prevUser, item.User))
+						item.User = string.Empty;
+					else
+						prevUser = item.User;
+				}
 			};
 
 			ActivityView currentView = null;
