@@ -65,9 +65,7 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual bool DoProcess(ActivityView view, TModel model)
 		{
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
 			view.ActivityItem = model.ItemName;
-
 			return true;
 		}
 

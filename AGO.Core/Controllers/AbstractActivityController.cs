@@ -120,10 +120,10 @@ namespace AGO.Core.Controllers
 						processor.PostProcessItem(item);
 				}
 
-				var prevUser = default(Guid);
+				//var prevUser = default(Guid);
 				foreach (var item in view.Items)
 				{
-					var firstUser = item.Users.FirstOrDefault();
+					/*var firstUser = item.Users.FirstOrDefault();
 					if (firstUser == null || item.Users.Count > 1)
 					{
 						prevUser = default(Guid);
@@ -133,7 +133,7 @@ namespace AGO.Core.Controllers
 					if (prevUser.Equals(firstUser.UserId))
 						item.Users.Clear();
 					else
-					{
+					{*/
 						foreach (var userRecord in item.Users)
 						{
 							var rec = userRecord;
@@ -143,9 +143,9 @@ namespace AGO.Core.Controllers
 
 						foreach (var userRecord in item.Users)
 							userRecord.AvatarUrl = userRecord.AvatarUrlFuture.Value;
-					}
+					/*}
 
-					prevUser = firstUser.UserId;
+					prevUser = firstUser.UserId;*/
 				}
 			};
 
