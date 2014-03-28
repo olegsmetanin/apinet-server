@@ -14,7 +14,7 @@ namespace AGO.Core.Model.Dictionary
 		#region Persistent
 
 		/// <summary>
-		/// UserId of tag owner (can't use entiry, because may be used in project too)
+		/// UserId of tag owner (can't use proj member entity, because may be used in project too)
 		/// </summary>
 		[MetadataExclude]
 		public virtual Guid OwnerId { get; set; }

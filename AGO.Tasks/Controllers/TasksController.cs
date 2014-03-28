@@ -711,7 +711,7 @@ namespace AGO.Tasks.Controllers
 
 			file.Owner.Files.Remove(file);
 			dao.Delete(file);
-			_ModelProcessingService.AfterModelDeleted(file);
+			_ModelProcessingService.AfterModelDeleted(file, CurrentUserToMember(project));
 	    }
 
 		[JsonEndpoint, RequireAuthorization]
