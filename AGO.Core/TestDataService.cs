@@ -125,6 +125,17 @@ namespace AGO.Core
 			};
 			dao.Store(olegsmith);
 
+			var gexFb = new UserModel
+			{
+				Email = "gex@nightmail.ru",
+				Active = true,
+				LastName = "Facebook",
+				FirstName = "GeX",
+				SystemRole = SystemRole.Member,
+				OAuthProvider = OAuthProvider.Facebook,
+				OAuthUserId = "100003869729072"
+			};
+			dao.Store(gexFb);
 
 			dao.Store(new ProjectTagModel
 			{

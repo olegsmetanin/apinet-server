@@ -9,6 +9,7 @@ using AGO.Core.Model.Activity;
 using AGO.Core.Model.Processing;
 using AGO.Core.Filters;
 using AGO.Core.Json;
+using AGO.Core.Model.Security;
 using AGO.Core.Security;
 using NHibernate;
 
@@ -103,6 +104,7 @@ namespace AGO.Core.Controllers
 		protected IList<ActivityView> ActivityViewsFromRecords(IEnumerable<ActivityRecordModel> records, bool grouping)
 		{
 			var result = new List<ActivityView>();
+			var mainDbSession = SessionProviderRegistry.GetMainDbProvider().CurrentSession;
 
 			Action<ActivityView> postProcess = view =>
 			{
@@ -118,15 +120,32 @@ namespace AGO.Core.Controllers
 						processor.PostProcessItem(item);
 				}
 
-				view.Items = view.Items.Reverse().ToList();
-
-				var prevUser = string.Empty;
+				var prevUser = default(Guid);
 				foreach (var item in view.Items)
 				{
-					if (string.Equals(prevUser, item.User))
-						item.User = string.Empty;
+					var firstUser = item.Users.FirstOrDefault();
+					if (firstUser == null || item.Users.Count > 1)
+					{
+						prevUser = default(Guid);
+						continue;
+					}
+
+					if (prevUser.Equals(firstUser.UserId))
+						item.Users.Clear();
 					else
-						prevUser = item.User;
+					{
+						foreach (var userRecord in item.Users)
+						{
+							var rec = userRecord;
+							userRecord.AvatarUrlFuture = mainDbSession.QueryOver<UserModel>().Where(m => m.Id == rec.UserId)
+								.Select(m => m.AvatarUrl).Take(1).FutureValue<string>();
+						}
+
+						foreach (var userRecord in item.Users)
+							userRecord.AvatarUrl = userRecord.AvatarUrlFuture.Value;
+					}
+
+					prevUser = firstUser.UserId;
 				}
 			};
 

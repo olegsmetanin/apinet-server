@@ -62,8 +62,7 @@ namespace AGO.Core.Application
 						Assembly.Load(assembyName);
 					}
 
-					_ModuleDescriptors = new List<IModuleDescriptor>(AppDomain.CurrentDomain
-						.GetAssemblies()
+					_ModuleDescriptors = new List<IModuleDescriptor>(AppDomain.CurrentDomain.GetAssemblies()
 						.Where(a => !a.IsDynamic)
 						.SelectMany(a => a.GetExportedTypes()
 							.Where(t => t.IsClass && t.IsPublic && typeof(IModuleDescriptor).IsAssignableFrom(t)))

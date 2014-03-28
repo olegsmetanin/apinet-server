@@ -6,7 +6,7 @@ namespace AGO.Core.Controllers.Activity
 	public class ActivityItemView : AbstractActivityView
 	{
 		[JsonProperty]
-		public string User { get; set; }
+		public string AvatarUrl { get; set; }
 
 		[JsonProperty]
 		public string Action { get; set; }
