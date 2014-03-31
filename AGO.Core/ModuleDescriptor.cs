@@ -4,6 +4,7 @@ using AGO.Core.Config;
 using AGO.Core.Controllers.Security;
 using AGO.Core.Controllers.Security.OAuth;
 using AGO.Core.Localization;
+using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Modules;
 using AGO.Core.Controllers;
 using AGO.Core.Security;
@@ -50,6 +51,8 @@ namespace AGO.Core
 
 			app.LocalizationService.RegisterModuleLocalizers(GetType().Assembly);
 			app.LocalizationService.RegisterModuleLocalizers(typeof(ReportTaskState).Assembly);
+
+			DictionaryController.RegisterTagType(ProjectTagModel.TypeCode, typeof(ProjectTagModel));
 		}
 
 		public ModuleDescriptor()

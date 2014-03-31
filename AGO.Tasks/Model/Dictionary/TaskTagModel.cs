@@ -10,6 +10,8 @@ namespace AGO.Tasks.Model.Dictionary
 	/// </summary>
 	public class TaskTagModel: TagModel, ITasksModel
 	{
+		public static readonly string TypeCode = ModuleDescriptor.MODULE_CODE + ".task";
+
 		/// <summary>
 		/// Связи с задачами (надо удалить при удалении тегов)
 		/// </summary>

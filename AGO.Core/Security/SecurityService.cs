@@ -33,21 +33,19 @@ namespace AGO.Core.Security
 
 		public IModelFilterNode ApplyReadConstraint<T>(string project, Guid userId, ISession session, params IModelFilterNode[] criterias)
 		{
+			return ApplyReadConstraint(typeof (T), project, userId, session, criterias);
+		}
+
+		public IModelFilterNode ApplyReadConstraint(Type modelType, string project, Guid userId, ISession session, params IModelFilterNode[] criterias)
+		{
 			var restrictions = providers
-				.Where(p => p.AcceptRead(typeof(T), project, session))
+				.Where(p => p.AcceptRead(modelType, project, session))
 				.Select(p => p.ReadConstraint(project, userId, session));
 
 			if (criterias != null && criterias.Length > 0)
 				restrictions = restrictions.Concat(criterias);
 
 			return fs.ConcatFilters(restrictions);
-		}
-
-		public IEnumerable<IModelFilterNode> ApplyReadConstraint(Type modelType, string project, Guid userId, ISession session)
-		{
-			return providers
-				.Where(p => p.AcceptRead(modelType, project, session))
-				.Select(p => p.ReadConstraint(project, userId, session));
 		}
 
 		public void DemandUpdate(IIdentifiedModel model, string project, Guid userId, ISession session)

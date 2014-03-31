@@ -42,7 +42,7 @@ namespace AGO.Core.Security
 		
 		public virtual bool AcceptRead(Type modelType, string project, ISession session)
 		{
-			return typeof (TModel).IsAssignableFrom(modelType) && p2m.IsProjectInHandledModule(project);
+			return typeof (TModel).IsAssignableFrom(modelType) && !project.IsNullOrWhiteSpace() && p2m.IsProjectInHandledModule(project);
 		}
 
 		public virtual bool AcceptChange(IIdentifiedModel model, string project, ISession session)

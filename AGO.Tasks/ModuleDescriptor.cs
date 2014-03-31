@@ -9,6 +9,7 @@ using AGO.Core.Localization;
 using AGO.Core.Security;
 using AGO.Tasks.Controllers;
 using AGO.Tasks.Controllers.Activity;
+using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Processing;
 using SimpleInjector;
 using SimpleInjector.Advanced;
@@ -90,6 +91,8 @@ namespace AGO.Tasks
 				app.IocContainer.GetInstance<TaskExecutorsRelatedActivityPostProcessor>(),
 				app.IocContainer.GetInstance<TaskFilesRelatedActivityPostProcessor>()
 			});
+
+			Core.Controllers.DictionaryController.RegisterTagType(TaskTagModel.TypeCode, typeof(TaskTagModel));
 		}
 
         public IEnumerable<IServiceDescriptor> Services { get; private set; }

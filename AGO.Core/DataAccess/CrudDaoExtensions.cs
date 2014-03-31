@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AGO.Core.Model;
 using NHibernate;
+using NHibernate.Criterion;
 
 namespace AGO.Core.DataAccess
 {

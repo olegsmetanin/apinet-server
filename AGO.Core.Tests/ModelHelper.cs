@@ -54,7 +54,7 @@ namespace AGO.Core.Tests
 			});
 		}
 
-		public ProjectTagModel ProjectTag(string name = null, UserModel owner = null)
+		public ProjectTagModel ProjectTag(string name = null, UserModel owner = null, ProjectTagModel parent = null)
 		{
 			return Track(() =>
 			{
@@ -62,7 +62,8 @@ namespace AGO.Core.Tests
 				{
 					OwnerId = (owner ?? CurrentUser()).Id,
 					CreationTime = DateTime.UtcNow,
-					Name = name ?? "NUnit test tag"
+					Name = name ?? "NUnit test tag",
+					Parent = parent
 				};
 				tag.FullName = tag.Name;
 				Session().Save(tag);

@@ -6,8 +6,10 @@ namespace AGO.Core.Model.Dictionary.Projects
 {
 	public class ProjectTagModel : TagModel
 	{
+		public static readonly string TypeCode = ModuleDescriptor.MODULE_CODE + ".project";
+
 		[PersistentCollection(CascadeType = CascadeType.Delete, Column = "TagId")]
-		public virtual ISet<ProjectToTagModel> Tags { get { return _Tags; } set { _Tags = value; } }
-		private ISet<ProjectToTagModel> _Tags = new HashSet<ProjectToTagModel>();
+		public virtual ISet<ProjectToTagModel> ProjectLinks { get { return links; } set { links = value; } }
+		private ISet<ProjectToTagModel> links = new HashSet<ProjectToTagModel>();
 	}
 }

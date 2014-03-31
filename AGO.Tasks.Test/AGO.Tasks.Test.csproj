@@ -91,6 +91,7 @@
     <Compile Include="TaskPrioritiesTest.cs" />
     <Compile Include="TaskStatusChangeTest.cs" />
     <Compile Include="TaskStatusesTest.cs" />
+    <Compile Include="TaskTagCRUDTest.cs" />
     <Compile Include="TaskTimelogTest.cs" />
     <Compile Include="TaskTypeCRUDTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

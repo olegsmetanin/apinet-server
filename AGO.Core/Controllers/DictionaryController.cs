@@ -17,6 +17,7 @@ using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
+using NHibernate;
 using NHibernate.Criterion;
 
 namespace AGO.Core.Controllers
@@ -48,27 +49,6 @@ namespace AGO.Core.Controllers
 		public IEnumerable<LookupEntry> LookupProjectStatuses(string term, [InRange(0, null)] int page)
 		{
 			return LookupEnum<ProjectStatus>(term, page, ref projectStatuses);
-		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupProjectTags(
-			[InRange(0, null)] int page,
-			string term)
-		{
-			IModelFilterNode termFilter = null;
-			if (!term.IsNullOrWhiteSpace())
-				termFilter = _FilteringService.Filter<ProjectTagModel>()
-					.WhereString(m => m.FullName).Like(term, true, true);
-
-			var filter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null, 
-				CurrentUser.Id, MainSession, termFilter);
-
-			var criteria = _FilteringService.CompileFilter(filter, typeof (ProjectTagModel))
-				.GetExecutableCriteria(MainSession)
-				.AddOrder(Order.Asc(Projections.Property<ProjectTagModel>(m => m.FullName)));
-			return DaoFactory.CreateMainCrudDao()
-				.PagedCriteria(criteria, page)
-				.LookupModelsList<ProjectTagModel>(m => m.FullName);
 		}
 
 		[JsonEndpoint, RequireAuthorization]
@@ -113,58 +93,128 @@ namespace AGO.Core.Controllers
 			return DaoFactory.CreateProjectCrudDao(project).PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<ProjectTagModel> GetProjectTags(
-			[InRange(0, null)] int page,
-			[NotNull] ICollection<IModelFilterNode> filter,
-			[NotNull] ICollection<SortInfo> sorters)
-		{
-			var finalFilter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
-				CurrentUser.Id, MainSession, filter.ToArray());
+		#region Tags management
 
-			return DaoFactory.CreateMainFilteringDao().List<ProjectTagModel>(finalFilter, page, sorters);
+		private static readonly IDictionary<string, Type> tagTypes = new Dictionary<string, Type>();
+
+		public static void RegisterTagType(string typeCode, Type tagModelType)
+		{
+			if (typeCode.IsNullOrWhiteSpace())
+				throw new ArgumentNullException("typeCode");
+			if (tagModelType == null)
+				throw new ArgumentNullException("tagModelType");
+			if (!typeof(TagModel).IsAssignableFrom(tagModelType))
+				throw new ArgumentException("Tag type must be inheritor from TagModel", "tagModelType");
+
+			tagTypes[typeCode.ToLowerInvariant()] = tagModelType;
+		}
+
+		private bool ResolveByTagType(string type, string project, out Type tagType, out ISession session, out ICrudDao dao)
+		{
+			tagType = tagTypes[type.ToLowerInvariant()];
+			var useMainSession = type.Equals(ProjectTagModel.TypeCode, StringComparison.InvariantCultureIgnoreCase);
+			session = useMainSession ? MainSession : ProjectSession(project);
+			dao = project.IsNullOrWhiteSpace()
+				? DaoFactory.CreateMainCrudDao()
+				: DaoFactory.CreateProjectCrudDao(project);
+
+			return useMainSession;
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public int GetProjectTagsCount([NotNull] ICollection<IModelFilterNode> filter)
+		public IEnumerable<LookupEntry> LookupTags(
+			string project,
+			[NotEmpty] string type,
+			string term,
+			[InRange(0, null)] int page)
 		{
-			var finalFilter = SecurityService.ApplyReadConstraint<ProjectTagModel>(null,
-				CurrentUser.Id, MainSession, filter.ToArray());
+			Type tagType;
+			ISession s;
+			ICrudDao dao;
+			var useMain = ResolveByTagType(type, project, out tagType, out s, out dao);
 
-			return DaoFactory.CreateMainFilteringDao().RowCount<ProjectTagModel>(finalFilter);
+			var fb = _FilteringService.Filter<TagModel>();
+			IModelFilterNode termFilter = null;
+			if (!term.IsNullOrWhiteSpace())
+				termFilter = fb
+					.WhereString(m => m.FullName).Like(term, true, true);
+			IModelFilterNode projFilter = useMain
+				? fb.WhereProperty(m => m.ProjectCode).Not().Exists()
+				: fb.Where(m => m.ProjectCode == project);
+
+			var filter = SecurityService.ApplyReadConstraint(tagType, project, CurrentUser.Id, s, termFilter, projFilter);
+
+			//compilefilter is main row. call with tagType create rigth criteria, that in reality not used later in LookupModelsList and we can use generic TagModel for expressions
+			var criteria = _FilteringService.CompileFilter(filter, tagType) 
+				.GetExecutableCriteria(s)
+				.AddOrder(Order.Asc(Projections.Property<TagModel>(m => m.FullName)));
+			return dao.PagedCriteria(criteria, page).LookupModelsList<TagModel>(m => m.FullName);
+		}
+			
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<TagModel> GetTags(
+			string project,
+			[NotEmpty] string type,
+			[InRange(0, null)] int page)
+		{
+			Type tagType;
+			ISession s;
+			ICrudDao dao;
+			ResolveByTagType(type, project, out tagType, out s, out dao);
+
+			var filter = SecurityService.ApplyReadConstraint(tagType, project, CurrentUser.Id, s);
+			var criteria = _FilteringService.CompileFilter(filter, tagType).GetExecutableCriteria(s);
+			var order = Order.Asc(Projections.Property<TagModel>(m => m.FullName));
+			return dao.PagedCriteria(criteria, page).AddOrder(order).List<TagModel>();
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object CreateProjectTag(Guid parentId, [NotEmpty] string name)
+		public int GetTagsCount(string project, [NotEmpty] string type)
+		{
+			Type tagType;
+			ISession s;
+			ICrudDao dao;
+			ResolveByTagType(type, project, out tagType, out s, out dao);
+
+			var filter = SecurityService.ApplyReadConstraint(tagType, project, CurrentUser.Id, s);
+			var criteria = _FilteringService.CompileFilter(filter, tagType).GetExecutableCriteria(s);
+
+			return dao.RowCount<TagModel>(criteria);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public object CreateTag(string project, [NotEmpty] string type, Guid parentId, [NotEmpty] string name)
 		{
 			var validation = new ValidationResult();
-			
+			Type tagType;
+			ISession s;
+			ICrudDao dao;
+			ResolveByTagType(type, project, out tagType, out s, out dao);
 			try
 			{
-				var dao = DaoFactory.CreateMainCrudDao();
-				var tag = new ProjectTagModel
-				{
-					OwnerId = CurrentUser.Id,
-					Name = name.TrimSafe(),
-					Parent = !default(Guid).Equals(parentId) ? dao.Get<ProjectTagModel>(parentId, true) : null
-				};
+				var tag = (TagModel)Activator.CreateInstance(tagType);
+				tag.ProjectCode = project;
+				tag.OwnerId = CurrentUser.Id;
+				tag.Name = name.TrimSafe();
+				tag.Parent = !default(Guid).Equals(parentId) ? dao.Get<TagModel>(parentId, true, tagType) : null;
 
-				SecurityService.DemandUpdate(tag, null, CurrentUser.Id, MainSession);
+				SecurityService.DemandUpdate(tag, project, CurrentUser.Id, s);
 
 				// ReSharper disable once PossibleUnintendedReferenceComparison
-				if (dao.Exists<ProjectTagModel>(q => q.Where(m => 
-						m.Name == tag.Name 
+				if (dao.Exists<TagModel>(q => q.Where(m =>
+						m.GetType() == tagType 
+						&& m.Name == tag.Name 
 						&& m.Parent == tag.Parent 
 						&& m.OwnerId == tag.OwnerId)))
 				{
 					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
 				}
 
-				_ModelProcessingService.ValidateModelSaving(tag, validation, MainSession);
+				_ModelProcessingService.ValidateModelSaving(tag, validation, s);
 				if (!validation.Success)
 					return validation;
 
-				var affected = new HashSet<ProjectTagModel>();
+				var affected = new HashSet<TagModel>();
 				DoUpdateProjectTag(dao, tag, affected);
 				return tag;
 			}
@@ -177,22 +227,26 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object UpdateProjectTag([NotEmpty] Guid id, [NotEmpty] string name)
+		public object UpdateTag(string project, [NotEmpty] string type, [NotEmpty] Guid id, [NotEmpty] string name)
 		{
 			var validation = new ValidationResult();
+			Type tagType;
+			ISession s;
+			ICrudDao dao;
+			ResolveByTagType(type, project, out tagType, out s, out dao);
 
 			try
 			{
-				var dao = DaoFactory.CreateMainCrudDao();
-				var tag = dao.Get<ProjectTagModel>(id, true);
+				var tag = dao.Get<TagModel>(id, true, tagType);
 
-				SecurityService.DemandUpdate(tag, null, CurrentUser.Id, MainSession);
+				SecurityService.DemandUpdate(tag, null, CurrentUser.Id, s);
 
 				tag.Name = name.TrimSafe();
 
 				// ReSharper disable once PossibleUnintendedReferenceComparison
-				if (dao.Exists<ProjectTagModel>(q => q.Where(m => 
-						m.Name == tag.Name 
+				if (dao.Exists<TagModel>(q => q.Where(m => 
+						m.GetType() == tagType 
+						&& m.Name == tag.Name 
 						&& m.Parent == tag.Parent
 						&& m.OwnerId == tag.OwnerId 
 						&& m.Id != tag.Id)))
@@ -204,7 +258,7 @@ namespace AGO.Core.Controllers
 				if (!validation.Success)
 					return validation;
 
-				var affected = new HashSet<ProjectTagModel>();
+				var affected = new HashSet<TagModel>();
 				DoUpdateProjectTag(dao, tag, affected);
 				return affected;
 			}
@@ -217,15 +271,18 @@ namespace AGO.Core.Controllers
 		}
 
 		[JsonEndpoint, RequireAuthorization]
-		public object DeleteProjectTag([NotEmpty] Guid id)
+		public object DeleteTag(string project, [NotEmpty] string type, [NotEmpty] Guid id)
 		{
 			var validation = new ValidationResult();
+			Type tagType;
+			ISession s;
+			ICrudDao dao;
+			ResolveByTagType(type, project, out tagType, out s, out dao);
 
 			try
 			{
-				var dao = DaoFactory.CreateMainCrudDao();
-				var tag = dao.Get<ProjectTagModel>(id, true);
-				SecurityService.DemandDelete(tag, null, CurrentUser.Id, MainSession);
+				var tag = dao.Get<TagModel>(id, true, tagType);
+				SecurityService.DemandDelete(tag, null, CurrentUser.Id, s);
 				var deletedIds = new HashSet<Guid>();
 				DoDeleteProjectTag(dao, tag, deletedIds);
 				return deletedIds;
@@ -237,6 +294,8 @@ namespace AGO.Core.Controllers
 
 			return validation;
 		}
+
+		#endregion
 
 		[JsonEndpoint, RequireAuthorization]
 		public CustomPropertyTypeModel GetCustomPropertyType([NotEmpty] string project, [NotEmpty] Guid id)
@@ -266,20 +325,19 @@ namespace AGO.Core.Controllers
 
 		#region Helper methods
 
-		protected void DoDeleteProjectTag(ICrudDao dao, ProjectTagModel tag, ISet<Guid> deletedIds)
+		protected void DoDeleteProjectTag(ICrudDao dao, TagModel tag, ISet<Guid> deletedIds)
 		{
 			if ((CurrentUser.Id != tag.OwnerId) && CurrentUser.SystemRole != SystemRole.Administrator)
 				throw new AccessForbiddenException();
 
-			foreach (var subTag in MainSession.QueryOver<ProjectTagModel>()
-					.Where(m => m.Parent.Id == tag.Id).List())
+			foreach (var subTag in tag.Children)
 				DoDeleteProjectTag(dao, subTag, deletedIds);
 
 			deletedIds.Add(tag.Id);
 			dao.Delete(tag);
 		}
 
-		protected void DoUpdateProjectTag(ICrudDao dao, ProjectTagModel tag, ISet<ProjectTagModel> affected)
+		protected void DoUpdateProjectTag(ICrudDao dao, TagModel tag, ISet<TagModel> affected)
 		{
 			if (tag == null)
 				return;
@@ -294,7 +352,7 @@ namespace AGO.Core.Controllers
 			dao.Store(tag);
 			affected.Add(tag);
 
-			foreach (var subTag in tag.Children.OfType<ProjectTagModel>())
+			foreach (var subTag in tag.Children)
 				DoUpdateProjectTag(dao, subTag, affected);
 		}
 

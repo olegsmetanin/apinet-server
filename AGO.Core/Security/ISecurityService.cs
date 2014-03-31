@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AGO.Core.Application;
@@ -42,8 +41,9 @@ namespace AGO.Core.Security
 		/// <param name="project">Project (optional for system models)</param>
 		/// <param name="userId">User identifier</param>
 		/// <param name="session">NHibernate session for access to datastore (if needed)</param>
+		/// <param name="criterias">Criterias, that will be combined with security resctriction criterias</param>
 		/// <returns>Additional restrictions for security reasons</returns>
-		IEnumerable<IModelFilterNode> ApplyReadConstraint(Type modelType, string project, Guid userId, ISession session);
+		IModelFilterNode ApplyReadConstraint(Type modelType, string project, Guid userId, ISession session, params IModelFilterNode[] criterias);
 
 		/// <summary>
 		/// Test, that current user has permissions (does't have restrictons) for
