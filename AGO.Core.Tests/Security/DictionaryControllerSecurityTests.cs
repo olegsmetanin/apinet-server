@@ -7,6 +7,7 @@ using AGO.Core.Controllers;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Security;
+using AGO.Core.Security;
 using NUnit.Framework;
 
 namespace AGO.Core.Tests.Security
@@ -138,28 +139,32 @@ namespace AGO.Core.Tests.Security
 			
 			Login(current.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-			var response = controller.CreateTag(null, ProjectTagModel.TypeCode, ptag.Id, "nunit child");
-
-			if (!expectSuccess)
+			object response = null;
+			try
+			{
+				response = controller.CreateTag(null, ProjectTagModel.TypeCode, ptag.Id, "nunit child");
+			}
+			catch (Exception e)
 			{
 				MainSession.Clear(); //rollback
-
-				Assert.That(response, Is.Not.Null);
-				Assert.That(response, Is.TypeOf<ValidationResult>());
-				var vr = (ValidationResult) response;
-				Assert.That(vr.Errors, Has.Exactly(1).Matches("Not enough permissions for create model"));
+				if (!expectSuccess)
+				{
+					Assert.That(e, Is.TypeOf<CreationDeniedException>());
+					return;
+				}
+				else
+					throw;
 			}
-			else
-			{
-				MainSession.Flush();
 
-				Assert.That(response, Is.Not.Null);
-				Assert.That(response, Is.TypeOf<ProjectTagModel>());
-				var tag = (ProjectTagModel)response;
-				M.Track(() => tag);
-				Assert.That(tag.FullName, Is.EqualTo("nunit parent / nunit child"));
-				Assert.That(tag.OwnerId, Is.EqualTo(current.Id));
-			}
+			MainSession.Flush();
+
+			Assert.That(response, Is.Not.Null);
+			Assert.That(response, Is.TypeOf<ProjectTagModel>());
+			var tag = (ProjectTagModel)response;
+			M.Track(() => tag);
+			Assert.That(tag.FullName, Is.EqualTo("nunit parent / nunit child"));
+			Assert.That(tag.OwnerId, Is.EqualTo(current.Id));
+
 		}
 
 		[Test]
@@ -192,25 +197,27 @@ namespace AGO.Core.Tests.Security
 
 			Login(updater.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-			var response = controller.UpdateTag(null, ProjectTagModel.TypeCode, tag.Id, "new nunit");
-			if (!expectSuccess)
+			object response = null;
+			try
 			{
-				MainSession.Clear();
-
-				Assert.That(response, Is.Not.Null);
-				Assert.That(response, Is.TypeOf<ValidationResult>());
-				var vr = (ValidationResult) response;
-				Assert.That(vr.Errors, Has.Exactly(1).Matches("Not enough permissions for update model"));
+				response = controller.UpdateTag(null, ProjectTagModel.TypeCode, tag.Id, "new nunit");
 			}
-			else
+			catch (Exception e)
 			{
-				MainSession.Flush();
-
-				Assert.That(response, Is.Not.Null);
-				Assert.That(response, Is.TypeOf<HashSet<TagModel>>());
-				var updatedTag = ((HashSet<TagModel>)response).Single();
-				Assert.That(updatedTag.FullName, Is.EqualTo("new nunit"));
+				if (!expectSuccess)
+				{
+					Assert.That(e, Is.TypeOf<ChangeDeniedException>());
+					return;
+				}
+				throw;
 			}
+
+			MainSession.Flush();
+
+			Assert.That(response, Is.Not.Null);
+			Assert.That(response, Is.TypeOf<HashSet<TagModel>>());
+			var updatedTag = ((HashSet<TagModel>)response).Single();
+			Assert.That(updatedTag.FullName, Is.EqualTo("new nunit"));
 		}
 
 		[Test]
@@ -244,25 +251,30 @@ namespace AGO.Core.Tests.Security
 
 			Login(current.Email);
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-			var response = controller.DeleteTag(null, ProjectTagModel.TypeCode, tag.Id);
-			if (!expectSuccess)
-			{
-				MainSession.Clear();
 
-				Assert.That(response, Is.Not.Null);
-				Assert.That(response, Is.TypeOf<ValidationResult>());
-				var vr = (ValidationResult)response;
-				Assert.That(vr.Errors, Has.Exactly(1).Matches("Not enough permissions for delete model"));
-			}
-			else
+			object response = null;
+			try
 			{
-				MainSession.Flush();
-
-				Assert.That(response, Is.Not.Null);
-				Assert.That(response, Is.TypeOf<HashSet<Guid>>());
-				var id = ((HashSet<Guid>)response).Single();
-				Assert.That(id, Is.EqualTo(tag.Id));
+				response = controller.DeleteTag(null, ProjectTagModel.TypeCode, tag.Id);
 			}
+			catch (Exception e)
+			{
+				if (!expectSuccess)
+				{
+					Assert.That(e, Is.TypeOf<DeleteDeniedException>());
+					return;
+				}
+				
+				throw;
+			}
+
+
+			MainSession.Flush();
+
+			Assert.That(response, Is.Not.Null);
+			Assert.That(response, Is.TypeOf<HashSet<Guid>>());
+			var id = ((HashSet<Guid>)response).Single();
+			Assert.That(id, Is.EqualTo(tag.Id));
 		}
 
 		[Test]

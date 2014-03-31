@@ -140,7 +140,7 @@ namespace AGO.Tasks.Test
 			});
 		}
 
-		public CustomPropertyTypeModel ParamType(string name = "strParam", CustomPropertyValueType type = CustomPropertyValueType.String)
+		public CustomPropertyTypeModel ParamType(string name = "strParam", CustomPropertyValueType type = CustomPropertyValueType.String, CustomPropertyTypeModel parent = null)
 		{
 			return Track(() =>
 			{
@@ -148,8 +148,9 @@ namespace AGO.Tasks.Test
 				{
 					ProjectCode = project,
 					Creator = MemberFromUser(project, CurrentUser()),
+					Parent = parent,
 					Name = name,
-					FullName = name,
+					FullName = parent != null ? parent.Name + " / " + name : name,
 					ValueType = type
 				};
 				Session().Save(pt);

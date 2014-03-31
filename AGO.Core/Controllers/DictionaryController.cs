@@ -9,12 +9,12 @@ using AGO.Core.DataAccess;
 using AGO.Core.Filters.Metadata;
 using AGO.Core.Json;
 using AGO.Core.Localization;
+using AGO.Core.Model;
 using AGO.Core.Model.Dictionary;
 using AGO.Core.Filters;
 using AGO.Core.Model.Dictionary.Projects;
 using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
-using AGO.Core.Model.Security;
 using AGO.Core.Modules.Attributes;
 using AGO.Core.Security;
 using NHibernate;
@@ -76,23 +76,7 @@ namespace AGO.Core.Controllers
 
 			return DaoFactory.CreateMainCrudDao().PagedQuery(query, page).LookupList(m => m.Name, null, false);
 		}
-
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
-			[NotEmpty] string project,
-			[InRange(0, null)] int page,
-			string term)
-		{
-			var query = ProjectSession(project).QueryOver<CustomPropertyTypeModel>()
-				.Where(m => m.ProjectCode == project)
-				.OrderBy(m => m.Name).Asc;
-
-			if (!term.IsNullOrWhiteSpace())
-				query = query.WhereRestrictionOn(m => m.Name).IsLike(term, MatchMode.Anywhere);
-
-			return DaoFactory.CreateProjectCrudDao(project).PagedQuery(query, page).LookupModelsList(m => m.Name);
-		}
-
+		
 		#region Tags management
 
 		private static readonly IDictionary<string, Type> tagTypes = new Dictionary<string, Type>();
@@ -215,12 +199,17 @@ namespace AGO.Core.Controllers
 					return validation;
 
 				var affected = new HashSet<TagModel>();
-				DoUpdateProjectTag(dao, tag, affected);
+				DoUpdateHierarchyItem(dao, tag, affected);
 				return tag;
 			}
-			catch (Exception e)
+			catch (AbstractApplicationException)
 			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Error when create tag", ex);
+				validation.AddErrors(_LocalizationService.MessageForException(ex));
 			}
 
 			return validation;
@@ -239,7 +228,7 @@ namespace AGO.Core.Controllers
 			{
 				var tag = dao.Get<TagModel>(id, true, tagType);
 
-				SecurityService.DemandUpdate(tag, null, CurrentUser.Id, s);
+				SecurityService.DemandUpdate(tag, project, CurrentUser.Id, s);
 
 				tag.Name = name.TrimSafe();
 
@@ -259,12 +248,17 @@ namespace AGO.Core.Controllers
 					return validation;
 
 				var affected = new HashSet<TagModel>();
-				DoUpdateProjectTag(dao, tag, affected);
+				DoUpdateHierarchyItem(dao, tag, affected);
 				return affected;
 			}
-			catch (Exception e)
+			catch (AbstractApplicationException)
 			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Error when update tag", ex);
+				validation.AddErrors(_LocalizationService.MessageForException(ex));
 			}
 
 			return validation;
@@ -282,14 +276,19 @@ namespace AGO.Core.Controllers
 			try
 			{
 				var tag = dao.Get<TagModel>(id, true, tagType);
-				SecurityService.DemandDelete(tag, null, CurrentUser.Id, s);
+				SecurityService.DemandDelete(tag, project, CurrentUser.Id, s);
 				var deletedIds = new HashSet<Guid>();
-				DoDeleteProjectTag(dao, tag, deletedIds);
+				DoDeleteHierarchyItem(dao, tag, deletedIds);
 				return deletedIds;
 			}
-			catch (Exception e)
+			catch (AbstractApplicationException)
 			{
-				validation.AddErrors(_LocalizationService.MessageForException(e));
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Error when delete tag", ex);
+				validation.AddErrors(_LocalizationService.MessageForException(ex));
 			}
 
 			return validation;
@@ -297,16 +296,210 @@ namespace AGO.Core.Controllers
 
 		#endregion
 
+		#region Custom property type management
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
+			[NotEmpty] string project,
+			[InRange(0, null)] int page,
+			string term)
+		{
+			var fb = _FilteringService.Filter<CustomPropertyTypeModel>();
+			var projFilter = fb.Where(m => m.ProjectCode == project);
+			IModelFilterNode termFilter = null;
+			if (!term.IsNullOrWhiteSpace())
+				termFilter = fb.WhereString(m => m.FullName).Like(term, true, true);
+
+			var filter = SecurityService.ApplyReadConstraint<CustomPropertyTypeModel>(project, CurrentUser.Id,
+				ProjectSession(project), projFilter, termFilter);
+
+			var criteria = _FilteringService.CompileFilter(filter, typeof (CustomPropertyTypeModel))
+				.GetExecutableCriteria(ProjectSession(project))
+				.AddOrder(Order.Asc(Projections.Property<CustomPropertyTypeModel>(m => m.FullName)));
+
+			return DaoFactory.CreateProjectCrudDao(project).PagedCriteria(criteria, page).LookupModelsList<CustomPropertyTypeModel>(m => m.FullName);
+		}
+
 		[JsonEndpoint, RequireAuthorization]
 		public CustomPropertyTypeModel GetCustomPropertyType([NotEmpty] string project, [NotEmpty] Guid id)
 		{
 			var fdao = DaoFactory.CreateProjectFilteringDao(project);
 			var fb = _FilteringService.Filter<CustomPropertyTypeModel>();
 			var filter = SecurityService.ApplyReadConstraint<CustomPropertyTypeModel>(project, CurrentUser.Id,
-				ProjectSession(project), fb.Where(m => m.Id == id));
+				ProjectSession(project), fb.Where(m => m.ProjectCode == project && m.Id == id));
 
 			return fdao.Find<CustomPropertyTypeModel>(filter);
 		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<CustomPropertyTypeModel> GetCustomPropertyTypes(
+			[NotEmpty] string project,
+			[NotNull] ICollection<IModelFilterNode> filter,
+			[NotNull] ICollection<SortInfo> sorters,
+			[InRange(0, null)] int page)
+		{
+			var projectPredicate = _FilteringService.Filter<CustomPropertyTypeModel>().Where(m => m.ProjectCode == project);
+			filter.Add(projectPredicate);
+			var predicate = SecurityService.ApplyReadConstraint<CustomPropertyTypeModel>(project, CurrentUser.Id, ProjectSession(project), 
+				filter.ToArray());
+
+			return DaoFactory.CreateProjectFilteringDao(project)
+				.List<CustomPropertyTypeModel>(predicate, page, sorters)
+				.ToArray();
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public int GetCustomPropertyTypesCount([NotEmpty] string project, [NotNull] ICollection<IModelFilterNode> filter)
+		{
+			var projectPredicate = _FilteringService.Filter<CustomPropertyTypeModel>().Where(m => m.ProjectCode == project);
+			filter.Add(projectPredicate);
+			var predicate = SecurityService.ApplyReadConstraint<CustomPropertyTypeModel>(project, CurrentUser.Id, ProjectSession(project), 
+				filter.ToArray());
+
+			return DaoFactory.CreateProjectFilteringDao(project).RowCount<CustomPropertyTypeModel>(predicate);
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public object CreateCustomPropertyType([NotEmpty] string project, [NotNull] CustomPropertyTypeModel model)
+		{
+			var validation = new ValidationResult();
+			try
+			{
+				var dao = DaoFactory.CreateProjectCrudDao(project);
+				var newParamType = new CustomPropertyTypeModel
+				{
+					ProjectCode = project,
+					Creator = CurrentUserToMember(project),
+					CreationTime = DateTime.UtcNow,
+					Parent = model.ParentId.HasValue ? dao.Get<CustomPropertyTypeModel>(model.ParentId, true) : null,
+					Name = model.Name,
+					ValueType = model.ValueType,
+					Format = model.Format
+				};
+
+				SecurityService.DemandUpdate(newParamType, project, CurrentUser.Id, ProjectSession(project));
+
+				// ReSharper disable once PossibleUnintendedReferenceComparison
+				if (dao.Exists<CustomPropertyTypeModel>(q => q.Where(m =>
+					m.ProjectCode == project
+					&& m.Name == newParamType.Name
+					&& m.Parent == newParamType.Parent)))
+				{
+					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
+				}
+
+				_ModelProcessingService.ValidateModelSaving(newParamType, validation, ProjectSession(project));
+				if (!validation.Success)
+					return validation;
+
+				var affected = new HashSet<CustomPropertyTypeModel>();
+				DoUpdateHierarchyItem(dao, newParamType, affected);
+				return newParamType;
+			}
+			catch (AbstractApplicationException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Error when create custom property type", ex);
+				validation.AddErrors(_LocalizationService.MessageForException(ex));
+			}
+			return validation;
+		}
+
+		public object UpdateCustomPropertyType([NotEmpty] string project, [NotNull] PropChangeDTO data)
+		{
+			if (data.Prop.IsNullOrWhiteSpace())
+				throw new ArgumentException("No prop name for update found", "data");
+
+			var validation = new ValidationResult();
+			try
+			{
+				var dao = DaoFactory.CreateProjectCrudDao(project);
+				var paramType = dao.Get<CustomPropertyTypeModel>(data.Id, true);
+
+				SecurityService.DemandUpdate(paramType, project, CurrentUser.Id, ProjectSession(project));
+
+				var affected = new HashSet<CustomPropertyTypeModel>();
+				switch (data.Prop)
+				{
+					case "Name":
+						paramType.Name = data.Value as string;
+						break;
+					case "Format":
+						paramType.Format = data.Value as string;
+						break;
+					default:
+						throw new InvalidOperationException(string.Format("Unsupported prop for update: '{0}'", data.Prop));
+				}
+
+				// ReSharper disable once PossibleUnintendedReferenceComparison
+				if (dao.Exists<CustomPropertyTypeModel>(q => q.Where(m =>
+					m.ProjectCode == project
+					&& m.Name == paramType.Name
+					&& m.Parent == paramType.Parent
+					&& m.Id != paramType.Id)))
+				{
+					validation.AddFieldErrors("Name", _LocalizationService.MessageForException(new MustBeUniqueException()));
+				}
+
+				_ModelProcessingService.ValidateModelSaving(paramType, validation, ProjectSession(project));
+				if (!validation.Success)
+					return validation;
+
+				if ("Name".Equals(data.Prop))
+					DoUpdateHierarchyItem(dao, paramType, affected);
+				else
+					affected.Add(paramType);
+
+				dao.Store(paramType);
+
+				return affected;
+			}
+			catch (AbstractApplicationException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Error when update custom property type", ex);
+				validation.AddErrors(_LocalizationService.MessageForException(ex));
+			}
+			return validation;
+		}
+
+		[JsonEndpoint, RequireAuthorization]
+		public object DeleteCustomPropertyType([NotEmpty] string project, [NotEmpty] Guid id)
+		{
+			var validation = new ValidationResult();
+
+			try
+			{
+				var dao = DaoFactory.CreateProjectCrudDao(project);
+				var paramType = dao.Get<CustomPropertyTypeModel>(id, true);
+				SecurityService.DemandDelete(paramType, project, CurrentUser.Id, ProjectSession(project));
+
+				// ReSharper disable once PossibleUnintendedReferenceComparison
+				if (dao.Exists<CustomPropertyInstanceModel>(q => q.Where(m => m.PropertyType == paramType)))
+					throw new CannotDeleteReferencedItemException();
+
+				var deletedIds = new HashSet<Guid>();
+				DoDeleteHierarchyItem(dao, paramType, deletedIds);
+				return deletedIds;
+			}
+			catch (AbstractApplicationException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Error when delete custom property type", ex);
+				validation.AddErrors(_LocalizationService.MessageForException(ex));
+			}
+			return validation;
+		}
+
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<IModelMetadata> CustomPropertyMetadata()
@@ -315,45 +508,40 @@ namespace AGO.Core.Controllers
 				MetadataForModelAndRelations<CustomPropertyInstanceModel>());
 		}
 
-		[JsonEndpoint, RequireAuthorization]
-		public IEnumerable<IModelMetadata> ProjectTagMetadata()
-		{
-			return MetadataForModelAndRelations<ProjectTagModel>();
-		}
+		#endregion
 
 		#endregion
 
 		#region Helper methods
 
-		protected void DoDeleteProjectTag(ICrudDao dao, TagModel tag, ISet<Guid> deletedIds)
+		protected void DoUpdateHierarchyItem<TModel>(ICrudDao dao, TModel item, ISet<TModel> affected) 
+			where TModel: class, IHierarchicalDictionaryItemModel<TModel>, IIdentifiedModel
 		{
-			if ((CurrentUser.Id != tag.OwnerId) && CurrentUser.SystemRole != SystemRole.Administrator)
-				throw new AccessForbiddenException();
-
-			foreach (var subTag in tag.Children)
-				DoDeleteProjectTag(dao, subTag, deletedIds);
-
-			deletedIds.Add(tag.Id);
-			dao.Delete(tag);
-		}
-
-		protected void DoUpdateProjectTag(ICrudDao dao, TagModel tag, ISet<TagModel> affected)
-		{
-			if (tag == null)
+			if (item == null)
 				return;
 
-			var fullName = new StringBuilder(tag.Parent != null ? tag.Parent.FullName : string.Empty);		
+			var fullName = new StringBuilder(item.Parent != null ? item.Parent.FullName : string.Empty);
 			if (fullName.Length > 0)
 				fullName.Append(" / ");
-			fullName.Append(tag.Name);
+			fullName.Append(item.Name);
 
-			tag.FullName = fullName.ToString();
+			item.FullName = fullName.ToString();
 
-			dao.Store(tag);
-			affected.Add(tag);
+			dao.Store(item);
+			affected.Add(item);
 
-			foreach (var subTag in tag.Children)
-				DoUpdateProjectTag(dao, subTag, affected);
+			foreach (var subItem in item.Children)
+				DoUpdateHierarchyItem(dao, subItem, affected);
+		}
+
+		protected void DoDeleteHierarchyItem<TModel>(ICrudDao dao, TModel item, ISet<Guid> deletedIds)
+			where TModel : class, IHierarchicalDictionaryItemModel<TModel>, IIdentifiedModel
+		{
+			foreach (var subItem in item.Children)
+				DoDeleteHierarchyItem(dao, subItem, deletedIds);
+
+			deletedIds.Add(item.Id);
+			dao.Delete(item);
 		}
 
 		#endregion

@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace AGO.Core.Model.Dictionary
 {
 	[TablePerSubclass("ModelType")]
-	public class TagModel : CoreModel<Guid>, IHierarchicalDictionaryItemModel
+	public class TagModel : CoreModel<Guid>, IHierarchicalDictionaryItemModel<TagModel>
 	{
 		#region Persistent
 

@@ -105,6 +105,7 @@
     <Compile Include="Controllers\AbstractActivityController.cs" />
     <Compile Include="Controllers\ProjectsController.cs" />
     <Compile Include="Controllers\Projects\ProjectViewModel.cs" />
+    <Compile Include="Controllers\PropChangeDTO.cs" />
     <Compile Include="Controllers\ReportingController.cs" />
     <Compile Include="Controllers\Security\AuthController.cs" />
     <Compile Include="Controllers\Security\OAuth\AbstractOAuthProvider.cs" />

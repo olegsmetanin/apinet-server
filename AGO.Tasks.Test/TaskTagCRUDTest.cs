@@ -96,10 +96,12 @@ namespace AGO.Tasks.Test
 			M.Track(newTag);
 
 			Assert.That(newTag, Is.Not.Null);
+			// ReSharper disable PossibleNullReferenceException
 			Assert.That(newTag.FullName, Is.EqualTo("zxc"));
 			Assert.That(newTag.Name, Is.EqualTo("zxc"));
 			Assert.That(newTag.ProjectCode, Is.EqualTo(TestProject));
 			Assert.That(newTag.Parent, Is.Null);
+			// ReSharper restore PossibleNullReferenceException
 		}
 
 		[Test]
@@ -111,6 +113,7 @@ namespace AGO.Tasks.Test
 			var vr = controller.CreateTag(TestProject, TaskTagModel.TypeCode, Guid.Empty, "ttt") as ValidationResult;
 
 			Assert.That(vr, Is.Not.Null);
+// ReSharper disable once PossibleNullReferenceException
 			Assert.That(vr.Success, Is.False);
 		}
 
@@ -136,7 +139,7 @@ namespace AGO.Tasks.Test
 			Session.Clear();
 
 			var tags = controller.UpdateTag(TestProject, TaskTagModel.TypeCode, parent.Id, "newName") as IEnumerable<TagModel>;
-			MainSession.Flush();
+			Session.Flush();
 
 			Assert.That(tags, Is.Not.Null);
 			Assert.That(tags, Has.Count.EqualTo(2));
@@ -146,13 +149,14 @@ namespace AGO.Tasks.Test
 		[Test]
 		public void CannotUpdateToDuplicate()
 		{
-			var a1 = M.Tag("a1");
+			M.Tag("a1");
 			var b1 = M.Tag("b1");
 			Session.Clear();
 
 			var vr = controller.UpdateTag(TestProject, TaskTagModel.TypeCode, b1.Id, "a1") as ValidationResult;
 
 			Assert.That(vr, Is.Not.Null);
+// ReSharper disable once PossibleNullReferenceException
 			Assert.That(vr.Success, Is.False);
 		}
 
@@ -175,7 +179,7 @@ namespace AGO.Tasks.Test
 			Session.Clear();
 
 			var ids = controller.DeleteTag(TestProject, TaskTagModel.TypeCode, p.Id) as IEnumerable<Guid>;
-			MainSession.Flush();
+			Session.Flush();
 
 			Assert.That(ids, Contains.Item(p.Id));
 			Assert.That(ids, Contains.Item(c.Id));
