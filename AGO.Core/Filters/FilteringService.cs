@@ -61,6 +61,8 @@ namespace AGO.Core.Filters
 
 		protected readonly IJsonService _JsonService;
 
+		protected IList<Type> _AllModelTypes = new List<Type>();
+
 		public FilteringService(IJsonService jsonService)
 		{
 			if (jsonService == null)
@@ -439,6 +441,11 @@ namespace AGO.Core.Filters
 			base.DoInitialize();
 
 			_JsonService.TryInitialize();
+			
+			_AllModelTypes = new List<Type>(AppDomain.CurrentDomain.GetAssemblies()
+				.Where(a => !a.IsDynamic)
+				.SelectMany(a => a.GetExportedTypes()
+					.Where(t => t.IsClass && t.IsPublic && typeof(IIdentifiedModel).IsAssignableFrom(t))));
 		}
 
 		#endregion
@@ -457,7 +464,14 @@ namespace AGO.Core.Filters
 				PropertyInfo propertyInfo = null;
 				if (!item.Path.IsNullOrWhiteSpace())
 				{
-					propertyInfo = modelType.GetProperty(item.Path.Trim(), BindingFlags.Public | BindingFlags.Instance);
+					var parts = item.Path.Split('.');
+					if (parts.Length > 1)
+					{
+						
+					}
+					else
+						propertyInfo = modelType.GetProperty(item.Path.Trim(), BindingFlags.Public | BindingFlags.Instance);
+					
 					if (propertyInfo == null)
 						throw new MissingModelPropertyException(item.Path, modelType);
 

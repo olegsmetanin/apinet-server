@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq;
 using AGO.Core.Localization;
 using AGO.Core.Model.Activity;
 
@@ -9,6 +8,12 @@ namespace AGO.Core.Controllers.Activity
 	public abstract class AbstractActivityViewProcessor<TModel> : IActivityViewProcessor
 		where TModel : ActivityRecordModel
 	{
+		#region Constants
+
+		protected const int MAX_USERS = 3;
+
+		#endregion
+
 		#region Properties, fields, constructors
 
 		protected readonly ILocalizationService LocalizationService;
@@ -60,9 +65,7 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual bool DoProcess(ActivityView view, TModel model)
 		{
-			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
 			view.ActivityItem = model.ItemName;
-
 			return true;
 		}
 
@@ -72,12 +75,13 @@ namespace AGO.Core.Controllers.Activity
 			if (groupedView != null)
 			{
 				groupedView.ChangeCount++;
-				groupedView.Users.Add(model.Creator.ToStringSafe()); 
-				return true;
+				if (groupedView.Users.Count >= MAX_USERS)
+					groupedView.MoreUsers++;
 			}
 
 			view.ActivityTime = (model.CreationTime ?? DateTime.Now).ToLocalTime().ToString("O");
-			view.User = model.Creator.ToStringSafe();
+			if (model.Creator != null && view.Users.Count < MAX_USERS)
+				view.Users.Add(new ActivityViewUserRecord(model.Creator));
 
 			return true;
 		}
@@ -88,7 +92,6 @@ namespace AGO.Core.Controllers.Activity
 
 		protected virtual void DoPostProcessItem(ActivityItemView view)
 		{
-			LocalizeUser(view);
 			LocalizeAction(view);
 		}
 
@@ -112,24 +115,6 @@ namespace AGO.Core.Controllers.Activity
 
 			view.ActivityItem = LocalizationService.MessageForType(typeof(TType), "ActivityItem",
 				CultureInfo.CurrentUICulture, view.ActivityItem);
-		}
-		
-		protected virtual void LocalizeUser(ActivityItemView view)
-		{
-			var groupedView = view as GroupedActivityItemView;
-			if (groupedView == null)
-			{
-				if (!view.User.IsNullOrWhiteSpace())
-						view.User = LocalizationService.MessageForType(typeof(IActivityViewProcessor), "User",
-					CultureInfo.CurrentUICulture, view.User);
-				return;
-			}				
-
-			groupedView.User = groupedView.Users.Count > 1 
-				? LocalizationService.MessageForType(typeof(IActivityViewProcessor), "Users", CultureInfo.CurrentUICulture,
-					groupedView.Users.Aggregate(string.Empty, (current, user) => current.IsNullOrWhiteSpace() ? user : current + ", " + user))
-				: LocalizationService.MessageForType(typeof(IActivityViewProcessor), "User", CultureInfo.CurrentUICulture, 
-					groupedView.Users.FirstOrDefault());
 		}
 
 		#endregion
