@@ -1,5 +1,5 @@
 var app = require('http').createServer(handler)
-  , io = require('socket.io').listen(app)
+  , io = require('socket.io').listen(app, {resource: '/socket'})
   , redis = require("redis")
   , pg = require('pg')
   , client = redis.createClient(6379, '127.0.0.1', {retry_max_delay: 1000 * 60})
