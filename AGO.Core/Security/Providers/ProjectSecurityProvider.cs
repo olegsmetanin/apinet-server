@@ -2,6 +2,7 @@
 using System.Linq;
 using AGO.Core.DataAccess;
 using AGO.Core.Filters;
+using AGO.Core.Model.Configuration;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using NHibernate;
@@ -45,9 +46,15 @@ namespace AGO.Core.Security.Providers
 				.WhereCollection(m => m.Members).Where(m => m.User.Id == user.Id).End();
 		}
 
+		private bool HasTicket(UserModel user, ISession session)
+		{
+			return session.QueryOver<ProjectTicketModel>().Where(m => m.User.Id == user.Id && m.Project == null).Exists();
+		}
+
 		public override bool CanCreate(ProjectModel model, string project, UserModel user, ISession session)
 		{
-			return user.IsAdmin;
+			//admin or user, if has open ticket for creating project
+			return user.IsAdmin || HasTicket(user, session);
 		}
 
 		public override bool CanUpdate(ProjectModel model, string project, UserModel user, ISession session)

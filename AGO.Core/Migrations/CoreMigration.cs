@@ -80,6 +80,10 @@ namespace AGO.Core.Migrations
 				.WithValueColumn<ReportArchiveRecordModel>(m => m.Name, use_citext)
 				.WithValueColumn<ReportArchiveRecordModel>(m => m.SettingsName, use_citext)
 				.WithValueColumn<ReportArchiveRecordModel>(m => m.UserId);
+
+			Create.CoreModelTable<ProjectTicketModel>()
+				.WithRefColumn<ProjectTicketModel>(m => m.User)
+				.WithRefColumn<ProjectTicketModel>(m => m.Project);
 				
 			//Hash token:login, that will be used in socket.io for sending messages
 			//to particulat user
@@ -103,6 +107,7 @@ namespace AGO.Core.Migrations
 		{
 			Delete.Table("WorkQueue").InSchema(MODULE_SCHEMA);
 			Delete.Table("TokenToLogin").InSchema(MODULE_SCHEMA);
+			Delete.ModelTable<ProjectTicketModel>();
 			Delete.ModelTable<ReportArchiveRecordModel>();
 			Delete.ModelTable<ProjectToTagModel>();
 			Delete.ModelTable<ProjectStatusHistoryModel>();

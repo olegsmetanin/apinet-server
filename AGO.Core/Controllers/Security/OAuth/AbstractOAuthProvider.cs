@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Threading.Tasks;
 using AGO.Core.DataAccess;
+using AGO.Core.Model.Configuration;
 using AGO.Core.Model.Security;
 using NHibernate;
 
@@ -61,6 +62,9 @@ namespace AGO.Core.Controllers.Security.OAuth
 					OAuthUserId = userId
 				};
 				s.Save(user);
+				//every new user take one ticket for creating one project
+				var ticket = new ProjectTicketModel { User = user, CreationTime = DateTime.UtcNow };
+				s.Save(ticket);
 			});
 			return user;
 		}

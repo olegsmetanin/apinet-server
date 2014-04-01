@@ -104,7 +104,7 @@ namespace AGO.Core.Controllers
 			return true;
 		}
 
-		[JsonEndpoint, RequireAuthorization(true)]
+		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupDbInstances(string term, [InRange(0, null)] int page)
 		{
 			var query = MainSession.QueryOver<DbInstanceModel>()
@@ -115,7 +115,7 @@ namespace AGO.Core.Controllers
 			return DaoFactory.CreateMainCrudDao().PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
 			
-		[JsonEndpoint, RequireAuthorization(true)]
+		[JsonEndpoint, RequireAuthorization]
 		public object CreateProject(
 			[NotNull] ProjectModel model, 
 			[NotEmpty] Guid serverId, 
@@ -164,6 +164,20 @@ namespace AGO.Core.Controllers
 
 				dao.Store(newProject);
 				MainSession.Flush();//next code find project in db
+
+				//if not admin, find any open ticket for creating project and close it
+				if (!CurrentUser.IsAdmin)
+				{
+					var openTickets = MainSession.QueryOver<ProjectTicketModel>()
+						.Where(m => m.User.Id == CurrentUser.Id && m.Project == null)
+						.List<ProjectTicketModel>();
+
+					Debug.Assert(openTickets.Count > 0);//Garantied via project security provider
+					var ticket = openTickets.First();
+					ticket.Project = newProject;
+					MainSession.Update(ticket);
+					MainSession.Flush();
+				}
 
 				//Make project database
 				if (!skipDbCreation)
