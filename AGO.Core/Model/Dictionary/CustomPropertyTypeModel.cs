@@ -26,7 +26,7 @@ namespace AGO.Core.Model.Dictionary
 
 		[JsonProperty]
 		public virtual CustomPropertyTypeModel Parent { get; set; }
-		[ReadOnlyProperty, MetadataExclude]
+		[ReadOnlyProperty, MetadataExclude, JsonProperty]
 		public virtual Guid? ParentId { get; set; }
 
 		[PersistentCollection(Column = "ParentId")]

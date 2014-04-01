@@ -298,6 +298,13 @@ namespace AGO.Core.Controllers
 
 		#region Custom property type management
 
+		private static IDictionary<string, LookupEntry[]> valueTypes;
+		[JsonEndpoint, RequireAuthorization]
+		public IEnumerable<LookupEntry> LookupCustomPropertyValueTypes(string term, [InRange(0, null)] int page)
+		{
+			return LookupEnum<CustomPropertyValueType>(term, page, ref valueTypes);
+		}
+			
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<LookupEntry> LookupCustomPropertyTypes(
 			[NotEmpty] string project,
@@ -408,6 +415,7 @@ namespace AGO.Core.Controllers
 			return validation;
 		}
 
+		[JsonEndpoint, RequireAuthorization]
 		public object UpdateCustomPropertyType([NotEmpty] string project, [NotNull] PropChangeDTO data)
 		{
 			if (data.Prop.IsNullOrWhiteSpace())
@@ -499,7 +507,6 @@ namespace AGO.Core.Controllers
 			}
 			return validation;
 		}
-
 
 		[JsonEndpoint, RequireAuthorization]
 		public IEnumerable<IModelMetadata> CustomPropertyMetadata()
