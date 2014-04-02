@@ -27,10 +27,13 @@ namespace AGO.Core.AutoMapping
 				instance.Cascade.AllDeleteOrphan();
 
 			var relatedManyToMany = instance.Relationship as IManyToManyInstance;
+			var relatedOneToMany = instance.Relationship as IOneToManyInstance;
 
-			if (relatedManyToMany == null && !attribute.Column.IsNullOrWhiteSpace())
+			if (!attribute.Column.IsNullOrWhiteSpace())
 				instance.Key.Column(attribute.Column.TrimSafe());
-			else
+			else if (relatedOneToMany != null && relatedOneToMany.ChildType == instance.EntityType)
+				instance.Key.Column("ParentId");
+			else if (relatedManyToMany == null)
 				instance.Key.Column(instance.EntityType.Name.RemoveSuffix("Model") + "Id");
 
 			if (relatedManyToMany == null)
