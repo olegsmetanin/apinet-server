@@ -31,14 +31,14 @@ namespace AGO.Core
 		{
 			var dao = DaoFactory.CreateMainCrudDao();
 
-			var localhost = new DbInstanceModel
+			var demoServer = new DbInstanceModel
 			{
 				CreationTime = DateTime.UtcNow,
-				Name = "Localhost",
+				Name = "Demo database server",
 				Server = "localhost",
 				Provider = "PostgreSQL"
 			};
-			dao.Store(localhost);
+			dao.Store(demoServer);
 
 			var admin = new UserModel
 			{
