@@ -114,7 +114,14 @@ namespace AGO.Core.Controllers
 
 			return DaoFactory.CreateMainCrudDao().PagedQuery(query, page).LookupModelsList(m => m.Name);
 		}
-			
+
+	    private ProjectTicketModel FindOpenTicket()
+	    {
+	        return MainSession.QueryOver<ProjectTicketModel>()
+	            .Where(m => m.User.Id == CurrentUser.Id && m.Project == null)
+	            .List<ProjectTicketModel>().FirstOrDefault();
+	    }
+
 		[JsonEndpoint, RequireAuthorization]
 		public object CreateProject(
 			[NotNull] ProjectModel model, 
@@ -124,6 +131,17 @@ namespace AGO.Core.Controllers
 			bool skipAddMember = false)//i know that code only for test is bad design, but can't find appropriate solution now, try implement later
 		{
 			var validation = new ValidationResult();
+
+		    ProjectTicketModel ticket = null;
+		    if (!CurrentUser.IsAdmin)
+		    {
+		        ticket = FindOpenTicket();
+		        if (ticket == null)
+		        {
+		            validation.AddErrors(_LocalizationService.MessageForException(new CurrentUserHasNoTicketForCreateProject()));
+		            return validation;
+		        }
+		    }
 
 			try
 			{
@@ -168,12 +186,8 @@ namespace AGO.Core.Controllers
 				//if not admin, find any open ticket for creating project and close it
 				if (!CurrentUser.IsAdmin)
 				{
-					var openTickets = MainSession.QueryOver<ProjectTicketModel>()
-						.Where(m => m.User.Id == CurrentUser.Id && m.Project == null)
-						.List<ProjectTicketModel>();
+                    Debug.Assert(ticket != null, "TIcket must exists for non-admin, retrieved above in method");
 
-					Debug.Assert(openTickets.Count > 0);//Garantied via project security provider
-					var ticket = openTickets.First();
 					ticket.Project = newProject;
 					MainSession.Update(ticket);
 					MainSession.Flush();

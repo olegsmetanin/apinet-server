@@ -129,6 +129,10 @@ namespace AGO.Core
 	{
 	}
 
+    public class CurrentUserHasNoTicketForCreateProject : AbstractApplicationException
+    {
+    }
+
 	public class OAuthLoginException : AbstractApplicationException
 	{
 		public OAuthLoginException(Exception innerException): base(null, innerException)

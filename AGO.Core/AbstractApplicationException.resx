@@ -180,4 +180,7 @@
   <data name="NoSuchProjectMemberException" xml:space="preserve">
     <value>No such project member found</value>
   </data>
+  <data name="CurrentUserHasNoTicketForCreateProject" xml:space="preserve">
+    <value>Current user has't ticker for creating project</value>
+  </data>
 </root>

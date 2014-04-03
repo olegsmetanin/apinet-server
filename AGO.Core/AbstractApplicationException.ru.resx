@@ -180,4 +180,7 @@
   <data name="NoSuchProjectMemberException" xml:space="preserve">
     <value>Пользователь не является участником проекта</value>
   </data>
+  <data name="CurrentUserHasNoTicketForCreateProject" xml:space="preserve">
+    <value>Текущий пользователь не имеет билета на создание проекта</value>
+  </data>
 </root>
