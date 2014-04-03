@@ -19,7 +19,7 @@ rd /S /Q tmp >> build.log
 mkdir tmp >> build.log
 SET CURDIR=%CD%
 pushd ..
-call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86 >> build.log
+call "C:\Program Files (x86)\VC\vcvarsall.bat" x86 >> build.log
 %MSBUILD% AGO.sln /p:Configuration=Debug /verbosity:m >> %CURDIR%\build.log
 %MSBUILD% AGO.WebApiApp\AGO.WebApiApp.csproj /t:_WPPCopyWebApplication /p:BuildingProject=false;WebProjectOutputDir=%CURDIR%\distr\api /verbosity:m >> %CURDIR%\build.log
 popd
@@ -60,7 +60,7 @@ rem copy client
 robocopy %APINET_CLIENT%\release\ distr\client /MIR >> build.log
 
 rem Zip all
-SET ZIPPER="c:\Program Files (x86)\7-Zip\7z.exe"
+SET ZIPPER="c:\Program Files\7-Zip\7z.exe"
 %ZIPPER% a apinet.zip distr\ >> build.log
 
 pause
