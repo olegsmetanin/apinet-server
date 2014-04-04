@@ -123,6 +123,9 @@
   <data name="CanNotAddAgreemerToClosedTask" xml:space="preserve">
     <value>Невозможно добавить согласующего в закрытую задачу</value>
   </data>
+  <data name="CannotAddCommentToClosedTask" xml:space="preserve">
+    <value>Невозможно добавить комментарий в закрытую задачу</value>
+  </data>
   <data name="CanNotAgreeClosedTaskException" xml:space="preserve">
     <value>Невозможно согласовать закрытую задачу</value>
   </data>

@@ -123,6 +123,9 @@
   <data name="CanNotAddAgreemerToClosedTask" xml:space="preserve">
     <value>Can not add agreemer to closed task</value>
   </data>
+  <data name="CannotAddCommentToClosedTask" xml:space="preserve">
+    <value>Can not add comment to closed task</value>
+  </data>
   <data name="CanNotAgreeClosedTaskException" xml:space="preserve">
     <value>Can not agree closed task</value>
   </data>

@@ -83,4 +83,8 @@ namespace AGO.Tasks
 			_MessageArguments.Add(value);
 		}
 	}
+
+    public class CannotAddCommentToClosedTask : TasksException
+    {
+    }
 }

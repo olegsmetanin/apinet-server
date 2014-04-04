@@ -737,5 +737,72 @@ namespace AGO.Tasks.Test.Security
 
 			Assert.That(() => action(notMember, projExecutor), denied);
 		}
+
+        [Test]
+	    public void OnlyMembersCanGetComments()
+	    {
+            var task = M.Task(1, executor: projExecutor);
+            M.Comment(task);
+
+            Func<UserModel, CommentDTO[]> action = u =>
+            {
+                Login(u.Email);
+                return controller.GetComments(task.ProjectCode, task.Id, 0).ToArray();
+            };
+
+            ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+            ReusableConstraint granted = Has.Length.EqualTo(1);
+
+            Assert.That(() => action(admin), denied);
+            Assert.That(action(projAdmin), granted);
+            Assert.That(action(projManager), granted);
+            Assert.That(action(projExecutor), granted);
+            Assert.That(() => action(notMember), denied);
+	    }
+
+        [Test]
+        public void OnlyMembersCanGetCommentsCount()
+        {
+            var task = M.Task(1, executor: projExecutor);
+            M.Comment(task);
+
+            Func<UserModel, int> action = u =>
+            {
+                Login(u.Email);
+                return controller.GetCommentsCount(task.ProjectCode, task.Id);
+            };
+
+            ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+            ReusableConstraint granted = Is.EqualTo(1);
+
+            Assert.That(() => action(admin), denied);
+            Assert.That(action(projAdmin), granted);
+            Assert.That(action(projManager), granted);
+            Assert.That(action(projExecutor), granted);
+            Assert.That(() => action(notMember), denied);
+        }
+
+        [Test]
+	    public void OnlyMembersCanAddCommentToTask()
+	    {
+	        var task = M.Task(1, executor: projExecutor);
+
+	        Func<UserModel, CommentDTO> action = u =>
+	        {
+	            Login(u.Email);
+	            var dto = controller.CreateComment(task.ProjectCode, task.Id, "comment");
+	            Session.Flush();
+	            return dto;
+	        };
+
+	        ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
+	        ReusableConstraint granted = Is.Not.Null;
+
+            Assert.That(()=> action(admin), denied);
+            Assert.That(action(projAdmin), granted);
+            Assert.That(action(projManager), granted);
+            Assert.That(action(projExecutor), granted);
+            Assert.That(() => action(notMember), denied);
+	    }
 	}
 }

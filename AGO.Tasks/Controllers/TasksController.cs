@@ -50,7 +50,7 @@ namespace AGO.Tasks.Controllers
 			DaoFactory factory)
             : base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory)
         {
-	        p2m = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE, registry.GetMainDbProvider().SessionFactory);
+	        projToModuleCache = new ProjectToModuleCache(ModuleDescriptor.MODULE_CODE, registry.GetMainDbProvider().SessionFactory);
         }
 
 		protected override void DoSetConfigProperty(string key, string value)
@@ -740,11 +740,11 @@ namespace AGO.Tasks.Controllers
 
 		#region IFileResourceStorage implementation
 
-		private readonly ProjectToModuleCache p2m;
+		private readonly ProjectToModuleCache projToModuleCache;
 
 		public IFileResource FindFile(string project, Guid fileId)
 		{
-			if (!p2m.IsProjectInHandledModule(project)) 
+			if (!projToModuleCache.IsProjectInHandledModule(project)) 
 				return null;
 
 			var fb = _FilteringService.Filter<TaskFileModel>();
@@ -814,5 +814,56 @@ namespace AGO.Tasks.Controllers
 	    }
 
 		#endregion
-	}
+
+        #region Comments
+
+        private IModelFilterNode MakeCommentsPredicate(string project, Guid taskId)
+        {
+            var fb = _FilteringService.Filter<TaskCommentModel>();
+            return ApplyReadConstraint<TaskCommentModel>(project, fb.Where(m => m.Task.ProjectCode == project && m.Task.Id == taskId));
+        }
+
+        [JsonEndpoint, RequireAuthorization]
+        public IEnumerable<CommentDTO> GetComments([NotEmpty] string project, [NotEmpty] Guid taskId, [InRange(0, null)] int page)
+        {
+            var task = SecureFind<TaskModel>(project, taskId); //Test, if task available for current user
+            var filter = MakeCommentsPredicate(task.ProjectCode, task.Id);
+            var sorters = new[] {new SortInfo {Property = "CreationTime"}};
+            var adapter = new CommentAdapter();
+            return DaoFactory.CreateProjectFilteringDao(project)
+                .List<TaskCommentModel>(filter, page, sorters)
+                .Select(adapter.Fill)
+                .ToList();
+        }
+
+        [JsonEndpoint, RequireAuthorization]
+        public int GetCommentsCount([NotEmpty] string project, [NotEmpty] Guid taskId)
+        {
+            var task = SecureFind<TaskModel>(project, taskId); //Test, if task available for current user
+            var filter = MakeCommentsPredicate(task.ProjectCode, task.Id);
+            return DaoFactory.CreateProjectFilteringDao(project).RowCount<TaskCommentModel>(filter);
+        }
+
+        public CommentDTO CreateComment([NotEmpty] string project, [NotEmpty] Guid taskId, [NotEmpty] string text)
+        {
+            var task = SecureFind<TaskModel>(project, taskId); //Test, if task available for current user
+            
+            if (task.Status == TaskStatus.Closed)
+                throw new CannotAddCommentToClosedTask();
+
+            var comment = new TaskCommentModel
+            {
+                Task = task,
+                Text = text,
+                Creator = CurrentUserToMember(task.ProjectCode),
+                CreationTime = DateTime.UtcNow            
+            };
+            //Don't test for task update, because any members can add comments to task. Test only with comment security provider
+            DemandUpdate(comment, task.ProjectCode);
+            DaoFactory.CreateProjectCrudDao(task.ProjectCode).Store(comment);
+            return new CommentAdapter().Fill(comment);
+        }
+
+        #endregion
+    }
 }

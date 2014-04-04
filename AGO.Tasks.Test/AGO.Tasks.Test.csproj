@@ -87,6 +87,7 @@
     <Compile Include="Security\ProjectControllerSecurityTests.cs" />
     <Compile Include="Security\TasksControllerSecurityTests.cs" />
     <Compile Include="TaskAgreementsTest.cs" />
+    <Compile Include="TaskCommentTest.cs" />
     <Compile Include="TaskCRUDTest.cs" />
     <Compile Include="TaskFilesTest.cs" />
     <Compile Include="TaskListReportsTest.cs" />

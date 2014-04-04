@@ -74,10 +74,15 @@ namespace AGO.Tasks.Migrations
 		        .WithRefColumn<TaskTimelogEntryModel>(m => m.Member)
 		        .WithValueColumn<TaskTimelogEntryModel>(m => m.Time)
 				.WithValueColumn<TaskTimelogEntryModel>(m => m.Comment, use_citext);
+
+            Create.SecureModelTable<TaskCommentModel>()
+                .WithRefColumn<TaskCommentModel>(m => m.Task)
+                .WithValueColumn<TaskCommentModel>(m => m.Text);
         }
 
         public override void Down()
         {
+            Delete.ModelTable<TaskCommentModel>();
 			Delete.ModelTable<TaskFileModel>();
 			Delete.ModelTable<TaskTimelogEntryModel>();
 			Delete.ModelTable<TaskToTagModel>();

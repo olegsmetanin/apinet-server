@@ -137,7 +137,18 @@ namespace AGO.Tasks.Model.Task
 	    }
 		private ISet<TaskFileModel> files = new HashSet<TaskFileModel>();
 
-		#region Time tracking
+        /// <summary>
+        /// Комментарии задачи
+        /// </summary>
+        [PersistentCollection(CascadeType = CascadeType.AllDeleteOrphan)]
+        public virtual ISet<TaskCommentModel> Comments
+        {
+            get { return comments; }
+            set { comments = value; }
+        }
+        private ISet<TaskCommentModel> comments = new HashSet<TaskCommentModel>();
+
+        #region Time tracking
 
 		/// <summary>
 		/// Планируемое время выполнения задачи

@@ -93,6 +93,8 @@
     <Compile Include="Controllers\ConfigController.cs" />
     <Compile Include="Controllers\ActivityController.cs" />
     <Compile Include="Controllers\DictionaryController.cs" />
+    <Compile Include="Controllers\DTO\CommentAdapter.cs" />
+    <Compile Include="Controllers\DTO\CommentDTO.cs" />
     <Compile Include="Controllers\DTO\CreateTaskDTO.cs" />
     <Compile Include="Controllers\DTO\CustomParameterDTO.cs" />
     <Compile Include="Controllers\DTO\DictionaryAdapters.cs" />
@@ -117,6 +119,7 @@
     <Compile Include="Model\Dictionary\TaskTypeModel.cs" />
     <Compile Include="Model\ITasksModel.cs" />
     <Compile Include="Model\Task\TaskAgreementModel.cs" />
+    <Compile Include="Model\Task\TaskCommentModel.cs" />
     <Compile Include="Model\Task\TaskCustomPropertyModel.cs" />
     <Compile Include="Model\Task\TaskExecutorModel.cs" />
     <Compile Include="Model\Task\TaskFileModel.cs" />

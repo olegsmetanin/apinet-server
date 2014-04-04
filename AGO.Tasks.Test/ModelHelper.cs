@@ -211,5 +211,23 @@ namespace AGO.Tasks.Test
 				return entry;
 			});
 		}
+
+	    public TaskCommentModel Comment(TaskModel task, string text = "task comment", UserModel author = null)
+	    {
+	        return Track(() =>
+	        {
+	            var comment = new TaskCommentModel
+	            {
+	                Task = task,
+	                Text = text,
+	                Creator = MemberFromUser(task.ProjectCode, author ?? CurrentUser()),
+	                CreationTime = DateTime.UtcNow
+	            };
+	            task.Comments.Add(comment);
+	            Session().Save(comment);
+	            Session().Flush();
+	            return comment;
+	        });
+	    }
 	}
 }
