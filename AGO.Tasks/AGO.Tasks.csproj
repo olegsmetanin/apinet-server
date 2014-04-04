@@ -84,6 +84,7 @@
   <ItemGroup>
     <Compile Include="Controllers\AbstractTasksController.cs" />
     <Compile Include="Controllers\Activity\ProjectAttributesActivityViewProcessor.cs" />
+    <Compile Include="Controllers\Activity\TaskCommentsRelatedActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\TaskCustomPropertiesActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\TaskFilesRelatedActivityViewProcessor.cs" />
     <Compile Include="Controllers\Activity\TaskExecutorsRelatedActivityViewProcessor.cs" />
@@ -131,6 +132,7 @@
     <Compile Include="Model\Task\TaskToTagModel.cs" />
     <Compile Include="ModuleDescriptor.cs" />
     <Compile Include="Processing\ProjectAttributesActivityPostProcessor.cs" />
+    <Compile Include="Processing\TaskCommentsRelatedActivityPostProcessor.cs" />
     <Compile Include="Processing\TaskCustomPropertiesActivityPostProcessor.cs" />
     <Compile Include="Processing\TaskFilesRelatedActivityPostProcessor.cs" />
     <Compile Include="Processing\TaskExecutorsRelatedActivityPostProcessor.cs" />
@@ -170,6 +172,12 @@
     <EmbeddedResource Include="Controllers\Activity\ProjectAttributesActivityViewProcessor.ru.resx">
       <DependentUpon>ProjectAttributesActivityViewProcessor.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\TaskCommentsRelatedActivityViewProcessor.resx">
+      <DependentUpon>TaskCommentsRelatedActivityViewProcessor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controllers\Activity\TaskCommentsRelatedActivityViewProcessor.ru.resx">
+      <DependentUpon>TaskCommentsRelatedActivityViewProcessor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controllers\Activity\TaskCustomPropertiesActivityViewProcessor.resx">
       <DependentUpon>TaskCustomPropertiesActivityViewProcessor.cs</DependentUpon>

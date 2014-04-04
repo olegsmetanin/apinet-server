@@ -58,6 +58,7 @@ namespace AGO.Tasks
 			app.IocContainer.RegisterSingle<TaskAgreementsRelatedActivityPostProcessor, TaskAgreementsRelatedActivityPostProcessor>();
 			app.IocContainer.RegisterSingle<TaskExecutorsRelatedActivityPostProcessor, TaskExecutorsRelatedActivityPostProcessor>();
 			app.IocContainer.RegisterSingle<TaskFilesRelatedActivityPostProcessor, TaskFilesRelatedActivityPostProcessor>();
+            app.IocContainer.RegisterSingle<TaskCommentsRelatedActivityPostProcessor, TaskCommentsRelatedActivityPostProcessor>();
 			app.IocContainer.RegisterSingle<ProjectAttributesActivityViewProcessor, ProjectAttributesActivityViewProcessor>();
 			app.IocContainer.RegisterSingle<TaskAttributesActivityViewProcessor, TaskAttributesActivityViewProcessor>();
 			app.IocContainer.RegisterSingle<TaskCustomPropertiesActivityViewProcessor, TaskCustomPropertiesActivityViewProcessor>();		
@@ -65,6 +66,7 @@ namespace AGO.Tasks
 			app.IocContainer.RegisterSingle<TaskAgreementsRelatedActivityViewProcessor, TaskAgreementsRelatedActivityViewProcessor>();
 			app.IocContainer.RegisterSingle<TaskExecutorsRelatedActivityViewProcessor, TaskExecutorsRelatedActivityViewProcessor>();
 			app.IocContainer.RegisterSingle<TaskFilesRelatedActivityViewProcessor, TaskFilesRelatedActivityViewProcessor>();
+            app.IocContainer.RegisterSingle<TaskCommentsRelatedActivityViewProcessor, TaskCommentsRelatedActivityViewProcessor>();
 
 			var projFactoryRegistration = Lifestyle.Singleton.CreateRegistration(
 				typeof (IProjectFactory),
@@ -89,7 +91,8 @@ namespace AGO.Tasks
 				app.IocContainer.GetInstance<ProjectTasksRelatedActivityPostProcessor>(),
 				app.IocContainer.GetInstance<TaskAgreementsRelatedActivityPostProcessor>(),
 				app.IocContainer.GetInstance<TaskExecutorsRelatedActivityPostProcessor>(),
-				app.IocContainer.GetInstance<TaskFilesRelatedActivityPostProcessor>()
+				app.IocContainer.GetInstance<TaskFilesRelatedActivityPostProcessor>(),
+                app.IocContainer.GetInstance<TaskCommentsRelatedActivityPostProcessor>()
 			});
 
 			Core.Controllers.DictionaryController.RegisterTagType(TaskTagModel.TypeCode, typeof(TaskTagModel));

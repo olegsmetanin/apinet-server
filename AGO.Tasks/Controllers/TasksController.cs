@@ -824,11 +824,11 @@ namespace AGO.Tasks.Controllers
         }
 
         [JsonEndpoint, RequireAuthorization]
-        public IEnumerable<CommentDTO> GetComments([NotEmpty] string project, [NotEmpty] Guid taskId, [InRange(0, null)] int page)
+        public IEnumerable<CommentDTO> GetComments([NotEmpty] string project, [NotEmpty] string numpp, [InRange(0, null)] int page)
         {
-            var task = SecureFind<TaskModel>(project, taskId); //Test, if task available for current user
+            var task = SecureFindTask(project, numpp); //Test, if task available for current user
             var filter = MakeCommentsPredicate(task.ProjectCode, task.Id);
-            var sorters = new[] {new SortInfo {Property = "CreationTime"}};
+            var sorters = new[] {new SortInfo {Property = "CreationTime", Descending = true}};
             var adapter = new CommentAdapter();
             return DaoFactory.CreateProjectFilteringDao(project)
                 .List<TaskCommentModel>(filter, page, sorters)
@@ -837,16 +837,17 @@ namespace AGO.Tasks.Controllers
         }
 
         [JsonEndpoint, RequireAuthorization]
-        public int GetCommentsCount([NotEmpty] string project, [NotEmpty] Guid taskId)
+        public int GetCommentsCount([NotEmpty] string project, [NotEmpty] string numpp)
         {
-            var task = SecureFind<TaskModel>(project, taskId); //Test, if task available for current user
+            var task = SecureFindTask(project, numpp); //Test, if task available for current user
             var filter = MakeCommentsPredicate(task.ProjectCode, task.Id);
             return DaoFactory.CreateProjectFilteringDao(project).RowCount<TaskCommentModel>(filter);
         }
 
-        public CommentDTO CreateComment([NotEmpty] string project, [NotEmpty] Guid taskId, [NotEmpty] string text)
+        [JsonEndpoint, RequireAuthorization]
+        public CommentDTO CreateComment([NotEmpty] string project, [NotEmpty] string numpp, [NotEmpty] string text)
         {
-            var task = SecureFind<TaskModel>(project, taskId); //Test, if task available for current user
+            var task = SecureFindTask(project, numpp); //Test, if task available for current user
             
             if (task.Status == TaskStatus.Closed)
                 throw new CannotAddCommentToClosedTask();
@@ -861,6 +862,8 @@ namespace AGO.Tasks.Controllers
             //Don't test for task update, because any members can add comments to task. Test only with comment security provider
             DemandUpdate(comment, task.ProjectCode);
             DaoFactory.CreateProjectCrudDao(task.ProjectCode).Store(comment);
+            _ModelProcessingService.AfterModelCreated(comment);
+
             return new CommentAdapter().Fill(comment);
         }
 

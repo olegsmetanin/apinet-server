@@ -16,7 +16,7 @@ namespace AGO.Core.DataAccess
 
 		private const int MAX_PAGE_SIZE = 100;
 
-		private const int DEFAULT_PAGE_SIZE = 20;
+	    private const int DEFAULT_PAGE_SIZE = 20;
 
 		#endregion
 

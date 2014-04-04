@@ -747,7 +747,7 @@ namespace AGO.Tasks.Test.Security
             Func<UserModel, CommentDTO[]> action = u =>
             {
                 Login(u.Email);
-                return controller.GetComments(task.ProjectCode, task.Id, 0).ToArray();
+                return controller.GetComments(task.ProjectCode, task.SeqNumber, 0).ToArray();
             };
 
             ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
@@ -769,7 +769,7 @@ namespace AGO.Tasks.Test.Security
             Func<UserModel, int> action = u =>
             {
                 Login(u.Email);
-                return controller.GetCommentsCount(task.ProjectCode, task.Id);
+                return controller.GetCommentsCount(task.ProjectCode, task.SeqNumber);
             };
 
             ReusableConstraint denied = Throws.Exception.TypeOf<NoSuchProjectMemberException>();
@@ -790,7 +790,7 @@ namespace AGO.Tasks.Test.Security
 	        Func<UserModel, CommentDTO> action = u =>
 	        {
 	            Login(u.Email);
-	            var dto = controller.CreateComment(task.ProjectCode, task.Id, "comment");
+	            var dto = controller.CreateComment(task.ProjectCode, task.SeqNumber, "comment");
 	            Session.Flush();
 	            return dto;
 	        };

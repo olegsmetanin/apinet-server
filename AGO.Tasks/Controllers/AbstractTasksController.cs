@@ -14,6 +14,7 @@ using AGO.Core.Model.Processing;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Core.Security;
+using AGO.Tasks.Model.Task;
 using Common.Logging;
 using NHibernate;
 using NHibernate.Criterion;
@@ -205,5 +206,17 @@ namespace AGO.Tasks.Controllers
 
 			return model;
 		}
+
+        protected TaskModel SecureFindTask(string project, string numpp)
+        {
+            var fb = _FilteringService.Filter<TaskModel>();
+            var predicate = ApplyReadConstraint<TaskModel>(project, fb.Where(m =>
+                m.ProjectCode == project && m.SeqNumber == numpp));
+            var model = DaoFactory.CreateProjectFilteringDao(project).Find<TaskModel>(predicate);
+            if (model == null)
+                throw new NoSuchEntityException();
+
+            return model;
+        }
 	}
 }

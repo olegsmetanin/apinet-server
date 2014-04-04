@@ -31,7 +31,7 @@ namespace AGO.Tasks.Test
             var c1 = M.Comment(task, "aaa");
             var c2 = M.Comment(task, "bbb");
 
-            var comments = controller.GetComments(task.ProjectCode, task.Id, 0).ToArray();
+            var comments = controller.GetComments(task.ProjectCode, task.SeqNumber, 0).ToArray();
 
             Assert.That(comments, Is.Not.Null);
             Assert.That(comments, Has.Length.EqualTo(2));
@@ -45,7 +45,7 @@ namespace AGO.Tasks.Test
             M.Comment(task, "aaa");
             M.Comment(task, "bbb");
 
-            var res = controller.GetCommentsCount(task.ProjectCode, task.Id);
+            var res = controller.GetCommentsCount(task.ProjectCode, task.SeqNumber);
 
             Assert.That(res, Is.EqualTo(2));
         }
@@ -53,7 +53,7 @@ namespace AGO.Tasks.Test
         [Test]
         public void CreateCommentReturnDto()
         {
-            var dto = controller.CreateComment(task.ProjectCode, task.Id, "aaa");
+            var dto = controller.CreateComment(task.ProjectCode, task.SeqNumber, "aaa");
 
             Assert.That(dto, Is.Not.Null);
             Assert.That(dto.Author, Is.EqualTo(CurrentUser.FullName));
@@ -65,7 +65,7 @@ namespace AGO.Tasks.Test
         {
             task.ChangeStatus(TaskStatus.Closed, M.MemberFromUser(task.ProjectCode, CurrentUser));
 
-            Assert.That(() => controller.CreateComment(task.ProjectCode, task.Id, "aaa"),
+            Assert.That(() => controller.CreateComment(task.ProjectCode, task.SeqNumber, "aaa"),
                 Throws.Exception.TypeOf<CannotAddCommentToClosedTask>());
         }
     }

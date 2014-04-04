@@ -41,7 +41,8 @@ namespace AGO.Tasks.Controllers
 			ProjectTasksRelatedActivityViewProcessor projectTasksViewProcessor,
 			TaskAgreementsRelatedActivityViewProcessor taskAgreementsViewProcessor,
 			TaskExecutorsRelatedActivityViewProcessor taskExecutorsViewProcessor,
-			TaskFilesRelatedActivityViewProcessor taskFilesViewProcessor)
+			TaskFilesRelatedActivityViewProcessor taskFilesViewProcessor,
+            TaskCommentsRelatedActivityViewProcessor taskCommentsViewProcessor)
 			: base(jsonService, filteringService, localizationService, modelProcessingService, authController, securityService, registry, factory, activityViewProcessors)
 		{
 			_ActivityViewProcessors.Add(projectAttributesProcessor);
@@ -51,6 +52,7 @@ namespace AGO.Tasks.Controllers
 			_ActivityViewProcessors.Add(taskAgreementsViewProcessor);
 			_ActivityViewProcessors.Add(taskExecutorsViewProcessor);
 			_ActivityViewProcessors.Add(taskFilesViewProcessor);
+            _ActivityViewProcessors.Add(taskCommentsViewProcessor);
 		} 
 
 		#endregion
