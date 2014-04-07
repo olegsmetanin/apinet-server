@@ -165,4 +165,7 @@
   <data name="UserAlreadyProjectMemberException" xml:space="preserve">
     <value>Provided user already member of this project</value>
   </data>
+  <data name="InvalidTaskStatusTransition" xml:space="preserve">
+    <value>Invalid task status transition</value>
+  </data>
 </root>

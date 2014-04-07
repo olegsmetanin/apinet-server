@@ -24,6 +24,7 @@ using AGO.Core.Security;
 using AGO.Tasks.Controllers.DTO;
 using AGO.Tasks.Model.Dictionary;
 using AGO.Tasks.Model.Task;
+using AGO.Tasks.Workflow;
 using Newtonsoft.Json.Linq;
 using NHibernate.Criterion;
 
@@ -128,23 +129,10 @@ namespace AGO.Tasks.Controllers
 			return predicate;
 		}
 
-	    private TaskModel FindTaskByProjectAndNumber(string project, string numpp)
-	    {
-			var fb = _FilteringService.Filter<TaskModel>();
-			var predicate = ApplyReadConstraint<TaskModel>(project, fb.Where(m => m.ProjectCode == project && m.SeqNumber == numpp));
-
-			var task = DaoFactory.CreateProjectFilteringDao(project).Find<TaskModel>(predicate);
-
-			if (task == null)
-				throw new NoSuchEntityException();
-
-		    return task;
-	    }
-
 		[JsonEndpoint, RequireAuthorization]
 		public TaskListItemDetailsDTO GetTaskDetails([NotEmpty] string project, [NotEmpty] string numpp)
 		{
-			var task = FindTaskByProjectAndNumber(project, numpp);
+			var task = SecureFindTask(project, numpp);
 			var adapter = new TaskListItemDetailsAdapter(_LocalizationService);
 			return adapter.Fill(task);
 		}
@@ -152,7 +140,7 @@ namespace AGO.Tasks.Controllers
 		[JsonEndpoint, RequireAuthorization]
 		public TaskViewDTO GetTask([NotEmpty] string project, [NotEmpty] string numpp)
 		{
-			var task = FindTaskByProjectAndNumber(project, numpp);			
+            var task = SecureFindTask(project, numpp);			
 			var adapter = new TaskViewAdapter(_LocalizationService);
 			return adapter.Fill(task);
 		}
@@ -201,11 +189,11 @@ namespace AGO.Tasks.Controllers
 			            }
 
 			            var executor = new TaskExecutorModel
-			                       		{
-			                       			Creator = task.Creator,
-			                       			Task = task,
-			                       			Executor = member
-			                       		};
+			            {
+			                Creator = task.Creator,
+			                Task = task,
+			                Executor = member
+			            };
 			            task.Executors.Add(executor);
 			        }
 				}, task => task.SeqNumber);
@@ -237,6 +225,11 @@ namespace AGO.Tasks.Controllers
 			    			break;
 			    		case "Status":
 			    			var newStatus = (TaskStatus) Enum.Parse(typeof (TaskStatus), (string) data.Value);
+			    	        var workflow = new TaskStatusWorkflow();
+			    	        if (!workflow.IsValidTransitions(task.Status, newStatus))
+			    	        {
+			    	            throw new InvalidTaskStatusTransition();
+			    	        }
 			    			task.ChangeStatus(newStatus, CurrentUserToMember(project));
 			    			break;
 			    		case "TaskType":
@@ -292,15 +285,15 @@ namespace AGO.Tasks.Controllers
 			    }
 			    catch (InvalidCastException cex)
 			    {
-			    	vr.AddFieldErrors(data.Prop, cex.GetBaseException().Message);
+			    	vr.AddFieldErrors(data.Prop, _LocalizationService.MessageForException(cex));
 			    }
 			    catch (OverflowException oex)
 			    {
-			    	vr.AddFieldErrors(data.Prop, oex.GetBaseException().Message);
+                    vr.AddFieldErrors(data.Prop, _LocalizationService.MessageForException(oex));
 			    }
 			    catch (TasksException ex)
 			    {
-					vr.AddFieldErrors(data.Prop, ex.GetBaseException().Message);
+                    vr.AddFieldErrors(data.Prop, _LocalizationService.MessageForException(ex.GetBaseException()));
 			    }
 			}, 
 			task => new TaskViewAdapter(_LocalizationService).Fill(task),

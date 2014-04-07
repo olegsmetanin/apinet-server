@@ -87,4 +87,8 @@ namespace AGO.Tasks
     public class CannotAddCommentToClosedTask : TasksException
     {
     }
+
+    public class InvalidTaskStatusTransition : TasksException
+    {
+    }
 }

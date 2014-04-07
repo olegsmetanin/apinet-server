@@ -165,4 +165,7 @@
   <data name="UserAlreadyProjectMemberException" xml:space="preserve">
     <value>Заданный пользователь уже является участником этого проекта</value>
   </data>
+  <data name="InvalidTaskStatusTransition" xml:space="preserve">
+    <value>Неподдерживаемое изменение статуса задачи</value>
+  </data>
 </root>

@@ -162,6 +162,8 @@
     <Compile Include="TasksProjectFactory.cs" />
     <Compile Include="TasksReports.cs" />
     <Compile Include="TestDataService.cs" />
+    <Compile Include="Workflow\IWorkflow.cs" />
+    <Compile Include="Workflow\TaskStatusWorkflow.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

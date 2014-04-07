@@ -8,6 +8,7 @@ using AGO.Core.Model.Dictionary;
 using AGO.Core.Model.Projects;
 using AGO.Core.Model.Security;
 using AGO.Tasks.Model.Task;
+using AGO.Tasks.Workflow;
 
 namespace AGO.Tasks.Controllers.DTO
 {
@@ -147,6 +148,8 @@ namespace AGO.Tasks.Controllers.DTO
 	/// </summary>
 	public class TaskViewAdapter: TaskAdapter<TaskViewDTO>
 	{
+	    private static IWorkflow<TaskStatus> workflow = new TaskStatusWorkflow();
+
 		public TaskViewAdapter(ILocalizationService localizationService): base(localizationService)
 		{
 		}
@@ -203,9 +206,7 @@ namespace AGO.Tasks.Controllers.DTO
 			{
 				Current = TaskStatusEntry(task.Status),
 				History = ToHistory(task.StatusHistory, TaskStatusEntry),
-				Next = Enum.GetValues(typeof(TaskStatus)) //TODO это должно браться из workflow
-					.OfType<TaskStatus>()
-					.Where(en => en != task.Status)
+				Next = workflow.Next(task.Status)
 					.OrderBy(en => (int)en)
 					.Select(s => new LookupEntry
 					{
