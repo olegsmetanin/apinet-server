@@ -23,10 +23,26 @@ namespace AGO.WebApiApp.Controllers
 		private const string OptionsHttpMethod = "OPTIONS";
 		public ActionResult Dispatch()
 		{
-			if (OptionsHttpMethod.Equals(Request.HttpMethod, StringComparison.InvariantCultureIgnoreCase))
-				return Content(string.Empty);
+		    var agoRequestedWith = Request.Headers["X-AGO-Requested-With"];
+            var origin = Request.Headers["Origin"];
+		    if (OptionsHttpMethod.Equals(Request.HttpMethod, StringComparison.InvariantCultureIgnoreCase))
+		    {
+                Response.AddHeader("Access-Control-Allow-Origin", origin);
+		        return Content(string.Empty);
+		    }
 
-			var usersController = DependencyResolver.Current.GetService<UsersController>();
+		    if (agoRequestedWith == "easyXDM")
+		    {
+		        //there Origin header is our api, so, we can not use Origin and return wildcard (that is bad, i know)
+		        Response.AddHeader("Access-Control-Allow-Origin", "*");
+		    }
+		    else
+		    {
+		        //this is not easyXDM request (off or file upload request) and we can use Origin safely
+                Response.AddHeader("Access-Control-Allow-Origin", origin);
+		    }
+
+		    var usersController = DependencyResolver.Current.GetService<UsersController>();
 			usersController.SetLocale(null, HttpContext.Request.UserLanguages);
 
 			using (ScopeStorage.CreateTransientScope(new Dictionary<object, object>()))
