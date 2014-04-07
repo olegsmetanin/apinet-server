@@ -82,7 +82,7 @@ namespace AGO.Core.Controllers
 
 								var lc = diContainer.GetInstance<ILocalizationService>();
 								var user = diContainer.GetInstance<AuthController>().CurrentUser();
-								var p = sp.CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == report.ProjectCode).SingleOrDefault();
+								var p = registry.GetMainDbProvider().CurrentSession.QueryOver<ProjectModel>().Where(m => m.ProjectCode == report.ProjectCode).SingleOrDefault();
 								//User must be logged in to download report, so, we don't check user to null
 								var dto = ReportTaskDTO.FromTask(report, lc, p != null ? p.Name : null, user.SystemRole != SystemRole.Administrator);
 								diContainer.GetInstance<INotificationService>().EmitReportChanged(ReportEvents.DOWNLOADED, user.Id.ToString(), dto);
@@ -116,7 +116,7 @@ namespace AGO.Core.Controllers
 			}
 			finally
 			{
-				sp.CloseCurrentSession();
+			    registry.CloseCurrentSessions();
 			}
 		}
 
