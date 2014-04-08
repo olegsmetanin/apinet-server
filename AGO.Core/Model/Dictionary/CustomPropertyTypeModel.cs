@@ -29,7 +29,7 @@ namespace AGO.Core.Model.Dictionary
 		[ReadOnlyProperty, MetadataExclude, JsonProperty]
 		public virtual Guid? ParentId { get; set; }
 
-		[PersistentCollection]
+		[PersistentCollection(Column = "ParentId")]
 		public virtual ISet<CustomPropertyTypeModel> Children { get { return _Children; } set { _Children = value; } }
 		private ISet<CustomPropertyTypeModel> _Children = new HashSet<CustomPropertyTypeModel>();
 

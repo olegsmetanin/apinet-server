@@ -33,7 +33,7 @@ namespace AGO.Core.Model.Dictionary
 		[ReadOnlyProperty, MetadataExclude]
 		public virtual Guid? ParentId { get; set; }
 
-		[PersistentCollection]
+		[PersistentCollection(Column = "ParentId")]
 		public virtual ISet<TagModel> Children { get { return _Children; } set { _Children = value; } }
 		private ISet<TagModel> _Children = new HashSet<TagModel>();
 
